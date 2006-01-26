@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include <iostream>
 using namespace std;
@@ -20,20 +21,30 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_main.cpp,v 1.17 2005/01/25 08:46:48 fp Exp $");
+
+//---------------------------------------------------------------
+
+// Globale Variablen (extern)
 unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
 
+enum DLSProcessType process_type = dlsMotherProcess;
 unsigned int job_id = 0;
-bool process_forked = false;
+bool is_daemon = true;
+
+string dls_dir;
 
 //---------------------------------------------------------------
 
+void get_options(int, char **);
+void print_usage();
 void signal_handler(int);
 void set_signal_handlers();
+void dump_signal(int);
 void init_daemon();
-void closeSTDx();
-void get_directory(int, char **, string *);
+void closeSTDXXX();
 void check_running(const string *);
 void create_pid_file(const string *);
 void remove_pid_file(const string *);
@@ -60,45 +71,60 @@ int main(int argc, char **argv)
   DLSProcMother *mother_process;
   DLSProcLogger *logger_process;
   int exit_code;
-  string dls_dir;
 
-  cout << "starting data logging server version " << DLS_VERSION << endl;
+  cout << dls_version_str << endl;
 
-  // Welches DLS-Verzeichnis soll benutzt werden?
-  get_directory(argc, argv, &dls_dir);
+  // Kommandozeilenparameter parsen
+  get_options(argc, argv);
 
   // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
   // schon ein Daemon läuft
   check_running(&dls_dir);
 
   // Jetzt in einen Daemon verwandeln
-  init_daemon();
+  if (is_daemon) init_daemon();
   
   // PID-Datei erzeugen
   create_pid_file(&dls_dir);
 
-  // STDIN, STDOUT und STDERR schliessen
-  closeSTDx();
-
   // Signalhandler installieren
   set_signal_handlers();
-  
-  // Mutterprozess starten
-  mother_process = new DLSProcMother();
-  exit_code = mother_process->start(dls_dir);
-  delete mother_process;
 
-  if (process_forked)
+  // Alles ok. Wir laufen!
+  cout << "DLS running with PID " << getpid();
+  if (is_daemon) cout << " [daemon]";
+  cout << endl;
+
+  // STDIN, STDOUT und STDERR schliessen
+  if (is_daemon) closeSTDXXX();
+
+  try
   {
-    // Multiplexer-Prozess starten
-    logger_process = new DLSProcLogger(dls_dir, job_id);
-    exit_code = logger_process->start();
-    delete logger_process;
+    // Mutterprozess starten
+    mother_process = new DLSProcMother();
+    exit_code = mother_process->start(dls_dir);
+    delete mother_process;
+
+    if (process_type == dlsLoggingProcess)
+    {
+      // Erfassungsprozess starten
+      logger_process = new DLSProcLogger(dls_dir, job_id);
+      exit_code = logger_process->start();
+      delete logger_process;
+    }
+    else
+    {
+      // PID-Datei der Mutterprozesses entfernen
+      remove_pid_file(&dls_dir);
+    }
   }
-  else
+  catch (COMException &e)
   {
-    // PID-Datei der Mutterprozesses entfernen
-    remove_pid_file(&dls_dir);
+    syslog(LOG_INFO, "CRITICAL: UNCATCHED KNOWN EXCEPTION! text: %s", e.msg.c_str());
+  }
+  catch (...)
+  {
+    syslog(LOG_INFO, "CRITICAL: UNCATCHED UNKNOWN EXCEPTION!");
   }
 
   exit(exit_code);
@@ -106,54 +132,144 @@ int main(int argc, char **argv)
 
 //---------------------------------------------------------------
 
-void signal_handler(int sig)
+void get_options(int argc, char **argv)
 {
-    switch (sig)
+  int c;
+  bool dir_set = false;
+  char *env;
+
+  do
+  {
+    c = getopt(argc, argv, "d:kh");
+
+    switch (c)
     {
-	case SIGHUP:
-	    sig_hangup++;
-	    break;
+      case 'd':
+        dir_set = true;
+        dls_dir = optarg;
+        break;
 
-	case SIGCHLD:
-	    sig_child++;
-	    break;
+      case 'k':
+        is_daemon = false;
+        break;
 
-	case SIGINT:
-	case SIGTERM:
-	    sig_int_term++;
-	    break;
+      case 'h':
+      case '?':
+        print_usage();
+        break;
 
-	case SIGSEGV:
-	    syslog(LOG_INFO, "CRITICAL: process caused a SEGMENTATION VIOLATION!");
-	    exit(-1);
-	    break;
-
-	case SIGILL:
-	    syslog(LOG_INFO, "CRITICAL: process became ILL!");
-	    exit(-1);
-	    break;
-
-	case SIGFPE:
-	    syslog(LOG_INFO, "CRITICAL: process caused a FLOTING POINT EXCEPTION!");
-	    exit(-1);
-	    break;
+      default:
+        break;
+    }
+  }
+  while (c != -1);
+  
+  // Weitere Parameter vorhanden?
+  if (optind < argc)
+  {
+    print_usage();
   }
 
-  // Signalhandler wieder installieren
-  set_signal_handlers();
+  if (!dir_set)
+  {
+    // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
+    if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
+
+    // $DLS_DIR leer: Standardverzeichnis nutzen
+    else dls_dir = DEFAULT_DLS_DIR;
+  }
+
+  // Benutztes Verzeichnis ausgeben
+  cout << "using dls directory \"" << dls_dir << "\"" << endl;
+
+  if (!is_daemon)
+  {
+    cout << "NOT detaching from tty!" << endl;
+  }
+}
+
+//---------------------------------------------------------------
+
+void print_usage()
+{
+  cout << "Aufruf: dlsd [OPTIONEN]" << endl;
+  cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
+  cout << "        -k                 Nicht von der Konsole trennen" << endl;
+  cout << "        -h                 Diese Hilfe anzeigen" << endl;
+  exit(0);
+}
+
+//---------------------------------------------------------------
+
+void signal_handler(int sig)
+{
+  switch (sig)
+  {
+    case SIGHUP:
+      sig_hangup++;
+      break;
+      
+    case SIGCHLD:
+      sig_child++;
+      break;
+      
+    case SIGINT:
+    case SIGTERM:
+      sig_int_term++;
+      break;
+      
+    default:
+      dump_signal(sig);
+      _exit(E_DLS_SIGNAL);
+  }
 }
 
 //---------------------------------------------------------------
 
 void set_signal_handlers()
 {
-  signal(SIGHUP, signal_handler);
-  signal(SIGCHLD, signal_handler);
-  signal(SIGINT, signal_handler);
-  signal(SIGTERM, signal_handler);
-  signal(SIGSEGV, signal_handler);
-  signal(SIGILL, signal_handler);
-  signal(SIGFPE, signal_handler);
+  struct sigaction action;
+
+  action.sa_handler = signal_handler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+
+  sigaction(SIGHUP, &action, 0);
+  sigaction(SIGCHLD, &action, 0);
+  sigaction(SIGINT, &action, 0);
+  sigaction(SIGTERM, &action, 0);
+  sigaction(SIGSEGV, &action, 0);
+  sigaction(SIGILL, &action, 0);
+  sigaction(SIGFPE, &action, 0);
+  sigaction(SIGQUIT, &action, 0);
+  sigaction(SIGABRT, &action, 0);
+  sigaction(SIGPIPE, &action, 0);
+  sigaction(SIGALRM, &action, 0);
+  sigaction(SIGUSR1, &action, 0);
+  sigaction(SIGUSR2, &action, 0);
+}
+
+//---------------------------------------------------------------
+
+void dump_signal(int sig)
+{
+  int fd;
+  stringstream err, file;
+
+  file << dls_dir << "/error_" << getpid();
+
+  err << "process (" << getpid() << ")";
+  err << " caught a signal: \"" << sys_siglist[sig] << "\"";
+  err << " at " << time(0) << endl;
+
+  fd = open(file.str().c_str(), O_WRONLY | O_CREAT, 0644);
+  if (fd != -1)
+  {
+    write(fd, err.str().c_str(), err.str().length());
+    close(fd);
+  }
+
+  if (!is_daemon) cout << err;
 }
 
 //---------------------------------------------------------------
@@ -172,8 +288,6 @@ void init_daemon()
     exit(0);
   }
 
-  cout << "data logging server daemon running with PID " << getpid() << endl;
-
   if (setsid() == -1) // Session leader werden
   {
     cerr << "ERROR: could not become session leader!" << endl;
@@ -181,7 +295,7 @@ void init_daemon()
   }
 
   if (chdir("/") < 0) // Nach root wechseln - jemand könnte ein Dateisystem
-                      // unmounten, auf dem wir stehen
+                      // unmounten wollen, auf dem wir stehen!
   {
     cerr << "ERROR: could not change to file root!" << endl;
     exit(-1);
@@ -192,11 +306,8 @@ void init_daemon()
 
 //---------------------------------------------------------------
 
-void closeSTDx()
+void closeSTDXXX()
 {
-
-#if NEVER
-
   if (close(0) < 0)
   {
     cerr << "WARNING: could not close STDIN" << endl;
@@ -211,28 +322,6 @@ void closeSTDx()
   {
     cerr << "WARNING: could not close STDERR" << endl;
   }
-
-#endif
-
-}
-
-//---------------------------------------------------------------
-
-void get_directory(int argc, char **argv, string *dls_dir)
-{
-  char *env;
-
-  // Ein Kommandozeilenparameter: Dieser ist das DLS-Verzeichnis
-  if (argc == 2) *dls_dir = argv[1];
-
-  // Kein Parameter: DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
-  else if ((env = getenv("DLS_DIR")) != 0) *dls_dir = env;
-
-  // Kein Parameter und $DLS_DIR leer: Standardverzeichnis nutzen
-  else *dls_dir = DEFAULT_DLS_DIR;
-
-  // Benutztes Verzeichnis ausgeben
-  cout << "using dls directory \"" << *dls_dir << "\"" << endl;
 }
 
 //---------------------------------------------------------------
@@ -246,7 +335,7 @@ void check_running(const string *dls_dir)
 
   str.exceptions(ios::badbit | ios::failbit);
 
-  pid_file_name = *dls_dir + "/" + PID_FILE_NAME;
+  pid_file_name = *dls_dir + "/" + DLS_PID_FILE;
 
   if ((pid_fd = open(pid_file_name.c_str(), O_RDONLY)) == -1)
   {
@@ -317,7 +406,7 @@ void create_pid_file(const string *dls_dir)
   string pid_file_name;
   stringstream str;
 
-  pid_file_name = *dls_dir + "/" + PID_FILE_NAME;
+  pid_file_name = *dls_dir + "/" + DLS_PID_FILE;
 
   if ((pid_fd = open(pid_file_name.c_str(), O_WRONLY | O_CREAT, 0644)) == -1)
   {
@@ -343,7 +432,7 @@ void remove_pid_file(const string *dls_dir)
   string pid_file_name;
   stringstream err;
 
-  pid_file_name = *dls_dir + "/" + PID_FILE_NAME;
+  pid_file_name = *dls_dir + "/" + DLS_PID_FILE;
 
   if (unlink(pid_file_name.c_str()) == -1)
   {

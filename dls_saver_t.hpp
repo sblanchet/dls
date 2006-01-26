@@ -27,7 +27,10 @@ using namespace std;
 #include "com_time.hpp"
 #include "com_file.hpp"
 #include "com_index_t.hpp"
-#include "dls_compression_t.hpp"
+#include "com_compression_t.hpp"
+
+//#define DEBUG
+//#define DEBUG_SIZES
 
 //---------------------------------------------------------------
 
@@ -50,6 +53,11 @@ public:
 
 /**
    Exception eines Saver-Objekts: Zeittoleranzfehler!
+
+   Ein Zeit-Toleranzfehler tritt immer dann auf, wenn
+   die Zeiten von zwei aufeinanderfolgenden Datenwerten
+   nicht aufeinanderpassen, d. h. der relative Fehler
+   einen festgelegten Grenzwert überschreitet.
 */
 
 class EDLSTimeTolerance : public COMException
@@ -77,22 +85,23 @@ public:
   virtual ~DLSSaverT();
 
 protected:
-  DLSLogger *_parent_logger;     /**< Zeiger auf das besitzende Logger-Objekt */
-  T *_block_buf;                 /**< Array von Datenwerten, die als Block in die
-                                      entsprechende Datei gespeichert werden sollen */
-  T *_meta_buf;                  /**< Array von Datenwerten, über die ein Meta-Wert
-                                      erzeugt werden soll */
-  unsigned int _block_buf_index; /**< Index des ersten, freien Elementes im Block-Puffer */
-  unsigned int _block_buf_size;  /**< Größe des Block-Puffers */
-  unsigned int _meta_buf_index;  /**< Index des ersten, freien Elementes im Meta-Puffer */
-  unsigned int _meta_buf_size;   /**< Größe des Meta-Puffers */
-  COMTime _block_time;           /**< Zeit des ersten Datenwertes im Block-Puffer */
-  COMTime _meta_time;            /**< Zeit des ersten Datenwertes im Meta-Puffer */
-  COMTime _time_of_last;         /**< Zeit des letzten Datenwertes beider Puffer */
+  DLSLogger *_parent_logger;        /**< Zeiger auf das besitzende Logger-Objekt */
+  T *_block_buf;                    /**< Array von Datenwerten, die als Block in die
+                                         entsprechende Datei gespeichert werden sollen */
+  T *_meta_buf;                     /**< Array von Datenwerten, über die ein Meta-Wert
+                                         erzeugt werden soll */
+  unsigned int _block_buf_index;    /**< Index des ersten, freien Elementes im Block-Puffer */
+  unsigned int _block_buf_size;     /**< Größe des Block-Puffers */
+  unsigned int _meta_buf_index;     /**< Index des ersten, freien Elementes im Meta-Puffer */
+  unsigned int _meta_buf_size;      /**< Größe des Meta-Puffers */
+  COMTime _block_time;              /**< Zeit des ersten Datenwertes im Block-Puffer */
+  COMTime _meta_time;               /**< Zeit des ersten Datenwertes im Meta-Puffer */
+  COMTime _time_of_last;            /**< Zeit des letzten Datenwertes beider Puffer */
+  COMCompressionT<T> *_compression; /**< Zeiger auf ein beliebiges Komprimierungs-Objekt */
 
   void _save_block();
-  void _save_carry(COMTime, COMTime, unsigned int, T);
   void _finish_files();
+  void _save_rest();
   stringstream &msg();
   void log(DLSLogType);
 
@@ -121,7 +130,6 @@ protected:
   virtual string _meta_type() const = 0;
 
 private:
-  DLSCompressionT<T> *_compression; /**< Zeiger auf ein beliebiges Komprimierungs-Objekt */
   COMFile _data_file;               /**< Datei-Objekt zum Speichern der Blöcke */
   COMFile _index_file;              /**< Datei-Objekt zum Speichern der Block-Indizes */
   char *_write_buf;                 /**< Schreibpuffer zum Zwischenspeichern vor der Ausgabe */
@@ -142,6 +150,8 @@ template <class T>
 DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
 {
   stringstream err;
+  unsigned int dim;
+  double acc;
 
   _parent_logger = parent_logger;
 
@@ -170,17 +180,20 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
   {
     if (_parent_logger->channel_preset()->format_index == DLS_FORMAT_ZLIB)
     {
-      _compression = new DLSCompressionT_ZLib<T>();
+      _compression = new COMCompressionT_ZLib<T>();
     }
     else if (_parent_logger->channel_preset()->format_index == DLS_FORMAT_MDCT)
     {
+      dim = _parent_logger->channel_preset()->mdct_block_size;
+      acc = _parent_logger->channel_preset()->mdct_accuracy;
+
       if (typeid(T) == typeid(float))
       {
-        _compression = (DLSCompressionT<T> *) new DLSCompressionT_MDCT<float>(_parent_logger->channel_preset()->mdct_block_size);
+        _compression = (COMCompressionT<T> *) new COMCompressionT_MDCT<float>(dim, acc);
       }
       else if (typeid(T) == typeid(double))
       {
-        _compression = (DLSCompressionT<T> *) new DLSCompressionT_MDCT<double>(_parent_logger->channel_preset()->mdct_block_size);
+        _compression = (COMCompressionT<T> *) new COMCompressionT_MDCT<double>(dim, acc);
       }
       else 
       {
@@ -192,7 +205,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
       err << "unknown channel format index " << _parent_logger->channel_preset()->format_index;
     }
   }
-  catch (EDLSCompression &e)
+  catch (ECOMCompression &e)
   {
     throw EDLSSaver(e.msg);
   }
@@ -216,14 +229,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
 template <class T>
 DLSSaverT<T>::~DLSSaverT()
 {
-  // Dateien schliessen
-  _data_file.close();
-  _index_file.close();
-
-  // ggfs. Kompressionsobjekt freigeben
   if (_compression) delete _compression;
-
-  // Puffer freigeben
   if (_write_buf) delete [] _write_buf;
   if (_block_buf) delete [] _block_buf;
   if (_meta_buf) delete [] _meta_buf;
@@ -273,8 +279,6 @@ void DLSSaverT<T>::_save_block()
 
   if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
 
-  //cout << "BLOCK" << endl;
-
   try
   {
     data_length += _compression->compress(_block_buf,                      // Adresse des Input-Puffers
@@ -283,13 +287,11 @@ void DLSSaverT<T>::_save_block()
                                           SAVER_BUF_SIZE - data_length - 1 // Größe des Ausgabepuffers
                                           );
   }
-  catch (EDLSCompression &e)
+  catch (ECOMCompression &e)
   {
     err << "block compression: " << e.msg;
     throw EDLSSaver(err.str());
   }
-
-  //cout << "BLOCK END" << endl;
 
   // Tag-Ende anhängen
   strcpy(_write_buf + data_length, "\"/>\n");
@@ -305,7 +307,7 @@ void DLSSaverT<T>::_save_block()
   {
     // Würde die aktuelle Dateigröße plus den hinzukommenden
     // Daten die Maximalgröße überschreiten?
-    if (_data_file.size() + data_length >= SAVER_MAX_FILE_SIZE - 1)
+    if (_data_file.calc_size() + data_length >= SAVER_MAX_FILE_SIZE - 1)
     {
       // Dann neue Dateien beginnen
       _begin_files(_block_time);
@@ -320,14 +322,14 @@ void DLSSaverT<T>::_save_block()
   // Daten für neuen Indexeintrag erfassen
   index_record.start_time = _block_time.to_ll();
   index_record.end_time = _time_of_last.to_ll();
-  index_record.position = _data_file.size();
+  index_record.position = _data_file.calc_size();
 
-  start_time.set_now();
+  start_time.set_now(); // Zeiterfassung
 
   try
   {
     // Buffer in die Datei schreiben
-    _data_file.write(_write_buf, data_length);
+    _data_file.append(_write_buf, data_length);
   }
   catch (ECOMFile &e)
   {
@@ -335,8 +337,16 @@ void DLSSaverT<T>::_save_block()
     throw EDLSSaver(err.str());
   }
 
-  end_time.set_now();
+  end_time.set_now(); // Zeiterfassung
 
+  // Dem Logger mitteilen, dass Daten gespeichert wurden
+  _parent_logger->bytes_written(data_length);
+
+#ifdef DEBUG_SIZES
+  cout << "WRITTEN " << data_length << " to " << _data_file.path() << endl;
+#endif
+
+  // Warnen, wenn Aufruf von write() sehr lange gebraucht hat
   if (end_time - start_time > (long long) 1000000)
   {
     msg() << "write() took " << (end_time - start_time) << "!";
@@ -346,13 +356,20 @@ void DLSSaverT<T>::_save_block()
   try
   {
     // Index aktualisieren
-    _index_file.write((char *) &index_record, sizeof(COMIndexRecord));
+    _index_file.append((char *) &index_record, sizeof(COMIndexRecord));
   }
   catch (ECOMFile &e)
   {
     err << "could not add index record! (disk full?): " << e.msg;
     throw EDLSSaver(err.str());
   }
+
+  // Dem Logger mitteilen, dass Daten gespeichert wurden
+  _parent_logger->bytes_written(sizeof(COMIndexRecord));
+
+#ifdef DEBUG_SIZES
+  cout << "WRITTEN " << sizeof(COMIndexRecord) << " to index" << endl;
+#endif
   
   _block_buf_index = 0;
 }
@@ -360,115 +377,78 @@ void DLSSaverT<T>::_save_block()
 //---------------------------------------------------------------
 
 /**
-   Speichert einen Carryblock als XML-Tag in die Ausgabedatei
+   Speichert einen Überhangblock als XML-Tag in die Ausgabedatei
 
-   Konstruiert zuerst das komplette XML-Tag und prüft dann, ob
-   zusammen mit dem bisherigen Dateiinhalt die maximale Dateigröße
-   überschritten werden würde. Bei Bedarf wird dann eine neue
-   Datei geöffnet.
-   Dann wird das XML-Tag in die aktuell offene Datei gespeichert
-   und dessen Größe auf die bisherige Dateigröße addiert.
+   Ähnlich wie _save_block(), schreibt aber _immer_ in die
+   noch offene Datei.
 
-   \throw EDLSSaver Datenlänge des Einzelblocks überschreitet
-                    bereits maximale Dateigröße oder Block
-                    konnte nicht gespeichert werden
+   \throw EDLSSaver Block konnte nicht gespeichert werden
  */
 
 template <class T>
-void DLSSaverT<T>::_save_carry(COMTime start_time,
-                               COMTime end_time,
-                               unsigned int length,
-                               T carry_value)
+void DLSSaverT<T>::_save_rest()
 {
-  unsigned int data_length;
-  COMIndexRecord index_record;
   stringstream str, err;
+  COMTime start_time, end_time;
+  unsigned int data_length, flush_length;
 
-  // Wenn keine Daten: Beenden!
-  if (length == 0) return;
+#ifdef DEBUG
+  cout << "save rest" << endl;
+#endif
+
+  if (!_data_file.open()) throw EDLSSaver("data file closed!"); // Sollte nie passieren
 
   // Tag-Anfang in einen Stream schreiben
-  str.str("");
-  str.clear();
-  str << "<c t=\"" << start_time << "\" n=\"" << length << "\"";
+  str << "<d t=\"0\"";
+  str << " s=\"0\"";
   str << " d=\"";
-  
+
   // Stream in Schreibpuffer schieben
   strcpy(_write_buf, str.str().c_str());
-
-  // Länge des bisherigen Tags ermitteln
   data_length = strlen(_write_buf);
 
   if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
 
-  //cout << "CARRY" << endl;
-
   try
   {
-    data_length += _compression->compress(&carry_value,                    // Adresse des Input-Puffers
-                                          1,                               // Größe des Input-Puffers
-                                          _write_buf + data_length,        // Adresse des Ausgabepuffers
-                                          SAVER_BUF_SIZE - data_length - 1 // Größe des Ausgabepuffers
-                                          );
+    flush_length = _compression->flush_compress(_write_buf + data_length, SAVER_BUF_SIZE - data_length - 1);
   }
-  catch (EDLSCompression &e)
+  catch (ECOMCompression &e)
   {
-    err << "carry compression: " << e.msg;
+    err << "block flush compression: " << e.msg;
     throw EDLSSaver(err.str());
   }
 
-  //cout << "CARRY END" << endl;
-
-  // Tag-Ende anhängen
-  strcpy(_write_buf + data_length, "\"/>\n");
-  data_length += 4;
-
-  // Prüfen ob die reine Datenlänge bereits größer ist, als erlaubt
-  if (data_length >= SAVER_MAX_FILE_SIZE - 1)
+  if (flush_length > 0)
   {
-    throw EDLSSaver("data length exceeds maximum file size!");
-  }
+    data_length += flush_length;
 
-  if (_data_file.open()) // Wenn die Dateien bereits geöffnet sind
-  {
-    // Würde die aktuelle Dateigröße plus den hinzukommenden
-    // Daten die Maximalgröße überschreiten?
-    if (_data_file.size() + data_length >= SAVER_MAX_FILE_SIZE - 1)
+    // Tag-Ende anhängen
+    strcpy(_write_buf + data_length, "\"/>\n");
+    data_length += 4;
+
+    try
     {
-      _begin_files(start_time); // Neue Dateien beginnen
+      // Buffer in die Datei schreiben
+      _data_file.append(_write_buf, data_length);
     }
-  }
-  else // Dateien sind noch nicht offen
-  {
-    _begin_files(start_time); // Neue Dateien beginnen
+    catch (ECOMFile &e)
+    {
+      err << "could not write to file! (disk full?): " << e.msg;
+      throw EDLSSaver(err.str());
+    }
+
+    // Dem Logger mitteilen, dass Daten gespeichert wurden
+    _parent_logger->bytes_written(data_length);
+
+#ifdef DEBUG_SIZES
+    cout << "WRITTEN " << data_length << " rest to " << _data_file.path() << endl;
+#endif
   }
 
-  // Daten für Index-Eintrag erfassen
-  index_record.start_time = start_time.to_ll();
-  index_record.end_time = end_time.to_ll();
-  index_record.position = _data_file.size();
-
-  try
-  {
-    // Puffer in die Datei schreiben
-    _data_file.write(_write_buf, data_length);
-  }
-  catch (ECOMFile &e)
-  {
-    err << "could not write to file! (disk full?): " << e.msg;
-    throw EDLSSaver(err.str());
-  }
-
-  try
-  {
-    // Index aktualisieren
-    _index_file.write((char *) &index_record, sizeof(COMIndexRecord));
-  }
-  catch (ECOMFile &e)
-  {
-    err << "could not write to index file! (disk full?): " << e.msg;
-    throw EDLSSaver(err.str());
-  }
+#ifdef DEBUG
+  cout << "save rest finished" << endl;
+#endif
 }
 
 //---------------------------------------------------------------
@@ -528,7 +508,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
 
   try
   {
-    _data_file.open_write(file_name.str().c_str());
+    _data_file.open_read_append(file_name.str().c_str());
   }
   catch (ECOMFile &e)
   {
@@ -541,7 +521,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
 
   try
   {
-    _index_file.open_write(file_name.str().c_str());
+    _index_file.open_read_append(file_name.str().c_str());
   }
   catch (ECOMFile &e)
   {
@@ -562,7 +542,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
 
   try
   {
-    global_index.open_rw(file_name.str());
+    global_index.open_read_append(file_name.str());
     global_index.append_record(&global_index_record);
     global_index.close();
   }
@@ -571,6 +551,13 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     err << "could not write to global index file \"" << file_name.str() << "\": " << e.msg;
     throw EDLSSaver(err.str());
   }
+
+  // Dem Logger mitteilen, dass Daten gespeichert wurden
+  _parent_logger->bytes_written(sizeof(COMGlobalIndexRecord));
+
+#ifdef DEBUG_SIZES
+  cout << "WRITTEN " << sizeof(COMGlobalIndexRecord) << " to global index" << endl;
+#endif
 }
 
 //---------------------------------------------------------------
@@ -624,7 +611,7 @@ void DLSSaverT<T>::_finish_files()
     try
     {
       // Globalen Index öffnen
-      global_index.open_rw(file_name.str());
+      global_index.open_read_write(file_name.str());
 
       if (global_index.record_count() == 0) // Keine Records im Index?
       {

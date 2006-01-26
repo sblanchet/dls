@@ -63,10 +63,15 @@ public:
   void stop_logging();
   //@}
 
+  //@{
   void process_data(COMTime, int, const string &);
+  long long data_size() const;
+  //@}
+
   void ack_received(const string &);
+  void message(const COMXMLTag *);
   void finish();
-  void message(const string &);
+  void discard_data();
 
   //@{
   stringstream &msg() const;
@@ -85,6 +90,11 @@ private:
   bool _logging_started;       /**< Logging gestartet? */
   bool _finished;              /**< Wenn true, dann sind keine Daten im
                                     Speicher - ein "delete" ist unbedenklich */
+
+  //@{
+  COMFile _message_file;                           /**< Dateiobjekt für Messages */
+  COMIndexT<COMMessageIndexRecord> _message_index; /**< Index für messages */
+  //@}
 
   void _clear_loggers();
   void _sync_loggers(SyncLoggerMode);

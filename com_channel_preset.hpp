@@ -58,6 +58,7 @@ public:
   unsigned int meta_reduction;   /**< Meta-Untersetzung */
   int format_index;              /**< Index des Formates zum Speichern der Daten */
   unsigned int mdct_block_size;  /**< Blockgröße für MDCT */
+  double mdct_accuracy;          /**< Genauigkeit der MDCT */
 };
 
 //---------------------------------------------------------------

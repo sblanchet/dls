@@ -16,12 +16,18 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+#include "com_globals.hpp"
 #include "fl_grid.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/fl_grid.cpp,v 1.5 2004/12/20 09:37:31 fp Exp $");
 
 //---------------------------------------------------------------
 
 #define MIN_SCROLL_HEIGHT 10
 #define LEFT_MARGIN 4
+#define FRAME_WIDTH 3
 
 //---------------------------------------------------------------
 
@@ -547,6 +553,7 @@ void Fl_Grid::check_boxes(bool check)
 
 void Fl_Grid::draw()
 {
+  int drawing_width, drawing_height;
   list<Fl_Grid_Column>::iterator col_i;
   unsigned int width_sum;
   float width_factor;
@@ -555,20 +562,14 @@ void Fl_Grid::draw()
   unsigned int row_count;
   int scroll_height, scroll_pos, left, top;
 
-  // Hintergrund zeichnen
-  fl_color(255, 255, 255);
-  fl_rectf(x(), y(), w(), h());
+  drawing_width = w() - 2 * FRAME_WIDTH;
+  drawing_height = h() - 2 * FRAME_WIDTH;
 
-  if (_focused)
-  {
-    fl_color(0, 0, 0);
-    fl_line_style(FL_DOT);
-    fl_line(x(), y(), x() + w() - 1, y());
-    fl_line(x() + w() - 1, y(), x() + w() - 1, y() + h() - 1);
-    fl_line(x() + w() - 1, y() + h() - 1, x(), y() + h() - 1);
-    fl_line(x(), y() + h() - 1, x(), y());
-    fl_line_style(FL_SOLID);
-  }
+  // Hintergrund zeichnen
+  draw_box(FL_DOWN_BOX, FL_WHITE);
+
+  // Fokuslinien zeichnen
+  if (_focused) draw_focus();
 
   // Spaltenbreiten Addieren
   col_i = _cols.begin();
@@ -581,17 +582,19 @@ void Fl_Grid::draw()
 
   if (width_sum == 0) return;
 
-  // Scrollbar?
-  row_count = h() / _row_height - 1;
+  // Clipping erzwingen
+  fl_push_clip(x() + FRAME_WIDTH, y() + FRAME_WIDTH, drawing_width, drawing_height);
+
+  row_count = drawing_height / _row_height - 1;
 
   if (_record_count <= row_count)
   {
-    width_factor = (_check_boxes ? w() - _row_height : w()) / (float) width_sum;
+    width_factor = (_check_boxes ? drawing_width - _row_height : drawing_width) / (float) width_sum;
     _scroll_index = 0;
   }
-  else
+  else // Es ist eine Scrollbar nötig
   {
-    width_factor = ((_check_boxes ? w() - _row_height : w()) - 20) / (float) width_sum;
+    width_factor = ((_check_boxes ? drawing_width - _row_height : drawing_width) - 20) / (float) width_sum;
 
     if (_scroll_index > _record_count - row_count)
     {
@@ -600,24 +603,24 @@ void Fl_Grid::draw()
 
     // Scrollbar zeichnen
     fl_color(150, 150, 150);
-    fl_rectf(x() + w() - 19, y() + 1, 18, 18);
-    fl_rectf(x() + w() - 19, y() + h() - 19, 18, 18);
+    fl_rectf(x() + FRAME_WIDTH + drawing_width - 19, y() + FRAME_WIDTH + 1, 18, 18);
+    fl_rectf(x() + FRAME_WIDTH + drawing_width - 19, y() + FRAME_WIDTH + drawing_height - 19, 18, 18);
     fl_color(200, 200, 200);
-    fl_polygon(x() + w() - 17, y() + 14,
-               x() + w() - 5, y() + 14,
-               x() + w() - 11, y() + 5);
-    fl_polygon(x() + w() - 17, y() + h() - 14,
-               x() + w() - 5, y() + h() - 14,
-               x() + w() - 11, y() + h() - 5);
+    fl_polygon(x() + FRAME_WIDTH + drawing_width - 17, y() + FRAME_WIDTH + 14,
+               x() + FRAME_WIDTH + drawing_width - 5, y() + FRAME_WIDTH + 14,
+               x() + FRAME_WIDTH + drawing_width - 11, y() + FRAME_WIDTH + 5);
+    fl_polygon(x() + FRAME_WIDTH + drawing_width - 17, y() + FRAME_WIDTH + drawing_height - 14,
+               x() + FRAME_WIDTH + drawing_width - 5, y() + FRAME_WIDTH + drawing_height - 14,
+               x() + FRAME_WIDTH + drawing_width - 11, y() + FRAME_WIDTH + drawing_height - 5);
 
-    scroll_height = (int) (row_count / (double) _record_count * (h() - 38)); // _record_count >0, da _record_count > _row_count
+    scroll_height = (int) (row_count / (double) _record_count * (drawing_height - 38)); // _record_count >0, da _record_count > _row_count
     if (scroll_height < MIN_SCROLL_HEIGHT) scroll_height = MIN_SCROLL_HEIGHT;
 
     scroll_pos = (int) (_scroll_index
                         / (double) (_record_count - row_count) // Hier auf jeden Fall >0
-                        * ((h() - 38) - scroll_height));
+                        * ((drawing_height - 38) - scroll_height));
 
-    fl_rectf(x() + w() - 19, y() + 19 + scroll_pos, 18, scroll_height);
+    fl_rectf(x() + FRAME_WIDTH + drawing_width - 19, y() + FRAME_WIDTH + 19 + scroll_pos, 18, scroll_height);
   }
 
   // Header zeichnen
@@ -629,21 +632,21 @@ void Fl_Grid::draw()
 
     // Header-Hintergrund
     fl_color(200, 200, 200);
-    fl_rectf(x() + left,
-             y() + 1,
+    fl_rectf(x() + FRAME_WIDTH + left,
+             y() + FRAME_WIDTH + 1,
              (int) (col_i->width() * width_factor) - 2,
              _row_height - 2);
 
     // Header-Text
     fl_color(0, 0, 0);
     fl_font(FL_HELVETICA | FL_BOLD, 12);
-    fl_push_clip(x() + left + 1,
-                 y() + 2,
+    fl_push_clip(x() + FRAME_WIDTH + left + 1,
+                 y() + FRAME_WIDTH + 2,
                  (int) (col_i->width() * width_factor) - 4,
                  _row_height - 4);
     fl_draw(col_i->title().c_str(),
-            x() + left + LEFT_MARGIN,
-            y() + (int) (0.5 * _row_height + fl_descent()));
+            x() + FRAME_WIDTH + left + LEFT_MARGIN,
+            y() + FRAME_WIDTH + (int) (0.5 * _row_height + fl_descent()));
     fl_pop_clip();
     
     width_sum += col_i->width();
@@ -652,7 +655,7 @@ void Fl_Grid::draw()
 
   for (unsigned int i = 0; i < _record_count; i++)
   {
-    if ((i + 2) * _row_height > (unsigned int) h()) break;
+    if ((i + 2) * _row_height > (unsigned int) drawing_height) break;
 
     if (i + _scroll_index < 0 || i + _scroll_index >= _record_count) continue;
 
@@ -672,12 +675,12 @@ void Fl_Grid::draw()
         fl_color(230, 230, 230);
       }
 
-      fl_rectf(x() + 1, y() + top, _row_height, _row_height - 2);
+      fl_rectf(x() + FRAME_WIDTH + 1, y() + FRAME_WIDTH + top, _row_height, _row_height - 2);
 
       fl_color(0, 0, 0);
-      fl_rect(x() + 3, y() + top + 2, _row_height - 6, _row_height - 6);
+      fl_rect(x() + FRAME_WIDTH + 3, y() + FRAME_WIDTH + top + 2, _row_height - 6, _row_height - 6);
       fl_color(255, 255, 255);
-      fl_rectf(x() + 4, y() + top + 3, _row_height - 8, _row_height - 8);
+      fl_rectf(x() + FRAME_WIDTH + 4, y() + FRAME_WIDTH + top + 3, _row_height - 8, _row_height - 8);
 
       // Checked-Status erfragen
       _checked = false;
@@ -691,8 +694,8 @@ void Fl_Grid::draw()
       if (_checked)
       {
         fl_color(0, 0, 0);
-        fl_line(x() + 4, y() + top + 3, x() + _row_height - 5, y() + top + _row_height - 6);
-        fl_line(x() + 4, y() + top + _row_height - 6, x() + _row_height - 5, y() + top + 3);
+        fl_line(x() + FRAME_WIDTH + 4, y() + FRAME_WIDTH + top + 3, x() + FRAME_WIDTH + _row_height - 5, y() + FRAME_WIDTH + top + _row_height - 6);
+        fl_line(x() + FRAME_WIDTH + 4, y() + FRAME_WIDTH + top + _row_height - 6, x() + FRAME_WIDTH + _row_height - 5, y() + FRAME_WIDTH + top + 3);
       }
     }
 
@@ -712,8 +715,8 @@ void Fl_Grid::draw()
 
       left = (int) (width_sum * width_factor) + (_check_boxes ? _row_height : 0) + 1;
 
-      fl_rectf(x() + left,
-               y() + (i + 1) * _row_height + 1,
+      fl_rectf(x() + FRAME_WIDTH + left,
+               y() + FRAME_WIDTH + (i + 1) * _row_height + 1,
                (int) (col_i->width() * width_factor) - 2,
                _row_height - 2);
 
@@ -740,19 +743,22 @@ void Fl_Grid::draw()
 
       fl_font(FL_HELVETICA, 12);
       fl_color(_content_color);
-      fl_push_clip(x() + left + 1,
-                   y() + (i + 1) * _row_height + 2,
+      fl_push_clip(x() + FRAME_WIDTH + left + 1,
+                   y() + FRAME_WIDTH + (i + 1) * _row_height + 2,
                    (int) (col_i->width() * width_factor) - 4,
                    _row_height - 4);
       fl_draw(_content.c_str(),
-              x() + left + LEFT_MARGIN,
-              y() + (int) ((i + 1.5) * _row_height + fl_descent()));
+              x() + FRAME_WIDTH + left + LEFT_MARGIN,
+              y() + FRAME_WIDTH + (int) ((i + 1.5) * _row_height + fl_descent()));
       fl_pop_clip();
 
       width_sum += col_i->width();
       col_i++;
     }
   }
+
+  // Clipping entfernen
+  fl_pop_clip();
 }
 
 //---------------------------------------------------------------
@@ -770,15 +776,19 @@ void Fl_Grid::draw()
 
 int Fl_Grid::handle(int e)
 {
+  int drawing_width, drawing_height;
   unsigned int record_index, row_count;
   int row_index;
   int xp, yp;
   int scroll_height, scroll_pos;
 
-  xp = Fl::event_x() - x();
-  yp = Fl::event_y() - y();
+  drawing_width = w() - 2 * FRAME_WIDTH;
+  drawing_height = h() - 2 * FRAME_WIDTH;
 
-  row_count = h() / _row_height - 1;
+  xp = Fl::event_x() - x() - FRAME_WIDTH;
+  yp = Fl::event_y() - y() - FRAME_WIDTH;
+
+  row_count = drawing_height / _row_height - 1;
 
   switch (e)
   {
@@ -789,9 +799,9 @@ int Fl_Grid::handle(int e)
       _push_x = xp;
       _push_y = yp;
 
-      if (_record_count > row_count && xp > w() - 20)
+      if (_record_count > row_count && xp > drawing_width - 20)
       {
-        if (yp > h() - 20) // Untere Taste
+        if (yp > drawing_height - 20) // Untere Taste
         {
           if (_scroll_index < _record_count - row_count)
           {
@@ -867,10 +877,10 @@ int Fl_Grid::handle(int e)
       if (_record_count > row_count) // Scrollbar vorhanden
       {
         // Aktuelle Höhe und Position des Scroll-Balkens berechnen
-        scroll_height = (int) (row_count / (double) _record_count * (h() - 38));
+        scroll_height = (int) (row_count / (double) _record_count * (drawing_height - 38));
         if (scroll_height < MIN_SCROLL_HEIGHT) scroll_height = MIN_SCROLL_HEIGHT;
         scroll_pos = (int) (_scroll_index / (double) (_record_count - row_count)
-                            * ((h() - 38) - scroll_height));
+                            * ((drawing_height - 38) - scroll_height));
 
         if (_scroll_tracking)
         {
@@ -880,17 +890,17 @@ int Fl_Grid::handle(int e)
           {
             new_scroll_pos = 0;
           }
-          else if (new_scroll_pos >= h() - 19)
+          else if (new_scroll_pos >= drawing_height - 19)
           {
-            new_scroll_pos = h() - 19;
+            new_scroll_pos = drawing_height - 19;
           }
 
-          _scroll_index = (int) (new_scroll_pos / (double) (h() - 38 - scroll_height)
+          _scroll_index = (int) (new_scroll_pos / (double) (drawing_height - 38 - scroll_height)
                                  * (_record_count - row_count));
 
           redraw();
         }
-        else if (_push_x > w() - 20) // Auf den Scrollbar-Bereich geklickt
+        else if (_push_x > drawing_width - 20) // Auf den Scrollbar-Bereich geklickt
         {
           if (_push_y >= 19 + scroll_pos && _push_y < 19 + scroll_pos + scroll_height)
           {

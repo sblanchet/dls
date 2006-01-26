@@ -8,10 +8,20 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <iostream>
 #include <sstream>
 using namespace std;
 
+//---------------------------------------------------------------
+
+#include "com_globals.hpp"
 #include "com_file.hpp"
+
+//#define DEBUG
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_file.cpp,v 1.9 2004/12/21 15:23:07 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -21,8 +31,7 @@ using namespace std;
 
 COMFile::COMFile()
 {
-  _open = false;
-  _size = 0;
+  _mode = fomClosed;
 }
 
 //---------------------------------------------------------------
@@ -40,8 +49,9 @@ COMFile::~COMFile()
   {
     COMFile::close();
   }
-  catch (...)
+  catch (ECOMFile &e)
   {
+    // Exception schlucken
   }
 }
 
@@ -62,45 +72,14 @@ void COMFile::open_read(const char *filename)
 
   if ((_fd = ::open(filename, O_RDONLY)) == -1)
   {
-    switch (errno)
-    {
-      case EACCES: err << "no permission."; break;
-      default: err << "unknown error"; break;
-    }
-
+    err << "could not open file";
+    err << " \"" << filename << "\"";
+    err << " for reading: " << strerror(errno);
     throw ECOMFile(err.str());
   }
 
-  _open = true;
-  _opened_read_only = true;
-  
-  if ((_size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
-  {
-    try
-    {
-      COMFile::close();
-    }
-    catch (...)
-    {
-    }
-
-    err << "could not determine file size!";
-    throw ECOMFile(err.str());
-  }
-
-  if (lseek(_fd, 0, SEEK_SET) == (off_t) - 1)
-  {
-    try
-    {
-      COMFile::close();
-    }
-    catch (...)
-    {
-    }
-
-    err << "could not seek back to beginning of file!";
-    throw ECOMFile(err.str());
-  }
+  _mode = fomOpenRead;
+  _path = filename;
 }
 
 //---------------------------------------------------------------
@@ -116,26 +95,47 @@ void COMFile::open_read(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_write(const char *filename)
+void COMFile::open_read_write(const char *filename)
 {
   stringstream err;
+  struct stat stat_buf;
 
   COMFile::close();
 
-  if ((_fd = ::open(filename, O_WRONLY | O_CREAT, 0644)) == -1)
+  // Prüfen, ob die Datei bereits existiert
+  if (lstat(filename, &stat_buf) == -1)
   {
-    switch (errno)
+    if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
     {
-      case EACCES: err << "no access to directory."; break;
-      default: err << "unknown error"; break;
+      // Datei neu erstellen
+      if ((_fd = ::open(filename, O_RDWR | O_CREAT, 0644)) == -1)
+      {
+        err << "could not create file";
+        err << " \"" << filename << "\"";
+        err << " for writing: " << strerror(errno);
+        throw ECOMFile(err.str());
+      }
     }
-
-    throw ECOMFile(err.str());
+    else // Fehler in stat
+    {
+      err << "could not stat file \"" << filename << "\": " << strerror(errno);
+      throw ECOMFile(err.str());
+    }
+  }
+  else // Datei existiert
+  {
+    // Existierende Datei zum Schreiben öffnen
+    if ((_fd = ::open(filename, O_RDWR)) == -1)
+    {
+      err << "could not open file";
+      err << " \"" << filename << "\"";
+      err << " for writing: " << strerror(errno);
+      throw ECOMFile(err.str());
+    }
   }
 
-  _open = true;
-  _opened_read_only = false;
-  _size = 0;
+  _mode = fomOpenReadWrite;
+  _path = filename;
 }
 
 //---------------------------------------------------------------
@@ -151,39 +151,47 @@ void COMFile::open_write(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_append(const char *filename)
+void COMFile::open_read_append(const char *filename)
 {
   stringstream err;
+  struct stat stat_buf;
 
   COMFile::close();
 
-  if ((_fd = ::open(filename, O_WRONLY | O_CREAT, 0644)) == -1)
+  // Prüfen, ob die Datei bereits existiert
+  if (lstat(filename, &stat_buf) == -1)
   {
-    switch (errno)
+    if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
     {
-      case EACCES: err << "no access to directory."; break;
-      default: err << "unknown error"; break;
+      // Datei neu erstellen
+      if ((_fd = ::open(filename, O_RDWR | O_CREAT | O_APPEND, 0644)) == -1)
+      {
+        err << "could not create file";
+        err << " \"" << filename << "\"";
+        err << " for appending: " << strerror(errno);
+        throw ECOMFile(err.str());
+      }
     }
-
-    throw ECOMFile(err.str());
+    else // Fehler in stat
+    {
+      err << "could not stat file \"" << filename << "\": " << strerror(errno);
+      throw ECOMFile(err.str());
+    }
+  }
+  else // Datei existiert
+  {
+    // Existierende Datei zum Schreiben öffnen und leeren
+    if ((_fd = ::open(filename, O_RDWR | O_APPEND)) == -1)
+    {
+      err << "could not open file";
+      err << " \"" << filename << "\"";
+      err << " for appending: " << strerror(errno);
+      throw ECOMFile(err.str());
+    }
   }
 
-  _open = true;
-  _opened_read_only = false;
-
-  if ((_size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
-  {
-    try
-    {
-      COMFile::close();
-    }
-    catch (...)
-    {
-    }
-
-    err << "could not determine file size!";
-    throw ECOMFile(err.str());
-  }
+  _mode = fomOpenReadAppend;
+  _path = filename;
 }
 
 //---------------------------------------------------------------
@@ -197,27 +205,22 @@ void COMFile::open_append(const char *filename)
 
 void COMFile::close()
 {
-  int sync_ret, close_ret;
   stringstream err;
   bool error = false;
 
-  if (_open)
+  if (_mode != fomClosed)
   {
-    sync_ret = fsync(_fd);
-
-    if (sync_ret == -1 && (errno == EBADF || errno == EIO))
+    if (fsync(_fd) == -1)
     {
       error = true;
-      err << "could not sync pending data.";
+      err << "could not sync pending data (" << strerror(errno) << ").";
     }
 
     do
     {
-      close_ret = ::close(_fd);
+      if (::close(_fd) == 0) break;
 
-      if (close_ret == 0) break;
-
-      if (errno == EBADF || errno == EIO)
+      if (errno != EINTR)
       {
         if (error)
         {
@@ -228,13 +231,12 @@ void COMFile::close()
           error = true;
         }
 
-        err << "could not close file.";
+        err << "could not close file (" << strerror(errno) << ").";
       }
     }
     while (errno == EINTR);
 
-    _open = false;
-    _size = 0;
+    _mode = fomClosed;
 
     if (error)
     {
@@ -266,14 +268,19 @@ void COMFile::write(const char *buffer, unsigned int length)
   bool error = false;
   stringstream err;
 
-  if (!_open)
+  if (_mode == fomClosed)
   {
     throw ECOMFile("file not open.");
   }
 
-  if (_opened_read_only)
+  if (_mode == fomOpenRead)
   {
     throw ECOMFile("file opened read only.");
+  }
+
+  if (_mode == fomOpenReadAppend)
+  {
+    throw ECOMFile("file opened for appending. use append().");
   }
 
   while (written < length) // Solange, wie noch
@@ -284,7 +291,6 @@ void COMFile::write(const char *buffer, unsigned int length)
     if (write_ret > -1)
     {
       written += write_ret;
-      _size += write_ret;
     }
     else // Ein Fehler ist aufgetreten
     {
@@ -295,12 +301,12 @@ void COMFile::write(const char *buffer, unsigned int length)
       else if (errno == EFAULT) // Speicherfehler
       {
         error = true;
-        err << "malicious buffer pointer.";
+        err << "malicious buffer pointer (" << strerror(errno) << ").";
       }
       else // Anderer, Fataler Fehler
       {
         error = true;
-        err << "unknown write error.";
+        err << strerror(errno);
         
         try
         {
@@ -308,7 +314,7 @@ void COMFile::write(const char *buffer, unsigned int length)
         }
         catch (ECOMFile &e)
         {
-          err << " " << e.msg;
+          err << " - closing: " << e.msg;
         }
       }
 
@@ -318,6 +324,90 @@ void COMFile::write(const char *buffer, unsigned int length)
       }
     }
   }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Schreibt Daten an das Ende der Datei
+
+   Setzt so viele Schreibbefehle ab, wie nötig sind,
+   um die gesamten Daten zu speichern. Wenn das Schreiben
+   durch ein Signal unterbrochen wird, wird es danach
+   fortgesetzt.
+
+   \param buffer Zeiger auf den Datenpuffer
+   \param length Länge der zu schreibenden Daten in Bytes
+   \throw ECOMFile Daten konnten nicht vollständig
+                   gespeichert werden.
+*/
+
+void COMFile::append(const char *buffer, unsigned int length)
+{
+  int write_ret;
+  unsigned int written = 0;
+  bool error = false;
+  stringstream err;
+
+  if (_mode == fomClosed)
+  {
+    throw ECOMFile("file not open.");
+  }
+
+  if (_mode == fomOpenRead)
+  {
+    throw ECOMFile("file opened read only.");
+  }
+
+  if (_mode == fomOpenReadWrite)
+  {
+    throw ECOMFile("file opened for writing. use write()!");
+  }
+
+  while (written < length) // Solange noch nicht alles geschrieben
+  {
+    write_ret = ::write(_fd, buffer + written, length - written);
+
+    if (write_ret > -1)
+    {
+      written += write_ret;
+    }
+    else // Ein Fehler ist aufgetreten
+    {
+      if (errno == EINTR) // Signal empfangen
+      {
+        // Einfach nochmal versuchen
+      }
+      else if (errno == EFAULT) // Speicherfehler
+      {
+        error = true;
+        err << "malicious buffer pointer (" << strerror(errno) << ").";
+      }
+      else // Anderer, Fataler Fehler
+      {
+        error = true;
+        err << strerror(errno);
+        
+        try
+        {
+          COMFile::close();
+        }
+        catch (ECOMFile &e)
+        {
+          err << " - closing: " << e.msg;
+        }
+      }
+
+      if (error)
+      {
+        throw ECOMFile(err.str());
+      }
+    }
+  }
+
+#ifdef DEBUG
+  cout << "appended " << written << " byte(s)." << endl;
+#endif
 }
 
 //---------------------------------------------------------------
@@ -333,25 +423,14 @@ void COMFile::seek(unsigned int position)
 {
   stringstream err;
 
-  if (!_open)
+  if (_mode == fomClosed)
   {
     throw ECOMFile("file not open.");
   }
 
-  if (!_opened_read_only)
-  {
-    throw ECOMFile("seek supported in read only mode only.");
-  }
-  
-  if (position > _size)
-  {
-    err << "position out of range!";
-    throw ECOMFile(err.str());
-  }
-
   if (lseek(_fd, position, SEEK_SET) == (off_t) - 1)
   {
-    err << "position could not be reached!";
+    err << "position could not be reached! seek: " << strerror(errno);
     throw ECOMFile(err.str());
   }
 }
@@ -375,16 +454,11 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
   unsigned int bytes = 0;
   int read_ret;
 
-  if (!_open)
+  if (_mode == fomClosed)
   {
     throw ECOMFile("file not open.");
   }
 
-  if (!_opened_read_only)
-  {
-    throw ECOMFile("file not opened in read mode!");
-  }
-  
   if (length > 0)
   {
     while (1)
@@ -393,7 +467,7 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
       {
         if (errno != EINTR)
         {
-          err << "read error (errno = " << errno << ")";
+          err << "read error: " << strerror(errno);
           throw ECOMFile(err.str());
         }
       }
@@ -408,6 +482,38 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
   if (bytes_read) *bytes_read = bytes;
 
   return;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Berechnet die Dateigröße mit einem Sprung ans Ende
+
+   \return Dateigröße in Bytes
+*/
+
+long long COMFile::calc_size()
+{
+  stringstream err;
+  long long size;
+
+  if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
+  {
+    err << "could not determine file size! seek: " << strerror(errno);
+
+    try
+    {
+      COMFile::close();
+    }
+    catch (ECOMFile &e)
+    {
+      err << " - close: " << e.msg;
+    }
+
+    throw ECOMFile(err.str());
+  }
+
+  return size;
 }
 
 //---------------------------------------------------------------

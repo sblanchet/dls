@@ -9,8 +9,13 @@
 
 //---------------------------------------------------------------
 
+#include <fcntl.h>
+
+//---------------------------------------------------------------
+
 #include "com_exception.hpp"
 #include "com_time.hpp"
+#include "com_file.hpp"
 
 //---------------------------------------------------------------
 
@@ -22,31 +27,6 @@ class ECOMIndexT : public COMException
 {
 public:
   ECOMIndexT(const string &pmsg) : COMException(pmsg) {};
-};
-
-//---------------------------------------------------------------
-
-/**
-   Index-Record für einen Datendatei-Index innerhalb eines Chunks
-*/
-
-struct COMIndexRecord
-{
-  long long start_time;
-  long long end_time;
-  unsigned int position;
-};
-
-//---------------------------------------------------------------
-
-/**
-   Index für alle Datendateien eines Chunks
-*/
-
-struct COMGlobalIndexRecord
-{
-  long long start_time;
-  long long end_time;
 };
 
 //---------------------------------------------------------------
@@ -66,9 +46,11 @@ public:
   ~COMIndexT();
   
   // Dazeistatus
-  void open(const string &);
-  void open_rw(const string &);
+  void open_read(const string &);
+  void open_read_write(const string &);
+  void open_read_append(const string &);
   void close();
+  bool open() const;
 
   // Lesezugriff
   REC operator[](unsigned int);
@@ -80,9 +62,7 @@ public:
   unsigned int record_count() const;
 
 private:
-  int _fd;
-  bool _open;
-  bool _opened_read_only;
+  COMFile _file;
   unsigned int _record_count;
   unsigned int _position;
 };
@@ -96,7 +76,6 @@ private:
 template <class REC>
 COMIndexT<REC>::COMIndexT()
 {
-  _open = false;
 }
 
 //---------------------------------------------------------------
@@ -108,7 +87,14 @@ COMIndexT<REC>::COMIndexT()
 template <class REC>
 COMIndexT<REC>::~COMIndexT()
 {
-  close();
+  try
+  {
+    _file.close();
+  }
+  catch (ECOMFile &e)
+  {
+    // Fehler schlucken
+  }
 }
 
 //---------------------------------------------------------------
@@ -124,45 +110,39 @@ COMIndexT<REC>::~COMIndexT()
 */
 
 template <class REC>
-void COMIndexT<REC>::open(const string &file_name)
+void COMIndexT<REC>::open_read(const string &file_name)
 {
   stringstream err;
-  off_t seek_ret;
+  long long size;
 
-  close();
-
-  if ((_fd = ::open(file_name.c_str(), O_RDONLY)) == -1)
+  try
   {
-    err << "could not open index file \"" << file_name << "\"";
-    throw ECOMIndexT(err.str());
+    _file.open_read(file_name.c_str());
+    size = _file.calc_size();
+    _file.seek(0);
+  }
+  catch (ECOMFile &e)
+  {
+    throw ECOMIndexT(e.msg);
   }
 
-  _open = true;
-  _opened_read_only = true;
-
-  if ((seek_ret = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
+  if (size % sizeof(REC) != 0)
   {
-    close();
-    err << "seek failed in index file \"" << file_name << "\"";
-    throw ECOMIndexT(err.str());
-  }
-
-  if (seek_ret % sizeof(REC) != 0)
-  {
-    close();
     err << "illegal size of index file \"" << file_name << "\"";
+
+    try
+    {
+      close();
+    }
+    catch (ECOMFile &e)
+    {
+      err << " - closing: " << e.msg;
+    }
+
     throw ECOMIndexT(err.str());
   }
 
-  _record_count = seek_ret / sizeof(REC);
-
-  if ((seek_ret = lseek(_fd, 0, SEEK_SET)) == (off_t) - 1)
-  {
-    close();
-    err << "seek failed in index file \"" << file_name << "\"";
-    throw ECOMIndexT(err.str());
-  }
-
+  _record_count = size / sizeof(REC);
   _position = 0;
 }
 
@@ -178,45 +158,87 @@ void COMIndexT<REC>::open(const string &file_name)
 */
 
 template <class REC>
-void COMIndexT<REC>::open_rw(const string &file_name)
+void COMIndexT<REC>::open_read_write(const string &file_name)
 {
   stringstream err;
-  off_t seek_ret;
+  long long size;
 
-  close();
-
-  if ((_fd = ::open(file_name.c_str(), O_RDWR | O_CREAT, 0644)) == -1)
+  try
   {
-    err << "could not open index file (RD/WR) \"" << file_name << "\"";
-    throw ECOMIndexT(err.str());
+    _file.open_read_write(file_name.c_str());
+    size = _file.calc_size();
+    _file.seek(0);
   }
-
-  _open = true;
-  _opened_read_only = false;
-
-  if ((seek_ret = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
+  catch (ECOMFile &e)
   {
-    close();
-    err << "seek failed in index file \"" << file_name << "\"";
-    throw ECOMIndexT(err.str());
+    throw ECOMIndexT(e.msg);
   }
-
-  if (seek_ret % sizeof(REC) != 0)
+  
+  if (size % sizeof(REC) != 0)
   {
-    close();
     err << "illegal size of index file \"" << file_name << "\"";
+
+    try
+    {
+      close();
+    }
+    catch (ECOMFile &e)
+    {
+      err << " - closing: " << e.msg;
+    }
+
     throw ECOMIndexT(err.str());
   }
 
-  _record_count = seek_ret / sizeof(REC);
+  _record_count = size / sizeof(REC);
+  _position = 0;
+}
 
-  if ((seek_ret = lseek(_fd, 0, SEEK_SET)) == (off_t) - 1)
+//---------------------------------------------------------------
+
+/**
+   Öffnet eine binäre Index-Datei zum Lesen und Anhängen
+
+   Siehe open()
+
+   \param file_name Dateiname der Index-Datei
+   \throw ECOMIndexT Datei nicht zu öffnen oder ungültig
+*/
+
+template <class REC>
+void COMIndexT<REC>::open_read_append(const string &file_name)
+{
+  stringstream err;
+  long long size;
+
+  try
   {
-    close();
-    err << "seek failed in index file \"" << file_name << "\"";
+    _file.open_read_append(file_name.c_str());
+    size = _file.calc_size();
+    _file.seek(0);
+  }
+  catch (ECOMFile &e)
+  {
+    throw ECOMIndexT(e.msg);
+  }
+  
+  if (size % sizeof(REC) != 0)
+  {
+    err << "illegal size of index file \"" << file_name << "\"";
+
+    try
+    {
+      close();
+    }
+    catch (ECOMFile &e)
+    {
+      err << " - closing: " << e.msg;
+    }
+
     throw ECOMIndexT(err.str());
   }
 
+  _record_count = size / sizeof(REC);
   _position = 0;
 }
 
@@ -229,11 +251,28 @@ void COMIndexT<REC>::open_rw(const string &file_name)
 template <class REC>
 void COMIndexT<REC>::close()
 {
-  if (_open)
+  try
   {
-    ::close(_fd);
-    _open = false;
+    _file.close();
   }
+  catch (ECOMFile &e)
+  {
+    throw ECOMIndexT(e.msg);
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt zurück, ob die Index-Datei geöffnet ist
+
+   \return true, wenn Datei offen
+*/
+
+template <class REC>
+bool COMIndexT<REC>::open() const
+{
+  return _file.open();
 }
 
 //---------------------------------------------------------------
@@ -267,9 +306,11 @@ inline unsigned int COMIndexT<REC>::record_count() const
 template <class REC>
 REC COMIndexT<REC>::operator[](unsigned int index)
 {
+  stringstream err;
   REC index_record;
+  unsigned int bytes_read;
 
-  if (!_open)
+  if (!_file.open())
   {
     throw ECOMIndexT("index not open!");
   }
@@ -279,19 +320,34 @@ REC COMIndexT<REC>::operator[](unsigned int index)
     throw ECOMIndexT("index out of range!");
   }
 
-  if (_position != index * sizeof(REC))
+  try
   {
-    if (lseek(_fd, index * sizeof(REC), SEEK_SET) == (off_t) - 1)
+    if (_position != index * sizeof(REC))
     {
-      close();
-      throw ECOMIndexT("could not seek in file!");
+      _file.seek(index * sizeof(REC));
+    }
+
+    _file.read((char *) &index_record, sizeof(REC), &bytes_read);
+
+    if (bytes_read != sizeof(REC))
+    {
+      err << "did not read enough bytes!";
+
+      try
+      {
+        _file.close();
+      }
+      catch (ECOMFile &e)
+      {
+        err << " - close: " << e.msg;
+      }
+
+      throw ECOMIndexT(err.str());
     }
   }
-
-  if (read(_fd, &index_record, sizeof(REC)) != sizeof(REC))
+  catch (ECOMFile &e)
   {
-    close();
-    throw ECOMIndexT("could not read from file!");
+    throw ECOMIndexT(e.msg);
   }
 
   _position = (index + 1) * sizeof(REC);
@@ -312,29 +368,23 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 template <class REC>
 void COMIndexT<REC>::append_record(const REC *index_record)
 {
-  if (!_open)
+  if (!_file.open())
   {
     throw ECOMIndexT("index not open!");
   }
 
-  if (_opened_read_only)
+  if (_file.open_mode() != fomOpenReadAppend)
   {
-    throw ECOMIndexT("index opened with read access only!");
+    throw ECOMIndexT("index not opened for appending!");
   }
 
-  if (_position != _record_count * sizeof(REC))
+  try
   {
-    if (lseek(_fd, 0, SEEK_END) == (off_t) - 1)
-    {
-      close();
-      throw ECOMIndexT("could not seek in file!");
-    }
+    _file.append((const char *) index_record, sizeof(REC));
   }
-
-  if (::write(_fd, index_record, sizeof(REC)) != sizeof(REC))
+  catch (ECOMFile &e)
   {
-    close();
-    throw ECOMIndexT("could not write to file!");
+    throw ECOMIndexT(e.msg);
   }
 
   _record_count++;
@@ -355,14 +405,9 @@ template <class REC>
 void COMIndexT<REC>::change_record(unsigned int index,
                                    const REC *index_record)
 {
-  if (!_open)
+  if (_file.open_mode() != fomOpenReadWrite)
   {
-    throw ECOMIndexT("index not open!");
-  }
-
-  if (_opened_read_only)
-  {
-    throw ECOMIndexT("index opened with read access only!");
+    throw ECOMIndexT("index not open for writing!");
   }
 
   if (index >= _record_count)
@@ -370,19 +415,18 @@ void COMIndexT<REC>::change_record(unsigned int index,
     throw ECOMIndexT("index out of range!");
   }
 
-  if (_position != index * sizeof(REC))
+  try
   {
-    if (lseek(_fd, index * sizeof(REC), SEEK_SET) == (off_t) - 1)
+    if (_position != index * sizeof(REC))
     {
-      close();
-      throw ECOMIndexT("could not seek in file!");
+      _file.seek(index * sizeof(REC));
     }
-  }
 
-  if (::write(_fd, index_record, sizeof(REC)) != sizeof(REC))
+    _file.write((char *) index_record, sizeof(REC));
+  }
+  catch (ECOMFile &e)
   {
-    close();
-    throw ECOMIndexT("could not write to file!");
+    throw ECOMIndexT(e.msg);
   }
 
   _position = (index + 1) * sizeof(REC);

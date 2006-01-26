@@ -15,6 +15,9 @@
 
 /**
    Exception eines COMZlib-Objektes
+
+   Tritt meistens auf, wenn der Augabepuffer zu
+   klein ist (Fehler 5).
 */
 
 class ECOMZLib : public COMException
@@ -24,6 +27,13 @@ public:
 };
 
 //---------------------------------------------------------------
+
+/**
+   ZLib-Kompressionsklasse
+
+   Stellt alle nötigen Funktionen bereit, um Daten mit der
+   ZLib zu komprimieren und zu dekomprimieren.
+*/
 
 class COMZLib
 {
@@ -35,16 +45,22 @@ public:
   void uncompress(const char *, unsigned int, unsigned int);
 
   const char *output() const;
-  unsigned int length() const;
+  unsigned int output_length() const;
 
 private:
-  char *_out_buf;
-  unsigned int _out_len;
+  char *_out_buf;        /**< Ausgabepuffer */
+  unsigned int _out_len; /**< Länge der datem im Ausgabepuffer */
 
   void _realloc(unsigned int);
 };
 
 //---------------------------------------------------------------
+
+/**
+   Ermöglicht lesenden Zugriff auf den Ausgabepuffer
+
+   \return Konstanter Zeiger auf den Ausgabepuffer
+*/
 
 inline const char *COMZLib::output() const
 {
@@ -53,7 +69,13 @@ inline const char *COMZLib::output() const
 
 //---------------------------------------------------------------
 
-inline unsigned int COMZLib::length() const
+/**
+   Liefert die Länge der ausgegebenen Daten
+
+   \return Anzahl zeichen im Ausgabepuffer
+*/
+
+inline unsigned int COMZLib::output_length() const
 {
   return _out_len;
 }

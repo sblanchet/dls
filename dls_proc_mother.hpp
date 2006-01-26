@@ -16,7 +16,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-#include "com_job_preset.hpp"
+#include "dls_job_preset.hpp"
 #include "dls_globals.hpp"
 
 //---------------------------------------------------------------
@@ -38,27 +38,21 @@ public:
   int start(const string &);
 
 private:
-  string _dls_dir;          /**< DLS-Datenverzeichnis */
-  list<COMJobPreset> _jobs; /**< Liste von Auftragsvorgaben */
-  unsigned int _sig_child;  /**< Zähler für empfangene SIGCHLD-Signale */
-  bool _exit;               /**< true, wenn der Prozess beendet werden soll */
-  bool _exit_error;         /**< true, wenn die Beendigung mit Fehler erfolgen soll */
-  stringstream _msg;        /**< Auszugebende Nachricht */
+  string _dls_dir;             /**< DLS-Datenverzeichnis */
+  list<DLSJobPreset> _jobs;    /**< Liste von Auftragsvorgaben */
+  unsigned int _sig_child;     /**< Zähler für empfangene SIGCHLD-Signale */
+  bool _exit;                  /**< true, wenn der Prozess beendet werden soll */
+  bool _exit_error;            /**< true, wenn die Beendigung mit Fehler erfolgen soll */
+  stringstream _msg;           /**< Auszugebende Nachricht */
 
   void _empty_spool();
   void _check_jobs();
   void _check_signals();
   void _check_spool();
   void _check_processes();
-  COMJobPreset *_job_exists(int);
-  void _child_process_forked(string);
-  static void _signal_callback_handler(int, void *, void *);
-  void _set_exit_code(struct process_exit *);
+  DLSJobPreset *_job_exists(int);
   void _log(DLSLogType);
-  bool _process_exists(COMJobPreset *);
-  void _process_term(COMJobPreset *);
-  void _process_notify(const COMJobPreset *);
-  void _add_job(int);
+  unsigned int _processes_running();
 };
 
 //---------------------------------------------------------------

@@ -46,12 +46,10 @@ public:
   COMXMLAtt(const string &, const string &);
 
   const string &name() const;
-  void name(const string &);
   const string &to_str() const;
   int to_int() const;
   double to_dbl() const;
   long long to_ll() const;
-  void value(const string &);
 
 private:
   string _name;  /**< Attributname */
@@ -85,6 +83,9 @@ public:
   bool has_att(const string &) const;
   void push_att(const string &, const string &);
   void push_att(const string &, int);
+  void push_att(const string &, unsigned int);
+  void push_att(const string &, double);
+  void push_att(const string &, long long);
   int att_count() const;
   string tag() const;
 

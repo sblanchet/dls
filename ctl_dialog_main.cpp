@@ -6,6 +6,10 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include <iostream>
 #include <sstream>
@@ -18,9 +22,15 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "com_xml_parser.hpp"
+#include "ctl_globals.hpp"
 #include "ctl_dialog_job_edit.hpp"
 #include "ctl_dialog_job.hpp"
 #include "ctl_dialog_main.hpp"
+#include "ctl_msg_wnd.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.11 2005/01/24 13:00:42 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -29,6 +39,12 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+/**
+   Konstruktor
+
+   \param dls_dir DLS-Datenverzeichnis
+*/
+
 CTLDialogMain::CTLDialogMain(const string &dls_dir)
 {
   int x = Fl::w() / 2 - WIDTH / 2;
@@ -36,8 +52,10 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
 
   _dls_dir = dls_dir;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLS Messauftragsverwaltung");
+  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLS Manager");
   _wnd->callback(_callback, this);
+
+  _tile = new Fl_Tile(10, 10, WIDTH - 20, 350);
 
   _grid_jobs = new Fl_Grid(10, 10, WIDTH - 20, 200);
   _grid_jobs->add_column("job", "Auftrag", 200);
@@ -48,11 +66,13 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
   _grid_jobs->add_column("logging", "Erfassung");
   _grid_jobs->callback(_callback, this);
 
-  _grid_messages = new Fl_Grid(10, 220, WIDTH - 20, 140);
+  _grid_messages = new Fl_Grid(10, 210, WIDTH - 20, 150);
   _grid_messages->add_column("time", "Zeit");
   _grid_messages->add_column("text", "Nachricht", 230);
   _grid_messages->select_mode(flgNoSelect);
   _grid_messages->callback(_callback, this);
+
+  _tile->end();
 
   _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schliessen");
   _button_close->callback(_callback, this);
@@ -69,13 +89,13 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
   _button_state->hide();
 
   _wnd->resizable(_grid_jobs);
-
-  _load_jobs();
-  _load_messages();
-  _load_watchdogs();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 CTLDialogMain::~CTLDialogMain()
 {
@@ -85,6 +105,39 @@ CTLDialogMain::~CTLDialogMain()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Dialog anzeigen
+*/
+
+void CTLDialogMain::show()
+{
+  // Fenster zeigen
+  _wnd->show();
+
+  // Überprüfen, ob das angegebene Verzeichnis
+  // schon ein DLS-Datenverzeichnis ist
+  _check_dls_dir();
+
+  _load_jobs();
+  _load_messages();
+  _load_watchdogs();
+
+  // Timeout für die aktualisierung der Nachrichten hinzufügen
+  Fl::add_timeout(1.0, _static_timeout, this);
+
+  // Solange in der Event-Loop bleiben, wie das Fenster sichtbar ist
+  while (_wnd->shown()) Fl::wait();
+}
+
+//---------------------------------------------------------------
+
+/**
+   Statische Callback-Funktion
+
+   \param sender Zeiger aud das Widget, das den Callback ausgelöst hat
+   \param data User-Data, hier Zeiger auf den Dialog
+*/
 
 void CTLDialogMain::_callback(Fl_Widget *sender, void *data)
 {
@@ -100,6 +153,10 @@ void CTLDialogMain::_callback(Fl_Widget *sender, void *data)
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback für das Erfassungsauftrags-Grid
+*/
 
 void CTLDialogMain::_grid_jobs_callback()
 {
@@ -223,6 +280,10 @@ void CTLDialogMain::_grid_jobs_callback()
 
 //---------------------------------------------------------------
 
+/**
+   Callback für das Nachrichten-Grid
+*/
+
 void CTLDialogMain::_grid_messages_callback()
 {
   unsigned int i;
@@ -254,6 +315,10 @@ void CTLDialogMain::_grid_messages_callback()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Beenden"-Button wurde geklickt
+*/
+
 void CTLDialogMain::_button_close_clicked()
 {
   _wnd->hide();
@@ -261,10 +326,14 @@ void CTLDialogMain::_button_close_clicked()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Hinzufügen"-Button wurde geklickt
+*/
+
 void CTLDialogMain::_button_add_clicked()
 {
   CTLDialogJobEdit *dialog = new CTLDialogJobEdit(_dls_dir);
-  dialog->show(0); // Neuer Auftrag
+  dialog->show(0); // 0 = Neuer Auftrag
 
   if (dialog->updated())
   {
@@ -276,9 +345,13 @@ void CTLDialogMain::_button_add_clicked()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Entfernen"-Button wurde geklickt
+*/
+
 void CTLDialogMain::_button_rem_clicked()
 {
-  /*
+#if 0
   stringstream sql, text;
   int sel = _grid_jobs->selected_index();
   
@@ -300,19 +373,24 @@ void CTLDialogMain::_button_rem_clicked()
     
     _load_jobs();
   }
-  */
+#endif
 }
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Starten/Anhalten"-Button wurde geklickt
+*/
+
 void CTLDialogMain::_button_state_clicked()
 {
   int index = _grid_jobs->selected_index();
-  COMJobPreset job_copy;
+  CTLJobPreset job_copy;
 
   if (index < 0 || index >= (int) _jobs.size())
   {
-    cout << "job index out of range!" << endl;
+    msg->str() << "Job index out of range!";
+    msg->error();
     return;
   }
 
@@ -326,7 +404,8 @@ void CTLDialogMain::_button_state_clicked()
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "error writing preset file: " << e.msg << endl;
+    msg->str() << "Error writing preset file: " << e.msg;
+    msg->error();
     return;
   }
 
@@ -336,7 +415,8 @@ void CTLDialogMain::_button_state_clicked()
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "WARNING: dlsd could not be notified!" << endl;
+    msg->str() << "WARNING: dlsd could not be notified!";
+    msg->warning();
   }
 
   _jobs[index] = job_copy;
@@ -346,16 +426,11 @@ void CTLDialogMain::_button_state_clicked()
 
 //---------------------------------------------------------------
 
-void CTLDialogMain::show()
-{
-  _wnd->show();
+/**
+   Statische Callback-Funktion für den Nachrichten-Timeout
 
-  Fl::add_timeout(1.0, _static_timeout, this);
-
-  while (_wnd->shown()) Fl::wait();
-}
-
-//---------------------------------------------------------------
+   \param data Zeiger auf den Dialog
+*/
 
 void CTLDialogMain::_static_timeout(void *data)
 {
@@ -368,6 +443,10 @@ void CTLDialogMain::_static_timeout(void *data)
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Timeout! Die Nachrichten müssen aktualisiert werden
+*/
+
 void CTLDialogMain::_timeout()
 {
   unsigned int i, top = 0;
@@ -375,7 +454,6 @@ void CTLDialogMain::_timeout()
   bool found;
 
   // Watchdogs aktualisieren
-
   _load_watchdogs();
 
   // Messages aktualisieren
@@ -408,9 +486,13 @@ void CTLDialogMain::_timeout()
 
 //---------------------------------------------------------------
 
+/**
+   Alle Watchdog-Informationen laden
+*/
+
 void CTLDialogMain::_load_watchdogs()
 {
-  vector<COMJobPreset>::iterator job_i;
+  vector<CTLJobPreset>::iterator job_i;
   struct stat file_stat;
   stringstream dir_name;
 
@@ -499,6 +581,10 @@ void CTLDialogMain::_load_watchdogs()
 
 //---------------------------------------------------------------
 
+/**
+   Alle Erfassungsaufträge laden
+*/
+
 void CTLDialogMain::_load_jobs()
 {
   int job_id;
@@ -507,7 +593,7 @@ void CTLDialogMain::_load_jobs()
   string dirname;
   stringstream str;
   fstream file;
-  COMJobPreset job;
+  CTLJobPreset job;
   struct stat file_stat;
   stringstream watch_file_name;
 
@@ -520,7 +606,8 @@ void CTLDialogMain::_load_jobs()
    // Das Hauptverzeichnis öffnen
   if ((dir = opendir(_dls_dir.c_str())) == NULL)
   {
-    cout << "could not open dls directory \"" << _dls_dir << "\"" << endl;
+    msg->str() << "Could not open dls directory \"" << _dls_dir << "\"";
+    msg->error();
     return;
   }
 
@@ -562,7 +649,8 @@ void CTLDialogMain::_load_jobs()
     }
     catch (ECOMJobPreset &e)
     {
-      cout << "could not import job: " << e.msg << endl;
+      msg->str() << "Could not import job " << job_id << ": " << e.msg;
+      msg->error();
       continue;
     }
 
@@ -601,9 +689,13 @@ void CTLDialogMain::_load_jobs()
 
 //---------------------------------------------------------------
 
+/**
+   Alle allgemeinen Nachrichten laden
+*/
+
 void CTLDialogMain::_load_messages()
 {
-  /*
+#if 0
   DLSDBQuery *query;
   int count, i;
   stringstream sql;
@@ -648,10 +740,18 @@ void CTLDialogMain::_load_messages()
   delete query;
 
   _grid_messages->record_count(count);
-  */
+#endif
 }
 
 //---------------------------------------------------------------
+
+/**
+   Erfassungsauftrag editieren
+
+   Öffnet einen neuen Dialog, um den Auftrag zu bearbeiten
+
+   \param index Index des zu bearbeitenden Auftrags in der Liste
+*/
 
 void CTLDialogMain::_edit_job(unsigned int index)
 {
@@ -668,6 +768,10 @@ void CTLDialogMain::_edit_job(unsigned int index)
 }
 
 //---------------------------------------------------------------
+
+/**
+   Aktualisieren des "Starten/Anhalten"-Buttons
+*/
 
 void CTLDialogMain::_update_button_state()
 {
@@ -691,6 +795,208 @@ void CTLDialogMain::_update_button_state()
   else
   {
     _button_state->hide();
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Überprüft, ob das Verzeichnis ein DLS-Datenverzeichnis ist
+*/
+
+void CTLDialogMain::_check_dls_dir()
+{
+  struct stat stat_buf;
+  stringstream str;
+  bool build_dls_dir = false;
+  int fd;
+  pid_t pid;
+  int status;
+  fstream pid_file;
+  bool start_dlsd;
+
+  // Prüfen, ob das Verzeichnis überhaupt existiert
+  if (stat(_dls_dir.c_str(), &stat_buf) == -1)
+  {
+    str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
+    str << "existiert noch nicht. Soll es als" << endl;
+    str << "DLS-Datenverzeichnis angelegt werden?";
+
+    if (fl_ask(str.str().c_str()) == 0) return;
+
+    build_dls_dir = true;
+
+    if (mkdir(_dls_dir.c_str(), 0755) == -1)
+    {
+      msg->str() << "Konnte das Verzeichnis \"" << _dls_dir << "\"";
+      msg->str() << " nicht anlegen: " << strerror(errno);
+      msg->error();
+      return;
+    }
+  }
+  else
+  {
+    // Prüfen, ob das angegebene DLS-Datenverzeichnis überhaupt
+    // ein Verzeichnis ist
+    if (!S_ISDIR(stat_buf.st_mode))
+    {
+      msg->str() << "\"" << _dls_dir << "\" ist kein Verzeichnis!";
+      msg->error();
+      return;
+    }
+  }
+
+  // Existiert das Spooling-Verzeichnis?
+  if (stat((_dls_dir + "/spool").c_str(), &stat_buf) == -1)
+  {
+    if (!build_dls_dir)
+    {
+      str.clear();
+      str.str("");
+      str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
+      str << "ist noch kein DLS-Datenverzeichnis." << endl;
+      str << "Soll es als solches initialisiert werden?";
+
+      if (fl_ask(str.str().c_str()) == 0) return;
+
+      build_dls_dir = true;
+    }
+
+    // Spooling-Verzeichnis anlegen
+    if (mkdir((_dls_dir + "/spool").c_str(), 0755) == -1)
+    {
+      msg->str() << "Konnte das Verzeichnis \"" << (_dls_dir + "/spool") << "\"";
+      msg->str() << " nicht anlegen: " << strerror(errno);
+      msg->error();
+      return;
+    }
+  }
+
+  // Existiert die Datei mit der ID-Sequenz?
+  if (stat((_dls_dir + "/id_sequence").c_str(), &stat_buf) == -1)
+  {
+    if (!build_dls_dir)
+    {
+      str.clear();
+      str.str("");
+      str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
+      str << "ist noch kein DLS-Datenverzeichnis." << endl;
+      str << "Soll es als solches initialisiert werden?";
+
+      if (fl_ask(str.str().c_str()) == 0) return;
+
+      build_dls_dir = true;
+    }
+
+    // Datei anlegen
+    if ((fd = open((_dls_dir + "/id_sequence").c_str(), O_WRONLY | O_CREAT, 0644)) == -1)
+    {
+      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
+      msg->str() << " nicht anlegen: " << strerror(errno);
+      msg->error();
+      return;
+    }
+
+    if (write(fd, "100\n", 4) != 4)
+    {
+      close(fd);
+      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
+      msg->str() << " nicht beschreiben! Bitte manuell löschen!";
+      msg->error();
+      return;
+    }
+
+    close(fd);
+  }
+
+  start_dlsd = false;
+
+  // Existiert die PID-Datei des dlsd?
+  if (stat((_dls_dir + "/" + DLS_PID_FILE).c_str(), &stat_buf) == -1)
+  {
+    start_dlsd = true;
+  }
+  else
+  {
+    pid_file.exceptions(ios::badbit | ios::failbit);
+
+    pid_file.open((_dls_dir + "/" + DLS_PID_FILE).c_str(), ios::in);
+
+    if (!pid_file.is_open())
+    {
+      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" nicht öffnen!";
+      msg->error();
+      return;
+    }
+
+    try
+    {
+      pid_file >> pid;
+    }
+    catch (...)
+    {
+      pid_file.close();
+
+      msg->str() << "Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" ist korrupt!";
+      msg->error();
+      return;
+    }
+
+    pid_file.close();
+
+    if (kill(pid, 0) == -1)
+    {
+      if (errno == ESRCH) // Prozess existiert nicht
+      {
+        start_dlsd = true;
+      }
+      else
+      {
+        msg->str() << "Konnte Prozess " << pid << "nicht signalisieren!";
+        msg->error();
+        return;
+      }
+    }
+  }
+
+  if (start_dlsd)
+  {
+    str.clear();
+    str.str("");
+    str << "Für das Verzeichnis \"" << _dls_dir << "\"" << endl;
+    str << "läuft noch kein DLS-Daemon. Jetzt starten?";
+
+    if (fl_ask(str.str().c_str()) == 1)
+    {
+      if ((pid = fork()) == -1)
+      {
+        msg->str() << "Could not fork()!";
+        msg->error();
+        return;
+      }
+
+      if (pid == 0) // Kindprozess
+      {
+        const char *params[4] = {"dlsd", "-d", _dls_dir.c_str(), 0};
+        
+        if (execvp("dlsd", (char * const *) params) == -1)
+        {
+          cerr << "ERROR: Could not exec dlsd: " << strerror(errno) << endl;
+          exit(-1);
+        }
+      }
+      else // Mutterprozess
+      {
+        waitpid(pid, &status, 0);
+        
+        if ((signed char) WEXITSTATUS(status) == -1)
+        {
+          msg->str() << "Could not execute dlsd! See console for error message.";
+          msg->error();
+          return;
+        }
+      }
+    }
   }
 }
 

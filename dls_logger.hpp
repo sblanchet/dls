@@ -15,7 +15,6 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "com_exception.hpp"
-#include "com_real_channel.hpp"
 #include "com_channel_preset.hpp"
 #include "dls_saver_gen_t.hpp"
 
@@ -41,9 +40,11 @@ public:
    Speichert Daten für einen Kanal entsprechend einer Vorgabe.
 
    Verwaltet selbständig Chunk-Verzeichnisse und kann Online-
-   Änderungen in den Kanalvorgaben verarbeiten. Für das
-   eigentliche Speichern der Daten wird ein DLSSaverGen - Objekt
-   vorgehalten.
+   Änderungen in den Kanalvorgaben verarbeiten. Ein DLSLogger
+   ist das prozessseitige Äquivalent zu einem Chunk.
+   Die Größe der erzeugten Daten wird hier ebenfalls gespeichert.
+   Für das eigentliche Speichern der Daten wird ein
+   DLSSaverGen - Objekt vorgehalten. 
 */
 
 class DLSLogger
@@ -55,7 +56,16 @@ public:
 
   //@{
   void get_real_channel(const list<COMRealChannel> *);
-  bool presettings_valid(const COMChannelPreset * = 0) const;
+  void check_presettings(const COMChannelPreset * = 0) const;
+  void check_channel_info();
+  void create_gen_saver();
+  void process_data(const string &, COMTime);
+  long long data_size() const;
+  void finish();
+  void discard_chunk();
+  //@}
+
+  //@{
   const COMChannelPreset *channel_preset() const;
   const COMRealChannel *real_channel() const;
   //@}
@@ -71,14 +81,13 @@ public:
   void do_change();
   //@}
 
-  void process_data(const string &, COMTime);
-  void finish();
-
   //@{
   bool chunk_created() const;
   void create_chunk(COMTime);
   const string &chunk_dir() const;
   //@}
+
+  void bytes_written(unsigned int);
 
   //@{
   stringstream &msg() const;
@@ -94,13 +103,17 @@ private:
   COMRealChannel _real_channel;     /**< Informationen über den msrd-Kanal */
   //@}
 
-  DLSSaverGen *_saver;          /**< Zeiger auf das Objekt zur Speicherung
-                                     der generischen Daten */
+  //@{
+  DLSSaverGen *_gen_saver; /**< Zeiger auf das Objekt zur Speicherung
+                                der generischen Daten */
+  long long _data_size;    /**< Größe der bisher erzeugten Daten */
+  //@}
 
   //@{
-  bool _chunk_created; /**< Wurde das aktuelle Chunk-Verzeichnis
-                            bereits erstellt? */
-  string _chunk_dir;   /**< Pfad des Chunk-Verzeichnisses */
+  bool _channel_dir_exists;  /**< Das Kanalverzeichnis existiert bereits */
+  bool _channel_file_exists; /**< Die Kanal-Infodatei existiert bereits */
+  bool _chunk_created;       /**< Das aktuelle Chunk-Verzeichnis wurde bereits erstellt */
+  string _chunk_dir;         /**< Pfad des aktuellen Chunk-Verzeichnisses */
   //@}
 
   //@{
@@ -167,6 +180,32 @@ inline bool DLSLogger::chunk_created() const
 inline const string &DLSLogger::chunk_dir() const
 {
   return _chunk_dir;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Teilt dem Logger mit, dass Daten gespeichert wurden
+
+   Dient dem Logger dazu, die Größe der bisher gespeicherten
+   Daten mitzuführen und wird von den tieferliegenden
+   DLSSaverT-Derivaten aufgerufen.
+*/
+
+inline void DLSLogger::bytes_written(unsigned int bytes)
+{
+  _data_size += bytes;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt die Größe des Chunks in Bytes zurück
+*/
+
+inline long long DLSLogger::data_size() const
+{
+  return _data_size;
 }
 
 //---------------------------------------------------------------

@@ -24,6 +24,10 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+//#define DEBUG
+
+//---------------------------------------------------------------
+
 /**
    Abstrakte Basisklasse von DLSSaverGenT
 
@@ -61,6 +65,7 @@ public:
      \param length Anzahl der Datenwerte
      \param time_of_last Zeit des letzten Datenwertes
      \throw EDLSSaver Fehler beim Verarbeiten der Daten
+     \throw EDLSTimeTolerance Zeit-Toleranzfehler!
    */
 
   virtual void process_data(const void *buffer,
@@ -94,11 +99,14 @@ private:
   bool _finished;                        /**< true, wenn keine Daten mehr im Speicher */
 
   void _fill_buffers(const T *, unsigned int, COMTime);
-  void _generate_meta_data();
-  void _create_carries();
+
+  //@{
   void _create_savers();
+  void _generate_meta_data();
+  void _flush_savers();
   void _clear_savers();
-  string _type_string() const;
+  //@}
+
   int _meta_level() const;
   string _meta_type() const;
 
@@ -132,11 +140,13 @@ DLSSaverGenT<T>::DLSSaverGenT(DLSLogger *parent_logger)
 template <class T>
 DLSSaverGenT<T>::~DLSSaverGenT()
 {
+#if 0
   if (!_finished)
   {
     msg() << "saver_gen not finished!";
     log(DLSWarning);
   }
+#endif
 
   // Saver löschen
   _clear_savers();
@@ -309,14 +319,40 @@ void DLSSaverGenT<T>::flush()
   // Blockdaten speichern
   _save_block();
 
+  // Eventuell restliche Daten des Kompressionsobjektes speichern
+  _save_rest();
+
+#ifdef DEBUG
+  cout << "DLSSaverGenT: _finish_files() for channel " << _parent_logger->channel_preset()->name << endl;
+#endif
+
   // Dateien beenden
   _finish_files();
 
-  // Metadaten weiterreichen
-  _create_carries();
+#ifdef DEBUG
+  cout << "DLSSaverGenT: _compression_clear()" << endl;
+#endif
+
+  // Persistenten Speicher des Kompressionsobjekt leeren
+  _compression->clear();
+
+#ifdef DEBUG
+  cout << "DLSSaverGenT: _flush_savers()" << endl;
+#endif
+
+  // Metadaten speichern
+  _flush_savers();
+
+#ifdef DEBUG
+  cout << "DLSSaverGenT: _clear_savers()" << endl;
+#endif
 
   // Alle Saver beenden
   _clear_savers();
+
+#ifdef DEBUG
+  cout << "DLSSaverGenT: flush finished!" << endl;
+#endif
 
   // Jetzt ist nichts mehr im Speicher
   _finished = true;
@@ -360,33 +396,22 @@ void DLSSaverGenT<T>::_generate_meta_data()
 //---------------------------------------------------------------
 
 /**
-   Carries generieren
-
-   Carries müssen generiert werden, wenn beim Beenden des Chunks
-   noch Werte im Meta-Puffer sind, die aber nicht für einen
-   kompletten Meta-Wert ausreichen. Dann wird ein "halber"
-   Meta-Wert aus diesen Restdaten generiert. Wenn dies jeder
-   Meta-Saver getan hat, wird der Meta-Puffer geleert.
-
-   \throw EDLSSaver Fehler beim Speichern
 */
 
 template <class T>
-void DLSSaverGenT<T>::_create_carries()
+void DLSSaverGenT<T>::_flush_savers()
 {
   typename list<DLSSaverMetaT<T> *>::iterator meta_i;
 
   meta_i = _meta_savers.begin();
   while (meta_i != _meta_savers.end())
   {
-    // Aus den noch vorhandenen Daten ein Carry erzeugen
-    (*meta_i)->create_carry(_meta_time, _time_of_last,
-                            _meta_buf_index, _meta_buf);
-
+    // Alle Daten im Speicher auf die Festplatte schreiben
+    (*meta_i)->flush();
     meta_i++;
   }
 
-  // Alle Saver haben die Restdaten verwertet. Meta-Buffer leeren.
+  // Alle Saver haben die Restdaten verwertet. Meta-Puffer leeren.
   _meta_buf_index = 0;
 }
 
@@ -450,26 +475,6 @@ void DLSSaverGenT<T>::_clear_savers()
 
   _meta_savers.clear();
   _savers_created = false;
-}
-
-//---------------------------------------------------------------
-
-/**
-   Konvertiert den Datentyp in einen Bezeichner-String
-
-   \return Bezeichner-String (z.B. TULINT)
-*/
-
-template <class T>
-string DLSSaverGenT<T>::_type_string() const
-{
-  if      (typeid(T) == typeid(unsigned char)) return "TUCHAR";
-  else if (typeid(T) == typeid(int))           return "TINT";
-  else if (typeid(T) == typeid(unsigned int))  return "TUINT";
-  else if (typeid(T) == typeid(unsigned long)) return "TULINT";
-  else if (typeid(T) == typeid(double))        return "TDBL";
-      
-  throw EDLSSaver("type not registered!");
 }
 
 //---------------------------------------------------------------

@@ -11,11 +11,15 @@
 
 #include "com_exception.hpp"
 #include "com_time.hpp"
+#include "com_index_t.hpp"
+#include "com_file.hpp"
+#include "view_data.hpp"
 
 //---------------------------------------------------------------
 
-class ViewBlock;
 class ViewChannel;
+class ViewBlockList;
+class ViewBlock;
 
 //---------------------------------------------------------------
 
@@ -31,59 +35,56 @@ public:
 
 //---------------------------------------------------------------
 
+/**
+   Chunk-Objekt zur Anzeige. Abstrakte Basisklasse für ViewChunkT
+*/
+
 class ViewChunk
 {
 public:
   ViewChunk();
-  ~ViewChunk();
+  virtual ~ViewChunk();
   
   void set_dir(const string &);
   void import();
   void fetch_range();
-  bool fetch_data(ViewChannel *, COMTime, COMTime, unsigned int);
-  void clear();
+
+  virtual void fetch_data(COMTime, COMTime, unsigned int) = 0;
+  virtual void calc_min_max(double *, double *) const = 0;
+  virtual unsigned int blocks_fetched() const = 0;
+  virtual bool has_data() const = 0;
+  
+  virtual const ViewData *gen_data() const = 0;
+  virtual const ViewData *min_data() const = 0;
+  virtual const ViewData *max_data() const = 0;
 
   COMTime start() const;
   COMTime end() const;
-
-  const string &dir() const;
-  unsigned int sample_frequency() const;
-  unsigned int meta_reduction() const;
-
-  const list<ViewBlock *> *blocks() const;
-  const list<ViewBlock *> *min_blocks() const;
-  const list<ViewBlock *> *max_blocks() const;
-
+  int format_index() const;
+  unsigned int mdct_block_size() const;
   unsigned int current_level() const;
 
-private:
-  string _dir;
-  unsigned int _sample_frequency;
-  unsigned int _meta_mask;
-  unsigned int _meta_reduction;
-  string _format;
-  COMTime _start;
-  COMTime _end;
-
-  list<ViewBlock *> _blocks;
-  list<ViewBlock *> _min_blocks;
-  list<ViewBlock *> _max_blocks;
-  unsigned int _level;
+protected:
+  string _dir;                    /**< Chunk-Verzeichnis */
+  unsigned int _sample_frequency; /**< Abtastfrequenz */
+  unsigned int _meta_reduction;   /**< Meta-Untersetzung */
+  int _format_index;              /**< Kompressionsformat */
+  unsigned int _mdct_block_size;  /**< MDCT-Blockgröße */
+  COMTime _start;                 /**< Startzeit des Chunks */
+  COMTime _end;                   /**< Endzeit des Chunks */
+  unsigned int _level;            /**< Level, in dem Daten geladen wurden */
 
   void _calc_optimal_level(COMTime, COMTime, unsigned int);
-  bool _load_blocks(list<ViewBlock*> *, const string &,
-                    const string &,
-                    ViewChannel *, COMTime, COMTime);
+  double _time_per_value() const;
 };
- 
-//---------------------------------------------------------------
-
-inline const string &ViewChunk::dir() const
-{
-  return _dir;
-}
 
 //---------------------------------------------------------------
+
+/**
+   Liefert die Startzeit des Chunks
+   
+   \return Startzeit
+*/
 
 inline COMTime ViewChunk::start() const
 {
@@ -92,6 +93,12 @@ inline COMTime ViewChunk::start() const
 
 //---------------------------------------------------------------
 
+/**
+   Liefert die Endzeit des Chunks
+
+   \return Endzeit
+*/
+
 inline COMTime ViewChunk::end() const
 {
   return _end;
@@ -99,30 +106,44 @@ inline COMTime ViewChunk::end() const
 
 //---------------------------------------------------------------
 
-inline const list<ViewBlock *> *ViewChunk::blocks() const
-{
-  return &_blocks;
-}
+/**
+   Liefert die Meta-Ebene, aus der die aktuellen Daten geladen wurden
 
-//---------------------------------------------------------------
-
-inline const list<ViewBlock *> *ViewChunk::min_blocks() const
-{
-  return &_min_blocks;
-}
-
-//---------------------------------------------------------------
-
-inline const list<ViewBlock *> *ViewChunk::max_blocks() const
-{
-  return &_max_blocks;
-}
-
-//---------------------------------------------------------------
+   \return Meta-Ebene
+*/
 
 inline unsigned int ViewChunk::current_level() const
 {
   return _level;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Liefert das Format, in dem die Daten geladen werden sollen
+
+   \return Format-Index
+*/
+
+inline int ViewChunk::format_index() const
+{
+  return _format_index;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt die MDCT-Blockgröße zurück
+
+   Liefert nur einen vernünftigen Wert, wenn das Format
+   auch DLS_FORMAT_MDCT ist
+
+   \return MDCT-Blockgröße ("Dimension")
+*/
+
+inline unsigned int ViewChunk::mdct_block_size() const
+{
+  return _mdct_block_size;
 }
 
 //---------------------------------------------------------------

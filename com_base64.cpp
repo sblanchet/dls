@@ -8,7 +8,12 @@
 
 //---------------------------------------------------------------
 
+#include "com_globals.hpp"
 #include "com_base64.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_base64.cpp,v 1.4 2005/01/05 09:24:24 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -19,12 +24,20 @@ static const char pad64 = '=';
 
 //---------------------------------------------------------------
 
+/**
+   Konstruktor
+*/
+
 COMBase64::COMBase64()
 {
   _out_buf = 0;
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 COMBase64::~COMBase64()
 {
@@ -48,10 +61,12 @@ void COMBase64::encode(const char *src, unsigned int src_len)
   unsigned char output[4];
   unsigned int i;
 
-  if (_out_buf) delete [] _out_buf;
-  _out_buf = 0;
+  _out_len = 0;
 
   if (!src_len) return;
+
+  if (_out_buf) delete [] _out_buf;
+  _out_buf = 0;
 
   try
   {
@@ -134,10 +149,12 @@ void COMBase64::decode(const char *src, unsigned int src_len)
   unsigned int out_size = src_len + 1;
   char *pos;
 
-  if (_out_buf) delete [] _out_buf;
-  _out_buf = 0;
+  _out_len = 0;
 
   if (!src_len) return;
+
+  if (_out_buf) delete [] _out_buf;
+  _out_buf = 0;
 
   try
   {

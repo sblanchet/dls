@@ -22,9 +22,12 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "fl_grid.hpp"
-#include "com_real_channel.hpp"
 
 //---------------------------------------------------------------
+
+/**
+   Auswahldialog für Kanäle der Datenquelle
+*/
 
 class CTLDialogChannels
 {
@@ -37,20 +40,20 @@ public:
   const list<COMRealChannel> *channels() const;
 
 private:
-  Fl_Double_Window *_wnd;
-  Fl_Button *_button_ok;
-  Fl_Button *_button_cancel;
-  Fl_Grid *_grid_channels;
-  Fl_Box *_box_message;
-  string _source;
-  int _socket;
-  pthread_t _thread;
-  bool _imported;
-  vector<COMRealChannel> _channels;
-  COMRealChannel _channel;
-  bool _thread_running;
-  string _error;
-  list<COMRealChannel> _selected;
+  Fl_Double_Window *_wnd;    /**< Dialogfenster */
+  Fl_Button *_button_ok;     /**< "OK"-Button */
+  Fl_Button *_button_cancel; /**< "Abbrechen"-Button */
+  Fl_Grid *_grid_channels;   /**< Grid für die MSR-Kanäle */
+  Fl_Box *_box_message;      /**< Box für die Fehleranzeige */
+
+  string _source;                   /**< IP-Adresse/Hostname der Datenquelle */
+  int _socket;                      /**< File-Deskriptor für die TCP-Verbindung */
+  pthread_t _thread;                /**< Thread für die Abfrage */
+  bool _thread_running;             /**< true, wenn der Thread läuft */
+  bool _imported;                   /**< true, wenn alle Kanäle importiert wurden */
+  vector<COMRealChannel> _channels; /**< Vektor mit den geladenen MSR-Kanälen */
+  string _error;                    /**< Fehlerstring, wird vom Thread gesetzt */
+  list<COMRealChannel> _selected;   /**< Liste mit ausgewählten Kanälen */
 
   static void _callback(Fl_Widget *, void *);
   void _grid_channels_callback();
@@ -62,6 +65,17 @@ private:
 
   void _thread_finished();
 };
+
+//---------------------------------------------------------------
+
+/**
+   Liefert die Liste der ausgewählten Kanäle
+*/
+
+inline const list<COMRealChannel> *CTLDialogChannels::channels() const
+{
+  return &_selected;
+}
 
 //---------------------------------------------------------------
 

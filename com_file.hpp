@@ -25,6 +25,13 @@ public:
 
 //---------------------------------------------------------------
 
+enum COMFileOpenMode
+{
+  fomClosed, fomOpenRead, fomOpenReadWrite, fomOpenReadAppend
+};
+
+//---------------------------------------------------------------
+
 /**
    Dateiobjekt, benutzt nur UNIX System-Calls
 */
@@ -37,23 +44,30 @@ public:
 
   //@{
   void open_read(const char *);
-  void open_write(const char *);
-  void open_append(const char *);
+  void open_read_write(const char *);
+  void open_read_append(const char *);
   void close();
-  bool open() const;
   //@}
 
-  void write(const char *, unsigned int);
-  void seek(unsigned int);
+  //@{
+  bool open() const;
+  COMFileOpenMode open_mode() const;
+  string path() const;
+  //@}
+
+  //@{
   void read(char *, unsigned int, unsigned int * = 0);
-  
-  long long size() const;
+  void write(const char *, unsigned int);
+  void append(const char *, unsigned int);
+  void seek(unsigned int);
+  //@}
+
+  long long calc_size();
 
 private:
   int _fd;                /**< File-Descriptor */
-  bool _open;             /**< Ist die Datei momentan geöffnet? */
-  bool _opened_read_only; /**< Darf auch geschrieben werden? */
-  long long _size;        /**< Größe der geschriebenen Datenmenge */
+  COMFileOpenMode _mode;  /**< Öffnungsmodus */
+  string _path;           /**< Pfad der geöffneten Datei */
 };
 
 //---------------------------------------------------------------
@@ -66,20 +80,33 @@ private:
 
 inline bool COMFile::open() const
 {
-  return _open;
+  return _mode != fomClosed;
 }
 
 //---------------------------------------------------------------
 
 /**
-   Ermöglicht Lesezugriff auf Größe der bisherigen Daten
+   Ermöglicht Lesezugriff auf den Öffnungszustand
 
-   \return Dateigröße in Bytes
+   \return Zustand
 */
 
-inline long long COMFile::size() const
+inline COMFileOpenMode COMFile::open_mode() const
 {
-  return _size;
+  return _mode;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt den Pfad der geöffneten date zurück
+
+   \return Pfad
+*/
+
+inline string COMFile::path() const
+{
+  return _path;
 }
 
 //---------------------------------------------------------------

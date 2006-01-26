@@ -8,7 +8,6 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <signal.h>
 #include <syslog.h>
 #include <errno.h>
 #include <dirent.h>
@@ -24,6 +23,14 @@ using namespace std;
 #include "com_job_preset.hpp"
 #include "dls_globals.hpp"
 #include "dls_proc_mother.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.11 2005/01/25 08:48:00 fp Exp $");
+
+//---------------------------------------------------------------
+
+//#define DEBUG
 
 //---------------------------------------------------------------
 
@@ -78,9 +85,16 @@ DLSProcMother::~DLSProcMother()
 
 int DLSProcMother::start(const string &dls_dir)
 {
+#ifdef DEBUG
+  int p;
+#endif
+
   _dls_dir = dls_dir;
 
-  _msg << "----- mother process started. -----";
+  _msg << "----- mother process started -----";
+  _log(DLSInfo);
+
+  _msg << dls_version_str;
   _log(DLSInfo);
 
   _msg << "using dir \"" << _dls_dir << "\"";
@@ -89,7 +103,7 @@ int DLSProcMother::start(const string &dls_dir)
   // Spooling-Verzeichnis leeren
   _empty_spool();
 
-  // Alle Aufträge laden
+  // Anfangs einmal alle Aufträge laden
   _check_jobs();
 
   while (1)
@@ -107,14 +121,31 @@ int DLSProcMother::start(const string &dls_dir)
     // Laufen alle Prozesse noch?
     _check_processes();
 
-    if (process_forked || _exit) break;
+    if (process_type != dlsMotherProcess || _exit) break;
 
     // Alle Arbeit ist getan - Schlafen legen
     sleep(JOB_CHECK_INTERVAL);
   }
 
-  if (!process_forked)
+  if (process_type == dlsMotherProcess)
   {
+    // Auf alle Erfassungprozesse Warten
+#ifdef DEBUG
+    while ((p = _processes_running()) > 0)
+    {
+      _msg << "waiting for " << p << " process(es) to exit...";
+      _log(DLSInfo);
+#else
+    while (_processes_running())
+    {
+#endif
+      // Warten ...
+      sleep(JOB_CHECK_INTERVAL);
+
+      // ... auf SIGCHLD
+      _check_signals();
+    }
+
     _msg << "----- mother process finished. -----";
     _log(DLSInfo);
   }
@@ -194,7 +225,7 @@ void DLSProcMother::_check_jobs()
   stringstream str;
   unsigned int job_id;
   fstream file;
-  COMJobPreset job;
+  DLSJobPreset job;
 
   str.exceptions(ios::badbit | ios::failbit);
 
@@ -254,9 +285,6 @@ void DLSProcMother::_check_jobs()
       continue;
     }
 
-    job.pid = 0;
-    job.last_exit_code = 0;
-
     // Auftrag in die Liste einfügen
     _jobs.push_back(job);
   }
@@ -284,11 +312,18 @@ void DLSProcMother::_check_jobs()
 
 void DLSProcMother::_check_signals()
 {
-  int status, pid, exitcode;
-  list<COMJobPreset>::iterator job_i;
+  int status;
+  pid_t pid;
+  int exit_code;
+  list<DLSJobPreset>::iterator job_i;
+  list<pid_t> terminated;
+  list<pid_t>::iterator term_i;
 
   if (sig_int_term)
   {
+    // Rücksetzen, um nochmaliges Auswerten zu verhindern
+    sig_int_term = 0;
+
     _exit = true;
 
     _msg << "SIGINT or SIGTERM received.";
@@ -298,7 +333,24 @@ void DLSProcMother::_check_signals()
     job_i = _jobs.begin();
     while (job_i != _jobs.end())
     {
-      if (_process_exists(&(*job_i))) _process_term(&(*job_i));
+      if (job_i->process_exists())
+      {
+        _msg << "terminating process for job " << job_i->id_desc();
+        _msg << " with PID " << job_i->process_id();
+        _log(DLSInfo);
+
+        try
+        {
+          // Prozess terminieren
+          job_i->process_terminate();
+        }
+        catch (ECOMJobPreset &e)
+        {
+          _msg << e.msg;
+          _log(DLSWarning);
+        }
+      }
+
       job_i++;
     }
 
@@ -307,20 +359,21 @@ void DLSProcMother::_check_signals()
 
   while (_sig_child != sig_child)
   {
+    _sig_child++;
+
     pid = wait(&status); // Zombie töten!
-    exitcode = (signed char) WEXITSTATUS(status);
+    exit_code = (signed char) WEXITSTATUS(status);
 
     job_i = _jobs.begin();
     while (job_i != _jobs.end())
     {
-      if (job_i->pid == pid)
+      if (job_i->process_id() == pid)
       {
-        job_i->last_exit_code = exitcode;
-        job_i->exit_time.set_now();
+        job_i->process_exited(exit_code);
 
         _msg << "process for job " << job_i->id_desc();
-        _msg << " with PID " << job_i->pid;
-        _msg << " exited with code " << job_i->last_exit_code;
+        _msg << " with PID " << pid;
+        _msg << " exited with code " << exit_code;
         _log(DLSInfo);
 
         break;
@@ -328,8 +381,6 @@ void DLSProcMother::_check_signals()
 
       job_i++;
     }
-
-    _sig_child++;
   }
 }
 
@@ -369,8 +420,8 @@ void DLSProcMother::_check_spool()
   int job_id;
   string action, filename;
   fstream file;
-  COMJobPreset new_job, *job;
-  list<COMJobPreset>::iterator job_i;
+  DLSJobPreset new_job, *job;
+  list<DLSJobPreset>::iterator job_i;
 
   // Das Spoolverzeichnis öffnen
   if ((dir = opendir(spool_dir.c_str())) == NULL)
@@ -422,9 +473,6 @@ void DLSProcMother::_check_spool()
         continue;
       }
 
-      new_job.pid = 0;
-      new_job.last_exit_code = 0;
-
       // Spooling-Datei löschen
       if (unlink(filename.c_str()) != 0) continue;
 
@@ -453,22 +501,35 @@ void DLSProcMother::_check_spool()
       // ERST Spooling-Datei löschen
       if (unlink(filename.c_str()) != 0) continue;
 
+      // PID des laufenden Prozesses übernehmen
+      new_job.process_started(job->process_id());
+
       // Daten kopieren
-      new_job.pid = job->pid;
-      new_job.last_exit_code = job->last_exit_code;
       *job = new_job;
 
       _msg << "changed job " << new_job.id_desc();
       _log(DLSInfo);
 
-      if (_process_exists(&(*job)))
+      if (job->process_exists())
       {
-        // Prozess benachrichtigen
-        _process_notify(&(*job));
+        _msg << "notifying process for job " << job->id_desc();
+        _msg << " with PID " << job->process_id();
+        _log(DLSInfo);
+
+        try
+        {
+          // Prozess benachrichtigen
+          job->process_notify();
+        }
+        catch (ECOMJobPreset &e)
+        {
+          _msg << e.msg;
+          _log(DLSWarning);
+        }
       }
       else
       {
-        job->last_exit_code = 0;
+        job->allow_restart();
       }
     }
 
@@ -480,8 +541,25 @@ void DLSProcMother::_check_spool()
       {
         if (job_i->id() == job_id)
         {
-          if (_process_exists(&(*job_i))) _process_term(&(*job_i));
+          if (job_i->process_exists())
+          {
+            _msg << "terminating process for job " << job_i->id_desc();
+            _msg << " with PID " << job_i->process_id();
+            _log(DLSInfo);
+            
+            try
+            {
+              job_i->process_terminate();
+            }
+            catch (ECOMJobPreset &e)
+            {
+              _msg << e.msg;
+              _log(DLSWarning);
+            }
+          }
 
+
+          // TODO: Hier nocht nicht löschen, erst wenn Prozess beendet.
           _jobs.erase(job_i);
 
           // Spooling-Datei löschen
@@ -518,7 +596,7 @@ void DLSProcMother::_check_spool()
 void DLSProcMother::_check_processes()
 {
   int fork_ret;
-  list<COMJobPreset>::iterator job_i = _jobs.begin();
+  list<DLSJobPreset>::iterator job_i = _jobs.begin();
   string dir;
 
   while (job_i != _jobs.end())
@@ -527,18 +605,18 @@ void DLSProcMother::_check_processes()
     if (job_i->running()    
 
         // Tut er aber nicht!
-        && !_process_exists(&(*job_i))      
+        && !job_i->process_exists()
 
         // und er darf entweder gestartet werden...
-        && (job_i->last_exit_code == E_DLS_NO_ERROR 
+        && (job_i->last_exit_code() == E_DLS_NO_ERROR 
 
             // ...oder er wurde auf Grund eines Zeit-Toleranzfehlers beendet...
-            || (job_i->last_exit_code == E_DLS_TIME_TOLERANCE 
+            || (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE 
 
                 // ...und die Wartezeit ist um!
-                && job_i->exit_time <= COMTime::now() - COMTime(TIME_TOLERANCE_RESTART * 1000000.0))))
+                && job_i->exit_time() <= COMTime::now() - COMTime(TIME_TOLERANCE_RESTART * 1000000.0))))
     {
-      if (job_i->last_exit_code == E_DLS_TIME_TOLERANCE)
+      if (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE)
       {
         _msg << "restarting process for job " << job_i->id_desc();
         _msg << " after time tolerance error";
@@ -552,22 +630,21 @@ void DLSProcMother::_check_processes()
       
       if ((fork_ret = fork()) == 0) // Kindprozess
       {
+        // Globale Forking-Flags setzen
+        process_type = dlsLoggingProcess;
         job_id = job_i->id();
-        process_forked = true; // Globales Flag setzen
 
         break;
       }
       else if (fork_ret > 0) // Elternprozess
       {
-        job_i->pid = fork_ret;
+        job_i->process_started(fork_ret);
 
-        _msg << "started process with PID " << job_i->pid;
+        _msg << "started process with PID " << job_i->process_id();
         _log(DLSInfo);
       }
       else // Fehler
       {
-        job_i->pid = 0;
-
         _msg << "error " << errno << " in fork()";
         _log(DLSError);
       }
@@ -590,9 +667,9 @@ void DLSProcMother::_check_processes()
    \return Zeiger auf Auftragsvorgaben oder 0
 */
 
-COMJobPreset *DLSProcMother::_job_exists(int id)
+DLSJobPreset *DLSProcMother::_job_exists(int id)
 {
-  list<COMJobPreset>::iterator job_i = _jobs.begin();
+  list<DLSJobPreset>::iterator job_i = _jobs.begin();
 
   while (job_i != _jobs.end())
   {
@@ -610,76 +687,28 @@ COMJobPreset *DLSProcMother::_job_exists(int id)
 //---------------------------------------------------------------
 
 /**
-   Prüft, ob zu einem Auftrag ein Erfassungsprozess läuft
+   Prüft, ob noch Erfassungprozesse laufen
 
-   \param job Zeiger auf die Auftragsvorgaben
-   \return true, wenn der Prozess läuft
+   \return Anzahl der laufenden Erfassungprozesse
 */
 
-bool DLSProcMother::_process_exists(COMJobPreset *job)
+unsigned int DLSProcMother::_processes_running()
 {
-  if (job->pid == 0) return false;
+  list<DLSJobPreset>::iterator job_i;
+  unsigned int process_count = 0;
 
-  if (kill(job->pid, 0) == -1)
+  job_i = _jobs.begin();
+  while (job_i != _jobs.end())
   {
-    if (errno == ESRCH)
+    if (job_i->process_exists())
     {
-      job->pid = 0;
-      return false;
+      process_count++;
     }
+
+    job_i++;
   }
 
-  return true;
-}
-
-//---------------------------------------------------------------
-
-/**
-   Beendet einen Erfassungsprozess
-
-   \param job Zeiger auf die Auftragsvorgaben
-*/
-
-void DLSProcMother::_process_term(COMJobPreset *job)
-{
-  if (job->pid == 0) return;
-
-  _msg << "terminating process for job " << job->id_desc();
-  _msg << " with PID " << job->pid;
-  _log(DLSInfo);
-
-  if (kill(job->pid, SIGTERM) == -1)
-  {
-    _msg << "kill(): process not terminated!";
-    _log(DLSError);
-  }
-  else
-  {
-    job->pid = 0;
-  }
-}
-
-//---------------------------------------------------------------
-
-/**
-   Benachrichtigt einen Erfassungsprozess über eine Änderung
-
-   \param job Konstanter Zeiger auf die Auftragsvorgaben
-*/
-
-void DLSProcMother::_process_notify(const COMJobPreset *job)
-{
-  if (job->pid == 0) return;
-
-  _msg << "notifying process for job " << job->id_desc();
-  _msg << " with PID " << job->pid;
-  _log(DLSInfo);
-
-  if (kill(job->pid, SIGHUP) == -1)
-  {
-    _msg << "error in kill() - process not notified!";
-    _log(DLSError);
-  }
+  return process_count;
 }
 
 //---------------------------------------------------------------

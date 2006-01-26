@@ -33,7 +33,7 @@ public:
   virtual ~DLSSaverMetaT();
 
   void generate_meta_data(COMTime, COMTime, unsigned int, const T *);
-  void create_carry(COMTime, COMTime, unsigned int, const T *);
+  void flush();
 
 private:
   DLSSaverMetaT<T> *_next_saver; /**< Zeiger auf das Saver-Objekt der nächsten Ebene */
@@ -43,10 +43,6 @@ private:
 
   void _pass_meta_data();
   T _meta_value(const T *, unsigned int);
-  void _create_carry(COMTime, COMTime, unsigned int, const T *);
-  void _save_and_pass_carry(COMTime, COMTime, unsigned int, T);
-  void _pass_finish_files();
-
   int _meta_level() const;
   string _meta_type() const;
 };
@@ -59,7 +55,7 @@ DLSSaverMetaT<T>::DLSSaverMetaT(DLSLogger *parent_logger,
                                 unsigned int level)
   : DLSSaverT<T>(parent_logger)
 {
-  _next_saver = 0;
+  _next_saver = (DLSSaverMetaT<T> *) 0;
   _type = type;
   _finished = true;
   _level = level;
@@ -70,11 +66,13 @@ DLSSaverMetaT<T>::DLSSaverMetaT(DLSLogger *parent_logger,
 template <class T>
 DLSSaverMetaT<T>::~DLSSaverMetaT()
 {
+#if 0
   if (!_finished)
   {
     msg() << "Meta-Saver Level " << _level << ": not finished!";
     log(DLSWarning);
   }
+#endif
 
   // Nächsten MetaSaver freigeben
   if (_next_saver) delete _next_saver;
@@ -188,79 +186,26 @@ void DLSSaverMetaT<T>::_pass_meta_data()
 //---------------------------------------------------------------
 
 template <class T>
-void DLSSaverMetaT<T>::create_carry(COMTime start_time,
-                                    COMTime end_time,
-                                    unsigned int length,
-                                    const T *buffer)
+void DLSSaverMetaT<T>::flush()
 {
-  // Alle Carries erzeugen
-  _create_carry(start_time, end_time, length, buffer);
-
-  // Alle Dateien beenden
-  _pass_finish_files();
-}
-
-//---------------------------------------------------------------
-
-template <class T>
-void DLSSaverMetaT<T>::_create_carry(COMTime start_time,
-                                     COMTime end_time,
-                                     unsigned int length,
-                                     const T *buffer)
-{
-  unsigned int n;
-
   // Zuerst Blockdaten speichern
   _save_block();
 
-  // Dann die "Höheren" ihr Carry erzeugen lassen
-  if (_next_saver) _next_saver->_create_carry(_meta_time,
-                                              _time_of_last,
-                                              _meta_buf_index,
-                                              _meta_buf);
+  // Eventuell restliche Daten des Kompressionsobjektes speichern
+  _save_rest();
 
-  _meta_buf_index = 0;
-
-  // Eigenes Carry erzeugen
-  if (length > 0)
-  {
-    // Anzahl der enthaltenen, generischen Werte errechnen
-    n = (unsigned int) pow((double) _parent_logger->channel_preset()->meta_reduction,
-                           (int) (_level - 1)) * length;
-
-    // Carry speichern und werterreichen
-    _save_and_pass_carry(start_time, end_time, n, _meta_value(buffer, length));
-  }
-
-  _finished = true;
-}
-
-//---------------------------------------------------------------
-
-template <class T>
-void DLSSaverMetaT<T>::_save_and_pass_carry(COMTime start_time,
-                                            COMTime end_time,
-                                            unsigned int n,
-                                            T carry_val)
-{
-  _save_carry(start_time, end_time, n, carry_val);
-   
-  // Carry weiterreichen
-  if (_next_saver) _next_saver->_save_and_pass_carry(start_time,
-                                                     end_time,
-                                                     n,
-                                                     carry_val);
-}
-
-//---------------------------------------------------------------
-
-template <class T>
-void DLSSaverMetaT<T>::_pass_finish_files()
-{
+  // Dateien Beenden
   _finish_files();
-   
-  // Weiterreichen
-  if (_next_saver) _next_saver->_pass_finish_files();
+
+  // Persistenten Speicher des Kompressionsobjekt leeren
+  _compression->clear();
+
+  // Puffer sind jetzt leer
+  _meta_buf_index = 0;
+  _finished = true;
+
+  // Kinder sollen auch alle flush() aufrufen
+  if (_next_saver) _next_saver->flush();
 }
 
 //---------------------------------------------------------------

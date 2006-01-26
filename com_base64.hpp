@@ -9,6 +9,7 @@
 
 //---------------------------------------------------------------
 
+#include "com_globals.hpp"
 #include "com_exception.hpp"
 
 //---------------------------------------------------------------
@@ -42,10 +43,10 @@ public:
   void decode(const char *, unsigned int);
 
   const char *output() const;
-  unsigned int length() const;
+  unsigned int output_length() const;
 
 private:
-  char *_out_buf; /**< Zeiger auf den Ergebnispuffer */
+  char *_out_buf;        /**< Zeiger auf den Ergebnispuffer */
   unsigned int _out_len; /**< Länge des Ergebnispuffers */
 };
 
@@ -55,7 +56,7 @@ private:
    Ermöglicht Lesezugriff auf den Ergebnispuffer
 
    \return Konstanter Zeiger auf den Ergebnispuffer
- */
+*/
 
 inline const char *COMBase64::output() const
 {
@@ -68,9 +69,9 @@ inline const char *COMBase64::output() const
    Ermittelt die Länge der Daten im Ergebnispuffer
 
    \return Länge in Bytes
- */
+*/
 
-inline unsigned int COMBase64::length() const
+inline unsigned int COMBase64::output_length() const
 {
   return _out_len;
 }

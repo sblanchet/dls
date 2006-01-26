@@ -16,10 +16,15 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+#include "fl_track_bar.hpp"
 #include "com_time.hpp"
 #include "view_channel.hpp"
 
 //---------------------------------------------------------------
+
+/**
+   Bereich eines Chunks zur Anzeige der nicht erfassten Bereiche
+*/
 
 struct ViewViewDataChunkRange
 {
@@ -27,10 +32,19 @@ struct ViewViewDataChunkRange
   COMTime end;
 };
 
-bool range_before(const ViewViewDataChunkRange &,
-                  const ViewViewDataChunkRange &);
-
 //---------------------------------------------------------------
+
+/**
+   Anzeige für Messdaten
+
+   Diese Anzeige kann die Daten mehrerer Kanäle
+   übereinander darstellen. Diese werden auf die
+   volle Widget-Höhe verteilt. Würden, die einzelnen
+   Kanäle zu schmal werden, wird eine Mindesthöhe
+   für jeden Kanal verwendet und eine Track-Bar
+   angezeigt. Das Widget unterstützt Interaktionen
+   mit Maus und Keyboard
+*/
 
 class ViewViewData : public Fl_Widget
 {
@@ -38,6 +52,7 @@ public:
   ViewViewData(int, int, int, int, const char * = "");
   ~ViewViewData();
 
+  // Öffentliche Methoden
   void set_job(const string &, unsigned int);
   void add_channel(const ViewChannel *);
   void rem_channel(const ViewChannel *);
@@ -45,47 +60,71 @@ public:
   void clear();
   void full_range();
   void update();
+  void range_callback(void (*)(COMTime, COMTime, void *), void *);
 
 private:
   // Daten
-  list<ViewChannel> _channels;
-  COMTime _range_start;                      /**< Startzeit der anzuzeigenden Zeitspanne */
-  COMTime _range_end;                        /**< Endzeit der anzuzeigenden Zeitspanne */
-  bool _full_range;                          /**< Gibt an, ob beim Hinzufügen eines
-                                                  Kanales die Zeitspanne auf die volle
-                                                  Zeitspanne ausgeweitet werden soll. */
+  string _dls_dir;             /**< DLS-Datenverzeichnis */
+  unsigned int _job_id;        /**< Auftrags-ID */
+  Fl_Track_Bar *_track_bar;    /**< Vertikale Track-Bar */
+  list<ViewChannel> _channels; /**< Liste der zu Zeigenden Kanäle */
+  COMTime _range_start;        /**< Startzeit der anzuzeigenden Zeitspanne */
+  COMTime _range_end;          /**< Endzeit der anzuzeigenden Zeitspanne */
+  bool _full_range;            /**< Gibt an, ob beim Hinzufügen eines
+                                    Kanales die Zeitspanne auf die volle
+                                    Zeitspanne ausgeweitet werden soll. */
 
-  string _dls_dir;
-  unsigned int _job_id;
+  // Callbacks
+  void (*_range_cb)(COMTime, COMTime, void *); /**< Funktionszeiger auf Callback
+                                                    bei Zeitbereichsänderungen */
+  void *_range_cb_data;                        /**< Daten zur Übergabe bei Range-CB */
 
   // Widget-Zustand
-  bool _focused;
-  bool _dragging_line;
-  bool _moving;
-  bool _scanning;
-  int _start_x, _start_y, _end_x, _end_y;
-  bool _mouse_in;
-  bool _do_not_draw;
+  bool _focused;       /**< Das Widget hält momentan den Fokus */
+  bool _zooming;       /**< Der Benutzer zieht einen Zoom-Bereich auf */
+  bool _moving;        /**< Der Benutzer zieht einen Verschiebungs-Pfeil */
+  bool _scanning;      /**< Der Benutzer lässt die Scan-Linie anzeigen */
+  int _scan_x;         /**< X-Position der Scan-Linie */
+  int _start_x;        /**< X-Position des Cursors zu Beginn einer Aktion */
+  int _start_y;        /**< Y-Position des Cursors zu Beginn einer Aktion */
+  int _end_x;          /**< X-Position des Cursors zum Ende einer Aktion */
+  int _end_y;          /**< Y-Position des Cursors zum Ende einer Aktion */
+  bool _mouse_in;      /**< Der Mauscursor befindet sich auf dem Widget */
+  bool _do_not_draw;   /**< Flag: Der Inhalt soll nicht neu gezeichnet werden */
 
-  // Scrollbar
-  bool _scroll_bar_visible;
-  int _scroll_pos;
-  int _scroll_button_pos, _scroll_button_height, _scroll_grip;
-  bool _scroll_button_tracking;
-  
+  // Temporäre Größen zum Zeichnen
+  int _channel_area_width;  /**< Breite des Zeichenbereiches für die Kanäle */
+  int _channel_area_height; /**< Höhe des zeichenbereiches für die Kanäle */
+  int _channel_height;      /**< Höhe einer Kanalzeile, incl. Textbox */
+  double _channel_min;      /**< Kleinster Wert des aktuellen Kanals */
+  double _channel_max;      /**< Größter Wert des aktuellen Kanals */
+  int _scroll_pos;          /**< Anzeige-Offset (abhängig von track-Bar) */
+  double _scale_x;          /**< Faktor für horizontale Skalierung (in px/µs) */
+  double _scale_y;          /**< Faktor für vertikale Skalierung (in px/µs) */
+  bool _scan_found;         /**< Es gibt einen Schnittpunkt der Daten mit der Scan-Linie */
+  double _scan_min;         /**< Minimaler Datenwert an der Scanlinie des aktuellen Kanals */
+  double _scan_max;         /**< Maximaler Datenwert an der Scanlinie des aktuellen Kanals */
+  int _scan_ch_x;           /**< X-Position der eingeschnappten Scanlinie eines Kanals */
+
+  // Private Methoden
   void _load_data();
   void _calc_range();
-
-  virtual void draw();
-  virtual int handle(int);
-
   void _draw_gaps(const ViewChannel *, int, int, int, int);
   void _draw_time_scale(unsigned int, unsigned int, unsigned int, unsigned int);
   void _draw_scroll_bar(unsigned int, unsigned int, unsigned int, unsigned int);
   void _draw_channel(const ViewChannel *, int, int, int, int);
-  void _draw_gen(const ViewChannel *, const ViewChunk *, int, int, int, int);
-  void _draw_min_max(const ViewChannel *, const ViewChunk *, int, int, int, int);
+  void _draw_gen(const ViewChunk *, int, int, int, int);
+  void _draw_min_max(const ViewChunk *, int, int, int, int);
   void _draw_interactions();
+  void _draw_scan(const ViewChannel *, int, int, int, int);
+
+  // Prädikatsfunktion zum Sortieren
+  static bool range_before(const ViewViewDataChunkRange &,
+                           const ViewViewDataChunkRange &);
+
+  // FLTK
+  virtual void draw();
+  virtual int handle(int);
 };
 
 //---------------------------------------------------------------

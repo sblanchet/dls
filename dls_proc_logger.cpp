@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <syslog.h>
 
 #include <fstream>
@@ -15,9 +16,15 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "com_ring_buffer_t.hpp"
-#include "com_real_channel.hpp"
 #include "dls_globals.hpp"
 #include "dls_proc_logger.hpp"
+
+#define DEBUG
+// #define DEBUG_SIZES
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_logger.cpp,v 1.17 2005/01/25 09:52:32 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -32,6 +39,7 @@ DLSProcLogger::DLSProcLogger(const string &dls_dir, int job_id)
 {
   _dls_dir = dls_dir;
   _sig_hangup = sig_hangup;
+  _sig_child = sig_child;
   _exit = false;
   _exit_code = E_DLS_NO_ERROR;
   _state = dls_connecting;
@@ -104,18 +112,30 @@ DLSProcLogger::~DLSProcLogger()
 
 int DLSProcLogger::start()
 {
-  _msg << "process started!";
+  _msg << "process started for job " << job_id << "!";
   log(DLSInfo);
 
-  _start();
+  _create_pid_file();
 
+  if (!_exit)
+  {
+    // Ablauf starten
+    _start();
+  
+    if (process_type == dlsLoggingProcess)
+    {
+      // PID-Datei wieder entfernen
+      _remove_pid_file();
+    }
+  }
+    
   if (_exit_code == E_DLS_NO_ERROR)
   {
-    _msg << "----- process finished. exiting gracefully. -----";
+    _msg << "----- logging process finished. exiting gracefully. -----";
   }
   else
   {
-    _msg << "----- process finished. exiting with ERROR! (code " << _exit_code << ") -----";
+    _msg << "----- logging process finished. exiting with ERROR! (code " << _exit_code << ") -----";
   }
 
   log(DLSInfo);
@@ -146,6 +166,20 @@ void DLSProcLogger::_start()
     return;
   }
 
+  // Meldungen über Quota-Benutzung ausgeben
+
+  if (_job->preset()->quota_time())
+  {
+    _msg << "using time quota of " << _job->preset()->quota_time() << " seconds";
+    log(DLSInfo);
+  }
+  
+  if (_job->preset()->quota_size())
+  {
+    _msg << "using size quota of " << _job->preset()->quota_size() << " bytes";
+    log(DLSInfo);
+  }
+
   // Mit Prüfstand verbinden
   if (!_connect_socket())
   {
@@ -160,6 +194,9 @@ void DLSProcLogger::_start()
   // Verbindung zu MSR schliessen
   close(_socket);
 
+  _msg << "connection to " << _job->preset()->source() << " closed.";
+  log(DLSInfo);
+
   try
   {
     _job->finish();
@@ -171,9 +208,20 @@ void DLSProcLogger::_start()
     _msg << "finishing: " << e.msg;
     log(DLSError);
   }
+
+#ifdef DEBUG_SIZES
+  _msg << "wrote " << _job->data_size() << " bytes of data.";
+  log(DLSInfo);
+#endif
 }
 
 //---------------------------------------------------------------
+
+/**
+   Verbindung zur Datenquelle aufbauen
+
+   \return true, wenn die Verbindung aufgebaut werden konnte
+*/
 
 bool DLSProcLogger::_connect_socket()
 {
@@ -226,6 +274,10 @@ bool DLSProcLogger::_connect_socket()
 
 //---------------------------------------------------------------
 
+/**
+   Führt alle Lese- und Schreiboperationen durch
+*/
+
 void DLSProcLogger::_read_write_socket()
 {
   fd_set read_fds, write_fds;
@@ -267,14 +319,19 @@ void DLSProcLogger::_read_write_socket()
 	// Daten abholen...
         if ((recv_ret = recv(_socket, write_addr, write_size, 0)) > 0)
         {
-          #if DEBUG_REC
+#if DEBUG_REC
           _msg << "REC: \"" << string(write_addr, recv_ret) << "\""; 
           log(DLSInfo);
-          #endif
+#endif
 
+          // Dem Ring-Puffer mitteilen, dass Daten geschrieben wurden
           _ring_buf->written(recv_ret);
 
+          // Daten im Ring-Pugger parsen...
           _parse_ring_buffer();
+
+          // Wenn ein Fehler passiert ist, jetzt ausbrechen!
+          if (_exit) break;
         }
         else if (recv_ret == 0) // Verbindung geschlossen!
         {
@@ -304,10 +361,10 @@ void DLSProcLogger::_read_write_socket()
         // Daten senden
         if ((send_ret = send(_socket, _to_send.c_str(), _to_send.length(), 0)) > 0)
         {
-          #if DEBUG_SEND
+#if DEBUG_SEND
           _msg << "SENT: \"" << _to_send.substr(0, send_ret) << "\"";
           log(DLSInfo);
-          #endif
+#endif
 
           _to_send.erase(0, send_ret); // Gesendetes entfernen
         }
@@ -330,15 +387,23 @@ void DLSProcLogger::_read_write_socket()
     }
 
     // Select-Fehler
-    else if (select_ret == -1 && errno != EINTR)
+    else if (select_ret == -1)
     {
-      _exit = true;
-      _exit_code = E_DLS_ERROR;
-
-      _msg << "error " << errno << " in select()!";
-      log(DLSError);
-
-      break;
+      if (errno == EINTR)
+      {
+        _msg << "select() interrupted by signal.";
+        log(DLSInfo);
+      }
+      else
+      {
+        _exit = true;
+        _exit_code = E_DLS_ERROR;
+        
+        _msg << "error " << errno << " in select()!";
+        log(DLSError);
+        
+        break;
+      }
     }
 
     // Auf gesetzte Signale überprüfen
@@ -353,7 +418,7 @@ void DLSProcLogger::_read_write_socket()
     _do_watchdogs();
 
     // Warnung ausgeben, wenn zu lange keine Daten mehr empfangen
-    if (COMTime::now() - _last_data_received > (long long) 61000000)
+    if (COMTime::now() - _last_data_received > (long long) NO_DATA_WARNING * 1000000)
     {
       if (!_no_data_warning)
       {
@@ -363,6 +428,7 @@ void DLSProcLogger::_read_write_socket()
           log(DLSWarning);
         }
         _no_data_warning = true;
+        _first_data_time.set_null();
       }
     }
     else if (_no_data_warning)
@@ -371,6 +437,9 @@ void DLSProcLogger::_read_write_socket()
       log(DLSInfo);
       _no_data_warning = false;
     }
+
+    // Quota
+    _do_quota();
  
     // Soll der Prozess beendet werden?
     if (_exit) break;
@@ -379,6 +448,12 @@ void DLSProcLogger::_read_write_socket()
 
 //---------------------------------------------------------------
 
+/**
+   Merkt ein Kommando zum Senden an die Datenquelle vor
+
+   \param cmd Kommando-String
+*/
+
 void DLSProcLogger::send_command(const string &cmd)
 {
   _to_send += cmd + "\n";
@@ -386,17 +461,25 @@ void DLSProcLogger::send_command(const string &cmd)
 
 //---------------------------------------------------------------
 
+/**
+   Überprüft, ob Signale anstehen
+*/
+
 void DLSProcLogger::_check_signals()
 {
+  int status;
+  pid_t pid;
+  int exit_code;
+
   if (sig_int_term)
   {
     _exit = true;
 
     _msg << "SIGINT or SIGTERM received in state " << _state << "!";
-    log(DLSInfo);    
-  }
+    log(DLSInfo);   
 
-  if (_exit) return; // Bei Beendingung nicht mehr SIGHUP verarbeiten
+    return;
+  }
 
   // Nachricht von Elternprozess: Auftrag hat sich geändert!
   if (sig_hangup != _sig_hangup)
@@ -446,33 +529,57 @@ void DLSProcLogger::_check_signals()
       }
     }
   }
+
+  // Flush-Prozess hat sich beendet
+  while (sig_child != _sig_child)
+  {
+    _sig_child++;
+    
+    pid = wait(&status); // Zombie töten!
+    exit_code = (signed char) WEXITSTATUS(status);
+
+    _msg << "cleanup process exited with code " << exit_code;
+    log(DLSInfo);
+  }
 }
 
 //---------------------------------------------------------------
+
+/**
+   Parst die gelesenen Daten nach XML-Tags
+*/
 
 void DLSProcLogger::_parse_ring_buffer()
 {
   while (1)
   {
     try
-    {      
+    {
+      // Das nächste XML-Tag im Ringpuffer parsen
       _xml.parse(_ring_buf);
     }
     catch (ECOMXMLParserEOF &e) // Tag noch nicht komplett
     {
-      break;
+      // Weiter Daten empfangen
+      return;
     }
     catch (ECOMXMLParser &e) // Anderer Parsing-Fehler
     {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+      
       _msg << "parsing incoming data: " << e.msg << " tag: " << e.tag;
       log(DLSError);
 
-      continue;
+      // Prozess beenden!
+      return;
     }
 
     // Tag komplett; verarbeiten!
     _process_tag();
 
+    // Nach der Verarbeitung jedes Tags kann ein Fehler aufgetreten
+    // sein. Deshalb nach jedem Tag prüfen...
     if (_exit) break;
   }
 }
@@ -480,7 +587,7 @@ void DLSProcLogger::_parse_ring_buffer()
 //---------------------------------------------------------------
 
 /**
-   \todo Maximalen Fehler der Zeitabweichung auf 50% der Abtastrate (1000Hz->.05ms) zulassen!
+   Verarbeitet ein vollständig geparstes XML-Tag
 */
 
 void DLSProcLogger::_process_tag()
@@ -498,16 +605,9 @@ void DLSProcLogger::_process_tag()
     {
       _msg << "MSRD: " << _xml.last_tag()->tag();
       log(DLSInfo);
-      
-      try
-      {
-        _job->message(_xml.last_tag()->tag());
-      }
-      catch (EDLSJob &e)
-      {
-        _msg << "could not log last message!";
-        log(DLSError);
-      }
+     
+      // Message- und Message-Index-Datei aktualisieren
+      _job->message(_xml.last_tag());
       
       return;
     }
@@ -520,46 +620,40 @@ void DLSProcLogger::_process_tag()
     }
 
     // Trigger-Parameter verarbeiten
-    else if (_xml.last_tag()->title() == "parameter")
+    else if (_xml.last_tag()->title() == "parameter"                                 // Parameter empfangen
+             && _job->preset()->trigger() != ""                                      // Triggern aktiviert
+             && _xml.last_tag()->att("name")->to_str() == _job->preset()->trigger()) // Trigger-Parameter
     {
-      if (_job->preset()->trigger() != "") // Wenn Triggern aktiviert
+      if (_state == dls_waiting_for_trigger
+          && _xml.last_tag()->att("value")->to_int() != 0)
       {
-        if (_xml.last_tag()->att("name")->to_str() == _job->preset()->trigger())
-        {
-          if (_state == dls_waiting_for_trigger)
-          {
-            if (_xml.last_tag()->att("value")->to_int() != 0)
-            {
-              _state = dls_listening; // Zustandswechsel!
-              
-              _msg << "trigger active! start logging.";
-              log(DLSInfo);
-
-              _no_data_warning = true; // Gleich augeben, dass wieder Daten kommen
-
-              _job->start_logging();
-            }
-          }
-        
-          else if (_state == dls_listening || _state == dls_getting_data)
-          {
-            if (_xml.last_tag()->att("value")->to_int() == 0)
-            {
-              _state = dls_waiting_for_trigger;
-              
-              _msg << "trigger not active! stop logging.";
-              log(DLSInfo);
-
-              _job->stop_logging();
-
-              _msg << "waiting for trigger...";
-              log(DLSInfo);
-            }
-          }
+        _state = dls_listening; // Zustandswechsel!
             
-          return;
+        _msg << "trigger active! start logging.";
+        log(DLSInfo);
+            
+        _no_data_warning = true; // Gleich augeben, dass wieder Daten kommen
+            
+        _job->start_logging();
+      }
+        
+      else if (_state == dls_listening || _state == dls_getting_data)
+      {
+        if (_xml.last_tag()->att("value")->to_int() == 0)
+        {
+          _state = dls_waiting_for_trigger;
+              
+          _msg << "trigger not active! stop logging.";
+          log(DLSInfo);
+
+          _job->stop_logging();
+
+          _msg << "waiting for trigger...";
+          log(DLSInfo);
         }
       }
+            
+      return;
     }
 
     switch (_state) // Ab jetzt Zustandsabhängigkeit!
@@ -651,15 +745,29 @@ void DLSProcLogger::_process_tag()
         {
           try
           {
-            real_channel.read_from_tag(_xml.last_tag());
+            real_channel.name = _xml.last_tag()->att("name")->to_str();
+            real_channel.unit = _xml.last_tag()->att("unit")->to_str();
+            real_channel.index = _xml.last_tag()->att("index")->to_int();
+            real_channel.frequency = _xml.last_tag()->att("HZ")->to_int();
+            real_channel.bufsize = _xml.last_tag()->att("bufsize")->to_int();
+            real_channel.type = dls_str_to_channel_type(_xml.last_tag()->att("typ")->to_str());
             _real_channels.push_back(real_channel);
           }
-          catch (ECOMRealChannel &e)
+          catch (ECOMXMLTag &e)
           {
             _exit = true;
             _exit_code = E_DLS_ERROR;
 
-            _msg << "receiving channel: " << e.msg;
+            _msg << "receiving MSR channel: " << e.msg << " tag: " << e.tag;
+            log(DLSError);
+          }
+          catch (COMException &e) // Channel-Typ unbekannt
+          {
+            _exit = true;
+            _exit_code = E_DLS_ERROR;
+
+            _msg << "receiving MSR channel: unknown channel type \"";
+            _msg << "\"" << _xml.last_tag()->att("typ")->to_str() << "\"";
             log(DLSError);
           }
         }
@@ -698,6 +806,9 @@ void DLSProcLogger::_process_tag()
 
           _data_time.from_dbl_time(_xml.last_tag()->att("time")->to_dbl());
 
+          // zeit des ersten Datenempfanges vermerken
+          if (_first_data_time.is_null()) _first_data_time = _data_time;
+
           if (_xml.last_tag()->has_att("level"))
           {
             // Meldungen über Füllstand der Kanalpuffer auswerten
@@ -713,9 +824,10 @@ void DLSProcLogger::_process_tag()
                      && new_buffer_level < BUFFER_LEVEL_WARNING)
             {
               // Entwarnung geben
-              _msg << "level of channel buffers decreasing again...";
-              log(DLSWarning);
+              _msg << "level of channel buffers decreasing...";
+              log(DLSInfo);
             }
+
             _buffer_level = new_buffer_level;
           }
         }
@@ -770,6 +882,10 @@ void DLSProcLogger::_process_tag()
 
 //---------------------------------------------------------------
 
+/**
+   Veranlasst das Senden des Trigger-Parameters
+*/
+
 void DLSProcLogger::_do_trigger()
 {
   stringstream cmd;
@@ -789,6 +905,10 @@ void DLSProcLogger::_do_trigger()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Ändert die Watchdog-Dateien
+*/
 
 void DLSProcLogger::_do_watchdogs()
 {
@@ -822,15 +942,246 @@ void DLSProcLogger::_do_watchdogs()
 
 //---------------------------------------------------------------
 
+/**
+   Erstellt die PID-Datei
+*/
+
+void DLSProcLogger::_create_pid_file()
+{
+  stringstream pid_file_name;
+  fstream new_pid_file, old_pid_file;
+  pid_t pid;
+  struct stat stat_buf;
+
+  pid_file_name << _dls_dir << "/job" << job_id << "/" << DLS_PID_FILE;
+
+  if (stat(pid_file_name.str().c_str(), &stat_buf) == -1)
+  {
+    if (errno != ENOENT)
+    {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+
+      msg() << "Could not stat() file \"" << pid_file_name.str();
+      msg() << "\": " << strerror(errno);
+      log(DLSError);
+
+      return;
+    }
+  }
+  else // PID-Datei existiert bereits!
+  {
+    old_pid_file.exceptions(ios::badbit | ios::failbit);
+
+    old_pid_file.open(pid_file_name.str().c_str(), ios::in);
+
+    if (!old_pid_file.is_open())
+    {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+
+      msg() << "Could not open existing PID file \"" << pid_file_name.str() << "\"!";
+      log(DLSError);
+
+      return;
+    }
+
+    try
+    {
+      old_pid_file >> pid;
+    }
+    catch (...)
+    {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+
+      old_pid_file.close();
+
+      msg() << "Exsting PID file \"" << pid_file_name.str() << "\" is corrupt!";
+      log(DLSError);
+
+      return;
+    }
+
+    old_pid_file.close();
+
+    if (kill(pid, 0) == -1)
+    {
+      if (errno != ESRCH)
+      {
+        _exit = true;
+        _exit_code = E_DLS_ERROR;
+
+        msg() << "Could not signal process " << pid << "!";
+        log(DLSError);
+
+        return;
+      }
+    }
+    else // Prozess läuft noch!
+    {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+        
+      msg() << "Another logging process ist running on job " << job_id << "!";
+      log(DLSError);
+
+      return;
+    }
+
+    // Existierende PID-Datei löschen
+    _remove_pid_file();
+
+    if (_exit) return;
+  }
+
+  new_pid_file.open(pid_file_name.str().c_str(), ios::out);
+
+  if (!new_pid_file.is_open())
+  {
+    _exit = true;
+    _exit_code = E_DLS_ERROR;
+        
+    msg() << "Could not create PID file \"" << pid_file_name.str() << "\"!";
+    log(DLSError);
+
+    return;
+  }
+
+  new_pid_file << getpid() << endl;
+  new_pid_file.close();
+}
+
+//---------------------------------------------------------------
+
+/**
+   Entfernt die PID-Datei
+*/
+
+void DLSProcLogger::_remove_pid_file()
+{
+  stringstream pid_file_name;
+
+  pid_file_name << _dls_dir << "/job" << job_id << "/" << DLS_PID_FILE;
+
+  if (unlink(pid_file_name.str().c_str()) == -1)
+  {
+    _exit = true;
+    _exit_code = E_DLS_ERROR;
+    
+    msg() << "Could not remove PID file \"" << pid_file_name << "\"!";
+    log(DLSError);
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Prüft, ob die Quota überschritten wurde
+
+   Wenn ja, wird ein Kindprozess abgeforkt, der für die Flush-
+   Operationen zuständig ist. Der Elternprozess vergisst alle
+   bisherigen Daten und empfängt neue Daten von der Quelle.
+*/
+
+void DLSProcLogger::_do_quota()
+{
+  int fork_ret;
+  long long quota_time = _job->preset()->quota_time();
+  long long quota_size = _job->preset()->quota_size();
+  bool quota_reached = false;
+  COMTime quota_time_limit;
+
+  if (quota_time && !_first_data_time.is_null())
+  {
+    quota_time_limit = _first_data_time + (long long) (quota_time * 1000000 / QUOTA_PART_QUOTIENT);
+
+    if (_data_time >= quota_time_limit)
+    {
+      quota_reached = true;
+
+      _msg << "time quota (1/" << QUOTA_PART_QUOTIENT << " of " << quota_time << " seconds) reached.";
+      log(DLSInfo);
+    }
+  }
+
+  if (quota_size)
+  {
+    if (_job->data_size() >= quota_size / QUOTA_PART_QUOTIENT)
+    {
+      quota_reached = true;
+
+      _msg << "size quota (1/" << QUOTA_PART_QUOTIENT << " of " << quota_size << " bytes) reached.";
+      log(DLSInfo);
+    }
+  }
+
+  if (quota_reached)
+  {
+    _first_data_time.set_null();
+    
+    if ((fork_ret = fork()) == -1)
+    {
+      _exit = true;
+      _exit_code = E_DLS_ERROR;
+      
+      _msg << "could not fork!";
+      log(DLSError);
+      
+      return;
+    }
+
+    if (fork_ret == 0) // "Kind"
+    {
+      // Wir sind jetzt der Aufräum-Prozess
+      process_type = dlsCleanupProcess;
+
+      // Normal beenden und Daten speichern
+      _exit = true;
+      
+      _msg << "flushing process forked.";
+      log(DLSInfo);
+    }
+    else
+    {
+      // Alle Daten vergessen. Diese werden vom anderen
+      // Zweig gespeichert.
+      _job->discard_data();
+    }
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Vermerkt eine Logging-Nachricht
+
+   Die eigentliche Nachricht muss vorher über die Methode
+   msg() vermerkt worden sein. Beispiel:
+
+   msg() << "Das ist Test Nummer " << i << ".";
+   log(DLSInfo);
+
+   \param type Typ der Nachricht (DLSError, DLSInfo, usw...)
+*/
+
 void DLSProcLogger::log(DLSLogType type)
 {
-  string mode;
+  string msg;
 
-  if (type == DLSError) mode = "ERROR";
-  else if (type == DLSInfo) mode = "INFO";
-  else if (type == DLSWarning) mode = "WARNING";
+  if (type == DLSError) msg = "ERROR";
+  else if (type == DLSInfo) msg = "INFO";
+  else if (type == DLSWarning) msg = "WARNING";
 
-  syslog(LOG_INFO, "%s: %s", mode.c_str(), _msg.str().c_str());
+  msg += ": ";
+  msg += _msg.str();
+
+  // Nachricht an den syslogd weiterreichen
+  syslog(LOG_INFO, "%s", msg.c_str());
+
+  // Wenn Verbindung zu einem Terminal besteht, die Meldung hier
+  // ebenfalls ausgeben!
+  if (!is_daemon) cout << msg << endl;
 
   // Nachricht entfernen
   _msg.str("");

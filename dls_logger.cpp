@@ -11,11 +11,20 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "com_base64.hpp"
+#include "com_xml_parser.hpp"
 #include "com_xml_tag.hpp"
 #include "dls_globals.hpp"
 #include "dls_job.hpp"
 #include "dls_saver_gen_t.hpp"
 #include "dls_logger.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.15 2005/01/21 08:52:40 fp Exp $");
+
+//---------------------------------------------------------------
+
+//#define DEBUG
 
 //---------------------------------------------------------------
 
@@ -35,38 +44,26 @@ DLSLogger::DLSLogger(const DLSJob *job,
   _channel_preset = *channel_preset;
   _dls_dir = dls_dir;
 
-  _saver = 0;
+  _gen_saver = 0;
   _change_in_progress = false;
   _finished = true;
+
+  _channel_dir_exists = false;
+  _channel_file_exists = false;
   _chunk_created = false;
+
+  _data_size = 0;
 }
 
 //---------------------------------------------------------------
 
 /**
    Destruktor
-
-   Gibt eine Fehlermeldung aus, wenn noch Daten im Speicher sind
-
-   \throw EDLSLogger Fehler beim Löschen des Saver-Objektes
 */
 
 DLSLogger::~DLSLogger()
 {
-  if (!_finished)
-  {
-    msg() << "logger not finished!";
-    log(DLSWarning);
-  }
-
-  try
-  {
-    if (_saver) delete _saver;
-  }
-  catch (EDLSSaver &e)
-  {
-    throw EDLSLogger("deleting saver: " + e.msg);
-  }
+  if (_gen_saver) delete _gen_saver;
 }
 
 //---------------------------------------------------------------
@@ -90,78 +87,92 @@ DLSLogger::~DLSLogger()
 
 void DLSLogger::get_real_channel(const list<COMRealChannel> *channels)
 {
-  list<COMRealChannel>::const_iterator channel_i = channels->begin();
+  stringstream err;
+  list<COMRealChannel>::const_iterator channel_i;
 
+  channel_i = channels->begin();
   while (channel_i != channels->end())
   {
-    if (channel_i->name() == _channel_preset.name)
+    if (channel_i->name == _channel_preset.name)
     {
       _real_channel = *channel_i;
-
-      if (_saver) delete _saver;
-      _saver = 0;
-
-      try
-      {
-        switch (_real_channel.type())
-        {
-          case TCHAR:
-            _saver = new DLSSaverGenT<char>(this);
-            break;
-          case TUCHAR:
-            _saver = new DLSSaverGenT<unsigned char>(this);
-            break;
-          case TINT:
-            _saver = new DLSSaverGenT<int>(this);
-            break;
-          case TUINT:
-            _saver = new DLSSaverGenT<unsigned int>(this);
-            break;
-          case TLINT:
-            _saver = new DLSSaverGenT<long>(this);
-            break;
-          case TULINT:
-            _saver = new DLSSaverGenT<unsigned long>(this);
-            break;
-          case TFLT:
-            _saver = new DLSSaverGenT<float>(this);
-            break;
-          case TDBL:
-            _saver = new DLSSaverGenT<double>(this);
-            break;
-
-          default: throw EDLSLogger("Wrong data type!");
-        }
-      }
-      catch (EDLSSaver &e)
-      {
-        throw EDLSLogger("constructing new saver: " + e.msg);
-      }
-      catch (...)
-      {
-        throw EDLSLogger("out of memory while constructing saver!");
-      }
-
-      if (_channel_preset.meta_mask & DLSMetaMean)
-      {
-        _saver->add_meta_saver(DLSMetaMean);
-      }
-      if (_channel_preset.meta_mask & DLSMetaMin)
-      {
-        _saver->add_meta_saver(DLSMetaMin);
-      } 
-      if (_channel_preset.meta_mask & DLSMetaMax)
-      {
-        _saver->add_meta_saver(DLSMetaMax);
-      }
-
       return;
     }
 
     channel_i++;
   }
 
-  throw EDLSLogger("channel does not exist!");
+  err << "channel \"" << _channel_preset.name << "\" does not exist!";
+  throw EDLSLogger(err.str());
+}
+
+//---------------------------------------------------------------
+
+/**
+   Erstellt ein zu den Vorgaben passendes Saver-Objekt
+
+   Instanziert das DLSSaverGenT-Template mit dem entsprechenden
+   Datentyp und erstellt dann die vorgegebene Meta-Saver.
+*/
+
+void DLSLogger::create_gen_saver()
+{
+  if (_gen_saver) delete _gen_saver;
+  _gen_saver = 0;
+
+  try
+  {
+    switch (_real_channel.type)
+    {
+      case TCHAR:
+        _gen_saver = new DLSSaverGenT<char>(this);
+        break;
+      case TUCHAR:
+        _gen_saver = new DLSSaverGenT<unsigned char>(this);
+        break;
+      case TINT:
+        _gen_saver = new DLSSaverGenT<int>(this);
+        break;
+      case TUINT:
+        _gen_saver = new DLSSaverGenT<unsigned int>(this);
+        break;
+      case TLINT:
+        _gen_saver = new DLSSaverGenT<long>(this);
+        break;
+      case TULINT:
+        _gen_saver = new DLSSaverGenT<unsigned long>(this);
+        break;
+      case TFLT:
+        _gen_saver = new DLSSaverGenT<float>(this);
+        break;
+      case TDBL:
+        _gen_saver = new DLSSaverGenT<double>(this);
+        break;
+
+      default: throw EDLSLogger("Wrong data type!");
+    }
+  }
+  catch (EDLSSaver &e)
+  {
+    throw EDLSLogger("constructing new saver: " + e.msg);
+  }
+  catch (...)
+  {
+    throw EDLSLogger("out of memory while constructing saver!");
+  }
+
+  if (_channel_preset.meta_mask & DLSMetaMean)
+  {
+    _gen_saver->add_meta_saver(DLSMetaMean);
+  }
+  if (_channel_preset.meta_mask & DLSMetaMin)
+  {
+    _gen_saver->add_meta_saver(DLSMetaMin);
+  } 
+  if (_channel_preset.meta_mask & DLSMetaMax)
+  {
+    _gen_saver->add_meta_saver(DLSMetaMax);
+  }
 }
 
 //---------------------------------------------------------------
@@ -176,65 +187,189 @@ void DLSLogger::get_real_channel(const list<COMRealChannel> *channels)
 
    \param channel Konstanter Zeiger auf zu prüfende Kanalvorgaben.
    Weglassen dieses Parameters erwirkt die Prüfung der eigenen Vorgaben.
-   \return true, wenn die Vorgaben in Ordnung sind
+   \throw EDLSLogger Kanalvorgaben nicht in Ordnung
 */
 
-bool DLSLogger::presettings_valid(const COMChannelPreset *channel) const
+void DLSLogger::check_presettings(const COMChannelPreset *channel) const
 {
   double reduction;
   unsigned int block_size;
+  stringstream err;
 
+  // Wenn keine Kanalvorgaben übergeben, eigene überprüfen
   if (!channel) channel = &_channel_preset;
 
   if (channel->sample_frequency <= 0)
   {
-    msg() << "channel \"" << channel->name << "\": ";
-    msg() << "illegal frequency! (" << channel->sample_frequency << " Hz)";
-    log(DLSError);
-    return false;
+    err << "channel \"" << channel->name << "\": ";
+    err << "illegal frequency! (" << channel->sample_frequency << " Hz)";
+    throw EDLSLogger(err.str());
   }
 
-  if (channel->sample_frequency > _real_channel.frequency())
+  if (channel->sample_frequency > _real_channel.frequency)
   {
-    msg() << "channel \"" << channel->name << "\": ";
-    msg() << "frequency exceeds channel maximum!";
-    msg() << " (" << channel->sample_frequency << " / ";
-    msg() << _real_channel.frequency() << " Hz)";
-    log(DLSError);
-    return false;
+    err << "channel \"" << channel->name << "\": ";
+    err << "frequency exceeds channel maximum!";
+    err << " (" << channel->sample_frequency << " / ";
+    err << _real_channel.frequency << " Hz)";
+    throw EDLSLogger(err.str());
   }
 
-  reduction = _real_channel.frequency() / (double) channel->sample_frequency;
+  reduction = _real_channel.frequency / (double) channel->sample_frequency;
 
   if (reduction != (unsigned int) reduction)
   {
-    msg() << "channel \""<< channel->name << "\": ";
-    msg() << "frequency leads to non-integer reduction!";
-    log(DLSError);
-    return false;
+    err << "channel \""<< channel->name << "\": ";
+    err << "frequency leads to non-integer reduction!";
+    throw EDLSLogger(err.str());
   }
 
   block_size = channel->sample_frequency;
   
-  if (block_size * reduction > _real_channel.bufsize() / 2)
+  if (block_size * reduction > _real_channel.bufsize / 2)
   {
-    msg() << "channel \""<< channel->name << "\": ";
-    msg() << "buffer limit exceeded! ";
-    msg() << block_size * reduction << " > " << _real_channel.bufsize() / 2;
-    log(DLSError);
-    return false;
+    err << "channel \""<< channel->name << "\": ";
+    err << "buffer limit exceeded! ";
+    err << block_size * reduction << " > " << _real_channel.bufsize / 2;
+    throw EDLSLogger(err.str());
   }
 
   if (channel->format_index == DLS_FORMAT_MDCT
-      && _real_channel.type() != TFLT
-      && _real_channel.type() != TDBL)
+      && _real_channel.type != TFLT
+      && _real_channel.type != TDBL)
   {
-    msg() << "MDCT compression only for floating point channels!";
-    log(DLSError);
-    return false;
+    err << "MDCT compression only for floating point channels!";
+    throw EDLSLogger(err.str());
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Prüft, ob eine bereits existierende "channel.xml" gültig ist
+
+   Wenn im MSR-Modul Kanäle geändert werden (Typänderung,
+   Verschiebung, ...), kann es sein, dass bei einer erneuten
+   Erfassung die Angaben in einer existierenden "channel.xml"
+   nicht mehr stimmen. Dies ist fatal. Dann muss erst ein neuer
+   Job erstellt werden.
+
+   \throw EDLSLogger Kanalinfodatei stimmt nicht mehr!
+*/
+
+void DLSLogger::check_channel_info()
+{
+  stringstream channel_dir_name, err;
+  string channel_file_name;
+  fstream channel_file;
+  struct stat stat_buf;
+  COMXMLParser xml;
+  COMXMLTag channel_tag;
+
+  _channel_dir_exists = false;
+  _channel_file_exists = false;
+
+  channel_dir_name << _dls_dir;
+  channel_dir_name << "/job" << _parent_job->preset()->id();
+  channel_dir_name << "/channel" << _real_channel.index;
+  channel_file_name = channel_dir_name.str() + "/channel.xml";
+
+  // Prüfen, ob Kanalverzeichnis bereits existiert
+  if (stat(channel_dir_name.str().c_str(), &stat_buf) == -1)
+  {
+    if (errno == ENOENT)
+    {
+      // Existiert noch nicht. Alles ok!
+      return;
+    }
+    else
+    {
+      err << "could not stat \"" << channel_dir_name.str() << "\"!";
+      throw EDLSLogger(err.str());
+    }
   }
 
-  return true;
+  if (!S_ISDIR(stat_buf.st_mode))
+  {
+    err << "\"" << channel_dir_name.str() << "\" is not a directory!";
+    throw EDLSLogger(err.str());
+  }
+
+  _channel_dir_exists = true;
+
+  // Prüfen, ob "channel.xml" existiert
+  if (lstat(channel_file_name.c_str(), &stat_buf) == -1)
+  {
+    if (errno == ENOENT)
+    {
+      // Datei existiert noch nicht. Alles ok.
+      return;
+    }
+    else
+    {
+      err << "could not stat \"" << channel_file_name << "\"!";
+      throw EDLSLogger(err.str());
+    }
+  }
+
+  _channel_file_exists = true;
+
+  // Datei existiert. Jetzt öffnen.
+  channel_file.open(channel_file_name.c_str(), ios::in);
+
+  if (!channel_file.is_open())
+  {
+    err << "could not open \"" << channel_file_name << "\"!";
+    throw EDLSLogger(err.str());
+  }
+
+  try
+  {
+    xml.parse(&channel_file, "dlschannel", dxttBegin);
+    channel_tag = *xml.parse(&channel_file, "channel", dxttSingle);
+    xml.parse(&channel_file, "dlschannel", dxttEnd);
+  }
+  catch (ECOMXMLParser &e)
+  {
+    err << "parsing \"" << channel_file_name << "\": " << e.msg << " tag: " << e.tag;
+    throw EDLSLogger(err.str());
+  }
+
+  // Den Kanalnamen überprüfen
+  if (channel_tag.att("name")->to_str() != _channel_preset.name)
+  {
+    err << "different channel name in \"" << channel_file_name << "\": ";
+    err << "\"" << channel_tag.att("name")->to_str() << "\" instead of ";
+    err << "\"" << _channel_preset.name << "\"!";
+    throw EDLSLogger(err.str());
+  }
+
+  // Index überprüfen (sollte immer richtig sein)
+  if (channel_tag.att("index")->to_int() != _real_channel.index)
+  {
+    err << "wrong channel index in \"" << channel_file_name << "\": ";
+    err << channel_tag.att("index")->to_int() << " instead of ";
+    err << _real_channel.index << "!";
+    throw EDLSLogger(err.str());
+  }
+
+  // Einheit überprüfen
+  if (channel_tag.att("unit")->to_str() != _real_channel.unit)
+  {
+    err << "different channel unit in \"" << channel_file_name << "\": ";
+    err << "\"" << channel_tag.att("unit")->to_str() << "\" instead of ";
+    err << "\"" << _real_channel.unit << "\"!";
+    throw EDLSLogger(err.str());
+  }
+
+  // Datentyp überprüfen
+  if (channel_tag.att("type")->to_str() != dls_channel_type_to_str(_real_channel.type))
+  {
+    err << "different channel type in \"" << channel_file_name << "\": ";
+    err << "\"" << channel_tag.att("type")->to_str() << "\" instead of ";
+    err << "\"" << dls_channel_type_to_str(_real_channel.type) << "\"!";
+    throw EDLSLogger(err.str());
+  }
 }
 
 //---------------------------------------------------------------
@@ -255,7 +390,7 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
   double reduction;
   unsigned int block_size;
 
-  reduction = _real_channel.frequency() / channel->sample_frequency;
+  reduction = _real_channel.frequency / channel->sample_frequency;
 
   if (reduction != (unsigned int) reduction)
   {
@@ -276,7 +411,7 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
     throw EDLSLogger(err.str());
   }
 
-  tag << "<xsad channels=\"" << _real_channel.index() << "\"";
+  tag << "<xsad channels=\"" << _real_channel.index << "\"";
   tag << " reduction=\"" << (unsigned int) reduction << "\"";
   tag << " blocksize=\"" << block_size << "\"";
   tag << " coding=\"Base64\"";
@@ -298,7 +433,7 @@ string DLSLogger::stop_tag() const
 {
   stringstream tag;
 
-  tag << "<xsod channels=\"" << _real_channel.index() << "\">";
+  tag << "<xsod channels=\"" << _real_channel.index << "\">";
   return tag.str();
 }
 
@@ -314,7 +449,7 @@ string DLSLogger::stop_tag() const
    \param data Konstante Referenz auf die Daten
    \param time Zeitpunkt des letzten Einzelwertes
    \throw EDLSLogger Fehler beim Dekodieren oder Speichern
-   \throw EDLSLoggerTime Toleranzfehler! Prozess beenden!
+   \throw EDLSTimeTolerance Toleranzfehler! Prozess beenden!
 */
 
 void DLSLogger::process_data(const string &data, COMTime time)
@@ -337,7 +472,9 @@ void DLSLogger::process_data(const string &data, COMTime time)
   try
   {
     // Daten an Saver übergeben
-    _saver->process_data(base64.output(), base64.length(), time);
+    _gen_saver->process_data(base64.output(),
+                             base64.output_length(),
+                             time);
   }
   catch (EDLSSaver &e)
   {
@@ -357,7 +494,6 @@ void DLSLogger::process_data(const string &data, COMTime time)
 
 void DLSLogger::create_chunk(COMTime time_of_first)
 {
-  DIR *dir;
   stringstream dir_name;
   stringstream err;
   fstream file;
@@ -367,83 +503,69 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 
   if (_channel_preset.format_index < 0 || _channel_preset.format_index >= DLS_FORMAT_COUNT)
   {
-    throw EDLSSaver("invalid channel format!");
+    throw EDLSLogger("invalid channel format!");
   }
 
   dir_name << _dls_dir;
   dir_name << "/job" << _parent_job->preset()->id();
-  dir_name << "/channel" << _real_channel.index();
+  dir_name << "/channel" << _real_channel.index;
 
   // Prüfen, ob Kanalverzeichnis bereits existiert
-  if ((dir = opendir(dir_name.str().c_str())) == 0)
+  if (!_channel_dir_exists)
   {
-    if (errno == ENOENT)
+    // Kanalverzeichnis existiert nicht. Anlegen.
+    if (mkdir(dir_name.str().c_str(), 0755) != 0)
     {
-      // Verzeichnis existiert nicht. Anlegen!
-      if (mkdir(dir_name.str().c_str(), 0755) != 0)
-      {
-        err << "create_chunk: could not create directory \"";
-        err << dir_name.str() << "\"!";
-        throw EDLSSaver(err.str());
-      }
-
-      // channel.xml anlegen
-      file.open((dir_name.str() + "/channel.xml").c_str(), ios::out);
-
-      if (!file.is_open())
-      {
-        err << "create_chunk: could not write channel.xml into dir \"";
-        err << dir_name.str() << "\"!";
-        throw EDLSSaver(err.str());
-      }
-
-      tag.clear();
-      tag.title("dlschannel");
-      tag.type(dxttBegin);
-      file << tag.tag() << endl;
-      
-      tag.clear();
-      tag.title("channel");
-      tag.push_att("name", _channel_preset.name);
-      tag.push_att("index", _real_channel.index());
-      tag.push_att("unit", _real_channel.unit());
-      tag.push_att("type", _real_channel.type_str());
-      file << " " << tag.tag() << endl;
-
-      tag.clear();
-      tag.title("dlschannel");
-      tag.type(dxttEnd);
-      file << tag.tag() << endl;
-
-      file.close();
+      err << "create_chunk: could not create channel directory";
+      err << " \"" << dir_name.str() << "\"!";
+      throw EDLSLogger(err.str());
     }
-    else
-    {
-      err << "create_chunk: could not open directory";
-      err << " \"" << dir_name.str() << "\".";
 
-      if (errno == EACCES) err << " permission denied.";
-      else if (errno == ENOTDIR) err << " exists, but is no dir!";
-      else err << " fatal error.";
-
-      throw EDLSSaver(err.str());
-    }
-  }
-  else
-  {
-    // Verzeichnis existiert. Wieder schliessen
-    closedir(dir);
+    _channel_dir_exists = true;
   }
 
+  if (!_channel_file_exists)
+  {
+    // channel.xml anlegen
+    file.open((dir_name.str() + "/channel.xml").c_str(), ios::out);
+
+    if (!file.is_open())
+    {
+      err << "create_chunk: could not write channel.xml into dir \"";
+      err << dir_name.str() << "\"!";
+      throw EDLSLogger(err.str());
+    }
+
+    tag.clear();
+    tag.title("dlschannel");
+    tag.type(dxttBegin);
+    file << tag.tag() << endl;
+    
+    tag.clear();
+    tag.title("channel");
+    tag.push_att("name", _channel_preset.name);
+    tag.push_att("index", _real_channel.index);
+    tag.push_att("unit", _real_channel.unit);
+    tag.push_att("type", dls_channel_type_to_str(_real_channel.type));
+    file << " " << tag.tag() << endl;
+    
+    tag.clear();
+    tag.title("dlschannel");
+    tag.type(dxttEnd);
+    file << tag.tag() << endl;
+    
+    file.close();
+
+    _channel_file_exists = true;
+  }
+
+  // Chunk-Verzeichnis erstellen
   dir_name << "/chunk" << time_of_first;
-
   if (mkdir(dir_name.str().c_str(), 0755) != 0)
   {
     err << "create_chunk: could not create directory \"";
     err << dir_name.str() << "\"!";
-
-    if (errno == EEXIST) err << " exists already!";
-
+    if (errno == EEXIST) err << " It already exists!";
     throw EDLSLogger(err.str());
   } 
 
@@ -454,7 +576,7 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   {
     err << "create_chunk: could not write chunk.xml into dir \"";
     err << dir_name.str() << "\"!";
-    throw EDLSSaver(err.str());
+    throw EDLSLogger(err.str());
   }
 
   tag.clear();
@@ -465,14 +587,16 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   tag.clear();
   tag.title("chunk");
   tag.push_att("sample_frequency", _channel_preset.sample_frequency);
+  tag.push_att("block_size", _channel_preset.block_size);
   tag.push_att("meta_mask", _channel_preset.meta_mask);
   tag.push_att("meta_reduction", _channel_preset.meta_reduction);
   tag.push_att("format", dls_format_strings[_channel_preset.format_index]);
-  file << " " << tag.tag() << endl;
 
-  tag.clear();
-  tag.title("time");
-  tag.push_att("start", time_of_first.to_str());
+  if (_channel_preset.format_index == DLS_FORMAT_MDCT)
+  {
+    tag.push_att("mdct_block_size", _channel_preset.mdct_block_size);
+  }
+
   file << " " << tag.tag() << endl;
 
   tag.clear();
@@ -484,6 +608,33 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 
   _chunk_dir = dir_name.str();
   _chunk_created = true;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Verwirft alle Daten und erstellt einen neuen Chunk
+
+   Diese Methode löscht alle Daten im Speicher. Sie sollte
+   nur mit Bedacht aufgerufen werden (z. B. in einem Zweig
+   nach einem fork(), wobei der andere Zweig die Daten speichert).
+*/
+
+void DLSLogger::discard_chunk()
+{
+#ifdef DEBUG
+  msg() << "discarding chunk, " << _data_size << " bytes written.";
+  log(DLSDebug);
+#endif
+
+  // Vorgeben, dass noch keine Daten geschrieben wurden
+  _data_size = 0;
+
+  // Neuen Saver erstellen (löscht vorher den alten Saver)
+  create_gen_saver();
+
+  // Vorgeben, dass noch kein Chunk existiert
+  _chunk_created = false;
 }
 
 //---------------------------------------------------------------
@@ -559,6 +710,10 @@ void DLSLogger::do_change()
   // Änderungen übernehmen
   _channel_preset = _change_channel;
 
+  // Saver-Objekt neu erstellen
+  create_gen_saver();
+
+  // Jetzt wartet keine Änderung mehr
   _change_in_progress = false;
 }
 
@@ -577,22 +732,26 @@ void DLSLogger::finish()
   stringstream err;
   bool error = false;
 
+#ifdef DEBUG
+  msg() << "logger::finish()";
+  log(DLSInfo);
+#endif
+
   try
   {
     // Alle Daten speichern
-    if (_saver) _saver->flush();
+    if (_gen_saver) _gen_saver->flush();
   }
   catch (EDLSSaver &e)
   {
     error = true;
     err << "saver::flush(): " << e.msg;
+  }
 
-  }
-  catch (EDLSLogger &e)
-  {
-    error = true;
-    err << "saver::flush(): " << e.msg;
-  }
+#ifdef DEBUG
+  msg() << "logger::finish() ready";
+  log(DLSInfo);
+#endif
 
   // Chunk beenden
   _chunk_created = false;
@@ -601,6 +760,11 @@ void DLSLogger::finish()
   {
     throw EDLSLogger(err.str());
   }
+
+#ifdef DEBUG
+  msg() << "logger::finish() returning";
+  log(DLSInfo);
+#endif
 
   _finished = true;
 }

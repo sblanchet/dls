@@ -20,6 +20,11 @@ using namespace std;
 #include "com_ring_buffer_t.hpp"
 #include "ctl_globals.hpp"
 #include "ctl_dialog_channels.hpp"
+#include "ctl_msg_wnd.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channels.cpp,v 1.6 2005/01/24 10:15:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -27,6 +32,12 @@ using namespace std;
 #define HEIGHT 350
 
 //---------------------------------------------------------------
+
+/**
+   Konstruktor
+
+   \param source IP-Adresse oder Hostname der Datenquelle
+*/
 
 CTLDialogChannels::CTLDialogChannels(const string &source)
 {
@@ -58,10 +69,15 @@ CTLDialogChannels::CTLDialogChannels(const string &source)
   _box_message->align(FL_ALIGN_CENTER);
   _box_message->label("Empfange Kanäle...");
 
+  _wnd->end();
   _wnd->resizable(_grid_channels);
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 CTLDialogChannels::~CTLDialogChannels()
 {
@@ -69,6 +85,13 @@ CTLDialogChannels::~CTLDialogChannels()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Statische Callback-Funktion
+
+   \param sender Widget, dass den Callback ausgelöst hat
+   \param data Zeiger auf den Dialog
+*/
 
 void CTLDialogChannels::_callback(Fl_Widget *sender, void *data)
 {
@@ -82,6 +105,10 @@ void CTLDialogChannels::_callback(Fl_Widget *sender, void *data)
 
 //---------------------------------------------------------------
 
+/**
+   Callback des Kanal-grids
+*/
+
 void CTLDialogChannels::_grid_channels_callback()
 {
   unsigned int i;
@@ -94,15 +121,15 @@ void CTLDialogChannels::_grid_channels_callback()
 
       if (_grid_channels->current_col() == "name")
       {
-        _grid_channels->current_content(_channels[i].name());
+        _grid_channels->current_content(_channels[i].name);
       }
       else if (_grid_channels->current_col() == "unit")
       {
-        _grid_channels->current_content(_channels[i].unit());
+        _grid_channels->current_content(_channels[i].unit);
       }
       else if (_grid_channels->current_col() == "freq")
       {
-        str << _channels[i].frequency();
+        str << _channels[i].frequency;
         _grid_channels->current_content(str.str());
       }
       break;
@@ -126,12 +153,22 @@ void CTLDialogChannels::_grid_channels_callback()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "OK"-Button wurde geklickt
+*/
+
 void CTLDialogChannels::_button_ok_clicked()
 {
   list<unsigned int>::const_iterator sel_i;
 
-  _selected.clear();
+  // Eventuell den Thread abbrechen
+  if (_thread_running)
+  {
+    pthread_cancel(_thread);
+  }
 
+  // Liste mit ausgewählten Kanlälen erstellen
+  _selected.clear();
   sel_i = _grid_channels->selected_list()->begin();
   while (sel_i != _grid_channels->selected_list()->end())
   {
@@ -139,29 +176,39 @@ void CTLDialogChannels::_button_ok_clicked()
     sel_i++;
   }
 
+  // Fenster schließen
   _wnd->hide();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback: Der "Abbrechen"-Button wurde geklickt
+*/
 
 void CTLDialogChannels::_button_cancel_clicked()
 {
+  // Eventuell den Thread abbrechen
   if (_thread_running)
   {
-    cout << "cancelling thread..." << endl;
     pthread_cancel(_thread);
   }
 
+  // Abbrechen = keine Kanäle ausgewählt
   _selected.clear();
+
+  // Fenster schließen
   _wnd->hide();
 }
 
 //---------------------------------------------------------------
 
+/**
+   Dialog zeigen
+*/
+
 void CTLDialogChannels::show()
 {
-  _error = "";
-
   if (pthread_create(&_thread, 0, _static_thread_function, this) == 0)
   {
     _wnd->show();
@@ -170,15 +217,9 @@ void CTLDialogChannels::show()
   }
   else
   {
-    fl_alert("error: could not start thread!");
+    msg->str() << "Could not start thread!";
+    msg->error();
   }
-}
-
-//---------------------------------------------------------------
-
-const list<COMRealChannel> *CTLDialogChannels::channels() const
-{
-  return &_selected;
 }
 
 //---------------------------------------------------------------
@@ -190,6 +231,7 @@ void *CTLDialogChannels::_static_thread_function(void *data)
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
 
   Fl::lock();
+  dialog->_error = "";
   dialog->_thread_running = true;
   Fl::unlock();
 
@@ -233,7 +275,6 @@ void CTLDialogChannels::_thread_function()
   if ((hp = gethostbyname(_source.c_str())) == NULL)
   {
     _error = "could not resolve address \"" + _source + "\"!";
-    cout << _error << endl;
     close(socket);
     return;
   }
@@ -294,10 +335,15 @@ void CTLDialogChannels::_thread_function()
               {
                 try
                 {
-                  channel.read_from_tag(tag);
+                  channel.name = tag->att("name")->to_str();
+                  channel.unit = tag->att("unit")->to_str();
+                  channel.index = tag->att("index")->to_int();
+                  channel.frequency = tag->att("HZ")->to_int();
+                  channel.bufsize = tag->att("bufsize")->to_int();
+                  channel.type = dls_str_to_channel_type(tag->att("typ")->to_str());
                   _channels.push_back(channel);
                 }
-                catch (ECOMRealChannel &e)
+                catch (COMException &e)
                 {
                   _error = "reading channel: " + e.msg;
                   exit_thread = true;
@@ -356,18 +402,18 @@ void CTLDialogChannels::_thread_function()
 
 void CTLDialogChannels::_thread_finished()
 {
+  _box_message->hide();
+  _grid_channels->show();
+  _grid_channels->take_focus();
+
   if (_channels.size() > 0)
   {
     _grid_channels->record_count(_channels.size());
-
-    _box_message->hide();
-    _grid_channels->show();
-    _grid_channels->take_focus();
   }
   else if (_error != "")
   {
-    _box_message->labelcolor(FL_RED);
-    _box_message->label(_error.c_str());
+    msg->str() << _error;
+    msg->error();
   }
 }
 

@@ -34,6 +34,8 @@ public:
   COMTime(struct timeval);
 
   void from_dbl_time(double);
+  void set_null();
+  void set_now();
 
   //  COMTime &operator =(int);
   COMTime &operator =(long long);
@@ -46,6 +48,7 @@ public:
   bool operator >(const COMTime &) const;
   bool operator <=(const COMTime &) const;
   bool operator >=(const COMTime &) const;
+  bool is_null() const;
 
   COMTime operator +(const COMTime &) const;
   COMTime &operator +=(const COMTime &);
@@ -53,12 +56,12 @@ public:
   COMTime operator *(long long) const;
   
   double to_dbl() const;
+  double to_dbl_time() const;
   long long to_ll() const;
   string to_str() const;
   struct timeval to_tv() const;
   string to_real_time() const;
 
-  const COMTime &set_now();
   static COMTime now();
 
 private:

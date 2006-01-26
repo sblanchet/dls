@@ -14,8 +14,13 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+#include "view_globals.hpp"
 #include "view_channel.hpp"
 #include "view_dialog_main.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_dialog_main.cpp,v 1.6 2005/01/10 12:27:32 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -24,6 +29,12 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+/**
+   Konstruktor
+
+   \param dls_dir DLS-Datenverzeichnis
+*/
+
 ViewDialogMain::ViewDialogMain(const string &dls_dir)
 {
   int x = Fl::w() / 2 - WIDTH / 2;
@@ -31,7 +42,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
 
   _dls_dir = dls_dir;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Datenansicht");
+  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLSView");
   _wnd->callback(_callback, this);
   _wnd->set_modal();
 
@@ -45,22 +56,40 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
   _button_reload->callback(_callback, this);
 
-  _button_close = new Fl_Button(480, 25, 80, 25, "Schliessen");
+  _button_export = new Fl_Button(500, 25, 120, 25, "Exportieren...");
+  _button_export->callback(_callback, this);
+
+  _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
   _button_close->callback(_callback, this);
 
-  _view_data = new ViewViewData(10, 60, WIDTH - 230, HEIGHT - 70);
-  _view_data->take_focus();
+  _tile_ver = new Fl_Tile(10, 60, WIDTH - 20, HEIGHT - 70);
 
-  _grid_channels = new Fl_Grid(WIDTH - 210, 10, 200, HEIGHT - 20);
+  _tile_hor = new Fl_Tile(10, 60, WIDTH - 220, HEIGHT - 70);
+
+  _view_data = new ViewViewData(10, 60, WIDTH - 220, HEIGHT - 120);
+  _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
+
+  _tile_hor->end();
+
+  _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
   _grid_channels->add_column("channel", "Kanal");
   _grid_channels->select_mode(flgNoSelect);
   _grid_channels->check_boxes(true);
   _grid_channels->callback(_callback, this);
 
+  _tile_ver->end();
+
+  _view_data->range_callback(_data_range_callback, this);
+
   _wnd->resizable(_view_data);
+  _view_data->take_focus();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 ViewDialogMain::~ViewDialogMain()
 {
@@ -68,6 +97,10 @@ ViewDialogMain::~ViewDialogMain()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Anzeigen des Dialoges
+*/
 
 void ViewDialogMain::show()
 {
@@ -80,6 +113,13 @@ void ViewDialogMain::show()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Statische Callback-Funktion
+
+   \param sender Widget, dass den Callback ausgelöst hat
+   \param data Zeiger auf den Dialog
+*/
 
 void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
 {
@@ -95,12 +135,20 @@ void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Schliessen"-Button wurde geklickt
+*/
+
 void ViewDialogMain::_button_close_clicked()
 {
   _wnd->hide();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback: Der "Aktualisieren"-Button wurde geklickt
+*/
 
 void ViewDialogMain::_button_reload_clicked()
 {
@@ -109,12 +157,20 @@ void ViewDialogMain::_button_reload_clicked()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Gesamt"-Button wurde geklickt
+*/
+
 void ViewDialogMain::_button_full_clicked()
 {
   _view_data->full_range();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback: Es wurde ein Auftrag in der Auftragsauswahl gewählt
+*/
 
 void ViewDialogMain::_choice_job_changed()
 {
@@ -123,11 +179,16 @@ void ViewDialogMain::_choice_job_changed()
   _job_id = _jobs[index].id();
 
   _view_data->set_job(_dls_dir, _job_id);
+  _view_msg->set_job(_dls_dir, _job_id);
 
   _load_channels();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback der Kanal-Grids
+*/
 
 void ViewDialogMain::_grid_channels_changed()
 {
@@ -163,6 +224,29 @@ void ViewDialogMain::_grid_channels_changed()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Statischer Callback der Datenanzeige: Die Zeitspanne hat sich geändert!
+
+   \param start Neuer Anfang der Zeitspanne
+   \param end Neues Ende der Zeitspanne
+   \param data Zeiger auf den Dialog
+*/
+
+void ViewDialogMain::_data_range_callback(COMTime start, COMTime end, void *data)
+{
+  ViewDialogMain *dialog = (ViewDialogMain *) data;
+
+  dialog->_view_msg->load_msg(start, end);
+}
+
+//---------------------------------------------------------------
+
+/**
+   Laden aller Aufträge
+
+   \return true, wenn alle Aufträger geladen werden konnten
+*/
 
 bool ViewDialogMain::_load_jobs()
 {
@@ -223,6 +307,10 @@ bool ViewDialogMain::_load_jobs()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Laden aller Kanäle zum aktuellen Auftrag
+*/
 
 bool ViewDialogMain::_load_channels()
 {

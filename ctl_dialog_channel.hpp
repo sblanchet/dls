@@ -19,9 +19,16 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-#include "com_job_preset.hpp"
+#include "ctl_job_preset.hpp"
 
 //---------------------------------------------------------------
+
+/**
+   Dialog zum Ändern der Eigenschaften von zu erfassenden Kanälen
+
+   Über diese Eingabemaske kann der Benutzer die Abtastrate,
+   Meta-Untersetzung, Kompression usw. eines Kanals bestimmen.
+*/
 
 class CTLDialogChannel
 {
@@ -29,27 +36,27 @@ public:
   CTLDialogChannel(const string &);
   ~CTLDialogChannel();
 
-  void show(COMJobPreset *, const list<const COMChannelPreset *> *);
+  void show(CTLJobPreset *, const list<const COMChannelPreset *> *);
   bool updated() const;
 
 private:
-  Fl_Double_Window *_wnd;
-  Fl_Return_Button *_button_ok;
-  Fl_Button *_button_cancel;
-  Fl_Input *_input_freq;
-  Fl_Input *_input_block;
-  Fl_Input *_input_mask;
-  Fl_Input *_input_red;
-  Fl_Choice *_choice_format;
-  Fl_Choice *_choice_mdct;
-  Fl_Input *_input_accuracy;
+  Fl_Double_Window *_wnd;       /**< Dialogfenster */
+  Fl_Return_Button *_button_ok; /**< "OK"-Button */
+  Fl_Button *_button_cancel;    /**< "Abbrechen"-Button */
+  Fl_Input *_input_freq;        /**< Eingabefeld für die Abtastfrequenz */
+  Fl_Input *_input_block;       /**< Eingabefeld für die Blockgröße */
+  Fl_Input *_input_mask;        /**< Eingabefeld für die Meta-Maske */
+  Fl_Input *_input_red;         /**< Eingabefeld für die Meta-Untersetzung */
+  Fl_Choice *_choice_format;    /**< Auswahlfeld für die Kompression */
+  Fl_Choice *_choice_mdct;      /**< Auswahlfeld für die MDCT-Blockgröße */
+  Fl_Input *_input_accuracy;    /**< Eingabefeld für die MDCT-Genauigkeit */
 
-  string _dls_dir;
-  COMJobPreset *_job;
-  const list<const COMChannelPreset *> *_channels;
-  bool _updated;
-  bool _format_selected;
-  bool _mdct_selected;
+  string _dls_dir;                                 /**< DLS-Datenverzeichnis */
+  CTLJobPreset *_job;                              /**< Zeiger auf das Auftrags-Objekt */
+  const list<const COMChannelPreset *> *_channels; /**< Liste der zu ändernden Kanäle */
+  bool _updated;                                   /**< Es wurden Kanäle geändert */
+  bool _choice_format_selected;                    /**< Es wurde ein Format ausgewählt */
+  bool _choice_mdct_selected;                      /**< Es wurde eine MDCT-Blockgröße gewählt */
 
   static void _callback(Fl_Widget *, void *);
   void _button_ok_clicked();
@@ -62,6 +69,12 @@ private:
 };
 
 //---------------------------------------------------------------
+
+/**
+   Gibt zurück, ob Kanäle geändert wurden
+
+   \return true, wenn Kanäle geändert wurden
+*/
 
 inline bool CTLDialogChannel::updated() const
 {

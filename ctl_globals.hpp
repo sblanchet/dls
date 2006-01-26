@@ -20,6 +20,15 @@
 
 //---------------------------------------------------------------
 
+// Versions-String mit Build-Nummer aus ctl_build.cpp
+extern const char *ctl_version_str;
+
+//---------------------------------------------------------------
+
+/**
+   Nachricht des DLSD mit Zeitpunkt, Typ und Text
+*/
+
 struct CTLMessage
 {
   string time;

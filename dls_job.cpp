@@ -8,9 +8,20 @@
 #include <fstream>
 using namespace std;
 
+//---------------------------------------------------------------
+
 #include "dls_globals.hpp"
 #include "dls_proc_logger.hpp"
 #include "dls_job.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_job.cpp,v 1.19 2005/01/18 10:47:27 fp Exp $");
+
+//---------------------------------------------------------------
+
+//#define DEBUG
+//#define DEBUG_SIZES
 
 //---------------------------------------------------------------
 
@@ -199,10 +210,20 @@ void DLSJob::_sync_loggers(SyncLoggerMode mode)
       _remove_logger(*logger_i);
       rem_count++;
 
+#ifdef DEBUG
+      msg() << "_remove_logger() finished.";
+      log(DLSDebug);
+#endif
+
       delete *logger_i;
       del_i = logger_i;
       logger_i++;
       _loggers.erase(del_i);
+
+#ifdef DEBUG
+      msg() << "logger_i deleted.";
+      log(DLSDebug);
+#endif
     }
     else logger_i++;
   }
@@ -255,11 +276,13 @@ bool DLSJob::_add_logger(const COMChannelPreset *channel)
     new_logger->get_real_channel(_parent_proc->real_channels());
 
     // Kanalvorgaben auf Gültigkeit prüfen
-    if (!new_logger->presettings_valid())
-    {
-      delete new_logger;
-      return false;
-    }
+    new_logger->check_presettings();
+
+    // Prüfen, ob evtl. existierende "channel.xml" gültig ist
+    new_logger->check_channel_info();
+
+    // Saver-Objekt erstellen
+    new_logger->create_gen_saver();
 
     // Startkommando senden
     _parent_proc->send_command(new_logger->start_tag(channel));
@@ -301,13 +324,18 @@ bool DLSJob::_change_logger(DLSLogger *logger,
 {
   string id;
 
-  if (!logger->presettings_valid(channel)) return false;
-
-  id = _generate_id();
-
   try
   {
+    // Neue Vorgaben prüfen
+    logger->check_presettings(channel);
+
+    // ID generieren
+    id = _generate_id();
+
+    // Änderungskommando senden
     _parent_proc->send_command(logger->start_tag(channel, id));
+
+    // Wartende Änderung vermerken
     logger->set_change(channel, id);
   }
   catch (EDLSLogger &e)
@@ -337,6 +365,11 @@ bool DLSJob::_change_logger(DLSLogger *logger,
 
 void DLSJob::_remove_logger(DLSLogger *logger)
 {
+#ifdef DEBUG
+  msg() << "removing logger...";
+  log(DLSDebug);
+#endif
+
   _parent_proc->send_command(logger->stop_tag());
 
   try
@@ -349,6 +382,11 @@ void DLSJob::_remove_logger(DLSLogger *logger)
     msg() << logger->channel_preset()->name << "\": " << e.msg;
     log(DLSError);
   }
+
+#ifdef DEBUG
+  msg() << "logger removed.";
+  log(DLSDebug);
+#endif
 }
 
 //---------------------------------------------------------------
@@ -400,7 +438,7 @@ void DLSJob::ack_received(const string &id)
    \param channel_index Kanalindex aus dem <F>-Tag
    \param data Empfangene Daten
    \throw EDLSJob Fehler während der Datenverarbeitung
-   \throw EDLSJobTime Zeittoleranzfehler!
+   \throw EDLSTimeTolerance Zeittoleranzfehler!
 */
 
 void DLSJob::process_data(COMTime time_of_last,
@@ -412,7 +450,7 @@ void DLSJob::process_data(COMTime time_of_last,
   logger_i = _loggers.begin();
   while (logger_i != _loggers.end())
   {
-    if ((*logger_i)->real_channel()->index() == channel_index)
+    if ((*logger_i)->real_channel()->index == channel_index)
     {
       try
       {
@@ -430,6 +468,54 @@ void DLSJob::process_data(COMTime time_of_last,
 
   msg() << "channel " << channel_index << " not required!";
   log(DLSWarning);
+}
+
+//---------------------------------------------------------------
+
+/**
+   Löscht alle Daten, die noch im Speicher sind
+*/
+
+void DLSJob::discard_data()
+{
+  list<DLSLogger *>::iterator logger_i;
+
+  logger_i = _loggers.begin();
+  while (logger_i != _loggers.end())
+  {
+    (*logger_i)->discard_chunk();
+    logger_i++;
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Errechnet die Größe aller aktuell erfassenden Chunks
+
+   \return Größe in Bytes
+*/
+
+long long DLSJob::data_size() const
+{
+  list<DLSLogger *>::const_iterator logger_i;
+  long long size = 0;
+
+  logger_i = _loggers.begin();
+  while (logger_i != _loggers.end())
+  {
+
+#ifdef DEBUG_SIZES
+    msg() << "logger for channel " << (*logger_i)->real_channel()->index;
+    msg() << " " << (*logger_i)->data_size() << " bytes.";
+    log(DLSInfo);
+#endif
+
+    size += (*logger_i)->data_size();
+    logger_i++;
+  }
+
+  return size;
 }
 
 //---------------------------------------------------------------
@@ -453,16 +539,7 @@ void DLSJob::_clear_loggers()
   logger = _loggers.begin();
   while (logger != _loggers.end())
   {
-    try
-    {
-      delete *logger;
-    }
-    catch (EDLSLogger &e)
-    {
-      error = true;
-      err << "deleting logger: " << e.msg << " ";
-    }
-
+    delete *logger;
     logger++;
   }
 
@@ -535,6 +612,9 @@ void DLSJob::finish()
   stringstream err;
   bool errors = false;
 
+  msg() << "finishing job...";
+  log(DLSInfo);
+
   logger = _loggers.begin();
   while (logger != _loggers.end())
   {
@@ -569,23 +649,71 @@ void DLSJob::finish()
    \param info_tag Info-Tag
 */
 
-void DLSJob::message(const string &info_tag)
+void DLSJob::message(const COMXMLTag *info_tag)
 {
-  fstream file;
   stringstream filename;
+  COMMessageIndexRecord index_record;
+  COMTime time;
+  string tag;
 
-  filename << _dls_dir << "/job" << _job_id << "/messages.xml";
-
-  file.open(filename.str().c_str(), ios::out | ios::app);
-
-  if (!file.is_open())
+  if (!_message_file.open() || !_message_index.open())
   {
-    msg() << "could not log message: " << info_tag;
-    log(DLSError);
+    filename << _dls_dir << "/job" << _job_id << "/messages";
+
+    try
+    {
+      _message_file.open_read_append((filename.str() + ".xml").c_str());
+      _message_index.open_read_append((filename.str() + ".idx").c_str());
+    }
+    catch (ECOMFile &e)
+    {
+      msg() << "could not open message file for message \"" << info_tag << "\": " << e.msg;
+      log(DLSError);
+      return;
+    }
+    catch (ECOMIndexT &e)
+    {
+      msg() << "could not open message index for message \"" << info_tag << "\": " << e.msg;
+      log(DLSError);
+      return;
+    }
   }
 
-  file << info_tag << endl;
-  file.close();
+  try
+  {
+    // Zeit der Nachricht im Index vermerken
+    time.from_dbl_time(info_tag->att("time")->to_dbl());
+  }
+  catch (ECOMXMLTag &e)
+  {
+    msg() << "could not log message file (no time) for message \"" << info_tag << "\": " << e.msg;
+    log(DLSError);
+    return;
+  }
+
+  // Aktuelle Zeit und Dateiposition als Einsprungspunkt merken
+  index_record.time = time.to_ll();
+  index_record.position = _message_file.calc_size();
+
+  tag = info_tag->tag() + "\n";
+
+  try
+  {
+    _message_file.append(tag.c_str(), tag.length());
+    _message_index.append_record(&index_record);
+  }
+  catch (ECOMFile &e)
+  {
+    msg() << "could not write file for message \"" << info_tag << "\": " << e.msg;
+    log(DLSError);
+    return;
+  }
+  catch (ECOMIndexT &e)
+  {
+    msg() << "could not write index for message \"" << info_tag << "\": " << e.msg;
+    log(DLSError);
+    return;
+  }
 }
 
 //---------------------------------------------------------------

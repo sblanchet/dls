@@ -53,9 +53,25 @@ public:
 
 //---------------------------------------------------------------
 
-enum COMXMLParserType {ptString, ptStream, ptRing};
+enum COMXMLParserType
+{
+  ptStream,
+  ptRing
+};
 
 //---------------------------------------------------------------
+
+/**
+   Einfacher XML-Parser
+
+   Dieser XML-Parser unterstützt nur Tags mit Attributen,
+   kann allerdings zwischen öffnenden, einzelnen und schliessenden
+   Tags unterscheiden. Daten, die zwischen den Tags stehen,
+   werden ignoriert.
+
+   Der Parser kann STL-Streams, noch besser aber Ringpuffer vom
+   Typ COMRingBufferT verarbeiten.
+*/
 
 class COMXMLParser
 {
@@ -63,11 +79,6 @@ public:
   COMXMLParser();
   ~COMXMLParser();
 
-  /*
-  const COMXMLTag *parse(string *,
-                         const string & = "",
-                         COMXMLTagType = dxttSingle);
-  */
   const COMXMLTag *parse(istream *,
                          const string & = "",
                          COMXMLTagType = dxttSingle);
@@ -76,34 +87,33 @@ public:
                          COMXMLTagType = dxttSingle);
   
   const COMXMLTag *last_tag() const;
-  const string &last_parsed() const;
 
 private:
-  COMXMLTag _tag;
-  string _force_tag;
-  COMXMLTagType _force_type;
-  COMXMLParserType _parse_type;
+  COMXMLTag _tag; /**< Zuletzt geparstes XML-Tag */
+  string _current_tag;
 
-  COMRingBufferT<char, unsigned int> *_data_ring;
-  unsigned int _data_ring_length;
+  COMRingBufferT<char, unsigned int> *_data_ring; /**< Zeiger auf zu parsenden Ring */
 
-  istream *_data_stream;
-  unsigned int _data_stream_start;
-  unsigned int _data_stream_pos;
-  char _data_stream_char;
-  bool _data_stream_char_fetched;
-  unsigned int _data_stream_char_index;
+  istream *_data_stream;                /**< Zeiger auf zu parsenden Stream */
+  unsigned int _data_stream_start;      /**< Ürsprüngliche Startposition im Stream */
+  unsigned int _data_stream_pos;        /**< Aktuelle Position im Stream */
+  char _data_stream_char;               /**< Aktuelles Zeichen im Stream */
+  bool _data_stream_char_fetched;       /**< Wurde das aktuelle Zeichen schon gelesen? */
+  unsigned int _data_stream_char_index; /**< Index des aktuell gelesenen Zeichens im Stream */
 
-  string *_data_string;
-  unsigned int _data_string_length;
-
-  void _parse();
-  char _data(unsigned int);
-  void _erase(unsigned int);
+  void _parse(COMXMLParserType, const string &, COMXMLTagType);
+  char _data(COMXMLParserType, unsigned int);
+  void _erase(COMXMLParserType, unsigned int);
   bool _alphanum(char);
 };
 
 //---------------------------------------------------------------
+
+/**
+   Gibt einen konstanten zeiger auf das letzte Tag zurück
+
+   \return Letztes Tag
+*/
 
 inline const COMXMLTag *COMXMLParser::last_tag() const
 {

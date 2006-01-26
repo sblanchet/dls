@@ -46,65 +46,32 @@ public:
   ~COMJobPreset();
 
   void import(const string &, int);
-  void write(const string &);
-  void notify_new(const string &);
-  void notify_changed(const string &);
-  void notify_deleted(const string &);
-
-  void id(int);
-  void description(const string &);
-  void running(bool);
-  void source(const string &);
-  void trigger(const string &);
-
-  void toggle_running();
-  void add_channel(const COMChannelPreset *);
-  void change_channel(const COMChannelPreset *);
-  void remove_channel(const string &);
 
   int id() const;
   const string &description() const;
   string id_desc() const;
   const string &owner() const;
   bool running() const;
-  unsigned int quota() const;
+  long long quota_time() const;
+  long long quota_size() const;
   const string &source() const;
   const string &trigger() const;
   const vector<COMChannelPreset> *channels() const;
   bool channel_exists(const string &) const;
 
-  //--- Nur für User-Bereich
-  //@{
-  time_t process_watchdog;        /**< Zeitstempel der Watchdog-Datei (NUR USER) */
-  unsigned int process_bad_count; /**< Anzahl letzter Watchdog-Prüfungen,
-                                       ohne dass sich etwas geändert hat (NUR USER) */
-  bool process_watch_determined;  /**< Watchdog-Information steht fest (NUR USER) */
-  time_t logging_watchdog;        /**< Zeitstempel der Logging-Watchdog-Datei (NUR USER) */
-  unsigned int logging_bad_count; /**< Anzahl letzter Logging-Watchdog-Prüfungen,
-                                       ohne dass sich etwas geändert hat (NUR USER) */
-  bool logging_watch_determined;  /**< Logging-Watchdog-Information steht fest (NUR USER) */
-  //@}
-  //---
+  // prototypen
+  void description(const string &);
 
-  //--- Nur für Mother
-  //@{
-  int pid;            /**< PID des ge'fork'ten Kindprozesses (NUR MOTHER) */
-  int last_exit_code; /**< Exitcode des letzten Prozesses (NUR MOTHER) */
-  COMTime exit_time;  /**< Beendigungszeit des letzten Prozesses */
-  //@}
-  //---
-
-private:
-  int _id;                         /**< Auftrags-ID */
-  string _description;             /**< Beschreibender Name des Auftrages */
-  string _owner;                   /**< Besitzer des Auftrages \todo Nicht genutzt */
-  bool _running;                   /**< Soll erfasst werden? */
-  unsigned int _quota;             /**< Auftrags-Quota \todo Nicht genutzt */
-  string _source;                  /**< IP-Adresse oder Hostname der Datenquelle */
-  string _trigger;                 /**< Name des Trigger-Parameters, andernfalls leer */  
+protected:
+  int _id;                            /**< Auftrags-ID */
+  string _description;                /**< Beschreibender Name des Auftrages */
+  string _owner;                      /**< Besitzer des Auftrages \todo Nicht genutzt */
+  bool _running;                      /**< Soll erfasst werden? */
+  long long _quota_time;              /**< Auftrags-Quota nach Zeit */
+  long long _quota_size;              /**< Auftrags-Quota nach Datengröße */
+  string _source;                     /**< IP-Adresse oder Hostname der Datenquelle */
+  string _trigger;                    /**< Name des Trigger-Parameters, andernfalls leer */  
   vector<COMChannelPreset> _channels; /**< Liste der Kanalvorgaben */
-
-  void _write_spooling_file(const string &, const string &);
 };
 
 //---------------------------------------------------------------
@@ -189,6 +156,34 @@ inline const string &COMJobPreset::source() const
 inline const string &COMJobPreset::trigger() const
 {
   return _trigger;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Ermöglicht Lesezugriff auf das Zeit-Quota-Attribut
+
+   \returns Quota-Größe
+   \see _quota_time
+*/
+
+inline long long COMJobPreset::quota_time() const
+{
+  return _quota_time;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Ermöglicht Lesezugriff auf das Daten-Quota-Attribut
+
+   \returns Quota-Größe
+   \see _quota_size
+*/
+
+inline long long COMJobPreset::quota_size() const
+{
+  return _quota_size;
 }
 
 //---------------------------------------------------------------

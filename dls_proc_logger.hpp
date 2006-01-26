@@ -58,6 +58,7 @@ private:
   int _socket;
   COMRingBufferT<char, unsigned int> *_ring_buf;
   unsigned int _sig_hangup;
+  unsigned int _sig_child;
   string _to_send;
   bool _exit;
   int _exit_code;
@@ -68,6 +69,7 @@ private:
   double _max_frequency;
   list<COMRealChannel> _real_channels;
   COMTime _data_time;
+  COMTime _first_data_time;
   bool _got_channels;
   stringstream _msg;
   struct timeval _last_trigger_requested;
@@ -85,6 +87,9 @@ private:
   void _save_data();
   void _do_trigger();
   void _do_watchdogs();
+  void _do_quota();
+  void _create_pid_file();
+  void _remove_pid_file();
 };
 
 //---------------------------------------------------------------

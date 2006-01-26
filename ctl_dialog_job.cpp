@@ -11,15 +11,31 @@ using namespace std;
 
 #include <FL/Fl.h>
 
+//---------------------------------------------------------------
+
+#include "ctl_globals.hpp"
 #include "ctl_dialog_channel.hpp"
 #include "ctl_dialog_channels.hpp"
 #include "ctl_dialog_job_edit.hpp"
 #include "ctl_dialog_job.hpp"
+#include "ctl_msg_wnd.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job.cpp,v 1.12 2005/01/24 10:15:04 fp Exp $");
+
+//---------------------------------------------------------------
 
 #define WIDTH 600
 #define HEIGHT 470
 
 //---------------------------------------------------------------
+
+/**
+   Konstruktor
+
+   \param dls_dir DLS-Datenverzeichnis
+*/
 
 CTLDialogJob::CTLDialogJob(const string &dls_dir)
 {
@@ -50,6 +66,8 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _button_change = new Fl_Button(WIDTH - 90, 25, 80, 25, "Ändern...");
   _button_change->callback(_callback, this);
 
+  _tile = new Fl_Tile(10, 60, WIDTH - 20, 350);
+
   _grid_channels = new Fl_Grid(10, 60, WIDTH - 20, 200);
   _grid_channels->add_column("name", "Kanal", 300);
   _grid_channels->add_column("freq", "Abtastrate");
@@ -61,11 +79,13 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _grid_channels->take_focus();
   _grid_channels->select_mode(flgMultiSelect);
   
-  _grid_messages = new Fl_Grid(10, 270, WIDTH - 20, 150);
+  _grid_messages = new Fl_Grid(10, 260, WIDTH - 20, 160);
   _grid_messages->add_column("time", "Zeit");
   _grid_messages->add_column("text", "Nachricht", 230);
   _grid_messages->select_mode(flgNoSelect);
   _grid_messages->callback(_callback, this);
+
+  _tile->end();
 
   _button_add = new Fl_Button(10, HEIGHT - 35, 150, 25, "Kanäle hinzufügen...");
   _button_add->callback(_callback, this);
@@ -78,10 +98,16 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _button_rem->callback(_callback, this);
   _button_rem->deactivate();
 
+  _wnd->end();
+
   _wnd->resizable(_grid_channels);
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 CTLDialogJob::~CTLDialogJob()
 {
@@ -92,7 +118,13 @@ CTLDialogJob::~CTLDialogJob()
 
 //---------------------------------------------------------------
 
-void CTLDialogJob::show(COMJobPreset *job)
+/**
+   Zeigt den Dialog an
+
+   \param job Zeiger auf den Auftrag, der bearbeitet werden soll
+*/
+
+void CTLDialogJob::show(CTLJobPreset *job)
 {
   _job = job;
 
@@ -117,6 +149,13 @@ void CTLDialogJob::show(COMJobPreset *job)
 
 //---------------------------------------------------------------
 
+/**
+   Statische Callback-Funktion
+
+   \param sender Widget, dass den Callback ausgelöst hat
+   \param data Zeiger auf den Dialog
+*/
+
 void CTLDialogJob::_callback(Fl_Widget *sender, void *data)
 {
   CTLDialogJob *dialog = (CTLDialogJob *) data;
@@ -132,6 +171,10 @@ void CTLDialogJob::_callback(Fl_Widget *sender, void *data)
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback-Methode des Kanal-Grids
+*/
 
 void CTLDialogJob::_grid_channels_callback()
 {
@@ -198,6 +241,10 @@ void CTLDialogJob::_grid_channels_callback()
 
 //---------------------------------------------------------------
 
+/**
+   Callback-Methode des Meldungs-Grids
+*/
+
 void CTLDialogJob::_grid_messages_callback()
 {
   unsigned int i;
@@ -229,12 +276,20 @@ void CTLDialogJob::_grid_messages_callback()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Schliessen"-Button wurde geklickt
+*/
+
 void CTLDialogJob::_button_close_clicked()
 {
   _wnd->hide();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback: Der "Hinzufügen"-Button wurde geklickt
+*/
 
 void CTLDialogJob::_button_add_clicked()
 {
@@ -251,12 +306,20 @@ void CTLDialogJob::_button_add_clicked()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Entfernen"-Button wurde geklickt
+*/
+
 void CTLDialogJob::_button_rem_clicked()
 {
-  _remove_channel(_grid_channels->selected_index());
+  _remove_channels(_grid_channels->selected_list());
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback: Der "Ändern"-Button wurde geklickt
+*/
 
 void CTLDialogJob::_button_change_clicked()
 {
@@ -276,12 +339,20 @@ void CTLDialogJob::_button_change_clicked()
 
 //---------------------------------------------------------------
 
+/**
+   Callback: Der "Editieren"-Button wurde geklickt
+*/
+
 void CTLDialogJob::_button_edit_clicked()
 {
   _edit_channels();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback des Meldungs-Grids
+*/
 
 bool CTLDialogJob::_load_messages()
 {
@@ -309,6 +380,12 @@ bool CTLDialogJob::_load_messages()
 }
 
 //---------------------------------------------------------------
+
+/**
+   Editieren eines oder mehrerer Kanäle
+
+   Öffnet für die gewählten Kanäle den Änderungsdialog
+*/
 
 void CTLDialogJob::_edit_channels()
 {
@@ -340,11 +417,17 @@ void CTLDialogJob::_edit_channels()
 
 //---------------------------------------------------------------
 
+/**
+   Einfügen von Kanälen
+
+   Öffnet den Dialog zum Hinzufügen von Kanälen
+*/
+
 void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
 {
   list<COMRealChannel>::const_iterator ch_i;
   COMChannelPreset new_channel;
-  COMJobPreset job_copy;
+  CTLJobPreset job_copy;
 
   if (channels->size() == 0) return;
 
@@ -353,15 +436,16 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   ch_i = channels->begin();
   while (ch_i != channels->end())
   {
-    if (job_copy.channel_exists(ch_i->name()))
+    if (job_copy.channel_exists(ch_i->name))
     {
-      cout << "channel \"" << ch_i->name() << "\" already exists!" << endl;
+      msg->str() << "Channel \"" << ch_i->name << "\" already exists!";
+      msg->warning();
     }
     else
     { 
-      new_channel.name = ch_i->name();
-      new_channel.sample_frequency = ch_i->frequency();
-      new_channel.block_size = (ch_i->frequency() >= 10 ? ch_i->frequency() : 10);
+      new_channel.name = ch_i->name;
+      new_channel.sample_frequency = ch_i->frequency;
+      new_channel.block_size = (ch_i->frequency >= 10 ? ch_i->frequency : 10);
       new_channel.meta_mask = 7;
       new_channel.meta_reduction = 30;
       new_channel.format_index = DLS_FORMAT_ZLIB;
@@ -378,7 +462,8 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "error writing preset file: " << e.msg << endl;
+    msg->str() << "Writing preset file: " << e.msg;
+    msg->error();
     return;
   }
 
@@ -388,7 +473,8 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "WARNING: could not notify dlsd." << endl;
+    msg->str() << "Could not notify dlsd: " << e.msg;
+    msg->warning();
   }
 
   *_job = job_copy;
@@ -398,19 +484,33 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
 
 //---------------------------------------------------------------
 
-void CTLDialogJob::_remove_channel(int index)
-{
-  COMJobPreset job_copy;
+/**
+   Löscht die ausgewählten Kanäle
 
-  if (index < 0 || index >= (int) _job->channels()->size())
-  {
-    cout << "channel index out of range!" << endl;
-    return;
-  }
+   \param sel_list Liste mit den Indizes der selektierten Kanäle
+*/
+
+void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
+{
+  CTLJobPreset job_copy;
+  list<unsigned int>::const_iterator sel_i;
 
   job_copy = *_job;
 
-  job_copy.remove_channel((*_job->channels())[index].name);
+  sel_i = sel_list->begin();
+  while (sel_i != sel_list->end())
+  {
+    if (*sel_i >= _job->channels()->size())
+    {
+      msg->str() << "Channel index out of range!";
+      msg->error();
+      return;
+    }
+
+    job_copy.remove_channel((*_job->channels())[*sel_i].name);
+    
+    sel_i++;
+  }
 
   try
   {
@@ -418,7 +518,8 @@ void CTLDialogJob::_remove_channel(int index)
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "error writing preset file: " << e.msg << endl;
+    msg->str() << "Writing preset file: " << e.msg;
+    msg->error();
     return;
   }
 
@@ -428,7 +529,8 @@ void CTLDialogJob::_remove_channel(int index)
   }
   catch (ECOMJobPreset &e)
   {
-    cout << "WARNING: could not notify dlsd." << endl;
+    msg->str() << "Could not notify dlsd: " << e.msg;
+    msg->warning();
   }
 
   *_job = job_copy;
@@ -437,6 +539,10 @@ void CTLDialogJob::_remove_channel(int index)
 }
 
 //---------------------------------------------------------------
+
+/**
+   Passt bei Änderung der Kanalauswahl die Buttons an
+*/
 
 void CTLDialogJob::_grid_selection_changed()
 {
@@ -456,6 +562,12 @@ void CTLDialogJob::_grid_selection_changed()
 
 //---------------------------------------------------------------
 
+/**
+   Statische Callback-Funktion für den Aktualisierungsintervall
+
+   \param data Zeiger auf den Dialog
+*/
+
 void CTLDialogJob::_static_timeout(void *data)
 {
   CTLDialogJob *dialog = (CTLDialogJob *) data;
@@ -464,6 +576,10 @@ void CTLDialogJob::_static_timeout(void *data)
 }
 
 //---------------------------------------------------------------
+
+/**
+   Callback-Methode: Die Meldungen sollen aktualisiert werden
+*/
 
 void CTLDialogJob::_timeout()
 {

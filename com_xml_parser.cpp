@@ -4,13 +4,29 @@
 //
 //---------------------------------------------------------------
 
+//#define DEBUG_XML_PARSER
+
+#if DEBUG_XML_PARSER
+#include <iostream>
+#endif
 #include <sstream>
 using namespace std;
 
+//---------------------------------------------------------------
+
+#include "com_globals.hpp"
 #include "com_xml_parser.hpp"
 #include "com_ring_buffer_t.hpp"
 
 //---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_parser.cpp,v 1.6 2004/12/15 14:43:16 fp Exp $");
+
+//---------------------------------------------------------------
+
+/**
+   Konstruktor
+*/
 
 COMXMLParser::COMXMLParser()
 {
@@ -18,64 +34,82 @@ COMXMLParser::COMXMLParser()
 
 //---------------------------------------------------------------
 
+/**
+   Destruktor
+*/
+
 COMXMLParser::~COMXMLParser()
 {
 }
 
 //---------------------------------------------------------------
 
+/**
+   Holt das nächste XML-Tag aus einem STL-Stream
+*/
+
 const COMXMLTag *COMXMLParser::parse(istream *in,
                                      const string &force_tag,
                                      COMXMLTagType force_type)
 {
-  _force_tag = force_tag;
-  _force_type = force_type;
-  _parse_type = ptStream;
   _data_stream = in;
   _data_stream_start = in->tellg();
   _data_stream_pos = 0;
   _data_stream_char_fetched = false;
 
-  _parse();
+  _parse(ptStream, force_tag, force_type);
 
   return &_tag;
 }
 
 //---------------------------------------------------------------
+
+/**
+   Holt das nächste XML-Tag aus Ringpuffer
+*/
 
 const COMXMLTag *COMXMLParser::parse(COMRingBufferT<char, unsigned int> *ring,
                                      const string &force_tag,
                                      COMXMLTagType force_type)
 {
-  _force_tag = force_tag;
-  _force_type = force_type;
-  _parse_type = ptRing;
   _data_ring = ring;
-  _data_ring_length = ring->length();
 
-  _parse();
+  _parse(ptRing, force_tag, force_type);
 
   return &_tag;
 }
 
 //---------------------------------------------------------------
 
-void COMXMLParser::_parse()
+/**
+   Sucht Taganfang und -ende und parst den Inhalt
+
+   \param parse_type Stream oder Ring
+   \param force_tag Tag-Prüfung nach Parsing
+   \param force_type Tag-Typ-Prüfung
+   \throw ECOMXMLParser Fehler beim Parsing
+   \throw ECOMXMLParserEOF EOF beim Parsing
+*/
+
+void COMXMLParser::_parse(COMXMLParserType parse_type,
+                          const string &force_tag,
+                          COMXMLTagType force_type)
 {
   bool escaped, escaped2;
   unsigned int i = 0, tag_length;
   string title, name, value;
   stringstream err;
+  char c;
 
   // Bis zum ersten '<' gehen
-  while (_data(i) != '<') i++;
+  while (_data(parse_type, i) != '<') i++;
 
   // Alles vor dem ersten '<' löschen
   if (i > 0)
   {
-    if (_parse_type == ptString || _parse_type == ptRing)
+    if (parse_type == ptRing)
     {
-      _erase(i);
+      _erase(parse_type, i);
       i = 0;
     }
     else // Stream
@@ -84,10 +118,18 @@ void COMXMLParser::_parse()
     }
   }
     
+  _current_tag = "";
+
   escaped = false;
   escaped2 = false;
-  while (_data(i) != '>' || escaped)
+  while (1)
   {
+    c = _data(parse_type, i);
+
+    _current_tag += c;
+
+    if (c == '>' && !escaped) break;
+
     if (escaped) // Wenn mit " escaped
     {
       if (escaped2) // Wenn dazu mit \ escaped
@@ -96,13 +138,13 @@ void COMXMLParser::_parse()
       }
       else
       {
-        if (_data(i) == '\\') escaped2 = true;
-        else if (_data(i) == '\"') escaped = false;
+        if (_data(parse_type, i) == '\\') escaped2 = true;
+        else if (_data(parse_type, i) == '\"') escaped = false;
       }
     }
     else // Nicht escaped
     {
-      if (_data(i) == '\"') escaped = true;
+      if (_data(parse_type, i) == '\"') escaped = true;
     }
     i++;
   }
@@ -116,7 +158,7 @@ void COMXMLParser::_parse()
   i = 1; // '<' überspringen
 
   // End-Tag
-  if (_data(i) == '/')
+  if (_data(parse_type, i) == '/')
   {
     _tag.type(dxttEnd);
     i++;
@@ -124,50 +166,50 @@ void COMXMLParser::_parse()
 
   // Titel holen
 
-  while (_alphanum(_data(i)))
+  while (_alphanum(_data(parse_type, i)))
   {
-    title += _data(i++);
+    title += _data(parse_type, i++);
   }
 
   if (title == "")
   {
-    err << "expected title, got char " << (int) _data(i) << "...";
+    err << "expected title, got char " << (int) _data(parse_type, i) << "...";
 
     // Falsches Tag löschen
-    _erase(tag_length);
+    _erase(parse_type, tag_length);
 
-    throw ECOMXMLParser(err.str());
+    throw ECOMXMLParser(err.str(), _current_tag);
   }
 
   _tag.title(title);
 
   // Leerzeichen überspringen
-  while (_data(i) == ' ') i++;
+  while (_data(parse_type, i) == ' ' || _data(parse_type, i) == '\n') i++;
 
   // Attribut einlesen
 
-  while (_alphanum(_data(i)))
+  while (_alphanum(_data(parse_type, i)))
   {
     name = "";
     value = "";
     
     // Attributnamen einlesen
-    while (_alphanum(_data(i)))
+    while (_alphanum(_data(parse_type, i)))
     {
-      name += _data(i++);
+      name += _data(parse_type, i++);
     }
 
     // Leerzeichen ignorieren
-    if (_data(i) == ' ')
+    if (_data(parse_type, i) == ' ' || _data(parse_type, i) == '\n')
     {
       // Attribut ohne Wert
       _tag.push_att(name, "");
 
       i++;
-      while (_data(i) == ' ') i++;
+      while (_data(parse_type, i) == ' ' || _data(parse_type, i) == '\n') i++;
       continue;
     }
-    else if (_data(i) == '/' || _data(i) == '>')
+    else if (_data(parse_type, i) == '/' || _data(parse_type, i) == '>')
     {
       // Attribut ohne Wert
       _tag.push_att(name, "");
@@ -175,20 +217,20 @@ void COMXMLParser::_parse()
       break;
     }
 
-    if (_data(i++) != '=')
+    if (_data(parse_type, i++) != '=')
     {
       // Falsches Tag löschen
-      _erase(tag_length);
+      _erase(parse_type, tag_length);
 
-      throw ECOMXMLParser("expected \'=\'");
+      throw ECOMXMLParser("expected \'=\'", _current_tag);
     }
       
-    if (_data(i++) != '\"')
+    if (_data(parse_type, i++) != '\"')
     {
       // Falsches Tag löschen
-      _erase(tag_length);
+      _erase(parse_type, tag_length);
 
-      throw ECOMXMLParser("expected: '\"'!");
+      throw ECOMXMLParser("expected: '\"'!", _current_tag);
     }
 
     // Attributwert einlesen
@@ -198,22 +240,22 @@ void COMXMLParser::_parse()
     {
       if (escaped) // Letztes Zeichen war Escape-Zeichen.
       {
-        value += _data(i++); // "Blind" alles einlesen
+        value += _data(parse_type, i++); // "Blind" alles einlesen
         escaped = false;    // Escape zurücksetzen
       }
-      else if (_data(i) == '\\') // Escape-Zeichen
+      else if (_data(parse_type, i) == '\\') // Escape-Zeichen
       {
         escaped = true;
         i++;
       }
-      else if (_data(i) == '\"') // Nicht 'escape'tes '"': Fertig!
+      else if (_data(parse_type, i) == '\"') // Nicht 'escape'tes '"': Fertig!
       {
         i++;
         break;
       }
       else
       {
-        value += _data(i++);
+        value += _data(parse_type, i++);
       }
     }
       
@@ -221,57 +263,69 @@ void COMXMLParser::_parse()
     _tag.push_att(name, value);
 
     // Leerzeichen ignorieren
-    while (_data(i) == ' ') i++;
+    while (_data(parse_type, i) == ' ' || _data(parse_type, i) == '\n') i++;
   }
 
-  if (_data(i) == '/')
+  if (_data(parse_type, i) == '/')
   {
     if (_tag.type() == dxttEnd) // Tag hatte bereits / vor dem Titel
     {
-      throw ECOMXMLParser("double \'/\' detected");
+      throw ECOMXMLParser("double \'/\' detected", _current_tag);
     }
 
     _tag.type(dxttSingle);
     i++;
   }
 
-  if (_data(i) != '>')
+  if (_data(parse_type, i) != '>')
   {
-    throw ECOMXMLParser("expected \'>\'");
+    err << "expected \'>\' in tag " << _tag.title();
+    throw ECOMXMLParser(err.str(), _current_tag);
   }
 
   // Tag aus der Quelle entfernen
-  _erase(tag_length);
+  _erase(parse_type, tag_length);
 
-  if (_force_tag != "")
+  //_last_tag_length = tag_length;
+
+  if (force_tag != "")
   {
-    if (title != _force_tag)
+    if (title != force_tag)
     {
-      throw ECOMXMLParser("expected tag <" + _force_tag + ">, got <" + title + ">...");
+      throw ECOMXMLParser("expected tag <" + force_tag + ">, got <" + title + ">...", _current_tag);
     }
-    if (_tag.type() != _force_type)
+    if (_tag.type() != force_type)
     {
-      err << "wrong tag type of <" << _force_tag << "> ";
-      err << "expected " << _force_type << ", got " << _tag.type();
-       throw ECOMXMLParser(err.str());
+      err << "wrong tag type of <" << force_tag << "> ";
+      err << "expected " << force_type << ", got " << _tag.type();
+      throw ECOMXMLParser(err.str(), _current_tag);
     }
   }
 }
 
 //---------------------------------------------------------------
 
-char COMXMLParser::_data(unsigned int index)
+/**
+   Liefert ein zeichen an der gegebenen Stelle
+
+   \param parse_type Stream oder Ring
+   \param index Index des Zeichens
+   \return Zeichen
+   \throw ECOMXMLParserEOF EOF!
+*/
+
+char COMXMLParser::_data(COMXMLParserType parse_type, unsigned int index)
 {
-  if (_parse_type == ptRing)
+  if (parse_type == ptRing)
   {
-    if (index >= _data_ring_length)
+    if (index >= _data_ring->length())
     {
       throw ECOMXMLParserEOF();
     } 
     return (*_data_ring)[index];
   }
 
-  else if (_parse_type == ptStream)
+  else if (parse_type == ptStream)
   {
     if (_data_stream_char_fetched && index == _data_stream_char_index)
     {
@@ -296,12 +350,17 @@ char COMXMLParser::_data(unsigned int index)
         
         throw ECOMXMLParserEOF();
       }
-      
+
+#ifdef DEBUG_XML_PARSER
+      cout << _data_stream_char;
+#endif
+
       return _data_stream_char;
     }
   }
 
-  else //if (_parse_type == ptString)
+  /*
+  else
   {
     if (index >= _data_string_length)
     {
@@ -309,30 +368,43 @@ char COMXMLParser::_data(unsigned int index)
     } 
     return (*_data_string)[index];
   }
+  */
+
+  throw ECOMXMLParser("unkown parser type!");
 }
 
 //---------------------------------------------------------------
 
-void COMXMLParser::_erase(unsigned int length)
+/**
+   Löscht die geparsten Daten aus der Quelle
+
+   \param parse_type Stream oder Ring
+   \param length Anzahl der zu löschenden Zeichen
+*/
+
+void COMXMLParser::_erase(COMXMLParserType parse_type, unsigned int length)
 {
-  if (_parse_type == ptRing)
+  if (parse_type == ptRing)
   {
     _data_ring->erase_first(length);
   }
-  else if (_parse_type == ptString)
-  {
-    _data_string->erase(0, length);
-  }
 }
 
 //---------------------------------------------------------------
 
+/**
+   Bestimmt, ob das angegebene Zeichen alphanumerisch ist
+
+   \param c Zeichen
+   \return true, wenn Zeichen alphanumerisch
+*/
+
 bool COMXMLParser::_alphanum(char c)
 {
-  return (c >= 'a' && c <= 'z')
-    || (c >= 'A' && c <= 'Z')
-    || (c >= '0' && c <= '9')
-    || c == '_';
+  return ((c >= 'a' && c <= 'z')
+          || (c >= 'A' && c <= 'Z')
+          || (c >= '0' && c <= '9')
+          || c == '_');
 }
 
 //---------------------------------------------------------------

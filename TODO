@@ -1,8 +1,17 @@
-Quota
-Ring
-Datengröße anzeigen?
-Export
-Jobs löschen
-Echtzeit-Ansicht
-Binäre Suche über Indizes
-Carries anzeigen
+TODO-Liste DLS
+
+dlsd:
+
+1) MDCT verbessern
+1) Abstürze suchen
+
+dls_ctl:
+
+1) Export (ASCII/Diadem)
+2) Messages wieder anzeigen
+3) Jobs löschen?
+4) Binäre Suche über Indizes
+
+dls_view:
+
+dls_status:

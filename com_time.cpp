@@ -9,7 +9,12 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+#include "com_globals.hpp"
 #include "com_time.hpp"
+
+//---------------------------------------------------------------
+
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_time.cpp,v 1.4 2005/01/18 10:49:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -19,7 +24,7 @@ using namespace std;
 
 COMTime::COMTime()
 {
-  _time = 0;
+  set_null();
 }
 
 //---------------------------------------------------------------
@@ -121,6 +126,30 @@ COMTime &COMTime::operator =(struct timeval tv)
 void COMTime::from_dbl_time(double t)
 {
   _time = (long long) (t * 1000000.0 + 0.5);
+}
+
+//---------------------------------------------------------------
+
+/**
+   Setzt die Zeit auf Null
+*/
+
+void COMTime::set_null()
+{
+  _time = (long long) 0;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Prüft, ob die Zeit auf Null gesetzt ist
+
+   \return true, wenn auf Null
+*/
+
+bool COMTime::is_null() const
+{
+  return _time == (long long) 0;
 }
 
 //---------------------------------------------------------------
@@ -303,6 +332,20 @@ double COMTime::to_dbl() const
 //---------------------------------------------------------------
 
 /**
+   Konvertierung zu einem "double"-Wert, der Sekunden
+   und Sekundenbruchteile enthält
+
+   \returns Anzahl der Sekunden als double
+*/
+
+double COMTime::to_dbl_time() const
+{
+  return (double) _time / 1000000.0;
+}
+
+//---------------------------------------------------------------
+
+/**
    Konvertierung nach "long long"
 
    \returns Anzahl der Mikrosekunden als long long
@@ -390,10 +433,9 @@ string COMTime::to_real_time() const
    \returns Referenz auf die gesetzte Zeit
 */
 
-const COMTime &COMTime::set_now()
+void COMTime::set_now()
 {
   *this = COMTime::now();
-  return *this;
 }
 
 //---------------------------------------------------------------

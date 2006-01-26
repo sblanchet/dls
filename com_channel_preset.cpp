@@ -13,12 +13,24 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_channel_preset.cpp,v 1.6 2005/01/05 09:26:04 fp Exp $");
+
+//---------------------------------------------------------------
+
+/**
+   Konstruktor
+*/
+
 COMChannelPreset::COMChannelPreset()
 {
   clear();
 }
 
 //---------------------------------------------------------------
+
+/**
+   Destruktor
+*/
 
 COMChannelPreset::~COMChannelPreset()
 {
@@ -45,7 +57,8 @@ bool COMChannelPreset::operator!=(const COMChannelPreset &other) const
     meta_mask != other.meta_mask ||
     meta_reduction != other.meta_reduction ||
     format_index != other.format_index ||
-    mdct_block_size != other.mdct_block_size;
+    mdct_block_size != other.mdct_block_size ||
+    mdct_accuracy != other.mdct_accuracy;
 }
 
 //---------------------------------------------------------------
@@ -86,7 +99,7 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
       }
     }
 
-    if (format_index < 0 || format_index >= DLS_FORMAT_COUNT)
+    if (format_index == DLS_FORMAT_INVALID)
     {
       clear();
       err << "unknown channel format \"" << format_string << "\"!";
@@ -96,6 +109,7 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
     if (format_index == DLS_FORMAT_MDCT)
     {
       mdct_block_size = tag->att("mdct_block_size")->to_int();
+      mdct_accuracy = tag->att("mdct_accuracy")->to_dbl();
     }
   }
   catch (ECOMXMLTag &e)
@@ -137,10 +151,15 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
   if (format_index == DLS_FORMAT_MDCT)
   {
     tag->push_att("mdct_block_size", mdct_block_size);
+    tag->push_att("mdct_accuracy", mdct_accuracy);
   }
 }
 
 //---------------------------------------------------------------
+
+/**
+   Löscht die aktuellen Kanalvorgaben
+*/
 
 void COMChannelPreset::clear()
 {
@@ -151,6 +170,7 @@ void COMChannelPreset::clear()
   meta_reduction = 0;
   format_index = DLS_FORMAT_INVALID;
   mdct_block_size = 0;
+  mdct_accuracy = 0;
 }
 
 //---------------------------------------------------------------
