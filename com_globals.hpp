@@ -15,9 +15,9 @@ using namespace std;
 
 /*****************************************************************************/
 
-#define DLS_MASTER_VERSION  0
-#define DLS_SUB_VERSION     9
-#define DLS_SUB_SUB_VERSION 3
+#define DLS_MASTER_VERSION  1
+#define DLS_SUB_VERSION     0
+#define DLS_SUB_SUB_VERSION 0
 
 #define LITERAL(X) #X
 #define STRINGIFY(X) LITERAL(X)
