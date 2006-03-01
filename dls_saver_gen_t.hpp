@@ -85,6 +85,21 @@ public:
 template <class T>
 class DLSSaverGenT : public DLSSaverGen, public DLSSaverT<T>
 {
+    using DLSSaverT<T>::_block_buf;
+    using DLSSaverT<T>::_block_buf_index;
+    using DLSSaverT<T>::_block_buf_size;
+    using DLSSaverT<T>::_block_time;
+    using DLSSaverT<T>::_meta_buf;
+    using DLSSaverT<T>::_meta_buf_index;
+    using DLSSaverT<T>::_meta_buf_size;
+    using DLSSaverT<T>::_meta_time;
+    using DLSSaverT<T>::_time_of_last;
+    using DLSSaverT<T>::_parent_logger;
+    using DLSSaverT<T>::_compression;
+    using DLSSaverT<T>::_save_rest;
+    using DLSSaverT<T>::_finish_files;
+    using DLSSaverT<T>::_save_block;
+
 public:
   DLSSaverGenT(DLSLogger *);
   virtual ~DLSSaverGenT();

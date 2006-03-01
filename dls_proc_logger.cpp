@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include <fstream>
 using namespace std;
@@ -18,6 +19,7 @@ using namespace std;
 #include "com_ring_buffer_t.hpp"
 #include "dls_globals.hpp"
 #include "dls_proc_logger.hpp"
+#include "dls_saver_t.hpp"
 
 //#define DEBUG
 //#define DEBUG_SIZES

@@ -16,11 +16,11 @@ using namespace std;
 
 #include "com_exception.hpp"
 #include "com_channel_preset.hpp"
-#include "dls_saver_gen_t.hpp"
 
 /*****************************************************************************/
 
 class DLSJob; // Nötig, da gegenseitige Referenzierung
+class DLSSaverGen;
 
 /*****************************************************************************/
 

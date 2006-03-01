@@ -7,6 +7,8 @@
 #ifndef COMMDCTTHpp
 #define COMMDCTTHpp
 
+#include <math.h>
+
 /*****************************************************************************/
 
 //#define MDCT_DEBUG
@@ -444,12 +446,13 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
       max_error = 0;
       for (i = 0; i < _dim; i++)
       {
-        error = abs(quant_imdct[i] - coeff_imdct[i]);
+        error = fabs(quant_imdct[i] - coeff_imdct[i]);
         if (error > max_error) max_error = error;
       }
 
 #ifdef MDCT_DEBUG
-      msg() << "Quant with " << (int) bits << " bits. IMDCT error " << max_error;
+      msg() << "Quant with " << (int) bits << " bits. IMDCT error "
+	    << max_error;
       log(DLSDebug);
 #endif
 

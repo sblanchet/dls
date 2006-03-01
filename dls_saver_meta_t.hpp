@@ -28,6 +28,21 @@ enum DLSMetaType {DLSMetaMean = 1, DLSMetaMin = 2, DLSMetaMax = 4};
 template <class T>
 class DLSSaverMetaT : public DLSSaverT<T>
 {
+    using DLSSaverT<T>::_block_buf;
+    using DLSSaverT<T>::_block_buf_index;
+    using DLSSaverT<T>::_block_buf_size;
+    using DLSSaverT<T>::_block_time;
+    using DLSSaverT<T>::_meta_buf;
+    using DLSSaverT<T>::_meta_buf_index;
+    using DLSSaverT<T>::_meta_buf_size;
+    using DLSSaverT<T>::_meta_time;
+    using DLSSaverT<T>::_time_of_last;
+    using DLSSaverT<T>::_parent_logger;
+    using DLSSaverT<T>::_compression;
+    using DLSSaverT<T>::_save_rest;
+    using DLSSaverT<T>::_finish_files;
+    using DLSSaverT<T>::_save_block;
+
 public:
   DLSSaverMetaT(DLSLogger *, DLSMetaType, unsigned int);
   virtual ~DLSSaverMetaT();
@@ -36,9 +51,11 @@ public:
   void flush();
 
 private:
-  DLSSaverMetaT<T> *_next_saver; /**< Zeiger auf das Saver-Objekt der nächsten Ebene */
+  DLSSaverMetaT<T> *_next_saver; /**< Zeiger auf das Saver-Objekt der nächsten
+				    Ebene */
   DLSMetaType _type;             /**< Typ dieses Saver-Objektes */
-  bool _finished;                /**< true, wenn keine Daten mahr im Speicher */
+  bool _finished;                /**< true, wenn keine Daten mahr im
+				    Speicher */
   unsigned int _level;           /**< Meta-Ebene dieses Saver-Objektes */
 
   void _pass_meta_data();

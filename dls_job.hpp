@@ -17,6 +17,8 @@ using namespace std;
 #include "com_exception.hpp"
 #include "com_time.hpp"
 #include "com_job_preset.hpp"
+#include "com_file.hpp"
+#include "com_index_t.hpp"
 #include "dls_globals.hpp"
 #include "dls_logger.hpp"
 

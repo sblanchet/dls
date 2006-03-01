@@ -9,11 +9,11 @@
 
 /*****************************************************************************/
 
-#include "string.h"
-
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <iostream>
 #include <string>
@@ -29,13 +29,9 @@ using namespace std;
 #include "com_file.hpp"
 #include "com_index_t.hpp"
 #include "com_compression_t.hpp"
+#include "dls_logger.hpp"
 
 //#define DEBUG
-
-/*****************************************************************************/
-
-class DLSLogger; // Nötig, da gegenseitige Referenzierung
-class EDLSLogger;
 
 /*****************************************************************************/
 
@@ -85,19 +81,27 @@ public:
   virtual ~DLSSaverT();
 
 protected:
-  DLSLogger *_parent_logger;        /**< Zeiger auf das besitzende Logger-Objekt */
-  T *_block_buf;                    /**< Array von Datenwerten, die als Block in die
-                                         entsprechende Datei gespeichert werden sollen */
-  T *_meta_buf;                     /**< Array von Datenwerten, über die ein Meta-Wert
-                                         erzeugt werden soll */
-  unsigned int _block_buf_index;    /**< Index des ersten, freien Elementes im Block-Puffer */
+  DLSLogger *_parent_logger;        /**< Zeiger auf das besitzende
+				       Logger-Objekt */
+  T *_block_buf;                    /**< Array von Datenwerten, die als Block
+				       in die entsprechende Datei gespeichert
+				       werden sollen */
+  T *_meta_buf;                     /**< Array von Datenwerten, über die ein
+				       Meta-Wert erzeugt werden soll */
+  unsigned int _block_buf_index;    /**< Index des ersten, freien Elementes
+				       im Block-Puffer */
   unsigned int _block_buf_size;     /**< Größe des Block-Puffers */
-  unsigned int _meta_buf_index;     /**< Index des ersten, freien Elementes im Meta-Puffer */
+  unsigned int _meta_buf_index;     /**< Index des ersten, freien Elementes
+				       im Meta-Puffer */
   unsigned int _meta_buf_size;      /**< Größe des Meta-Puffers */
-  COMTime _block_time;              /**< Zeit des ersten Datenwertes im Block-Puffer */
-  COMTime _meta_time;               /**< Zeit des ersten Datenwertes im Meta-Puffer */
-  COMTime _time_of_last;            /**< Zeit des letzten Datenwertes beider Puffer */
-  COMCompressionT<T> *_compression; /**< Zeiger auf ein beliebiges Komprimierungs-Objekt */
+  COMTime _block_time;              /**< Zeit des ersten Datenwertes im
+				       Block-Puffer */
+  COMTime _meta_time;               /**< Zeit des ersten Datenwertes im
+				       Meta-Puffer */
+  COMTime _time_of_last;            /**< Zeit des letzten Datenwertes beider
+				       Puffer */
+  COMCompressionT<T> *_compression; /**< Zeiger auf ein beliebiges
+				       Komprimierungs-Objekt */
 
   void _save_block();
   void _finish_files();

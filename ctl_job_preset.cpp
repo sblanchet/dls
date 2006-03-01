@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 
 #include <sstream>
 #include <fstream>
