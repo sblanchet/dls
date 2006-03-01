@@ -13,14 +13,15 @@
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_globals.cpp,v 1.14 2005/03/09 10:23:18 fp Exp $");
+RCS_ID("$Header: /home/hm/projekte/dls_data_logging_server/src-0.93/RCS/com_globals.cpp,v 1.16 2005/08/25 13:27:46 hm Exp $");
 
 //---------------------------------------------------------------
 
 const char *dls_format_strings[DLS_FORMAT_COUNT] =
 {
     "ZLib/Base64",
-    "MDCT/ZLib/Base64"
+    "MDCT/ZLib/Base64",
+    "Quant/ZLib/Base64"
 };
 
 static stringstream _msg;
@@ -33,6 +34,8 @@ COMChannelType dls_str_to_channel_type(const string &str)
 {
   if (str == "TCHAR")  return TCHAR;
   if (str == "TUCHAR") return TUCHAR;
+  if (str == "TSHORT") return TSHORT;
+  if (str == "TUSHORT")return TUSHORT;
   if (str == "TINT")   return TINT;
   if (str == "TUINT")  return TUINT;
   if (str == "TLINT")  return TLINT;
@@ -51,6 +54,8 @@ char *dls_channel_type_to_str(COMChannelType type)
   {
     case TCHAR:  return "TCHAR";
     case TUCHAR: return "TUCHAR";
+    case TSHORT: return "TSHORT";
+    case TUSHORT: return "TUSHORT";
     case TINT:   return "TINT";
     case TUINT:  return "TUINT";
     case TLINT:  return "TLINT";
@@ -87,7 +92,10 @@ string convert_to_bin(const void *data,
 
     if (reverse)
     {
-      byte = *((unsigned char *) data + row * bytes_in_row + bytes_in_row - (i % bytes_in_row) - 1);
+      byte = *((unsigned char *) data
+               + row * bytes_in_row
+               + bytes_in_row
+               - (i % bytes_in_row) - 1);
     }
     else
     {

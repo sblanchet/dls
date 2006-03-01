@@ -26,7 +26,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/projekte/dls_data_logging_server/src/RCS/dls_main.cpp,v 1.27 2005/06/16 11:28:12 fp Exp $");
+RCS_ID("$Header: /home/fp/projekte/dls_data_logging_server/src/RCS/dls_main.cpp,v 1.28 2005/08/08 13:01:34 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -94,10 +94,14 @@ int main(int argc, char **argv)
   // schon ein Daemon läuft
   check_running(&dls_dir);
 
+  // In einen Daemon verwandeln, wenn gewuenscht
+  if (is_daemon) init_daemon();
+
   if (num_files != OPEN_MAX)
   {
     // Maximale Anzahl offener Dateien aendern
 
+    rlim.rlim_cur = num_files;
     rlim.rlim_max = num_files;
 
     if (setrlimit(RLIMIT_NOFILE, &rlim) == -1)
@@ -129,13 +133,10 @@ int main(int argc, char **argv)
     if (setuid(pwd->pw_uid) == -1)
     {
       cerr << "ERROR: Could not switch to UID " << pwd->pw_uid;
-      cerr << ": " << strerror(errno) << endl;
+      cerr << ": " << strerror(errno);
       exit(1);
     }
   }
-
-  // In einen Daemon verwandeln, wenn gewuenscht
-  if (is_daemon) init_daemon();
   
   // PID-Datei erzeugen
   create_pid_file(&dls_dir);

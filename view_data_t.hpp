@@ -34,7 +34,10 @@ public:
   ViewDataT();
   ~ViewDataT();
 
-  bool load_data_tag(const ViewChunk *, const char *, unsigned int, COMCompressionT<T> *);
+  bool load_data_tag(const ViewChunk *,
+                     const char *,
+                     unsigned int,
+                     COMCompressionT<T> *);
   void clear();
 
   T min() const;
@@ -124,7 +127,8 @@ bool ViewDataT<T>::load_data_tag(const ViewChunk *chunk,
   else if (chunk->format_index() == DLS_FORMAT_MDCT)
   {
 #ifdef DEBUG
-    cout << "reading overlapping mdct block. dim/2 = " << chunk->mdct_block_size() / 2 << endl;
+    cout << "reading overlapping mdct block. dim/2 = "
+         << chunk->mdct_block_size() / 2 << endl;
 #endif
 
     try

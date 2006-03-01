@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.21 2005/03/11 10:44:26 fp Exp $");
+RCS_ID("$Header: /home/hm/projekte/dls_data_logging_server/src-0.93/RCS/dls_logger.cpp,v 1.23 2005/08/25 13:30:10 hm Exp $");
 
 //---------------------------------------------------------------
 
@@ -129,6 +129,12 @@ void DLSLogger::create_gen_saver()
         break;
       case TUCHAR:
         _gen_saver = new DLSSaverGenT<unsigned char>(this);
+        break;
+      case TSHORT:
+        _gen_saver = new DLSSaverGenT<short int>(this);
+        break;
+      case TUSHORT:
+        _gen_saver = new DLSSaverGenT<unsigned short int>(this);
         break;
       case TINT:
         _gen_saver = new DLSSaverGenT<int>(this);
@@ -603,7 +609,12 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   if (_channel_preset.format_index == DLS_FORMAT_MDCT)
   {
     tag.push_att("mdct_block_size", _channel_preset.mdct_block_size);
-    tag.push_att("mdct_accuracy", _channel_preset.mdct_accuracy);
+    tag.push_att("mdct_accuracy", _channel_preset.accuracy);
+  }
+
+  else if (_channel_preset.format_index == DLS_FORMAT_QUANT)
+  {
+    tag.push_att("accuracy", _channel_preset.accuracy);
   }
 
   tag.push_att("architecture", arch_str);

@@ -180,7 +180,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
     else if (_parent_logger->channel_preset()->format_index == DLS_FORMAT_MDCT)
     {
       dim = _parent_logger->channel_preset()->mdct_block_size;
-      acc = _parent_logger->channel_preset()->mdct_accuracy;
+      acc = _parent_logger->channel_preset()->accuracy;
 
       if (typeid(T) == typeid(float))
       {
@@ -192,7 +192,26 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
       }
       else 
       {
-        err << "MDCT only suitable for floating point types, not for " << typeid(T).name() << "!";
+        err << "MDCT only suitable for";
+        err << " floating point types, not for " << typeid(T).name() << "!";
+      }
+    }
+    else if (_parent_logger->channel_preset()->format_index == DLS_FORMAT_QUANT)
+    {
+      acc = _parent_logger->channel_preset()->accuracy;
+
+      if (typeid(T) == typeid(float))
+      {
+        _compression = (COMCompressionT<T> *) new COMCompressionT_Quant<float>(acc);
+      }
+      else if (typeid(T) == typeid(double))
+      {
+        _compression = (COMCompressionT<T> *) new COMCompressionT_Quant<double>(acc);
+      }
+      else 
+      {
+        err << "Quantization only suitable for";
+        err << " floating point types, not for " << typeid(T).name() << "!";
       }
     }
     else

@@ -156,7 +156,9 @@ mdct.o: mdct.c
 # Abhängigkeiten ------------------------------------------------
 
 depend:
-	(for file in *.cpp mdct.c; do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $(FFTW_INC) $$file; done) > .depend
+	(for file in *.cpp mdct.c; \
+	   do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $(FFTW_INC) $$file; \
+	done) > .depend
 
 include .depend
 

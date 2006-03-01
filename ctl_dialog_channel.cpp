@@ -23,7 +23,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channel.cpp,v 1.20 2005/03/08 08:55:45 fp Exp $");
+RCS_ID("$Header: /home/fp/igh/dls_data_logging_server/src/RCS/ctl_dialog_channel.cpp,v 1.21 2005/07/05 14:41:46 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -152,8 +152,8 @@ void CTLDialogChannel::show(CTLJobPreset *job,
   unsigned int freq, block, mask, red, mdct_block_size;
   int format_index;
   bool freq_equal = true, block_equal = true, mask_equal = true, red_equal = true;
-  bool format_equal = true, mdct_equal = true;
-  double mdct_accuracy, exp2;
+  bool format_equal = true, mdct_equal = true, accuracy_equal = true;
+  double accuracy, exp2;
 
   _job = job;
   _channels = channels;
@@ -182,7 +182,7 @@ void CTLDialogChannel::show(CTLJobPreset *job,
   red = (*channel_i)->meta_reduction;
   format_index = (*channel_i)->format_index;
   mdct_block_size = (*channel_i)->mdct_block_size;
-  mdct_accuracy = (*channel_i)->mdct_accuracy;
+  accuracy = (*channel_i)->accuracy;
 
   channel_i++;
 
@@ -194,7 +194,7 @@ void CTLDialogChannel::show(CTLJobPreset *job,
     if ((*channel_i)->meta_reduction != red) red_equal = false;
     if ((*channel_i)->format_index != format_index) format_equal = false;
     if ((*channel_i)->mdct_block_size != mdct_block_size) mdct_equal = false;
-    if ((*channel_i)->mdct_accuracy != mdct_accuracy) mdct_equal = false;
+    if ((*channel_i)->accuracy != accuracy) accuracy_equal = false;
     channel_i++;
   }
   
@@ -233,36 +233,45 @@ void CTLDialogChannel::show(CTLJobPreset *job,
   // Wenn bei allen Kanälen das gleiche, gültige Format gewählt wurde
   if (format_equal && format_index >= 0 && format_index < DLS_FORMAT_COUNT)
   {
+    if (format_index == DLS_FORMAT_MDCT)
+    {
+      _choice_mdct->activate();
+
+      if (mdct_equal) // MDCT gewählt und MDCT-Parameter gleich
+      {
+        exp2 = log10((double) mdct_block_size) / log10((double) 2);
+        
+        // MDCT-Blockgröße gültig?
+        if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 <= MDCT_MAX_EXP2)
+        {
+          _choice_format->value(format_index);
+          _choice_format_selected = true;
+          
+          _choice_mdct->value((int) exp2 - MDCT_MIN_EXP2);
+          _choice_mdct_selected = true;
+        }
+      }
+    }
+
+    if (format_index == DLS_FORMAT_MDCT || format_index == DLS_FORMAT_QUANT)
+    {
+      _input_accuracy->activate();
+
+      if (accuracy_equal)
+      {
+        str.str("");
+        str.clear();
+        str << accuracy;
+        _input_accuracy->value(str.str().c_str());
+      }
+    }
+
     if (format_index != DLS_FORMAT_MDCT)
     {
       _choice_format->value(format_index);
       _choice_format_selected = true;
     }
-    else if (mdct_equal) // MDCT gewählt und alle MDCT-Parameter gleich
-    {
-      exp2 = log10((double) mdct_block_size) / log10((double) 2);
-      
-      // MDCT-Blockgröße gültig?
-      if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 <= MDCT_MAX_EXP2)
-      {
-        _choice_format->value(format_index);
-        _choice_format_selected = true;
-
-        str.str("");
-        str.clear();
-        str << mdct_block_size;
-        _choice_mdct->value((int) exp2 - MDCT_MIN_EXP2);
-        _choice_mdct_selected = true;
-        _choice_mdct->activate();
-        
-        str.str("");
-        str.clear();
-        str << mdct_accuracy;
-        _input_accuracy->value(str.str().c_str());
-        _input_accuracy->activate();
-      }
-    }
-  }
+  } // Format gueltig
 
   _updated = false;
 
@@ -331,6 +340,13 @@ void CTLDialogChannel::_choice_format_changed()
     _choice_mdct->activate();
     _input_accuracy->activate();
   }
+  else if (_choice_format->value() == DLS_FORMAT_QUANT)
+  {
+    ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
+    _choice_mdct_selected = false;
+    _choice_mdct->deactivate();
+    _input_accuracy->activate();
+  }
   else
   {
     ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
@@ -366,8 +382,8 @@ bool CTLDialogChannel::_save_channels()
   stringstream str;
   list<const COMChannelPreset *>::const_iterator channel_i;
   unsigned int freq, block, mask, red, mdct_block_size;
-  double mdct_accuracy;
-  bool write_freq, write_block, write_mask, write_red;
+  double accuracy;
+  bool write_freq, write_block, write_mask, write_red, write_acc;
   bool channel_changed, channels_changed = false;
   list<COMChannelPreset> channel_backups;
   list<COMChannelPreset>::iterator backup_i;
@@ -408,81 +424,122 @@ bool CTLDialogChannel::_save_channels()
       str >> red;
     }
 
-    if (_choice_format_selected && _choice_format->value() == DLS_FORMAT_MDCT)
+    if ((write_acc = (string(_input_accuracy->value()) != "")))
     {
-      // MDCT nur für Fließkommatypen
-      channel_i = _channels->begin();
-      while (channel_i != _channels->end())
-      {
-        if ((*channel_i)->type == TUNKNOWN)
-        {
-          msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
-          msg_win->error();
-          return false;
-        }
-
-        if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
-        {
-          msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
-          msg_win->error();
-          return false;
-        }
-            
-        channel_i++;
-      }
-
-      if (!_choice_mdct_selected)
-      {
-        msg_win->str() << "Sie haben keine MDCT-Blockgröße angeben!";
-        msg_win->error();
-        return false;
-      }
-
-      mdct_block_size = 1 << (_choice_mdct->value() + MDCT_MIN_EXP2);
-
-      // Blockgröße kein Vielfaches von MDCT-Dimension?
-      if (write_block)
-      {
-        if (block % mdct_block_size)
-        {
-          msg_win->str() << "Die Blockgröße muss ein Vielfaches der MDCT-Blockgröße sein!";
-          msg_win->error();
-          return false;
-        }
-      }
-      else
-      {
-        // Keine Blockgröße angegeben. Alle Kanäle mit ihren bisherigen
-        // Blockgrößen überprüfen
-         channel_i = _channels->begin();
-         while (channel_i != _channels->end())
-         {
-           if ((*channel_i)->block_size % mdct_block_size)
-           {
-             msg_win->str() << "Die bisherigen Blockgröße des Kanals \"";
-             msg_win->str() << (*channel_i)->name;
-             msg_win->str() << "\" ist kein Vielfaches der MDCT-Blockgröße!";
-             msg_win->error();
-             return false;
-           }
-           
-           channel_i++;
-         }
-      }
-
       str.str("");
       str.clear();
       str << _input_accuracy->value();
-
-      if (str.str() == "")
-      {
-        msg_win->str() << "Sie habe keine MDCT-Genauigkeit angegeben!";
-        msg_win->error();
-        return false;
-      }
-
-      str >> mdct_accuracy;
+      str >> accuracy;
     }
+
+    if (_choice_format_selected)
+    {
+      if (_choice_format->value() == DLS_FORMAT_MDCT)
+      {
+        // MDCT nur für Fließkommatypen
+        channel_i = _channels->begin();
+        while (channel_i != _channels->end())
+        {
+          if ((*channel_i)->type == TUNKNOWN)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
+            msg_win->error();
+            return false;
+          }
+          
+          if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
+            msg_win->error();
+            return false;
+          }
+
+          // Alle Kanäle müssen eine Genauigkeit haben
+          if (!write_acc && (*channel_i)->accuracy <= 0.0)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" benötigt noch eine Genauigkeit!";
+            msg_win->error();
+            return false;
+          }
+            
+          channel_i++;
+        }
+
+        if (!_choice_mdct_selected)
+        {
+          msg_win->str() << "Sie haben keine MDCT-Blockgröße angeben!";
+          msg_win->error();
+          return false;
+        }
+
+        mdct_block_size = 1 << (_choice_mdct->value() + MDCT_MIN_EXP2);
+
+        // Blockgröße kein Vielfaches von MDCT-Dimension?
+        if (write_block)
+        {
+          if (block % mdct_block_size)
+          {
+            msg_win->str() << "Die Blockgröße muss ein Vielfaches der MDCT-Blockgröße sein!";
+            msg_win->error();
+            return false;
+          }
+        }
+        else
+        {
+          // Keine Blockgröße angegeben. Alle Kanäle mit ihren bisherigen
+          // Blockgrößen überprüfen
+          channel_i = _channels->begin();
+          while (channel_i != _channels->end())
+          {
+            if ((*channel_i)->block_size % mdct_block_size)
+            {
+              msg_win->str() << "Die bisherigen Blockgröße des Kanals \"";
+              msg_win->str() << (*channel_i)->name;
+              msg_win->str() << "\" ist kein Vielfaches der MDCT-Blockgröße!";
+              msg_win->error();
+              return false;
+            }
+           
+            channel_i++;
+          }
+        }
+      } // MDCT
+
+      else if (_choice_format->value() == DLS_FORMAT_QUANT)
+      {
+        channel_i = _channels->begin();
+        while (channel_i != _channels->end())
+        {
+          if ((*channel_i)->type == TUNKNOWN)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
+            msg_win->error();
+            return false;
+          }
+
+          // Quantisierung nur für Fließkommatypen
+          if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
+            msg_win->error();
+            return false;
+          }
+
+          // Alle Kanäle müssen eine Genauigkeit haben
+          if (!write_acc && (*channel_i)->accuracy <= 0.0)
+          {
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" benötigt noch eine Genauigkeit!";
+            msg_win->error();
+            return false;
+          }
+
+          channel_i++;
+        }
+      } // Quant
+
+    } // Format ausgewaehlt
   }
   catch (...)
   {
@@ -503,7 +560,8 @@ bool CTLDialogChannel::_save_channels()
     if ((write_freq && channel.sample_frequency != freq) ||
         (write_block && channel.block_size != block) ||
         (write_mask && channel.meta_mask != mask) ||
-        (write_red && channel.meta_reduction != red))
+        (write_red && channel.meta_reduction != red) ||
+        (write_acc && channel.accuracy != accuracy))
     {
       channel_changed = true;
     }
@@ -513,7 +571,9 @@ bool CTLDialogChannel::_save_channels()
       if (channel.format_index != _choice_format->value()
           || (_choice_format->value() == DLS_FORMAT_MDCT
               && (mdct_block_size != channel.mdct_block_size
-                  || mdct_accuracy != channel.mdct_accuracy)))
+                  || accuracy != channel.accuracy))
+          || (_choice_format->value() == DLS_FORMAT_QUANT
+              && accuracy != channel.accuracy))
       {
         channel_changed = true;
       }
@@ -529,6 +589,7 @@ bool CTLDialogChannel::_save_channels()
       if (write_block) channel.block_size = block;
       if (write_mask) channel.meta_mask = mask;
       if (write_red) channel.meta_reduction = red;
+      if (write_acc) channel.accuracy = accuracy;
       if (_choice_format_selected)
       {
         channel.format_index = _choice_format->value();
@@ -536,7 +597,6 @@ bool CTLDialogChannel::_save_channels()
         if (channel.format_index == DLS_FORMAT_MDCT)
         {
           channel.mdct_block_size = mdct_block_size;
-          channel.mdct_accuracy = mdct_accuracy;
         }
       }
 

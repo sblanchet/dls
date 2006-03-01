@@ -13,7 +13,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_channel_preset.cpp,v 1.8 2005/03/11 10:43:00 fp Exp $");
+RCS_ID("$Header: /home/fp/igh/dls_data_logging_server/src/RCS/com_channel_preset.cpp,v 1.9 2005/07/05 14:42:53 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -58,7 +58,7 @@ bool COMChannelPreset::operator!=(const COMChannelPreset &other) const
     meta_reduction != other.meta_reduction ||
     format_index != other.format_index ||
     mdct_block_size != other.mdct_block_size ||
-    mdct_accuracy != other.mdct_accuracy;
+    accuracy != other.accuracy;
 }
 
 //---------------------------------------------------------------
@@ -109,7 +109,12 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
     if (format_index == DLS_FORMAT_MDCT)
     {
       mdct_block_size = tag->att("mdct_block_size")->to_int();
-      mdct_accuracy = tag->att("mdct_accuracy")->to_dbl();
+      accuracy = tag->att("mdct_accuracy")->to_dbl();
+    }
+
+    if (format_index == DLS_FORMAT_QUANT)
+    {
+      accuracy = tag->att("accuracy")->to_dbl();
     }
 
     if (tag->has_att("type"))
@@ -160,7 +165,12 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
   if (format_index == DLS_FORMAT_MDCT)
   {
     tag->push_att("mdct_block_size", mdct_block_size);
-    tag->push_att("mdct_accuracy", mdct_accuracy);
+    tag->push_att("mdct_accuracy", accuracy);
+  }
+
+  if (format_index == DLS_FORMAT_QUANT)
+  {
+    tag->push_att("accuracy", accuracy);
   }
 
   if (type != TUNKNOWN)
@@ -184,7 +194,7 @@ void COMChannelPreset::clear()
   meta_reduction = 0;
   format_index = DLS_FORMAT_INVALID;
   mdct_block_size = 0;
-  mdct_accuracy = 0;
+  accuracy = 0.0;
   type = TUNKNOWN;
 }
 

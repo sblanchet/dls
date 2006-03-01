@@ -12,6 +12,7 @@
 #include "com_zlib.hpp"
 #include "com_base64.hpp"
 #include "com_mdct_t.hpp"
+#include "com_quant_t.hpp"
 #include "com_exception.hpp"
 
 //#define DEBUG
@@ -566,6 +567,228 @@ template<class T>
 unsigned int COMCompressionT_MDCT<T>::decompressed_length() const
 {
   return _mdct->imdct_output_length();
+}
+
+//---------------------------------------------------------------
+//
+//  Quant / ZLib / Base64
+//
+//---------------------------------------------------------------
+
+/**
+   Kompressionsobjekt: Erst Quantisierung, dann ZLib, dann Base64
+*/
+
+template <class T>
+class COMCompressionT_Quant : public COMCompressionT<T>
+{
+public:
+  COMCompressionT_Quant(double);
+  ~COMCompressionT_Quant();
+
+  void compress(const T *input,
+                unsigned int length);
+  void uncompress(const char *input,
+                  unsigned int size,
+                  unsigned int length);
+  void clear();
+  void flush_compress();
+  void flush_uncompress(const char *input,
+                        unsigned int size);
+
+  void free();
+
+  const char *compression_output() const;
+  unsigned int compressed_size() const;
+  const T *decompression_output() const;
+  unsigned int decompressed_length() const;
+
+private:
+  COMQuantT<T> *_quant;      /**< Quantisierungs-Objekt */
+  COMZLib _zlib;            /**< ZLib-Objekt zum Komprimieren */
+  COMBase64 _base64;        /**< Base64-Objekt zum Kodieren */
+
+  COMCompressionT_Quant();
+};
+
+//---------------------------------------------------------------
+
+template <class T>
+COMCompressionT_Quant<T>::COMCompressionT_Quant(double acc)
+{
+  _quant = 0;
+
+  try
+  {
+    _quant = new COMQuantT<T>(acc);
+  }
+  catch (ECOMQuant &e)
+  {
+    throw ECOMCompression(e.msg);
+  }
+  catch (...)
+  {
+    throw ECOMCompression("Could not allocate memory for quantization object!");
+  }
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+COMCompressionT_Quant<T>::~COMCompressionT_Quant()
+{
+  free();
+
+  if (_quant) delete _quant;
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::free()
+{
+  if (_quant) _quant->free();
+
+  _zlib.free();
+  _base64.free();
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::compress(const T *input,
+                                       unsigned int length)
+{
+  stringstream err;
+
+  if (!_quant) throw COMException("No quantization object!");
+
+  try
+  {
+    _quant->quantize(input, length);
+    _zlib.compress(_quant->quant_output(), _quant->quant_output_size());
+    _base64.encode(_zlib.output(), _zlib.output_size());
+  }
+  catch (ECOMQuant &e)
+  {
+    err << "Quant: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMZLib &e)
+  {
+    err << "ZLib: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMBase64 &e)
+  {
+    err << "Base64: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::uncompress(const char *input,
+                                         unsigned int size,
+                                         unsigned int length)
+{
+  stringstream err;
+  
+  if (!_quant) throw COMException("No quantization object!");
+
+  free();
+
+  try
+  {
+    _base64.decode(input, size);
+    _zlib.uncompress(_base64.output(),
+                     _base64.output_size(),
+                     length * sizeof(T));
+    _quant->dequantize(_zlib.output(), _zlib.output_size(), length);
+  }
+  catch (ECOMBase64 &e)
+  {
+    err << "While Base64-decoding: " << e.msg << endl;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMZLib &e)
+  {
+    err << "While ZLib-uncompressing: " << e.msg << endl;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMQuant &e)
+  {
+    err << "While de-quantizing: " << e.msg << endl;
+    throw ECOMCompression(err.str());
+  }
+
+  if (_quant->dequant_output_length() != length)
+  {
+    err << "Quantization output does not have expected length: ";
+    err << _quant->dequant_output_length() << " / " << length;
+    throw ECOMCompression(err.str());
+  }
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::clear()
+{
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::flush_compress()
+{
+  free();
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_Quant<T>::flush_uncompress(const char *input,
+                                               unsigned int size)
+{
+  free();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+const char *COMCompressionT_Quant<T>::compression_output() const
+{
+  return _base64.output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_Quant<T>::compressed_size() const
+{
+  return _base64.output_size();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+const T *COMCompressionT_Quant<T>::decompression_output() const
+{
+  if (!_quant) throw COMException("No quantization object!");
+
+  return _quant->dequant_output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_Quant<T>::decompressed_length() const
+{
+  if (!_quant) throw COMException("No quantization object!");
+
+  return _quant->dequant_output_length();
 }
 
 //---------------------------------------------------------------

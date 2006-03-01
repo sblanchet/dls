@@ -17,7 +17,7 @@ using namespace std;
 
 #define DLS_MASTER_VERSION  0
 #define DLS_SUB_VERSION     9
-#define DLS_SUB_SUB_VERSION 2
+#define DLS_SUB_SUB_VERSION 3
 
 #define LITERAL(X) #X
 #define STRINGIFY(X) LITERAL(X)
@@ -39,11 +39,18 @@ using namespace std;
 #define DLS_PID_FILE "dlsd.pid"
 #define ENV_DLS_DIR "DLS_DIR" // Name der Umgebungsvariablen
 
-#define DLS_FORMAT_COUNT 2
+#define DLS_FORMAT_COUNT 3
 
 #define DLS_FORMAT_INVALID (-1)
 #define DLS_FORMAT_ZLIB    (0)
 #define DLS_FORMAT_MDCT    (1)
+#define DLS_FORMAT_QUANT   (2)
+
+/*
+   Hinzufügen von Kompressionsarten:
+      - com_globals.cpp       (String-Array)
+      - com_compression_t.hpp (Neue Klasse)
+ */
 
 //---------------------------------------------------------------
 
@@ -52,6 +59,8 @@ enum COMChannelType
   TUNKNOWN,
   TCHAR,
   TUCHAR,
+  TSHORT,
+  TUSHORT,
   TINT,
   TUINT,
   TLINT,

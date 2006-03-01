@@ -30,7 +30,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.21 2005/03/09 10:23:07 fp Exp $");
+RCS_ID("$Header: /home/fp/igh/dls_data_logging_server/src/RCS/ctl_dialog_main.cpp,v 1.22 2005/07/05 14:40:44 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -639,7 +639,7 @@ void CTLDialogMain::_check_dls_dir()
     str << "existiert noch nicht. Soll es als" << endl;
     str << "DLS-Datenverzeichnis angelegt werden?";
 
-    if (fl_ask(str.str().c_str()) == 0) return;
+    if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
 
     build_dls_dir = true;
 
@@ -674,7 +674,7 @@ void CTLDialogMain::_check_dls_dir()
       str << "ist noch kein DLS-Datenverzeichnis." << endl;
       str << "Soll es als solches initialisiert werden?";
 
-      if (fl_ask(str.str().c_str()) == 0) return;
+      if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
 
       build_dls_dir = true;
     }
@@ -700,7 +700,7 @@ void CTLDialogMain::_check_dls_dir()
       str << "ist noch kein DLS-Datenverzeichnis." << endl;
       str << "Soll es als solches initialisiert werden?";
 
-      if (fl_ask(str.str().c_str()) == 0) return;
+      if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
 
       build_dls_dir = true;
     }
@@ -783,7 +783,7 @@ void CTLDialogMain::_check_dls_dir()
     str << "Für das Verzeichnis \"" << _dls_dir << "\"" << endl;
     str << "läuft noch kein DLS-Daemon. Jetzt starten?";
 
-    if (fl_ask(str.str().c_str()) == 1)
+    if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 1)
     {
       if ((pid = fork()) == -1)
       {

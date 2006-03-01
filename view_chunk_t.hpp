@@ -280,6 +280,22 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       return;
     }
   }
+  else if (_format_index == DLS_FORMAT_QUANT)
+  {
+    if (typeid(T) == typeid(float))
+    {
+      _compression = (COMCompressionT<T> *) new COMCompressionT_Quant<float>(0.0);
+    }
+    else if (typeid(T) == typeid(double))
+    {
+      _compression = (COMCompressionT<T> *) new COMCompressionT_Quant<double>(0.0);
+    }
+    else
+    {
+      cout << "ERROR: Quant only for floating point types!" << endl;
+      return;
+    }
+  }
   else
   {
     cout << "ERROR: Unknown compression type index: " << _format_index << endl;

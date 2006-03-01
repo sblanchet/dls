@@ -23,7 +23,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_channel.cpp,v 1.12 2005/03/11 10:44:26 fp Exp $");
+RCS_ID("$Header: /home/hm/projekte/dls_data_logging_server/src-0.93/RCS/view_channel.cpp,v 1.13 2005/08/25 13:31:23 hm Exp $");
 
 //---------------------------------------------------------------
 
@@ -176,6 +176,12 @@ void ViewChannel::fetch_chunks(const string &dls_dir, unsigned int job_id)
           break;
         case TUCHAR:
           chunk = new ViewChunkT<unsigned char>();
+          break;
+        case TSHORT:
+          chunk = new ViewChunkT<short int>();
+          break;
+        case TUSHORT:
+          chunk = new ViewChunkT<unsigned short int>();
           break;
         case TINT:
           chunk = new ViewChunkT<int>();
