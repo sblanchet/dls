@@ -79,7 +79,7 @@ void DLSJobPreset::process_terminate()
 
   if (kill(_pid, SIGTERM) == -1)
   {
-    throw ECOMJobPreset("kill(): process not terminated!");
+    throw ECOMJobPreset("kill(): Process not terminated!");
   }
 }
 
@@ -97,7 +97,7 @@ void DLSJobPreset::process_notify()
 
   if (kill(_pid, SIGHUP) == -1)
   {
-    throw ECOMJobPreset("error in kill() - process not notified!");
+    throw ECOMJobPreset("Error in kill() - Process not notified!");
   }
 }
 

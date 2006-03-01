@@ -47,6 +47,7 @@ public:
 
    Enthält Auftragsvorgaben und stellt Methoden zur
    Steuerung und durchführung der Datenerfassung bereit.
+   Übernimmt ausserdem die Message-Behandlung.
  */
 
 class DLSJob
@@ -85,7 +86,11 @@ private:
 
   //@{
   COMFile _message_file;                           /**< Dateiobjekt für Messages */
-  COMIndexT<COMMessageIndexRecord> _message_index; /**< Index für messages */
+  COMIndexT<COMMessageIndexRecord> _message_index; /**< Index für Messages */
+  bool _msg_chunk_created;                         /**< true, wenn es einen aktuellen
+                                                        Message-Chunk gibt. */
+  string _msg_chunk_dir;                           /**< Pfad des aktuellen Message-
+                                                        Chunks-Verzeichnisses */
   //@}
 
   void _clear_loggers();

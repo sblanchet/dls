@@ -26,16 +26,18 @@ using namespace std;
 #include "ctl_dialog_job_edit.hpp"
 #include "ctl_dialog_job.hpp"
 #include "ctl_dialog_main.hpp"
-#include "ctl_msg_wnd.hpp"
+#include "ctl_dialog_msg.hpp"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.16 2005/02/23 11:59:35 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.21 2005/03/09 10:23:07 fp Exp $");
 
 //---------------------------------------------------------------
 
 #define WIDTH 700
-#define HEIGHT 400
+#define HEIGHT 300
+
+#define WATCHDOG_TIMEOUT 1.0
 
 //---------------------------------------------------------------
 
@@ -55,9 +57,7 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
   _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLS Manager");
   _wnd->callback(_callback, this);
 
-  _tile = new Fl_Tile(10, 10, WIDTH - 20, 350);
-
-  _grid_jobs = new Fl_Grid(10, 10, WIDTH - 20, 200);
+  _grid_jobs = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
   _grid_jobs->add_column("job", "Auftrag", 200);
   _grid_jobs->add_column("source", "Quelle");
   _grid_jobs->add_column("state", "Status");
@@ -66,27 +66,17 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
   _grid_jobs->add_column("logging", "Erfassung");
   _grid_jobs->callback(_callback, this);
 
-  _grid_messages = new Fl_Grid(10, 210, WIDTH - 20, 150);
-  _grid_messages->add_column("time", "Zeit");
-  _grid_messages->add_column("text", "Nachricht", 230);
-  _grid_messages->select_mode(flgNoSelect);
-  _grid_messages->callback(_callback, this);
-
-  _tile->end();
-
   _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schliessen");
   _button_close->callback(_callback, this);
 
   _button_add = new Fl_Button(10, HEIGHT - 35, 130, 25, "Neuer Auftrag");
   _button_add->callback(_callback, this);
 
-  _button_rem = new Fl_Button(150, HEIGHT - 35, 130, 25, "Auftrag löschen");
-  _button_rem->callback(_callback, this);
-  _button_rem->deactivate();
-
   _button_state = new Fl_Button(345, HEIGHT - 35, 100, 25);
   _button_state->callback(_callback, this);
   _button_state->hide();
+
+  _wnd->end();
 
   _wnd->resizable(_grid_jobs);
 }
@@ -99,7 +89,7 @@ CTLDialogMain::CTLDialogMain(const string &dls_dir)
 
 CTLDialogMain::~CTLDialogMain()
 {
-  Fl::remove_timeout(_static_timeout, this);
+  Fl::remove_timeout(_static_watchdog_timeout, this);
 
   delete _wnd;
 }
@@ -120,11 +110,10 @@ void CTLDialogMain::show()
   _check_dls_dir();
 
   _load_jobs();
-  _load_messages();
   _load_watchdogs();
 
-  // Timeout für die aktualisierung der Nachrichten hinzufügen
-  Fl::add_timeout(1.0, _static_timeout, this);
+  // Timeout für die Aktualisierung der Watchdogs hinzufügen
+  Fl::add_timeout(WATCHDOG_TIMEOUT, _static_watchdog_timeout, this);
 
   // Solange in der Event-Loop bleiben, wie das Fenster sichtbar ist
   while (_wnd->shown()) Fl::wait();
@@ -144,11 +133,9 @@ void CTLDialogMain::_callback(Fl_Widget *sender, void *data)
   CTLDialogMain *dialog = (CTLDialogMain *) data;
 
   if (sender == dialog->_grid_jobs) dialog->_grid_jobs_callback();
-  if (sender == dialog->_grid_messages) dialog->_grid_messages_callback();
   if (sender == dialog->_button_close) dialog->_button_close_clicked();
   if (sender == dialog->_wnd) dialog->_button_close_clicked();
   if (sender == dialog->_button_add) dialog->_button_add_clicked();
-  if (sender == dialog->_button_rem) dialog->_button_rem_clicked();
   if (sender == dialog->_button_state) dialog->_button_state_clicked();
 }
 
@@ -260,52 +247,15 @@ void CTLDialogMain::_grid_jobs_callback()
       break;
 
     case flgSelect:
-      _button_rem->activate();
       _update_button_state();
       break;
 
     case flgDeSelect:
-      _button_rem->deactivate();
       _update_button_state();
       break;
 
     case flgDoubleClick:
       _edit_job(_grid_jobs->current_record());
-      break;
-
-    default:
-      break;
-  }
-}
-
-//---------------------------------------------------------------
-
-/**
-   Callback für das Nachrichten-Grid
-*/
-
-void CTLDialogMain::_grid_messages_callback()
-{
-  unsigned int i;
-
-  switch (_grid_messages->current_event())
-  {
-    case flgContent:
-      i = _grid_messages->current_record();
-
-      if (_grid_messages->current_col() == "time")
-      {
-        _grid_messages->current_content(_messages[i].time);
-      }
-      else if (_grid_messages->current_col() == "text")
-      {
-        if (_messages[i].type == 1 && !_grid_messages->current_selected())
-        {
-          _grid_messages->current_content_color(FL_RED);
-        }
-
-        _grid_messages->current_content(_messages[i].text);
-      }
       break;
 
     default:
@@ -346,39 +296,6 @@ void CTLDialogMain::_button_add_clicked()
 //---------------------------------------------------------------
 
 /**
-   Callback: Der "Entfernen"-Button wurde geklickt
-*/
-
-void CTLDialogMain::_button_rem_clicked()
-{
-#if 0
-  stringstream sql, text;
-  int sel = _grid_jobs->selected_index();
-  
-  text << "Dieser Befehl löscht alle Daten zu diesem Auftrag" << endl;
-  text << "Wollen Sie wirklich fortfahren?";
-
-  if (fl_ask("%s", text.str().c_str()))
-  {
-    sql << "delete from jobs where id = " << _jobs[sel].id;
-    
-    try
-    {
-      _db->exec(sql.str().c_str());
-    }
-    catch (EDLSDB &e)
-    {
-      // Error enzeigen
-    }
-    
-    _load_jobs();
-  }
-#endif
-}
-
-//---------------------------------------------------------------
-
-/**
    Callback: Der "Starten/Anhalten"-Button wurde geklickt
 */
 
@@ -389,7 +306,7 @@ void CTLDialogMain::_button_state_clicked()
 
   if (index < 0 || index >= (int) _jobs.size())
   {
-    msg_win->str() << "Job index out of range!";
+    msg_win->str() << "Ungültiger Auftrags-Index!";
     msg_win->error();
     return;
   }
@@ -404,7 +321,7 @@ void CTLDialogMain::_button_state_clicked()
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "Error writing preset file: " << e.msg;
+    msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
     msg_win->error();
     return;
   }
@@ -415,73 +332,13 @@ void CTLDialogMain::_button_state_clicked()
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "WARNING: dlsd could not be notified!";
+    msg_win->str() << "Konnte den dlsd nicht benachrichtigen!";
     msg_win->warning();
   }
 
   _jobs[index] = job_copy;
   _grid_jobs->redraw();
   _update_button_state();
-}
-
-//---------------------------------------------------------------
-
-/**
-   Statische Callback-Funktion für den Nachrichten-Timeout
-
-   \param data Zeiger auf den Dialog
-*/
-
-void CTLDialogMain::_static_timeout(void *data)
-{
-  CTLDialogMain *dialog = (CTLDialogMain *) data;
-
-  dialog->_timeout();
-
-  Fl::add_timeout(1.0, _static_timeout, dialog);
-}
-
-//---------------------------------------------------------------
-
-/**
-   Callback: Timeout! Die Nachrichten müssen aktualisiert werden
-*/
-
-void CTLDialogMain::_timeout()
-{
-  unsigned int i, top = 0;
-  string top_time;
-  bool found;
-
-  // Watchdogs aktualisieren
-  _load_watchdogs();
-
-  // Messages aktualisieren
-
-  if (_messages.size() > 0)
-  {
-    top = _grid_messages->top_index();
-    top_time = _messages[top].time;
-  }
-
-  _load_messages();
-
-  if (top > 0)
-  {
-    i = 0;
-    found = false;
-
-    while (i < _messages.size() && !found)
-    {
-      if (_messages[i].time == top_time) found = true;
-      else i++;
-    }
-
-    if (found)
-    {
-      _grid_messages->scroll(i);
-    }
-  }
 }
 
 //---------------------------------------------------------------
@@ -614,7 +471,7 @@ void CTLDialogMain::_load_jobs()
    // Das Hauptverzeichnis öffnen
   if ((dir = opendir(_dls_dir.c_str())) == NULL)
   {
-    msg_win->str() << "Could not open dls directory \"" << _dls_dir << "\"";
+    msg_win->str() << "Konnte das Datenverzeichnis \"" << _dls_dir << "\" nicht öffnen!";
     msg_win->error();
     return;
   }
@@ -665,7 +522,7 @@ void CTLDialogMain::_load_jobs()
     }
     catch (ECOMJobPreset &e)
     {
-      msg_win->str() << "Could not import job " << *job_id_i << ": " << e.msg;
+      msg_win->str() << "Importieren des Auftrags " << *job_id_i << ": " << e.msg;
       msg_win->error();
       continue;
     }
@@ -701,62 +558,6 @@ void CTLDialogMain::_load_jobs()
   }
 
   _grid_jobs->record_count(_jobs.size());
-}
-
-//---------------------------------------------------------------
-
-/**
-   Alle allgemeinen Nachrichten laden
-*/
-
-void CTLDialogMain::_load_messages()
-{
-#if 0
-  DLSDBQuery *query;
-  int count, i;
-  stringstream sql;
-
-  _grid_messages->record_count(0);
-  _messages.clear();
-
-  sql << "select time, type, text"; // Optimiert: Klasse 1
-  sql << " from messages_mother order by time desc";
-
-  try
-  {
-    query = _db->query(sql.str().c_str());
-    count = query->row_count();
-  }
-  catch (EDLSDB &e)
-  {
-    // << "error fetching messages: " << e.msg << endl;
-    return;
-  }
-
-  for (i = 0; i < count; i++)
-  {
-    struct DLSMessage msg;
-
-    try
-    {
-      msg.time = query->value(i, "time").to_str();
-      msg.type = query->value(i, "type").to_int();
-      msg.text = query->value(i, "text").to_str();
-    }
-    catch (EDLSDB &e)
-    {
-      // << "error reading msg: " << e.msg << endl;
-      delete query;
-      return;
-    }
-
-    _messages.push_back(msg);
-  }
-
-  delete query;
-
-  _grid_messages->record_count(count);
-#endif
 }
 
 //---------------------------------------------------------------
@@ -968,7 +769,7 @@ void CTLDialogMain::_check_dls_dir()
       }
       else
       {
-        msg_win->str() << "Konnte Prozess " << pid << "nicht signalisieren!";
+        msg_win->str() << "Konnte Prozess " << pid << " nicht signalisieren!";
         msg_win->error();
         return;
       }
@@ -986,7 +787,7 @@ void CTLDialogMain::_check_dls_dir()
     {
       if ((pid = fork()) == -1)
       {
-        msg_win->str() << "Could not fork()!";
+        msg_win->str() << "fork() fehlgeschlagen!";
         msg_win->error();
         return;
       }
@@ -1007,13 +808,30 @@ void CTLDialogMain::_check_dls_dir()
         
         if ((signed char) WEXITSTATUS(status) == -1)
         {
-          msg_win->str() << "Could not execute dlsd! See console for error message.";
+          msg_win->str() << "Konnte dlsd nicht ausführen! Siehe Konsole für Fehlermeldungen.";
           msg_win->error();
           return;
         }
       }
     }
   }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Statische Callback-Funktion für den Watchdog-Timeout
+
+   \param data Zeiger auf den Dialog
+*/
+
+void CTLDialogMain::_static_watchdog_timeout(void *data)
+{
+  CTLDialogMain *dialog = (CTLDialogMain *) data;
+
+  dialog->_load_watchdogs();
+
+  Fl::add_timeout(WATCHDOG_TIMEOUT, _static_watchdog_timeout, dialog);
 }
 
 //---------------------------------------------------------------

@@ -212,7 +212,7 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
   if (size == 0) return;
 
   // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-  if (size % sizeof(T)) throw EDLSSaver("illegal data size!");
+  if (size % sizeof(T)) throw EDLSSaver("Illegal data size!");
 
   values_in_buffer = size / sizeof(T);
 
@@ -234,7 +234,7 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
     if (error_percent > ALLOWED_TIME_VARIANCE)
     {
       // Fehler! Prozess beenden!
-      err << "time diff of " << actual_diff;
+      err << "Time diff of " << actual_diff;
       err << " (expected: " << target_diff << ", error: " << error_percent << "%)";
       err << " channel \"" << _parent_logger->channel_preset()->name << "\".";
       throw EDLSTimeTolerance(err.str());
@@ -242,7 +242,7 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
   }
 
   // Endianess konvertieren, falls nötig
-  _convert_endianess((unsigned char *) buffer, size);
+  if (arch != source_arch) _convert_endianess((unsigned char *) buffer, size);
 
   // Daten speichern
   _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
@@ -253,6 +253,8 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
 /**
    Konvertieren der Endianess
 
+   Bemerkung: Konnte von mir noch nicht getestet werden! fp
+
    \param buffer Adresse des Datenspeichers
    \param size Anzahl der Bytes im Speicher
 */
@@ -261,7 +263,33 @@ template <class T>
 void DLSSaverGenT<T>::_convert_endianess(unsigned char *buffer,
                                          unsigned int size) const
 {
-  // FIXME
+  unsigned int i, j, k, bytes_per_value, values;
+  unsigned char tmp;
+
+  bytes_per_value = sizeof(T);
+  values = size / bytes_per_value;
+
+  // "Byteweise drehen"
+  if ((arch == LittleEndian && source_arch == BigEndian) ||
+      (arch == BigEndian && source_arch == LittleEndian))
+  {
+    for (i = 0; i < values; i++)
+    {
+      for (j = 0; j < bytes_per_value / 2; j++)
+      {
+        k = bytes_per_value - j - 1;
+        tmp = buffer[j];
+        buffer[j] = buffer[k];
+        buffer[k] = tmp;
+      }
+      
+      buffer += bytes_per_value;
+    }
+  }
+  else
+  {
+    throw EDLSTimeTolerance("Unknown architecture conversion!");
+  }
 }
 
 //---------------------------------------------------------------

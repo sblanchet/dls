@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_parser.cpp,v 1.7 2005/02/01 12:40:40 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_parser.cpp,v 1.8 2005/03/11 10:43:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -173,7 +173,7 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
 
   if (title == "")
   {
-    err << "expected title, got char " << (int) _data(parse_type, i) << "...";
+    err << "Expected title, got char " << (int) _data(parse_type, i) << "...";
 
     // Falsches Tag löschen
     _erase(parse_type, tag_length);
@@ -222,7 +222,7 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
       // Falsches Tag löschen
       _erase(parse_type, tag_length);
 
-      throw ECOMXMLParser("expected \'=\'", _current_tag);
+      throw ECOMXMLParser("Expected \'=\'", _current_tag);
     }
       
     if (_data(parse_type, i++) != '\"')
@@ -230,7 +230,7 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
       // Falsches Tag löschen
       _erase(parse_type, tag_length);
 
-      throw ECOMXMLParser("expected: '\"'!", _current_tag);
+      throw ECOMXMLParser("Expected: '\"'!", _current_tag);
     }
 
     // Attributwert einlesen
@@ -270,7 +270,7 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
   {
     if (_tag.type() == dxttEnd) // Tag hatte bereits / vor dem Titel
     {
-      throw ECOMXMLParser("double \'/\' detected", _current_tag);
+      throw ECOMXMLParser("Double \'/\' detected", _current_tag);
     }
 
     _tag.type(dxttSingle);
@@ -279,7 +279,7 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
 
   if (_data(parse_type, i) != '>')
   {
-    err << "expected \'>\' in tag " << _tag.title();
+    err << "Expected \'>\' in tag " << _tag.title();
     throw ECOMXMLParser(err.str(), _current_tag);
   }
 
@@ -292,12 +292,12 @@ void COMXMLParser::_parse(COMXMLParserType parse_type,
   {
     if (title != force_tag)
     {
-      throw ECOMXMLParser("expected tag <" + force_tag + ">, got <" + title + ">...", _current_tag);
+      throw ECOMXMLParser("Expected tag <" + force_tag + ">, got <" + title + ">...", _current_tag);
     }
     if (_tag.type() != force_type)
     {
-      err << "wrong tag type of <" << force_tag << "> ";
-      err << "expected " << force_type << ", got " << _tag.type();
+      err << "Wrong tag type of <" << force_tag << ">.";
+      err << " Expected " << force_type << ", got " << _tag.type();
       throw ECOMXMLParser(err.str(), _current_tag);
     }
   }
@@ -360,18 +360,7 @@ char COMXMLParser::_data(COMXMLParserType parse_type, unsigned int index)
     }
   }
 
-  /*
-  else
-  {
-    if (index >= _data_string_length)
-    {
-      throw ECOMXMLParserEOF();
-    } 
-    return (*_data_string)[index];
-  }
-  */
-
-  throw ECOMXMLParser("unkown parser type!");
+  throw ECOMXMLParser("Unkown parser type!");
 }
 
 //---------------------------------------------------------------

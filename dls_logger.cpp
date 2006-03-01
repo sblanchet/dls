@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.17 2005/02/04 11:19:22 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.21 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -102,7 +102,7 @@ void DLSLogger::get_real_channel(const list<COMRealChannel> *channels)
     channel_i++;
   }
 
-  err << "channel \"" << _channel_preset.name << "\" does not exist!";
+  err << "Channel \"" << _channel_preset.name << "\" does not exist!";
   throw EDLSLogger(err.str());
 }
 
@@ -149,16 +149,16 @@ void DLSLogger::create_gen_saver()
         _gen_saver = new DLSSaverGenT<double>(this);
         break;
 
-      default: throw EDLSLogger("Wrong data type!");
+      default: throw EDLSLogger("Unknown data type!");
     }
   }
   catch (EDLSSaver &e)
   {
-    throw EDLSLogger("constructing new saver: " + e.msg);
+    throw EDLSLogger("Constructing new saver: " + e.msg);
   }
   catch (...)
   {
-    throw EDLSLogger("out of memory while constructing saver!");
+    throw EDLSLogger("Out of memory while constructing saver!");
   }
 
   if (_channel_preset.meta_mask & DLSMetaMean)
@@ -201,15 +201,15 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
 
   if (channel->sample_frequency <= 0)
   {
-    err << "channel \"" << channel->name << "\": ";
-    err << "illegal frequency! (" << channel->sample_frequency << " Hz)";
+    err << "Channel \"" << channel->name << "\": ";
+    err << "Illegal frequency! (" << channel->sample_frequency << " Hz)";
     throw EDLSLogger(err.str());
   }
 
   if (channel->sample_frequency > _real_channel.frequency)
   {
-    err << "channel \"" << channel->name << "\": ";
-    err << "frequency exceeds channel maximum!";
+    err << "Channel \"" << channel->name << "\": ";
+    err << "Frequency exceeds channel maximum!";
     err << " (" << channel->sample_frequency << " / ";
     err << _real_channel.frequency << " Hz)";
     throw EDLSLogger(err.str());
@@ -219,8 +219,8 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
 
   if (reduction != (unsigned int) reduction)
   {
-    err << "channel \""<< channel->name << "\": ";
-    err << "frequency leads to non-integer reduction!";
+    err << "Channel \""<< channel->name << "\": ";
+    err << "Frequency leads to non-integer reduction!";
     throw EDLSLogger(err.str());
   }
 
@@ -228,8 +228,8 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
   
   if (block_size * reduction > _real_channel.bufsize / 2)
   {
-    err << "channel \""<< channel->name << "\": ";
-    err << "buffer limit exceeded! ";
+    err << "Channel \""<< channel->name << "\": ";
+    err << "Buffer limit exceeded! ";
     err << block_size * reduction << " > " << _real_channel.bufsize / 2;
     throw EDLSLogger(err.str());
   }
@@ -284,7 +284,7 @@ void DLSLogger::check_channel_info()
     }
     else
     {
-      err << "could not stat \"" << channel_dir_name.str() << "\"!";
+      err << "Could not stat() \"" << channel_dir_name.str() << "\"!";
       throw EDLSLogger(err.str());
     }
   }
@@ -307,7 +307,7 @@ void DLSLogger::check_channel_info()
     }
     else
     {
-      err << "could not stat \"" << channel_file_name << "\"!";
+      err << "Could not stat() \"" << channel_file_name << "\"!";
       throw EDLSLogger(err.str());
     }
   }
@@ -319,7 +319,7 @@ void DLSLogger::check_channel_info()
 
   if (!channel_file.is_open())
   {
-    err << "could not open \"" << channel_file_name << "\"!";
+    err << "Could not open \"" << channel_file_name << "\"!";
     throw EDLSLogger(err.str());
   }
 
@@ -331,14 +331,14 @@ void DLSLogger::check_channel_info()
   }
   catch (ECOMXMLParser &e)
   {
-    err << "parsing \"" << channel_file_name << "\": " << e.msg << " tag: " << e.tag;
+    err << "Parsing \"" << channel_file_name << "\": " << e.msg << " tag: " << e.tag;
     throw EDLSLogger(err.str());
   }
 
   // Den Kanalnamen überprüfen
   if (channel_tag.att("name")->to_str() != _channel_preset.name)
   {
-    err << "different channel name in \"" << channel_file_name << "\": ";
+    err << "Different channel name in \"" << channel_file_name << "\": ";
     err << "\"" << channel_tag.att("name")->to_str() << "\" instead of ";
     err << "\"" << _channel_preset.name << "\"!";
     throw EDLSLogger(err.str());
@@ -347,7 +347,7 @@ void DLSLogger::check_channel_info()
   // Index überprüfen (sollte immer richtig sein)
   if (channel_tag.att("index")->to_int() != _real_channel.index)
   {
-    err << "wrong channel index in \"" << channel_file_name << "\": ";
+    err << "Wrong channel index in \"" << channel_file_name << "\": ";
     err << channel_tag.att("index")->to_int() << " instead of ";
     err << _real_channel.index << "!";
     throw EDLSLogger(err.str());
@@ -356,7 +356,7 @@ void DLSLogger::check_channel_info()
   // Einheit überprüfen
   if (channel_tag.att("unit")->to_str() != _real_channel.unit)
   {
-    err << "different channel unit in \"" << channel_file_name << "\": ";
+    err << "Different channel unit in \"" << channel_file_name << "\": ";
     err << "\"" << channel_tag.att("unit")->to_str() << "\" instead of ";
     err << "\"" << _real_channel.unit << "\"!";
     throw EDLSLogger(err.str());
@@ -365,7 +365,7 @@ void DLSLogger::check_channel_info()
   // Datentyp überprüfen
   if (channel_tag.att("type")->to_str() != dls_channel_type_to_str(_real_channel.type))
   {
-    err << "different channel type in \"" << channel_file_name << "\": ";
+    err << "Different channel type in \"" << channel_file_name << "\": ";
     err << "\"" << channel_tag.att("type")->to_str() << "\" instead of ";
     err << "\"" << dls_channel_type_to_str(_real_channel.type) << "\"!";
     throw EDLSLogger(err.str());
@@ -394,7 +394,7 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
 
   if (reduction != (unsigned int) reduction)
   {
-    throw EDLSLogger("frequency results in no integer reduction!");
+    throw EDLSLogger("Frequency leads to no integer reduction!");
   }
 
   block_size = channel->sample_frequency;
@@ -406,7 +406,7 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
   if (channel->sample_frequency % block_size != 0)
   {
     stringstream err;
-    err << "block size (" << block_size << ")";
+    err << "Block size (" << block_size << ")";
     err << " doesn't match frequency (" << channel->sample_frequency << ")!";
     throw EDLSLogger(err.str());
   }
@@ -466,7 +466,7 @@ void DLSLogger::process_data(const string &data, COMTime time)
   }
   catch (ECOMBase64 &e)
   {
-    throw EDLSLogger("base64 error: " + e.msg);    
+    throw EDLSLogger("Base64 error: " + e.msg);    
   }
 
   try
@@ -478,7 +478,7 @@ void DLSLogger::process_data(const string &data, COMTime time)
   }
   catch (EDLSSaver &e)
   {
-    throw EDLSLogger("process_data: " + e.msg);
+    throw EDLSLogger("GenSaver: " + e.msg);
   }
 }
 
@@ -498,12 +498,20 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   stringstream err;
   fstream file;
   COMXMLTag tag;
+  string arch_str;
 
   _chunk_created = false;
 
   if (_channel_preset.format_index < 0 || _channel_preset.format_index >= DLS_FORMAT_COUNT)
   {
-    throw EDLSLogger("invalid channel format!");
+    throw EDLSLogger("Invalid channel format!");
+  }
+
+  switch (arch)
+  {
+    case LittleEndian: arch_str = "LittleEndian"; break;
+    case BigEndian: arch_str = "BigEndian"; break;
+    default: throw EDLSLogger("Unknown architecture!");
   }
 
   dir_name << _dls_dir;
@@ -516,8 +524,8 @@ void DLSLogger::create_chunk(COMTime time_of_first)
     // Kanalverzeichnis existiert nicht. Anlegen.
     if (mkdir(dir_name.str().c_str(), 0755) != 0)
     {
-      err << "create_chunk: could not create channel directory";
-      err << " \"" << dir_name.str() << "\"!";
+      err << "Could not create channel directory: ";
+      err << " \"" << dir_name.str() << "\" while creating chunk!";
       throw EDLSLogger(err.str());
     }
 
@@ -531,8 +539,8 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 
     if (!file.is_open())
     {
-      err << "create_chunk: could not write channel.xml into dir \"";
-      err << dir_name.str() << "\"!";
+      err << "Could not write channel.xml into dir \"";
+      err << dir_name.str() << "\" while creating chunk!";
       throw EDLSLogger(err.str());
     }
 
@@ -563,8 +571,8 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   dir_name << "/chunk" << time_of_first;
   if (mkdir(dir_name.str().c_str(), 0755) != 0)
   {
-    err << "create_chunk: could not create directory \"";
-    err << dir_name.str() << "\"!";
+    err << "Could not create directory \"";
+    err << dir_name.str() << "\" while creating chunk!";
     if (errno == EEXIST) err << " It already exists!";
     throw EDLSLogger(err.str());
   } 
@@ -574,8 +582,8 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 
   if (!file.is_open())
   {
-    err << "create_chunk: could not write chunk.xml into dir \"";
-    err << dir_name.str() << "\"!";
+    err << "Could not write chunk.xml into dir \"";
+    err << dir_name.str() << "\" while creating chunk!";
     throw EDLSLogger(err.str());
   }
 
@@ -595,7 +603,10 @@ void DLSLogger::create_chunk(COMTime time_of_first)
   if (_channel_preset.format_index == DLS_FORMAT_MDCT)
   {
     tag.push_att("mdct_block_size", _channel_preset.mdct_block_size);
+    tag.push_att("mdct_accuracy", _channel_preset.mdct_accuracy);
   }
+
+  tag.push_att("architecture", arch_str);
 
   file << " " << tag.tag() << endl;
 
@@ -623,7 +634,7 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 void DLSLogger::discard_chunk()
 {
 #ifdef DEBUG
-  msg() << "discarding chunk, " << _data_size << " bytes written.";
+  msg() << "Discarding chunk. " << _data_size << " bytes written.";
   log(DLSDebug);
 #endif
 
@@ -664,7 +675,7 @@ void DLSLogger::set_change(const COMChannelPreset *channel,
 {
   if (_change_in_progress)
   {
-    msg() << "change in progress!";
+    msg() << "Change in progress!";
     log(DLSWarning);
   }
   else

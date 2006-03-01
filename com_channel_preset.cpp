@@ -13,7 +13,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_channel_preset.cpp,v 1.6 2005/01/05 09:26:04 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_channel_preset.cpp,v 1.8 2005/03/11 10:43:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -102,7 +102,7 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
     if (format_index == DLS_FORMAT_INVALID)
     {
       clear();
-      err << "unknown channel format \"" << format_string << "\"!";
+      err << "Unknown channel format \"" << format_string << "\"!";
       throw ECOMChannelPreset(err.str());
     }
 
@@ -110,6 +110,15 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
     {
       mdct_block_size = tag->att("mdct_block_size")->to_int();
       mdct_accuracy = tag->att("mdct_accuracy")->to_dbl();
+    }
+
+    if (tag->has_att("type"))
+    {
+      type = dls_str_to_channel_type(tag->att("type")->to_str());
+    }
+    else
+    {
+      type = TUNKNOWN;
     }
   }
   catch (ECOMXMLTag &e)
@@ -136,7 +145,7 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
 {
   if (format_index < 0 || format_index >= DLS_FORMAT_COUNT)
   {
-    throw ECOMChannelPreset("invalid channel format!");
+    throw ECOMChannelPreset("Invalid channel format!");
   }
 
   tag->clear();
@@ -152,6 +161,11 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
   {
     tag->push_att("mdct_block_size", mdct_block_size);
     tag->push_att("mdct_accuracy", mdct_accuracy);
+  }
+
+  if (type != TUNKNOWN)
+  {
+    tag->push_att("type", dls_channel_type_to_str(type));
   }
 }
 
@@ -171,6 +185,7 @@ void COMChannelPreset::clear()
   format_index = DLS_FORMAT_INVALID;
   mdct_block_size = 0;
   mdct_accuracy = 0;
+  type = TUNKNOWN;
 }
 
 //---------------------------------------------------------------

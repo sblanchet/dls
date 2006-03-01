@@ -18,7 +18,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_zlib.cpp,v 1.13 2005/02/22 15:23:20 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_zlib.cpp,v 1.14 2005/03/11 10:43:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -105,7 +105,7 @@ void COMZLib::compress(const char *src, unsigned int src_size)
 
   if (comp_ret != Z_OK) // Fehler beim Komprimieren
   {
-    err << "compress returned " << comp_ret;
+    err << "compress() returned " << comp_ret;
     if (comp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
     err << ", out_size=" << out_size;
     err << ", src_size=" << src_size;
@@ -160,7 +160,7 @@ void COMZLib::uncompress(const char *src, unsigned int src_size,
 
   if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
   {
-    err << "uncompress returned " << uncomp_ret;
+    err << "uncompress() returned " << uncomp_ret;
     if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
     err << ", out_size=" << out_size;
     err << ", src_size=" << src_size;

@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_globals.cpp,v 1.12 2005/02/22 15:21:42 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_globals.cpp,v 1.14 2005/03/09 10:23:18 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -39,8 +39,8 @@ COMChannelType dls_str_to_channel_type(const string &str)
   if (str == "TULINT") return TULINT;
   if (str == "TFLT")   return TFLT;
   if (str == "TDBL")   return TDBL;
-
-  throw COMException("unknown channel type \"" + str + "\"!");
+  
+  return TUNKNOWN;
 }
 
 //---------------------------------------------------------------
@@ -57,9 +57,7 @@ char *dls_channel_type_to_str(COMChannelType type)
     case TULINT: return "TULINT";
     case TFLT:   return "TFLT";
     case TDBL:   return "TDBL";
-
-    default:
-      throw COMException("unknown channel type!");
+    default: return "-";
   }
 }
 

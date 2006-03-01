@@ -18,7 +18,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_main.cpp,v 1.5 2005/01/27 11:34:00 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_main.cpp,v 1.6 2005/03/11 09:17:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   dialog->show();
   delete dialog;
 
-  // Evtl. allokierte Speicher der MDCT freigeben
+  // Reservierte Speicher der MDCT freigeben
   mdct_cleanup();
 
   return 0;

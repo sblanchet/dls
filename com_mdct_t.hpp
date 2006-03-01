@@ -10,7 +10,6 @@
 //---------------------------------------------------------------
 
 //#define MDCT_DEBUG
-#define MDCT_NO_DIFF
 
 #define MDCT_MAX_BYTES 4 // Maximal 32 Bit für Quantisierung
 
@@ -82,7 +81,6 @@ private:
 
   //@{
   T *_last_tail;             /**< Die (_dim / 2) letzten Werte der letzten MDCT */
-  T _last_value;             /**< Letzter Wert der Differentierung/Integration */
   bool _first;               /**< true, wenn noch keine MDCT stattgefunden hat */
   unsigned int _last_length; /**< Anzahl Datenwerte der letzten MDCT */
   //@}
@@ -131,14 +129,14 @@ COMMDCTT<T>::COMMDCTT(unsigned int dim, double acc)
   log2 = log10((double) dim) / log10((double) 2);
   if (log2 != (unsigned int) log2)
   {
-    err << "invalid dimension " << dim;
+    err << "Invalid dimension " << dim;
     err << " (must be power of 2)!";
     throw ECOMMDCT(err.str());
   }
 
   if ((init_ret = mdct_init((unsigned int) log2)) < 0)
   {
-    err << "Could not init mdct! (error code " << init_ret << ")";
+    err << "Could not init MDCT! (Error code " << init_ret << ")";
     throw ECOMMDCT(err.str());
   }
 
@@ -153,7 +151,7 @@ COMMDCTT<T>::COMMDCTT(unsigned int dim, double acc)
   }
   catch (...)
   {
-    throw ECOMMDCT("could not allocate memory for tail buffer!");
+    throw ECOMMDCT("Could not allocate memory for tail buffer!");
   }
 
   // Persistenten Speicher leeren
@@ -191,13 +189,12 @@ void COMMDCTT<T>::clear()
   unsigned int i;
 
 #ifdef MDCT_DEBUG
-  msg() << "LAST TAIL CLEAR!";
+  msg() << "Clearing data of last MDCT!";
   log(DLSDebug);
 #endif
 
   _first = true;
   _last_length = 0;
-  _last_value = 0;
 
   if (!_last_tail) return;
 
@@ -229,23 +226,12 @@ unsigned int COMMDCTT<T>::max_compressed_size(unsigned int length) const
     // Anzahl der vollen Dimensionen ermitteln
     blocks_of_dim = length / _dim;
     if (length % _dim) blocks_of_dim++;
-
-#ifndef MDCT_NO_DIFF
-    // ...plus ein Mittelwert am Anfang
-    return sizeof(T) + blocks_of_dim * 2 * (sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2);
-#else
     return blocks_of_dim * 2 * (sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2);
-#endif
   }
 
   else // MDCT-Flushing
   {
-#ifndef MDCT_NO_DIFF
-    // ...plus ein Mittelwert am Anfang
-    return sizeof(T) + sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2;
-#else
     return sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2;
-#endif
   }
 }
 
@@ -272,14 +258,8 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
   unsigned int i, blocks_of_dim;
   double *mdct_buffer;
 
-#ifndef MDCT_NO_DIFF
-  double mean;
-  double diff_value;
-  double tmp_value;
-#endif
-
 #ifdef MDCT_DEBUG
-  msg() << "mdct::transform() len=" << input_length << " dim=" << _dim;
+  msg() << "MDCT::transform() len=" << input_length << " dim=" << _dim;
   log(DLSDebug);
 #endif
 
@@ -306,13 +286,7 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
   {
     // Speicher für die Ausgabe reservieren
     // Größe: blocks_of_dim * 2 DCTs
-
-#ifndef MDCT_NO_DIFF
-    // ...plus ein Mittelwert am Anfang
-    _mdct_output = new char[sizeof(T) + blocks_of_dim * 2 * (sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2)];
-#else
     _mdct_output = new char[blocks_of_dim * 2 * (sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2)];
-#endif
 
     // Speicher für den MDCT-Puffer reservieren.
     // Dabei eine Halbe Dimension mehr für den "Übertrag"
@@ -340,7 +314,7 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
 
 #ifdef MDCT_DEBUG
 #if 0
-  msg() << "input buffer";
+  msg() << "Input buffer:";
   log(DLSDebug);
   for (i = 0; i < input_length; i++)
   {
@@ -356,73 +330,15 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
     mdct_buffer[_dim / 2 + i] = (double) input[input_length - 1];
   }
 
-#ifndef MDCT_NO_DIFF
-  // Mittelwert berechnen
-  mean = 0;
-  for (i = 0; i < blocks_of_dim * _dim; i++) mean += mdct_buffer[i];
-  mean /= (blocks_of_dim * _dim);
-
-  // Den Mittelwert an der ersten Stellen des Ausgabespeichers kopieren
-  ((T *) _mdct_output)[0] = (T) mean;
-#endif
-
   // Die letzte, halbe Dimension von Werten (undifferenziert) speichern
   for (i = 0; i < _dim / 2; i++)
   {
     _last_tail[i] = (T) mdct_buffer[blocks_of_dim * _dim + i];
   }
 
-#ifndef MDCT_NO_DIFF
-  if (_first)
-  {
-    diff_value = mdct_buffer[i];
-  }
-  else
-  {
-    diff_value = (double) _last_value;
-  }
-
 #ifdef MDCT_DEBUG
 #if 0
-  msg() << "buffer before diff:";
-  log(DLSDebug);
-  for (i = 0; i < blocks_of_dim * _dim; i++) msg() << mdct_buffer[i] << ", ";
-  log(DLSDebug);
-#endif
-#endif
-
-  // Differentieren
-  for (i = 0; i < blocks_of_dim * _dim; i++)
-  {
-    tmp_value = mdct_buffer[i];
-    mdct_buffer[i] -= diff_value;
-    diff_value = tmp_value;
-  }
-
-#ifdef MDCT_DEBUG
-#if 0
-  msg() << "buffer after diff:";
-  log(DLSDebug);
-  for (i = 0; i < blocks_of_dim * _dim; i++) msg() << mdct_buffer[i] << ", ";
-  log(DLSDebug);
-#endif
-#endif
-
-  // Den Differentierungswert dieser Stelle für die Nachwelt speichern
-  _last_value = (T) diff_value;
-
-  // Weiter differentieren
-  for (i = 0; i < _dim / 2; i++)
-  {
-    tmp_value = mdct_buffer[blocks_of_dim * _dim + i];
-    mdct_buffer[blocks_of_dim * _dim + i] -= diff_value;
-    diff_value = tmp_value;
-  }
-#endif // diff
-
-#ifdef MDCT_DEBUG
-#if 0
-  msg() << "mdct buffer before transform:";
+  msg() << "MDCT buffer before transform:";
   log(DLSDebug);
   for (i = 0; i < blocks_of_dim * _dim; i++) msg() << mdct_buffer[i] << ", ";
   log(DLSDebug);
@@ -430,15 +346,11 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
 #endif
 
   // DCT's ausführen
-#ifndef MDCT_NO_DIFF
-  _mdct_output_size = sizeof(T) + _transform_all(mdct_buffer, blocks_of_dim * 2, _mdct_output + sizeof(T));
-#else
   _mdct_output_size = _transform_all(mdct_buffer, blocks_of_dim * 2, _mdct_output);
-#endif
 
 #ifdef MDCT_DEBUG
 #if 1
-  msg() << "output buffer after transform:";
+  msg() << "Output buffer after transform:";
   log(DLSDebug); 
   msg() << convert_to_bin(_mdct_output, _mdct_output_size, 8);
   log(DLSDebug);
@@ -487,7 +399,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
   for (d = 0; d < dct_count; d++)
   {
 #ifdef MDCT_DEBUG
-    msg() << "values";
+    msg() << "Values:";
     log(DLSDebug);
     msg() << "SEEEEEEE EEEEMMMM MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM";
     log(DLSDebug);
@@ -503,7 +415,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
     mdct(_exp2, input + (d * _dim / 2), coeff);
 
 #ifdef MDCT_DEBUG
-    msg() << "coeff";
+    msg() << "Coeffs:";
     log(DLSDebug);
     for (i = 0; i < _dim / 2; i++) {msg() << setw(15) << coeff[i]; log(DLSDebug);}
 #endif
@@ -537,7 +449,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
       }
 
 #ifdef MDCT_DEBUG
-      msg() << "quant with " << (int) bits << " bits. IMDCT error " << max_error;
+      msg() << "Quant with " << (int) bits << " bits. IMDCT error " << max_error;
       log(DLSDebug);
 #endif
 
@@ -568,7 +480,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
     }
 
 #ifdef MDCT_DEBUG
-    msg() << "using quant " << (int) use_bits;
+    msg() << "Using quant " << (int) use_bits;
     log(DLSDebug);
     for (i = 0; i < _dim / 2; i++)
     {
@@ -589,7 +501,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
     data_size += _store_quant(use_bits, intquant, output + data_size);
 
 #ifdef MDCT_DEBUG
-    msg() << "total packed (" << data_size << " bytes):";
+    msg() << "Total packed (" << data_size << " bytes):";
     log(DLSDebug);
     msg() << convert_to_bin(output, data_size, 8);
     log(DLSDebug);
@@ -645,7 +557,7 @@ void COMMDCTT<T>::_int_quant(const double *koeff,
   // Alle Koeffizienten skalieren
   for (i = 0; i < _dim / 2; i++)
   {
-    // Skalierten Koeffizienten im Integer-Array ablegen
+    // Skalierte Koeffizienten im Integer-Array ablegen
     intquant[i] = (int) round(koeff[i] / (*scale));
     //HM 26.02.2005 geaendert auf round statt floor
 
@@ -675,7 +587,7 @@ unsigned int COMMDCTT<T>::_store_quant(unsigned char bits,
   output[current_byte] = 0;
 
 #ifdef MDCT_DEBUG
-  msg() << "abs quant";
+  msg() << "Abs quant";
   log(DLSDebug);
 #endif
 
@@ -700,11 +612,6 @@ unsigned int COMMDCTT<T>::_store_quant(unsigned char bits,
       bits_free = 8;
     }
   }
-
-#ifdef MDCT_DEBUG_STORAGE
-  msg() << "storing bits";
-  log(DLSDebug);
-#endif
 
   // Nun die quantisierten Koeffizienten "transponiert" speichern
   for (b = bits; b > 0; b--)
@@ -741,14 +648,8 @@ void COMMDCTT<T>::flush_transform()
   unsigned int i;
   double *mdct_buffer;
 
-#ifndef MDCT_NO_DIFF
-  double mean;
-  double diff_value;
-  double tmp_value;
-#endif
-
 #ifdef MDCT_DEBUG
-  msg() << "mdct::flush_transform() dim=" << _dim << " last_len=" << _last_length;
+  msg() << "MDCT::flush_transform() dim=" << _dim << " last_len=" << _last_length;
   log(DLSDebug);
 #endif
 
@@ -769,12 +670,7 @@ void COMMDCTT<T>::flush_transform()
   try
   {
     // Speicher für die Ausgabe reservieren
-
-#ifndef MDCT_NO_DIFF
-    _mdct_output = new char[sizeof(T) + sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2];
-#else
     _mdct_output = new char[sizeof(T) + 1 + MDCT_MAX_BYTES * _dim / 2];
-#endif
 
     // Speicher für den MDCT-Puffer reservieren.
     mdct_buffer = new double[_dim];
@@ -790,28 +686,8 @@ void COMMDCTT<T>::flush_transform()
   // Rest des Speichers mit dem letzten Wert der ersten Hälfte auffüllen
   for (i = _dim / 2; i < _dim; i++) mdct_buffer[i] = mdct_buffer[_dim / 2 - 1];
 
-#ifndef MDCT_NO_DIFF
-  // Mittelwert berechnen
-  mean = 0;
-  for (i = 0; i < _dim / 2; i++) mean += mdct_buffer[i];
-  mean /= (_dim / 2);
-
-  // Den Mittelwert an der ersten Stellen des Ausgabespeichers kopieren
-  ((T *) _mdct_output)[0] = (T) mean;
-
-  // Differentieren
-  diff_value = (double) _last_value;
-  for (i = 0; i < _dim; i++)
-  {
-    tmp_value = mdct_buffer[i];
-    mdct_buffer[i] -= diff_value;
-    diff_value = tmp_value;
-  }
-
-  _mdct_output_size = sizeof(T) + _transform_all(mdct_buffer, 1, _mdct_output + sizeof(T));
-#else
+  // Transformieren
   _mdct_output_size = _transform_all(mdct_buffer, 1, _mdct_output);
-#endif
 
   // MDCT-Puffer wieder freigeben
   delete [] mdct_buffer;
@@ -835,14 +711,8 @@ void COMMDCTT<T>::detransform(const char *input,
   T *mdct_buffer;
   stringstream err;
  
-#ifndef MDCT_NO_DIFF
-  T mean;
-  T mean_diff;
-  T int_value;
-#endif
-
 #ifdef MDCT_DEBUG
-  msg() << "mdct::detransform() len=" << input_length << " dim=" << _dim;
+  msg() << "MDCT::detransform() len=" << input_length << " dim=" << _dim;
   if (_first) msg() << " FIRST";
   log(DLSDebug);
 #endif
@@ -877,7 +747,7 @@ void COMMDCTT<T>::detransform(const char *input,
   }
   catch (...)
   {
-    throw ECOMMDCT("could not allocate memory for buffers!");
+    throw ECOMMDCT("Could not allocate memory for buffers!");
   }
 
   // Die letzte, halbe Dimension der letzten
@@ -894,50 +764,9 @@ void COMMDCTT<T>::detransform(const char *input,
   }
 
   // Alle inversen Transformationen ausführen
-#ifndef MDCT_NO_DIFF
-  _detransform_all(input + sizeof(T), blocks_of_dim * 2, mdct_buffer);
-#else
   _detransform_all(input, blocks_of_dim * 2, mdct_buffer);
-#endif
-
-#ifndef MDCT_NO_DIFF
-  // Integrieren
-  int_value = _last_value;
-  for (i = 0; i < blocks_of_dim * _dim; i++)
-  {
-    mdct_buffer[i] += int_value;
-    int_value = mdct_buffer[i];
-  }  
-
-  _last_value = int_value;
-
-  // Mittelwert berechnen
-  mean = 0;
-  for (i = 0; i < blocks_of_dim * _dim; i++)
-  {
-    mean += mdct_buffer[i];
-  }
-  mean /= blocks_of_dim * _dim;
-
-  if (_first)
-  {
-    mean_diff = input[0] - mean;
-    _last_value += mean_diff;
-  }
-  else
-  {
-    mean_diff = 0;
-  }
-
-#ifdef MDCT_DEBUG
-  msg() << "calculated mean: " << mean << " handed mean: " << input[0];
-  log(DLSDebug);
-#endif
-
-#endif
 
   _imdct_output_length = blocks_of_dim * _dim;
-
   if ((input_length % _dim) > 0 && (input_length % _dim) < _dim / 2)
   {
     _imdct_output_length -= _dim / 2 - (input_length % _dim);
@@ -950,22 +779,14 @@ void COMMDCTT<T>::detransform(const char *input,
 
     for (i = 0; i < _imdct_output_length; i++)
     {
-#ifndef MDCT_NO_DIFF
-      _imdct_output[i] = mdct_buffer[_dim / 2 + i] + mean_diff;
-#else
       _imdct_output[i] = mdct_buffer[_dim / 2 + i];
-#endif
     }
   }
   else
   {
     for (i = 0; i < _imdct_output_length; i++)
     {
-#ifndef MDCT_NO_DIFF
-      _imdct_output[i] = mdct_buffer[i] + mean_diff;
-#else
       _imdct_output[i] = mdct_buffer[i];
-#endif
     }
   }
 
@@ -981,7 +802,7 @@ void COMMDCTT<T>::detransform(const char *input,
   }
 
 #ifdef MDCT_DEBUG
-  msg() << "deleting mdct buffer.";
+  msg() << "Deleting mdct buffer.";
   log(DLSDebug);
 #endif
 
@@ -1054,7 +875,7 @@ void COMMDCTT<T>::_detransform_all(const char *input,
     }
 
 #ifdef MDCT_DEBUG
-    msg() << "signs";
+    msg() << "Signs:";
     log(DLSDebug);
     for (i = 0; i < _dim / 2; i++) msg() << (int) signs[i] << ", ";
     log(DLSDebug);
@@ -1103,14 +924,8 @@ void COMMDCTT<T>::flush_detransform(const char *input, unsigned int input_size)
   unsigned int i;
   T *mdct_buffer;
  
-#ifndef MDCT_NO_DIFF
-  T mean;
-  T mean_diff;
-  T int_value;
-#endif
-
 #ifdef MDCT_DEBUG
-  msg() << "mdct::flush_detransform() dim=" << _dim << " last_len=" << _last_length;
+  msg() << "MDCT::flush_detransform() dim=" << _dim << " last_len=" << _last_length;
   log(DLSDebug);
 #endif
 
@@ -1147,34 +962,7 @@ void COMMDCTT<T>::flush_detransform(const char *input, unsigned int input_size)
   for (i = _dim / 2; i < _dim; i++) mdct_buffer[i] = 0;
 
   // Alle inversen Transformationen ausführen
-#ifndef MDCT_NO_DIFF
-  _detransform_all(input + sizeof(T), 1, mdct_buffer);
-#else
   _detransform_all(input, 1, mdct_buffer);
-#endif
-
-#ifndef MDCT_NO_DIFF
-  // Integrieren
-  int_value = _last_value;
-  for (i = 0; i < _dim / 2; i++)
-  {
-    mdct_buffer[i] += int_value;
-    int_value = mdct_buffer[i];
-  }  
-
-  // Mittelwert berechnen
-  mean = 0;
-  for (i = 0; i < _dim / 2; i++) mean += mdct_buffer[i];
-  mean /= blocks_of_dim * _dim;
-
-  mean_diff = 0;
-
-#ifdef MDCT_DEBUG
-  msg() << "calculated mean: " << mean << " handed mean: " << input[0];
-  log(DLSDebug);
-#endif
-
-#endif
 
   // Daten in den Ausgabepuffer kopieren
   _imdct_output_length = (_last_length % _dim) - _dim / 2;
@@ -1186,17 +974,13 @@ void COMMDCTT<T>::flush_detransform(const char *input, unsigned int input_size)
   // Daten in den Ausgabepuffer kopieren
   for (i = 0; i < _imdct_output_length; i++)
   {
-#ifndef MDCT_NO_DIFF
-    _imdct_output[i] = mdct_buffer[i] + mean_diff;
-#else
     _imdct_output[i] = mdct_buffer[i];
-#endif
   }
 
 #ifdef MDCT_DEBUG
-  msg() << "flush output_len=" << _imdct_output_length;
+  msg() << "Flush output_len=" << _imdct_output_length;
   log(DLSDebug);
-  msg() << "deleting mdct buffer.";
+  msg() << "Deleting MDCT buffer.";
   log(DLSDebug);
 #endif
 

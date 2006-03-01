@@ -26,7 +26,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_logger.cpp,v 1.23 2005/02/23 17:06:50 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_logger.cpp,v 1.26 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -683,7 +683,7 @@ void DLSProcLogger::_process_tag()
           {
             _exit = true;
             _exit_code = E_DLS_ERROR;
-            msg() << "expecting version > 2.7.0! actual version:";
+            msg() << "Expected version > 2.7.0! Current version:";
             msg() << " " << MSR_V(_msr_version);
             msg() << "." << MSR_P(_msr_version);
             msg() << "." << MSR_S(_msr_version) << "...";
@@ -739,7 +739,7 @@ void DLSProcLogger::_process_tag()
             _exit = true;
             _exit_code = E_DLS_ERROR;
 
-            msg() << "expected /Taskinfo/Abtastfrequenz!";
+            msg() << "Expected /Taskinfo/Abtastfrequenz!";
             log(DLSError);
           }
           else
@@ -748,7 +748,7 @@ void DLSProcLogger::_process_tag()
       
             _state = dls_waiting_for_channels; // Zustandswechsel!
 
-            msg() << "connected to MSR version";
+            msg() << "Connected to MSR version";
             msg() << " " << MSR_V(_msr_version);
             msg() << "." << MSR_P(_msr_version);
             msg() << "." << MSR_S(_msr_version);
@@ -782,6 +782,19 @@ void DLSProcLogger::_process_tag()
             real_channel.frequency = _xml.tag()->att("HZ")->to_int();
             real_channel.bufsize = _xml.tag()->att("bufsize")->to_int();
             real_channel.type = dls_str_to_channel_type(_xml.tag()->att("typ")->to_str());
+
+            if (real_channel.type == TUNKNOWN)
+            {
+              _exit = true;
+              _exit_code = E_DLS_ERROR;
+            
+              msg() << "Receiving MSR channel: Unknown channel type \"";
+              msg() << "\"" << _xml.tag()->att("typ")->to_str() << "\"";
+              log(DLSError);
+
+              break;
+            }
+
             _real_channels.push_back(real_channel);
           }
           catch (ECOMXMLTag &e)
@@ -789,16 +802,7 @@ void DLSProcLogger::_process_tag()
             _exit = true;
             _exit_code = E_DLS_ERROR;
 
-            msg() << "receiving MSR channel: " << e.msg << " tag: " << e.tag;
-            log(DLSError);
-          }
-          catch (COMException &e) // Channel-Typ unbekannt
-          {
-            _exit = true;
-            _exit_code = E_DLS_ERROR;
-
-            msg() << "receiving MSR channel: unknown channel type \"";
-            msg() << "\"" << _xml.tag()->att("typ")->to_str() << "\"";
+            msg() << "Receiving MSR channel: " << e.msg << " tag: " << e.tag;
             log(DLSError);
           }
         }
@@ -813,13 +817,13 @@ void DLSProcLogger::_process_tag()
             _job->start_logging();
             _state = dls_listening; // Zustandswechsel!
 
-            msg() << "start logging.";
+            msg() << "Start logging.";
           }
           else
           {
             _state = dls_waiting_for_trigger; // Zustandswechsel!
 
-            msg() << "waiting for trigger \"";
+            msg() << "Waiting for trigger \"";
             msg() << _job->preset()->trigger() << "\"...";
           }
 
@@ -837,7 +841,7 @@ void DLSProcLogger::_process_tag()
 
           _data_time.from_dbl_time(_xml.tag()->att("time")->to_dbl());
 
-          // zeit des ersten Datenempfanges vermerken
+          // Zeit des ersten Datenempfanges vermerken
           if (_first_data_time.is_null()) _first_data_time = _data_time;
 
           if (_xml.tag()->has_att("level"))
@@ -848,14 +852,14 @@ void DLSProcLogger::_process_tag()
                 && new_buffer_level >= BUFFER_LEVEL_WARNING)
             {
               // Warnung: Füllstand zu hoch!
-              msg() << "channel buffers nearly full!";
+              msg() << "Channel buffers nearly full!";
               log(DLSWarning);
             }
             else if (_buffer_level >= BUFFER_LEVEL_WARNING
                      && new_buffer_level < BUFFER_LEVEL_WARNING)
             {
               // Entwarnung geben
-              msg() << "level of channel buffers decreasing...";
+              msg() << "Level of channel buffers decreasing...";
               log(DLSInfo);
             }
 
@@ -892,7 +896,7 @@ void DLSProcLogger::_process_tag()
             _exit = true;
             _exit_code = E_DLS_ERROR;
 
-            msg() << "processing data: " << e.msg;
+            msg() << "Processing data: " << e.msg;
             log(DLSError);            
           }
         }
@@ -906,7 +910,7 @@ void DLSProcLogger::_process_tag()
     _exit = true;
     _exit_code = E_DLS_ERROR;
 
-    msg() << "processing tag: " << e.msg << " tag: " << e.tag;
+    msg() << "Processing tag: " << e.msg << " tag: " << e.tag;
     log(DLSError);
   }
 }
@@ -1028,7 +1032,7 @@ void DLSProcLogger::_create_pid_file()
 
       old_pid_file.close();
 
-      msg() << "Exsting PID file \"" << pid_file_name.str() << "\" is corrupt!";
+      msg() << "Existing PID file \"" << pid_file_name.str() << "\" is corrupt!";
       log(DLSError);
 
       return;

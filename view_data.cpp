@@ -9,7 +9,7 @@
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /vol/projekte/dls_data_logging_server/src-0.9/RCS/view_data.cpp,v 1.6 2004/12/21 14:55:44 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_data.cpp,v 1.6 2004/12/21 14:55:44 fp Exp $");
 
 //---------------------------------------------------------------
 

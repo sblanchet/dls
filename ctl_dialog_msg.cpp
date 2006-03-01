@@ -1,6 +1,6 @@
 //---------------------------------------------------------------
 //
-//  C O M _ D I A L O G _ M S G . C P P
+//  C T L _ D I A L O G _ M S G . C P P
 //
 //---------------------------------------------------------------
 
@@ -8,7 +8,7 @@
 
 //---------------------------------------------------------------
 
-#include "com_dialog_msg.hpp"
+#include "ctl_dialog_msg.hpp"
 
 //---------------------------------------------------------------
 
@@ -21,7 +21,7 @@
    Konstruktor
 */
 
-COMDialogMsg::COMDialogMsg()
+CTLDialogMsg::CTLDialogMsg()
 {
   int x = Fl::w() / 2 - WIDTH / 2;
   int y = Fl::h() / 2 - HEIGHT / 2;
@@ -49,7 +49,7 @@ COMDialogMsg::COMDialogMsg()
    Destruktor
 */
 
-COMDialogMsg::~COMDialogMsg()
+CTLDialogMsg::~CTLDialogMsg()
 {
   delete _wnd;
 }
@@ -62,7 +62,7 @@ COMDialogMsg::~COMDialogMsg()
    Der Text wird aus dem Stream gelesen.
 */
 
-void COMDialogMsg::error()
+void CTLDialogMsg::error()
 {
   COMMsg msg;
 
@@ -86,7 +86,7 @@ void COMDialogMsg::error()
    Der Text wird aus dem Stream gelesen.
 */
 
-void COMDialogMsg::warning()
+void CTLDialogMsg::warning()
 {
   COMMsg msg;
 
@@ -111,9 +111,9 @@ void COMDialogMsg::warning()
    \param data Zeiger auf den Dialog
 */
 
-void COMDialogMsg::_callback(Fl_Widget *sender, void *data)
+void CTLDialogMsg::_callback(Fl_Widget *sender, void *data)
 {
-  COMDialogMsg *dialog = (COMDialogMsg *) data;
+  CTLDialogMsg *dialog = (CTLDialogMsg *) data;
 
   if (sender == dialog->_button_ok) dialog->_button_ok_clicked();
   if (sender == dialog->_grid_msg) dialog->_grid_msg_callback();
@@ -126,7 +126,7 @@ void COMDialogMsg::_callback(Fl_Widget *sender, void *data)
    Callback: Der "OK"-Button wurde geklickt
 */
 
-void COMDialogMsg::_button_ok_clicked()
+void CTLDialogMsg::_button_ok_clicked()
 {
   // Fenster Schließen
   _wnd->hide();
@@ -142,7 +142,7 @@ void COMDialogMsg::_button_ok_clicked()
    Callback-Funktion des Grids
 */
 
-void COMDialogMsg::_grid_msg_callback()
+void CTLDialogMsg::_grid_msg_callback()
 {
   COMMsg msg;
 

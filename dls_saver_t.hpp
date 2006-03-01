@@ -168,7 +168,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
   }
   catch (...)
   {
-    throw EDLSSaver("could not allocate memory for buffers!");
+    throw EDLSSaver("Could not allocate memory for buffers!");
   }
 
   try
@@ -197,7 +197,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
     }
     else
     {
-      err << "unknown channel format index " << _parent_logger->channel_preset()->format_index;
+      err << "Unknown channel format index " << _parent_logger->channel_preset()->format_index;
     }
   }
   catch (ECOMCompression &e)
@@ -206,7 +206,7 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
   }
   catch (...)
   {
-    throw EDLSSaver("could not allocate memory for compression object!");
+    throw EDLSSaver("Could not allocate memory for compression object!");
   }
 
   if (err.str() != "") throw EDLSSaver(err.str());
@@ -259,10 +259,10 @@ void DLSSaverT<T>::_save_block()
   // Wenn keine Daten im Puffer sind, beenden.
   if (_block_buf_index == 0) return;
 
-  if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
+  if (!_compression) throw EDLSSaver("FATAL: No compression object!"); // Sollte nie passieren...
 
 #ifdef DEBUG
-  msg() << "compressing data for channel " << _parent_logger->channel_preset()->name;
+  msg() << "Compressing data for channel " << _parent_logger->channel_preset()->name;
   log(DLSDebug);
 #endif
 
@@ -315,9 +315,9 @@ void DLSSaverT<T>::_save_block()
   end_time.set_now(); // Zeiterfassung
 
   // Warnen, wenn Aufruf von write() sehr lange gebraucht hat
-  if (end_time - start_time > (long long) 1000000)
+  if (end_time - start_time > (long long) (WRITE_TIME_WARNING * 1000000))
   {
-    msg() << "write() took " << (end_time - start_time) << "!";
+    msg() << "Writing to disk took " << (end_time - start_time).to_dbl_time() << " seconds!";
     log(DLSWarning);
   }
 
@@ -361,11 +361,11 @@ void DLSSaverT<T>::_save_rest()
   COMTime start_time, end_time;
 
 #ifdef DEBUG
-  msg() << "save rest";
+  msg() << "Saving rest";
   log(DLSDebug);
 #endif
 
-  if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
+  if (!_compression) throw EDLSSaver("FATAL: No compression object!"); // Sollte nie passieren...
 
   try
   {
@@ -373,12 +373,12 @@ void DLSSaverT<T>::_save_rest()
   }
   catch (ECOMCompression &e)
   {
-    err << "block flush compression: " << e.msg;
+    err << "Block flush compression: " << e.msg;
     throw EDLSSaver(err.str());
   }
   
 #ifdef DEBUG
-  msg() << "saving " << _compression->compressed_size() << " bytes rest";
+  msg() << "Saving " << _compression->compressed_size() << " bytes of rest";
   log(DLSDebug);
 #endif
 
@@ -400,7 +400,7 @@ void DLSSaverT<T>::_save_rest()
     catch (ECOMFile &e)
     {
       _compression->free();
-      err << "could not write to file! (disk full?): " << e.msg;
+      err << "Could not write to file! (Disk full?): " << e.msg;
       throw EDLSSaver(err.str());
     }
 
@@ -411,7 +411,7 @@ void DLSSaverT<T>::_save_rest()
   }
 
 #ifdef DEBUG
-  msg() << "save rest finished";
+  msg() << "Saving rest finished";
   log(DLSDebug);
 #endif
 }

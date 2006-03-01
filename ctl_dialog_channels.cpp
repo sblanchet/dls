@@ -20,11 +20,11 @@ using namespace std;
 #include "com_ring_buffer_t.hpp"
 #include "ctl_globals.hpp"
 #include "ctl_dialog_channels.hpp"
-#include "ctl_msg_wnd.hpp"
+#include "ctl_dialog_msg.hpp"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channels.cpp,v 1.7 2005/02/01 12:21:52 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channels.cpp,v 1.13 2005/03/10 11:24:43 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -61,6 +61,7 @@ CTLDialogChannels::CTLDialogChannels(const string &source)
   _grid_channels->add_column("name", "Kanal", 200);
   _grid_channels->add_column("unit", "Einheit", 50);
   _grid_channels->add_column("freq", "Abtastrate (Hz)");
+  _grid_channels->add_column("type", "Typ");
   _grid_channels->select_mode(flgMultiSelect);
   _grid_channels->callback(_callback, this);
   _grid_channels->hide();
@@ -131,6 +132,10 @@ void CTLDialogChannels::_grid_channels_callback()
       {
         str << _channels[i].frequency;
         _grid_channels->current_content(str.str());
+      }
+      else if (_grid_channels->current_col() == "type")
+      {
+        _grid_channels->current_content(dls_channel_type_to_str(_channels[i].type));
       }
       break;
 
@@ -217,7 +222,7 @@ void CTLDialogChannels::show()
   }
   else
   {
-    msg_win->str() << "Could not start thread!";
+    msg_win->str() << "Konnte keinen neuen Thread starten!";
     msg_win->error();
   }
 }
@@ -266,7 +271,7 @@ void CTLDialogChannels::_thread_function()
   // Socket öffnen
   if ((socket = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    _error = "could not create socket!";
+    _error = "Konnte keinen Socket erstellen!";
     return;
   }
 
@@ -274,7 +279,7 @@ void CTLDialogChannels::_thread_function()
   address.sin_family = AF_INET;
   if ((hp = gethostbyname(_source.c_str())) == NULL)
   {
-    _error = "could not resolve address \"" + _source + "\"!";
+    _error = "Konnte die Adresse \"" + _source + "\" nicht auflösen!";
     close(socket);
     return;
   }
@@ -286,7 +291,7 @@ void CTLDialogChannels::_thread_function()
   // Verbinden
   if ((::connect(socket, (struct sockaddr *) &address, sizeof(address))) == -1)
   {
-    _error = "could not connect to \"" + _source + "\"!";
+    _error = "Verbindung zu \"" + _source + "\" konnte nicht aufgebaut werden!";
     close(socket);
     return;
   }
@@ -341,11 +346,19 @@ void CTLDialogChannels::_thread_function()
                   channel.frequency = tag->att("HZ")->to_int();
                   channel.bufsize = tag->att("bufsize")->to_int();
                   channel.type = dls_str_to_channel_type(tag->att("typ")->to_str());
+     
+                  if (channel.type == TUNKNOWN)
+                  {
+                    _error = "Unknown channel type \"" + tag->att("typ")->to_str() + "\"!";
+                    exit_thread = true;
+                    break;
+                  }
+
                   _channels.push_back(channel);
                 }
                 catch (COMException &e)
                 {
-                  _error = "reading channel: " + e.msg;
+                  _error = "Reading channel: " + e.msg;
                   exit_thread = true;
                   break;
                 }
@@ -358,7 +371,7 @@ void CTLDialogChannels::_thread_function()
             }
             catch (ECOMXMLTag &e)
             {
-              _error = "parser: " + e.msg;
+              _error = "Parser: " + e.msg;
               exit_thread = true;
               break;
             }
@@ -366,7 +379,7 @@ void CTLDialogChannels::_thread_function()
         }
         else if (recv_ret == -1)
         {
-          _error = "error in recv()";
+          _error = "Error in recv()";
           break;
         }
       }
@@ -381,7 +394,7 @@ void CTLDialogChannels::_thread_function()
         }
         else if (send_ret == -1)
         {
-          _error = "error in send()";
+          _error = "Error in send()";
           break;
         }
       }
@@ -390,7 +403,7 @@ void CTLDialogChannels::_thread_function()
     // Select-Fehler
     else if (select_ret == -1)
     {
-      _error = "error in select()";
+      _error = "Error in select()";
       break;
     }
   }
@@ -414,6 +427,8 @@ void CTLDialogChannels::_thread_finished()
   {
     msg_win->str() << _error;
     msg_win->error();
+
+    _wnd->hide();
   }
 }
 

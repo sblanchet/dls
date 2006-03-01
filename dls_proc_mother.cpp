@@ -26,7 +26,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.13 2005/02/03 09:43:24 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.14 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -91,13 +91,13 @@ int DLSProcMother::start(const string &dls_dir)
 
   _dls_dir = dls_dir;
 
-  msg() << "----- mother process started -----";
+  msg() << "----- DLS Mother process started -----";
   log(DLSInfo);
 
   msg() << dls_version_str;
   log(DLSInfo);
 
-  msg() << "using dir \"" << _dls_dir << "\"";
+  msg() << "Using dir \"" << _dls_dir << "\"";
   log(DLSInfo);
 
   // Spooling-Verzeichnis leeren
@@ -133,7 +133,7 @@ int DLSProcMother::start(const string &dls_dir)
 #ifdef DEBUG
     while ((p = _processes_running()) > 0)
     {
-      msg() << "waiting for " << p << " process(es) to exit...";
+      msg() << "Waiting for " << p << " process(es) to exit...";
       log(DLSInfo);
 #else
     while (_processes_running())
@@ -146,7 +146,7 @@ int DLSProcMother::start(const string &dls_dir)
       _check_signals();
     }
 
-    msg() << "----- mother process finished. -----";
+    msg() << "----- DLS Mother process finished. -----";
     log(DLSInfo);
   }
 
@@ -173,7 +173,7 @@ void DLSProcMother::_empty_spool()
     _exit = true;
     _exit_error = true;
 
-    msg() << "could not open spooling directory \"" << dirname << "\"";
+    msg() << "Could not open spooling directory \"" << dirname << "\"";
     log(DLSError);
 
     return;
@@ -193,17 +193,13 @@ void DLSProcMother::_empty_spool()
       _exit = true;
       _exit_error = true;
 
-      msg() << "could not empty spooling directory \"" << dirname << "\"!";
+      msg() << "Could not empty spooling directory \"" << dirname << "\"!";
       log(DLSError);
       break;
     }
   }
 
-  if (closedir(dir) == -1)
-  {
-    msg() << "closedir failed.";
-    log(DLSError);
-  }
+  closedir(dir);
 }
 
 //---------------------------------------------------------------
@@ -235,7 +231,7 @@ void DLSProcMother::_check_jobs()
     _exit = true;
     _exit_error = true;
 
-    msg() << "could not open dls directory \"" << _dls_dir << "\"";
+    msg() << "Could not open DLS directory \"" << _dls_dir << "\"";
     log(DLSError);
 
     return;
@@ -280,7 +276,7 @@ void DLSProcMother::_check_jobs()
     }
     catch (ECOMJobPreset &e)
     {
-      msg() << "importing job (" << job_id << "): " << e.msg;
+      msg() << "Importing job (" << job_id << "): " << e.msg;
       log(DLSError);
       continue;
     }
@@ -289,11 +285,7 @@ void DLSProcMother::_check_jobs()
     _jobs.push_back(job);
   }
 
-  if (closedir(dir) == -1)
-  {
-    msg() << "closedir failed.";
-    log(DLSError);
-  }
+  closedir(dir);
 }
 
 //---------------------------------------------------------------
@@ -335,7 +327,7 @@ void DLSProcMother::_check_signals()
     {
       if (job_i->process_exists())
       {
-        msg() << "terminating process for job " << job_i->id_desc();
+        msg() << "Terminating process for job " << job_i->id_desc();
         msg() << " with PID " << job_i->process_id();
         log(DLSInfo);
 
@@ -371,7 +363,7 @@ void DLSProcMother::_check_signals()
       {
         job_i->process_exited(exit_code);
 
-        msg() << "process for job " << job_i->id_desc();
+        msg() << "Process for job " << job_i->id_desc();
         msg() << " with PID " << pid;
         msg() << " exited with code " << exit_code;
         log(DLSInfo);
@@ -428,7 +420,7 @@ void DLSProcMother::_check_spool()
     _exit = true;
     _exit_error = true;
 
-    msg() << "could not open spool directory \"" << spool_dir << "\"";
+    msg() << "Could not open spool directory \"" << spool_dir << "\"";
     log(DLSError);
 
     return;
@@ -466,11 +458,7 @@ void DLSProcMother::_check_spool()
     }
   }
 
-  if (closedir(dir) == -1)
-  {
-    msg() << "closedir failed.";
-    log(DLSError);
-  }
+  closedir(dir);
 }
 
 //---------------------------------------------------------------
@@ -554,7 +542,7 @@ bool DLSProcMother::_add_job(unsigned int job_id)
   // Auftrag in die Liste einfügen
   _jobs.push_back(new_job);
 
-  msg() << "new job " << new_job.id_desc();
+  msg() << "New job " << new_job.id_desc();
   log(DLSInfo);
 
   return true;
@@ -583,7 +571,7 @@ bool DLSProcMother::_change_job(DLSJobPreset *job)
     return false;
   }
 
-  msg() << "changed job " << job->id_desc();
+  msg() << "Changed job " << job->id_desc();
   log(DLSInfo);
 
   // PID des laufenden Prozesses übernehmen
@@ -594,7 +582,7 @@ bool DLSProcMother::_change_job(DLSJobPreset *job)
 
   if (job->process_exists())
   {
-    msg() << "notifying process for job " << job->id_desc();
+    msg() << "Notifying process for job " << job->id_desc();
     msg() << " with PID " << job->process_id();
     log(DLSInfo);
 
@@ -638,7 +626,7 @@ bool DLSProcMother::_remove_job(unsigned int job_id)
     {
       if (job_i->process_exists())
       {
-        msg() << "terminating process for job " << job_i->id_desc();
+        msg() << "Terminating process for job " << job_i->id_desc();
         msg() << " with PID " << job_i->process_id();
         log(DLSInfo);
             
@@ -663,7 +651,7 @@ bool DLSProcMother::_remove_job(unsigned int job_id)
   }
 
   // Auftrag nicht gefunden!
-  msg() << "job (" << job_id << ") not found!";
+  msg() << "Job (" << job_id << ") was not found!";
   log(DLSError);
 
   return false;
@@ -703,12 +691,12 @@ void DLSProcMother::_check_processes()
     {
       if (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE)
       {
-        msg() << "restarting process for job " << job_i->id_desc();
+        msg() << "Restarting process for job " << job_i->id_desc();
         msg() << " after time tolerance error";
       }
       else
       {
-        msg() << "starting process for job " << job_i->id_desc();
+        msg() << "Starting process for job " << job_i->id_desc();
       }
 
       log(DLSInfo);
@@ -725,12 +713,12 @@ void DLSProcMother::_check_processes()
       {
         job_i->process_started(fork_ret);
 
-        msg() << "started process with PID " << job_i->process_id();
+        msg() << "Started process with PID " << job_i->process_id();
         log(DLSInfo);
       }
       else // Fehler
       {
-        msg() << "error " << errno << " in fork()";
+        msg() << "FATAL: Error " << errno << " in fork()";
         log(DLSError);
       }
     }

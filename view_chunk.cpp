@@ -23,7 +23,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_chunk.cpp,v 1.11 2005/02/23 13:22:44 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_chunk.cpp,v 1.12 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -79,7 +79,7 @@ void ViewChunk::import()
 
   if (!file.is_open())
   {
-    err << "could not open chunk file \"" << chunk_file_name << "\"!";
+    err << "Could not open chunk file \"" << chunk_file_name << "\"!";
     throw EViewChunk(err.str());
   }
 
@@ -104,7 +104,7 @@ void ViewChunk::import()
 
     if (_format_index == DLS_FORMAT_INVALID)
     {
-      throw EViewChunk("unknown compression format!");
+      throw EViewChunk("Unknown compression format!");
     }
 
     if (_format_index == DLS_FORMAT_MDCT)
@@ -117,19 +117,19 @@ void ViewChunk::import()
   catch (ECOMXMLParser &e)
   {
     file.close();
-    err << "parsing error: " << e.msg;
+    err << "Parsing error: " << e.msg;
     throw EViewChunk(err.str());
   }
   catch (ECOMXMLParserEOF &e)
   {
     file.close();
-    err << "parsing error: " << e.msg;
+    err << "Parsing error: " << e.msg;
     throw EViewChunk(err.str());
   }
   catch (ECOMXMLTag &e)
   {
     file.close();
-    err << "parsing (tag) error: " << e.msg;
+    err << "Parsing (tag) error: " << e.msg;
     throw EViewChunk(err.str());
   }
 
@@ -163,13 +163,13 @@ void ViewChunk::fetch_range()
   }
   catch (ECOMIndexT &e)
   {
-    err << "opening global index: " << e.msg << endl; 
+    err << "Opening global index: " << e.msg << endl; 
     throw EViewChunk(err.str());
   }
 
   if (global_index.record_count() == 0)
   {
-    err << "global index file \"" << global_index_file_name << "\" has no records!"; 
+    err << "Global index file \"" << global_index_file_name << "\" has no records!"; 
     throw EViewChunk(err.str());
   }
 
@@ -181,7 +181,7 @@ void ViewChunk::fetch_range()
   }
   catch (ECOMIndexT &e)
   {
-    err << "could not read first and last record from global index file \"" << global_index_file_name << "\"!"; 
+    err << "Could not read first and last record from global index file \"" << global_index_file_name << "\"!"; 
     throw EViewChunk(err.str());
   }
 
@@ -198,13 +198,13 @@ void ViewChunk::fetch_range()
     }
     catch (ECOMIndexT &e)
     {
-      err << "could not open index file \"" << index_file_name.str() << "\": " << e.msg; 
+      err << "Could not open index file \"" << index_file_name.str() << "\": " << e.msg; 
       throw EViewChunk(err.str());
     }
 
     if (index.record_count() == 0)
     {
-      err << "index file \"" << index_file_name.str() << "\" has no records!"; 
+      err << "Index file \"" << index_file_name.str() << "\" has no records!"; 
       throw EViewChunk(err.str());
     }
 
@@ -215,7 +215,7 @@ void ViewChunk::fetch_range()
     }
     catch (ECOMIndexT &e)
     {
-      err << "could not read from index file \"" << index_file_name.str() << "\": " << e.msg; 
+      err << "Could not read from index file \"" << index_file_name.str() << "\": " << e.msg; 
       throw EViewChunk(err.str());
     }
 

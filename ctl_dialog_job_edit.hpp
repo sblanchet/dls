@@ -12,6 +12,7 @@
 #include <FL/Fl_Double_Window.h>
 #include <FL/Fl_Return_Button.h>
 #include <FL/Fl_Input.h>
+#include <FL/Fl_Choice.h>
 
 //---------------------------------------------------------------
 
@@ -40,7 +41,9 @@ private:
   Fl_Input *_input_source;      /**< Eingabefeld für die Datenquelle */
   Fl_Input *_input_trigger;     /**< Eingabefeld für den Trigger-Parameter */
   Fl_Input *_input_quota_time;  /**< Eingabefeld für Zeit-Quota */
+  Fl_Choice *_choice_time_ext;  /**< Auswahlfenster für die Erweiterung der Zeit-Quota */
   Fl_Input *_input_quota_size;  /**< Eingabefeld für Daten-Quota */
+  Fl_Choice *_choice_size_ext;  /**< Auswahlfenster für die Erweiterung der Daten-Quota */
 
   string _dls_dir;    /**< DLS-Datenverzeichnis */
   CTLJobPreset *_job; /**< Zeiger auf den Messauftrag */
@@ -52,10 +55,10 @@ private:
   bool _save_job();
   bool _create_job();
   bool _get_new_id(int *);
-  void _convert_time_quota_to_str(long long, string *);
-  void _convert_size_quota_to_str(long long, string *);
-  bool _convert_str_to_time_quota(const string &, long long *);
-  bool _convert_str_to_size_quota(const string &, long long *);
+  void _display_time_quota();
+  void _display_size_quota();
+  bool _calc_time_quota(long long *);
+  bool _calc_size_quota(long long *);
 };
 
 //---------------------------------------------------------------

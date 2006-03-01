@@ -42,26 +42,22 @@ public:
 
 private:
   Fl_Double_Window *_wnd;       /**< Dialogfenster */
-  Fl_Tile *_tile;               /**< Horizontale Aufteilung zw. Kanälen und Meldungen */
   Fl_Button *_button_close;     /**< "Schliessen" - Button */
   Fl_Output *_output_desc;      /**< Ausgabefeld für die Auftragsbeschreibung */
   Fl_Output *_output_source;    /**< Ausgabefeld für die Datenquelle */
   Fl_Output *_output_trigger;   /**< Ausgabefeld für den Namen des Trigger-Parameters */
   Fl_Button *_button_change;    /**< Button für den Dialog zur Änderung der Beschreibung, usw. */
   Fl_Grid *_grid_channels;      /**< Das Grid zur Darstellung der Kanäle */
-  Fl_Grid *_grid_messages;      /**< Das Grid zur Darstellung des Meldungen */
   Fl_Button *_button_add;       /**< Button zum Hinzufügen von Kanälen */
   Fl_Button *_button_rem;       /**< Button zum entfernen von gewählten Kanälen */
   Fl_Button *_button_edit;      /**< Button zum Editieren von gewählten Kanälen */
   string _dls_dir;              /**< DLS-Datenverzeichnis */
   CTLJobPreset *_job;           /**< Zeiger auf den zu bearbeitenden Auftrag */
-  vector<CTLMessage> _messages; /**< Vektor mit den geladenen Meldungen */
   bool _changed;                /**< Flag, das anzeigt, ob etwas am Auftrag geändert wurde */
   bool _updated;                /**< Flag, das angibt, ob der Auftrag geändert gespeichert wurde */
 
   static void _callback(Fl_Widget *, void *);
   void _grid_channels_callback();
-  void _grid_messages_callback();
   void _button_close_clicked();
   void _button_change_clicked();
   void _button_add_clicked();
@@ -69,7 +65,6 @@ private:
   void _button_edit_clicked();
 
   bool _load_channels();
-  bool _load_messages();
 
   bool _save_job();
   void _edit_channels();
@@ -77,9 +72,6 @@ private:
   void _remove_channels(const list<unsigned int> *);
 
   void _grid_selection_changed();
-
-  static void _static_timeout(void *);
-  void _timeout();
 };
 
 //---------------------------------------------------------------

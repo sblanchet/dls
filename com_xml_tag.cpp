@@ -14,7 +14,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_tag.cpp,v 1.6 2005/01/21 09:04:30 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_tag.cpp,v 1.7 2005/03/11 10:43:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -95,7 +95,7 @@ const COMXMLAtt *COMXMLTag::att(const string &name) const
     iter++;
   }
 
-  throw ECOMXMLTag("attribute \"" + name + "\" does not exist!", tag());
+  throw ECOMXMLTag("Attribute \"" + name + "\" does not exist!", tag());
 }
 
 //---------------------------------------------------------------

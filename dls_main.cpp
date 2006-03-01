@@ -9,6 +9,11 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <linux/limits.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <pwd.h>
+
 
 #include <iostream>
 using namespace std;
@@ -21,7 +26,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_main.cpp,v 1.26 2005/02/23 13:44:09 fp Exp $");
+RCS_ID("$Header: /home/fp/projekte/dls_data_logging_server/src/RCS/dls_main.cpp,v 1.27 2005/06/16 11:28:12 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -33,6 +38,8 @@ unsigned int job_id = 0;
 string dls_dir = "";
 DLSArchitecture arch;
 DLSArchitecture source_arch;
+char user_name[100 + 1];
+unsigned long num_files;
 
 //---------------------------------------------------------------
 
@@ -68,10 +75,14 @@ int main(int argc, char **argv)
   DLSProcMother *mother_process;
   DLSProcLogger *logger_process;
   int exit_code;
+  struct rlimit rlim;
+  struct passwd *pwd;
 
   cout << dls_version_str << endl;
 
   is_daemon = true;
+  strcpy(user_name, "");
+  num_files = OPEN_MAX;
 
   // Endianess ermitteln
   get_endianess();
@@ -82,6 +93,46 @@ int main(int argc, char **argv)
   // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
   // schon ein Daemon läuft
   check_running(&dls_dir);
+
+  if (num_files != OPEN_MAX)
+  {
+    // Maximale Anzahl offener Dateien aendern
+
+    rlim.rlim_max = num_files;
+
+    if (setrlimit(RLIMIT_NOFILE, &rlim) == -1)
+    {
+      cerr << "ERROR: Could not set maximal";
+      cerr << " number of open files: " << strerror(errno) << endl;
+      exit(1);
+    }
+
+    getrlimit(RLIMIT_NOFILE, &rlim); 
+    cout << "Maximal number of open files:" << endl;
+    cout << "   Soft: " << rlim.rlim_cur;
+    cout << "Hard: " << rlim.rlim_max;
+    cout << "Kern: " << sysconf(_SC_OPEN_MAX) << endl;
+  }
+
+  if (strcmp(user_name, "") != 0) // Wenn Benutzer angegeben
+  {
+      // Zu angegebenem Benutzer wechseln
+
+    if ((pwd = getpwnam(user_name)) == NULL)
+    {
+      cerr << "ERROR: User \"" << user_name << "\" does not exist!" << endl;
+      exit(1);
+    }
+
+    cout << "Switching to UID " << pwd->pw_uid << "." << endl;
+
+    if (setuid(pwd->pw_uid) == -1)
+    {
+      cerr << "ERROR: Could not switch to UID " << pwd->pw_uid;
+      cerr << ": " << strerror(errno) << endl;
+      exit(1);
+    }
+  }
 
   // In einen Daemon verwandeln, wenn gewuenscht
   if (is_daemon) init_daemon();
@@ -145,7 +196,7 @@ void get_options(int argc, char **argv)
 
   do
   {
-    c = getopt(argc, argv, "d:kh");
+    c = getopt(argc, argv, "d:u:n:kh");
 
     switch (c)
     {
@@ -156,6 +207,21 @@ void get_options(int argc, char **argv)
 
       case 'k':
         is_daemon = false;
+        break;
+
+      case 'u':
+        strncpy(user_name, optarg, 100);
+        break;
+
+      case 'n':
+        num_files = strtoul(optarg, (char **) NULL, 10);
+
+        if (num_files == 0)
+        {
+          cerr << "Invalid number of open files!" << endl;
+          print_usage();
+        }
+
         break;
 
       case 'h':
@@ -197,10 +263,12 @@ void get_options(int argc, char **argv)
 
 void print_usage()
 {
-  cout << "Aufruf: dlsd [OPTIONEN]" << endl;
-  cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
-  cout << "        -k                 Nicht von der Konsole trennen" << endl;
-  cout << "        -h                 Diese Hilfe anzeigen" << endl;
+  cout << "Usage: dlsd [OPTIONS]" << endl;
+  cout << "        -d <dir>       Set DLS data directory." << endl;
+  cout << "        -u <user>      Switch to <user>." << endl;
+  cout << "        -n <number>    Set maximal number of open files." << endl;
+  cout << "        -k             Do not detach from console." << endl;
+  cout << "        -h             Show this help." << endl;
   exit(0);
 }
 

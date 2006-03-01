@@ -19,7 +19,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_job_preset.cpp,v 1.7 2005/02/24 11:49:43 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_job_preset.cpp,v 1.8 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -62,7 +62,7 @@ void CTLJobPreset::write(const string &dls_dir)
   {
     if (errno != EEXIST)
     {
-      err << "could not create \"" << dir_name.str() << "\" (errno " << errno << ")!";
+      err << "Could not create \"" << dir_name.str() << "\" (errno " << errno << ")!";
       throw ECOMJobPreset(err.str());     
     }
   }
@@ -75,7 +75,7 @@ void CTLJobPreset::write(const string &dls_dir)
 
   if (!file.is_open())
   {
-    err << "could not write file \"" << file_name << "\""; 
+    err << "Could not write file \"" << file_name << "\""; 
     throw ECOMJobPreset(err.str());
   }
 
@@ -140,13 +140,13 @@ void CTLJobPreset::write(const string &dls_dir)
   catch (ECOMChannelPreset &e)
   {
     file.close();
-    err << "could not write: " << e.msg;
+    err << "Could not write: " << e.msg;
     throw ECOMJobPreset(err.str());
   }
   catch (...)
   {
     file.close();
-    throw ECOMJobPreset("could not write!");
+    throw ECOMJobPreset("Could not write!");
   }
 
   file.close();
@@ -302,7 +302,7 @@ void CTLJobPreset::add_channel(const COMChannelPreset *channel)
 
   if (channel_exists(channel->name))
   {
-    err << "channel \"" << channel->name << "\" already exists!";
+    err << "Channel \"" << channel->name << "\" already exists!";
     throw ECOMJobPreset(err.str());
   }
 
@@ -339,7 +339,7 @@ void CTLJobPreset::change_channel(const COMChannelPreset *new_channel)
     channel_i++;
   }
 
-  err << "preset for channel \"" << new_channel->name << "\" doesn't exist!";
+  err << "Preset for channel \"" << new_channel->name << "\" doesn't exist!";
   throw ECOMJobPreset(err.str());
 }
 
@@ -371,7 +371,7 @@ void CTLJobPreset::remove_channel(const string &channel_name)
     channel_i++;
   }
 
-  err << "preset for channel \"" << channel_name << "\" doesn't exist!";
+  err << "Preset for channel \"" << channel_name << "\" doesn't exist!";
   throw ECOMJobPreset(err.str());
 }
 

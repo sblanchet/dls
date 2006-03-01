@@ -24,6 +24,7 @@
 #define BUFFER_LEVEL_WARNING   90       // in Prozent Füllstand
 #define QUOTA_PART_QUOTIENT    10       // Anzahl Chunks in Quota-Bereich
 #define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt werden soll
+#define WRITE_TIME_WARNING     1.0      // Sekunden
 
 #define MSR_VERSION(V, P, S) (((V) << 16) + ((P) << 8) + (S))
 #define MSR_V(CODE) (((CODE) >> 16) & 0xFF)

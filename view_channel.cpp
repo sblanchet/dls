@@ -23,7 +23,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_channel.cpp,v 1.10 2005/02/23 13:22:47 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_channel.cpp,v 1.12 2005/03/11 10:44:26 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -82,7 +82,7 @@ void ViewChannel::import(const string &dls_dir,
 
   if (!file.is_open())
   {
-    err << "could not open channel file \"" << channel_file_name << "\"!";
+    err << "Could not open channel file \"" << channel_file_name << "\"!";
     throw EViewChannel(err.str());
   }
 
@@ -93,32 +93,32 @@ void ViewChannel::import(const string &dls_dir,
     
     _name = xml.tag()->att("name")->to_str();
     _unit = xml.tag()->att("unit")->to_str();
-    _type = dls_str_to_channel_type(xml.tag()->att("type")->to_str());
+
+    if ((_type = dls_str_to_channel_type(xml.tag()->att("type")->to_str())) == TUNKNOWN)
+    {
+      file.close();
+      err << "Unknown channel type \"" << xml.tag()->att("type")->to_str() << "\"!";
+      throw EViewChannel(err.str());
+    }
 
     xml.parse(&file, "dlschannel", dxttEnd);
   }
   catch (ECOMXMLParser &e)
   {
     file.close();
-    err << "channel " << _index << " parsing error: " << e.msg;
+    err << "Channel " << _index << " parsing error: " << e.msg;
     throw EViewChannel(err.str());
   }
   catch (ECOMXMLParserEOF &e)
   {
     file.close();
-    err << "channel " << _index << " parsing error: " << e.msg;
+    err << "Channel " << _index << " parsing error: " << e.msg;
     throw EViewChannel(err.str());
   }
   catch (ECOMXMLTag &e)
   {
     file.close();
-    err << "channel " << _index << " parsing (tag) error: " << e.msg;
-    throw EViewChannel(err.str());
-  }
-  catch (COMException &e)
-  {
-    file.close();
-    err << e.msg;
+    err << "Channel " << _index << " parsing (tag) error: " << e.msg;
     throw EViewChannel(err.str());
   }
 
@@ -198,14 +198,14 @@ void ViewChannel::fetch_chunks(const string &dls_dir, unsigned int job_id)
 
         default:
           closedir(dir);
-          cout << "ERROR: unknown channel type " << _type << "!" << endl;
+          cout << "ERROR: Unknown channel type " << _type << "!" << endl;
           return;
       }
     }
     catch (...)
     {
       closedir(dir);
-      cout << "ERROR: could no allocate memory for chunk object!" << endl;
+      cout << "ERROR: Could no allocate memory for chunk object!" << endl;
       return;
     }
 

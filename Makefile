@@ -19,8 +19,7 @@ CTL_OBJECTS = \
 	com_globals.o com_time.o \
 	com_xml_tag.o  com_xml_parser.o \
 	com_channel_preset.o com_job_preset.o \
-	com_dialog_msg.o \
-	ctl_job_preset.o \
+	ctl_dialog_msg.o ctl_job_preset.o \
 	ctl_dialog_job_edit.o ctl_dialog_job.o \
 	ctl_dialog_channels.o ctl_dialog_channel.o \
 	ctl_dialog_main.o \
@@ -32,7 +31,6 @@ VIEW_OBJECTS = \
 	com_zlib.o com_base64.o \
 	com_xml_tag.o com_xml_parser.o \
 	com_channel_preset.o com_job_preset.o \
-	com_dialog_msg.o \
 	mdct.o \
 	view_data.o view_chunk.o view_channel.o \
 	view_view_data.o view_view_msg.o \
@@ -46,20 +44,24 @@ INSTALL = ../bin
 
 # LIBRARIES
 
+# FLTK-Configure:
+# ./configure --enable-threads --enable-xft --prefix=/vol/projekte/dls_data_logging_server/soft/fltk-1.1-install
+
 FLTK_INC = `fltk-config --cxxflags`
 FLTK_LIB = `fltk-config --ldflags`
 
 Z_INC = -I /usr/local/include
 Z_LIB = -L /usr/local/lib -lz
 
-# COM
+FFTW_DIR = /vol/projekte/dls_data_logging_server/soft/fftw-install
 
-COM_INC = $(FLTK_INC)
+FFTW_INC = -I $(FFTW_DIR)/include
+FFTW_LIB = -L $(FFTW_DIR)/lib -lfftw3 -lm
 
 # DLSD
 
 DLSD_INC = $(Z_INC)
-DLSD_LIB = $(Z_LIB)
+DLSD_LIB = $(Z_LIB) $(FFTW_LIB)
 DLSD_EXE = dlsd
 
 # CTL
@@ -71,7 +73,7 @@ CTL_EXE = dls_ctl
 # VIEW
 
 VIEW_INC = $(FLTK_INC)
-VIEW_LIB = $(FLTK_LIB) $(Z_LIB)
+VIEW_LIB = $(FLTK_LIB) $(Z_LIB) $(FFTW_LIB)
 VIEW_EXE = dls_view
 
 # FLAGS
@@ -134,7 +136,7 @@ doc:
 # Compiler-Anweisungen ------------------------------------------
 
 com_%.o: com_%.cpp
-	g++ -c $(COMPILER_FLAGS) $(COM_INC) $< -o $@
+	g++ -c $(COMPILER_FLAGS) $< -o $@
 
 dls_%.o: dls_%.cpp
 	g++ -c $(COMPILER_FLAGS) $< -o $@
@@ -149,12 +151,12 @@ fl_%.o: fl_%.cpp
 	g++ -c $(COMPILER_FLAGS) $(FLTK_INC) $< -o $@
 
 mdct.o: mdct.c
-	g++ -c $(COMPILER_FLAGS) $< -o $@
+	g++ -c $(COMPILER_FLAGS) $(FFTW_INC) $< -o $@
 
 # Abhängigkeiten ------------------------------------------------
 
 depend:
-	(for file in *.cpp *.c; do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $$file; done) > .depend
+	(for file in *.cpp mdct.c; do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $(FFTW_INC) $$file; done) > .depend
 
 include .depend
 

@@ -18,12 +18,12 @@ using namespace std;
 #include "ctl_globals.hpp"
 #include "ctl_job_preset.hpp"
 #include "ctl_dialog_channel.hpp"
-#include "ctl_msg_wnd.hpp"
+#include "ctl_dialog_msg.hpp"
 #include "mdct.h"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channel.cpp,v 1.15 2005/02/02 10:36:55 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channel.cpp,v 1.20 2005/03/08 08:55:45 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -410,16 +410,30 @@ bool CTLDialogChannel::_save_channels()
 
     if (_choice_format_selected && _choice_format->value() == DLS_FORMAT_MDCT)
     {
-      if (!write_block)
+      // MDCT nur für Fließkommatypen
+      channel_i = _channels->begin();
+      while (channel_i != _channels->end())
       {
-        msg_win->str() << "no blocksize chosen!";
-        msg_win->error();
-        return false;
+        if ((*channel_i)->type == TUNKNOWN)
+        {
+          msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
+          msg_win->error();
+          return false;
+        }
+
+        if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
+        {
+          msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
+          msg_win->error();
+          return false;
+        }
+            
+        channel_i++;
       }
 
       if (!_choice_mdct_selected)
       {
-        msg_win->str() << "no mdct blocksize selected!";
+        msg_win->str() << "Sie haben keine MDCT-Blockgröße angeben!";
         msg_win->error();
         return false;
       }
@@ -427,11 +441,33 @@ bool CTLDialogChannel::_save_channels()
       mdct_block_size = 1 << (_choice_mdct->value() + MDCT_MIN_EXP2);
 
       // Blockgröße kein Vielfaches von MDCT-Dimension?
-      if (block % mdct_block_size)
+      if (write_block)
       {
-        msg_win->str() << "MDCT block size must fit into data block size!";
-        msg_win->error();
-        return false;
+        if (block % mdct_block_size)
+        {
+          msg_win->str() << "Die Blockgröße muss ein Vielfaches der MDCT-Blockgröße sein!";
+          msg_win->error();
+          return false;
+        }
+      }
+      else
+      {
+        // Keine Blockgröße angegeben. Alle Kanäle mit ihren bisherigen
+        // Blockgrößen überprüfen
+         channel_i = _channels->begin();
+         while (channel_i != _channels->end())
+         {
+           if ((*channel_i)->block_size % mdct_block_size)
+           {
+             msg_win->str() << "Die bisherigen Blockgröße des Kanals \"";
+             msg_win->str() << (*channel_i)->name;
+             msg_win->str() << "\" ist kein Vielfaches der MDCT-Blockgröße!";
+             msg_win->error();
+             return false;
+           }
+           
+           channel_i++;
+         }
       }
 
       str.str("");
@@ -440,7 +476,7 @@ bool CTLDialogChannel::_save_channels()
 
       if (str.str() == "")
       {
-        msg_win->str() << "No MDCT accuracy selected!";
+        msg_win->str() << "Sie habe keine MDCT-Genauigkeit angegeben!";
         msg_win->error();
         return false;
       }
@@ -450,7 +486,7 @@ bool CTLDialogChannel::_save_channels()
   }
   catch (...)
   {
-    msg_win->str() << "Illegal value!";
+    msg_win->str() << "Ungültige Eingabe!";
     msg_win->error();
     return false;
   }
@@ -544,7 +580,7 @@ bool CTLDialogChannel::_save_channels()
       catch (ECOMChannelPreset &e)
       {
         msg_win->str() << "FATAL: " << e.msg << "!";
-        msg_win->str() << " Please restart application to avoid data loss!";
+        msg_win->str() << " Bitte starten Sie die Anwendung neu!";
         msg_win->error();
       }
     
@@ -557,7 +593,7 @@ bool CTLDialogChannel::_save_channels()
     }
     catch (ECOMJobPreset &e)
     {
-      msg_win->str() << "Could not notify dlsd: " << e.msg;
+      msg_win->str() << "Konnte dlsd nicht benachrichtigen: " << e.msg;
       msg_win->warning();
     }
   

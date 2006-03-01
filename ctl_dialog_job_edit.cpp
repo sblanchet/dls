@@ -14,11 +14,11 @@ using namespace std;
 
 #include "ctl_globals.hpp"
 #include "ctl_dialog_job_edit.hpp"
-#include "ctl_msg_wnd.hpp"
+#include "ctl_dialog_msg.hpp"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job_edit.cpp,v 1.14 2005/02/02 10:36:41 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job_edit.cpp,v 1.17 2005/03/08 08:55:33 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -39,7 +39,7 @@ CTLDialogJobEdit::CTLDialogJobEdit(const string &dls_dir)
   _dls_dir = dls_dir;
   _updated = false;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Auftrag anlegen");
+  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Auftrag ändern");
   _wnd->callback(_callback, this);
   _wnd->set_modal();
 
@@ -59,11 +59,24 @@ CTLDialogJobEdit::CTLDialogJobEdit(const string &dls_dir)
   _input_trigger = new Fl_Input(10, 130, 200, 25, "Trigger");
   _input_trigger->align(FL_ALIGN_TOP_LEFT);
 
-  _input_quota_time = new Fl_Input(10, 180, 200, 25, "Zeit-Quota");
+  _input_quota_time = new Fl_Input(10, 180, 90, 25, "Zeit-Quota");
   _input_quota_time->align(FL_ALIGN_TOP_LEFT);
 
-  _input_quota_size = new Fl_Input(10, 230, 200, 25, "Daten-Quota");
+  _choice_time_ext = new Fl_Choice(110, 180, 100, 25);
+  _choice_time_ext->add("Sekunden");
+  _choice_time_ext->add("Minuten");
+  _choice_time_ext->add("Stunden");
+  _choice_time_ext->add("Tage");
+  _choice_time_ext->value(2);
+
+  _input_quota_size = new Fl_Input(10, 230, 90, 25, "Daten-Quota");
   _input_quota_size->align(FL_ALIGN_TOP_LEFT);
+
+  _choice_size_ext = new Fl_Choice(110, 230, 100, 25);
+  _choice_size_ext->add("Byte");
+  _choice_size_ext->add("Megabyte");
+  _choice_size_ext->add("Gigabyte");
+  _choice_size_ext->value(1);
 
   _wnd->end();
 }
@@ -89,8 +102,6 @@ CTLDialogJobEdit::~CTLDialogJobEdit()
 
 void CTLDialogJobEdit::show(CTLJobPreset *job)
 {
-  string quota_str;
-
   _job = job;
   _updated = false;
 
@@ -101,12 +112,8 @@ void CTLDialogJobEdit::show(CTLJobPreset *job)
     _input_desc->value(_job->description().c_str());
     _input_source->value(_job->source().c_str());
     _input_trigger->value(_job->trigger().c_str());
-
-    _convert_time_quota_to_str(_job->quota_time(), &quota_str);
-    _input_quota_time->value(quota_str.c_str());
-
-    _convert_size_quota_to_str(_job->quota_size(), &quota_str);
-    _input_quota_size->value(quota_str.c_str());
+    _display_time_quota();
+    _display_size_quota();
   }
 
   // Wenn der Auftrag schon existiert, soll kein Editieren
@@ -198,8 +205,8 @@ bool CTLDialogJobEdit::_save_job()
   string quota_str;
   long long quota_time, quota_size;
   
-  if (!_convert_str_to_time_quota(_input_quota_time->value(), &quota_time)) return false;
-  if (!_convert_str_to_size_quota(_input_quota_size->value(), &quota_size)) return false;
+  if (!_calc_time_quota(&quota_time)) return false;
+  if (!_calc_size_quota(&quota_size)) return false;
 
   if (_job->description() != _input_desc->value()
       || _job->source() != _input_source->value()
@@ -264,13 +271,13 @@ bool CTLDialogJobEdit::_create_job()
   CTLJobPreset job;
   long long quota_time, quota_size;
 
-  if (!_convert_str_to_time_quota(_input_quota_time->value(), &quota_time)) return false;
-  if (!_convert_str_to_size_quota(_input_quota_size->value(), &quota_size)) return false;
+  if (!_calc_time_quota(&quota_time)) return false;
+  if (!_calc_size_quota(&quota_size)) return false;
 
   // Neue Job-ID aus der ID-Sequence-Datei lesen
   if (!_get_new_id(&new_id))
   {
-    msg_win->str() << "Could not fetch new id!";
+    msg_win->str() << "Es konnte keine neue Auftrags-ID ermittelt werden!";
     msg_win->error();
     return false;
   }
@@ -308,7 +315,7 @@ bool CTLDialogJobEdit::_create_job()
   catch (ECOMJobPreset &e)
   {
     // Fehler! Aber nur eine Warnung ausgeben.
-    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
     msg_win->warning();
   }
   
@@ -369,7 +376,6 @@ bool CTLDialogJobEdit::_get_new_id(int *id)
     id_out_file.close();
     return false;
   }
-  
 
   id_out_file.close();
 
@@ -379,103 +385,98 @@ bool CTLDialogJobEdit::_get_new_id(int *id)
 //---------------------------------------------------------------
 
 /**
-   Konvertiert die aktuelle Zeit-Quota zu einem lesbaren String
-
-   Bei keiner Zeit-Quota wird ein leerer String
-   zurückgeliefert (der auch korrekt zurückkonvertiert wird).
-   Andernfalls werden die Einheiten Sekunde (s), Minute (m),
-   Stunde (h) oder Tag (d) angehängt.
-
-   \param time_quota Zu konvertierende Zeit-Quota
-   \param quota_str Zeiger auf den String, in dem das
-                    konvertierte Ergebnis hinterlegt werden soll
+   Zeigt die aktuelle Zeit-Quota an
 */
 
-void CTLDialogJobEdit::_convert_time_quota_to_str(long long time_quota,
-                                                  string *quota_str)
+void CTLDialogJobEdit::_display_time_quota()
 {
+  long long time_quota = _job->quota_time();
   stringstream str;
 
   if (time_quota > 0)
   {
     if (time_quota % 86400 == 0)
     {
-      str << time_quota / 86400 << "d";
+      time_quota /= 86400;
+      _choice_time_ext->value(3);
     }
     else if (time_quota % 3600 == 0)
     {
-      str << time_quota / 3600 << "h";
+      time_quota /= 3600;
+      _choice_time_ext->value(2);
     }
     else if (time_quota % 60 == 0)
     {
-      str << time_quota / 60 << "m";
+      time_quota /= 60;
+      _choice_time_ext->value(1);
     }
     else
     {
-      str << time_quota << "s";
+      _choice_time_ext->value(0);
     }
+
+    str << time_quota;
+  }
+  else
+  {
+    _choice_time_ext->value(2);
   }
 
-  *quota_str = str.str();
+  _input_quota_time->value(str.str().c_str());
 }
 
 //---------------------------------------------------------------
 
 /**
-   Konvertiert die aktuelle Daten-Quota zu einem lesbaren String
-
-   Bei keiner Daten-Quota wird ein leerer String
-   zurückgeliefert (der auch korrekt zurückkonvertiert wird).
-   Andernfalls werden die Einheiten Kilobyte (K), Megabyte (M),
-   oder Gigabyte (G) angehängt.
-
-   \param size_quota Zu konvertierende Daten-Quota
-   \param quota_str Zeiger auf den String, in dem das
-                    konvertierte Ergebnis hinterlegt werden soll
+   Zeigt die aktuelle Daten-Quota an
 */
 
-void CTLDialogJobEdit::_convert_size_quota_to_str(long long size_quota,
-                                                  string *quota_str)
+void CTLDialogJobEdit::_display_size_quota()
 {
+  long long size_quota = _job->quota_size();
   stringstream str;
 
   if (size_quota > 0)
   {
     if (size_quota % 1073741824 == 0) // GB
     {
-      str << size_quota / 1073741824 << "G";
+      size_quota /= 1073741824;
+      _choice_size_ext->value(2);
     }
     else if (size_quota % 1048576 == 0) // MB
     {
-      str << size_quota / 1048576 << "M";
+      size_quota /= 1048576;
+      _choice_size_ext->value(1);
     }
     else
     {
-      str << size_quota;
+      _choice_size_ext->value(0);
     }
+
+    str << size_quota;
+  }
+  else
+  {
+    _choice_size_ext->value(1);
   }
 
-  *quota_str = str.str();
+  _input_quota_size->value(str.str().c_str());
 }
 
 //---------------------------------------------------------------
 
 /**
-   Konvertiert den eingegebenen String in eine Zeit-Quota
+   Berechnet die Zeit-Quota
 
-   \param quota_str  Zeiger auf den String, in dem das
-                     konvertierte Ergebnis hinterlegt werden soll
-   \param time_quota Zu konvertierende Daten-Quota
+   \param time_quota Zeiger auf Variable für berechnete Quota
+   \return true, wenn Quota berechnet werden konnte
 */
 
-bool CTLDialogJobEdit::_convert_str_to_time_quota(const string &quota_str,
-                                                  long long *time_quota)
+bool CTLDialogJobEdit::_calc_time_quota(long long *time_quota)
 {
   stringstream str;
-  long long number;
-  string extension;
-
-  number = 0;
+  string quota_str = _input_quota_time->value();
+  int ext = _choice_time_ext->value();
 
   str.exceptions(ios::badbit | ios::failbit);
 
@@ -485,62 +486,50 @@ bool CTLDialogJobEdit::_convert_str_to_time_quota(const string &quota_str,
 
     try
     {
-      str >> number;
+      str >> *time_quota;
     }
     catch (...)
     {
-      msg_win->str() << "Time quota must be numeric!";
+      msg_win->str() << "Die Zeit-Quota muss eine Ganzzahl sein!";
       msg_win->error();
       return false;
     }
 
-    str >> extension;
-
-    if (extension != "s" && extension != "")
+    if (ext == 1)
     {
-      if (extension == "m")
-      {
-        number *= 60;
-      }
-      else if (extension == "h")
-      {
-        number *= 3600;
-      }
-      else if (extension == "d")
-      {
-        number *= 86400;
-      }
-      else
-      {
-        msg_win->str() << "Unknown time extension! Valid are s, m, h and d.";
-        msg_win->error();
-        return false;
-      }
+      *time_quota *= 60;
+    }
+    else if (ext == 2)
+    {
+      *time_quota *= 3600;
+    }
+    else if (ext == 3)
+    {
+       *time_quota *= 86400;
     }
   }
+  else
+  {
+    *time_quota = 0;
+  }
 
-  *time_quota = number;
   return true;
 }
 
 //---------------------------------------------------------------
 
 /**
-   Konvertiert den eingegebenen String in eine Zeit-Quota
+   Berechnet die angegebene Daten-Quota
 
-   \param quota_str  Zeiger auf den String, in dem das
-                     konvertierte Ergebnis hinterlegt werden soll
-   \param size_quota Zu konvertierende Daten-Quota
+   \param size_quota Zeiger auf Variable für berechnete Quota
+   \return true, wenn Quota berechnet wurde
 */
 
-bool CTLDialogJobEdit::_convert_str_to_size_quota(const string &quota_str,
-                                                  long long *size_quota)
+bool CTLDialogJobEdit::_calc_size_quota(long long *size_quota)
 {
   stringstream str;
-  long long number;
-  string extension;
-
-  number = 0;
+  string quota_str = _input_quota_size->value();
+  int ext = _choice_size_ext->value();
 
   str.exceptions(ios::badbit | ios::failbit);
 
@@ -550,37 +539,29 @@ bool CTLDialogJobEdit::_convert_str_to_size_quota(const string &quota_str,
 
     try
     {
-      str >> number;
+      str >> *size_quota;
     }
     catch (...)
     {
-      msg_win->str() << "Size quota must be numeric!";
+      msg_win->str() << "Die Daten-Quota muss eine Ganzzahl sein!";
       msg_win->error();
       return false;
     }
 
-    str >> extension;
-
-    if (extension != "")
+    if (ext == 1)
     {
-      if (extension == "M")
-      {
-        number *= 1048576;
-      }
-      else if (extension == "G")
-      {
-        number *= 1073741824;
-      }
-      else
-      {
-        msg_win->str() << "Unknown size extension! Valid M and G.";
-        msg_win->error();
-        return false;
-      }
+      *size_quota *= 1048576;
+    }
+    else if (ext == 2)
+    {
+      *size_quota *= 1073741824;
     }
   }
+  else
+  {
+    *size_quota = 0;
+  }
 
-  *size_quota = number;
   return true;
 }
 

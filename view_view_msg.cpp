@@ -4,6 +4,9 @@
 //
 //---------------------------------------------------------------
 
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -38,7 +41,7 @@ const Fl_Color msg_colors[MSG_COUNT] =
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_msg.cpp,v 1.9 2005/02/23 13:22:28 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_msg.cpp,v 1.10 2005/03/09 10:23:30 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -117,9 +120,15 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
   COMRingBufferT<char, unsigned int> ring(10000);
   COMXMLParser xml;
   ViewMSRMessage msg;
-  stringstream str;
+  stringstream msg_dir, str, msg_chunk_dir;
   char *write_ptr;
   unsigned int i, write_len;
+  DIR *dir;
+  struct dirent *dir_ent;
+  string entry_name;
+  long long msg_chunk_time;
+  list<long long> chunk_times;
+  list<long long>::iterator chunk_time_i;
   
   clear();
 
@@ -127,98 +136,169 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
   _range_end = end;
 
 #ifdef DEBUG
-  cout << "loading messages from " << start << " to " << end << endl;
+  cout << "Loading messages from " << start << " to " << end << endl;
 #endif
 
-  str << _dls_dir << "/job" << _job_id << "/messages";
+  msg_dir << _dls_dir << "/job" << _job_id << "/messages";
 
-  try
+  // Das Message-Verzeichnis öffnen
+  if ((dir = opendir(msg_dir.str().c_str())) == NULL)
   {
-    index.open_read((str.str() + ".idx").c_str());
-    file.open_read((str.str() + ".xml").c_str());
+    cerr << "FEHLER: Konnte Message-Verzeichnis \"" << msg_dir.str() << "\" nicht öffnen!";
+    return;
+  }
 
-    for (i = 0; i < index.record_count(); i++)
+  // Alle Message-Chunks durchlaufen
+  while ((dir_ent = readdir(dir)) != NULL)
+  {
+    entry_name = dir_ent->d_name;
+
+    // Wenn das Verzeichnis nicht mit "chunk" beginnt, das Nächste verarbeiten
+    if (entry_name.substr(0, 5) != "chunk") continue;
+
+    str.str("");
+    str.clear();
+    str << entry_name.substr(5); // Alles nach "chunk" in den Stringstream einfügen
+
+    try
     {
-      index_record = index[i];
+      // Den Zeitstempel auslesen
+      str >> msg_chunk_time;
+    }
+    catch (...)
+    {
+      // Der Rest des Verzeichnisnamens ist kein Zeitstempel
+      continue;
+    }
 
-      if (COMTime(index_record.time) < _range_start) continue;
-      if (COMTime(index_record.time) > _range_end) break;
+    // Die Chunk-Zeit in die Liste einfügen
+    chunk_times.push_back(msg_chunk_time);
+  }
 
-      file.seek(index_record.position);
-      ring.clear();
+  // Message-Verzeichnis wieder schliessen
+  closedir(dir);
 
-      // Solange lesen, bis ein Tag komplett ist
-      while (1)
+  // Chunk-Zeiten sortieren
+  chunk_times.sort();
+
+  // Alle Chunks aus der Liste nehmen, die hinter dem Ende liegen
+  while (!chunk_times.empty() && COMTime(chunk_times.back()) > _range_end)
+  {
+#ifdef DEBUG
+    cout << "Deleting chunk from back" << endl;
+#endif
+    chunk_times.pop_back();
+  }
+
+  // Alle Chunks entfernen, dessen Nachfolger noch vor dem Start sind
+  while (chunk_times.size() > 1)
+  {
+    if (COMTime(*(chunk_times.begin()++)) > _range_start) break;
+#ifdef DEBUG
+    cout << "Deleting chunk from front" << endl;
+#endif
+    chunk_times.pop_front();
+  }
+
+  // Alle übriggebliebenen Message-Chunks durchlaufen
+  for (chunk_time_i = chunk_times.begin(); chunk_time_i != chunk_times.end(); chunk_time_i++)
+  {
+    msg_chunk_dir.str("");
+    msg_chunk_dir.clear();
+    msg_chunk_dir << msg_dir.str() << "/chunk" << *chunk_time_i;
+
+#ifdef DEBUG
+    cout << msg_chunk_dir.str() << endl;
+#endif
+
+    try
+    {
+      file.open_read((msg_chunk_dir.str() + "/messages").c_str());
+      index.open_read((msg_chunk_dir.str() + "/messages.idx").c_str());
+      
+      for (i = 0; i < index.record_count(); i++)
       {
-        ring.write_info(&write_ptr, &write_len);
+        index_record = index[i];
         
-        if (!write_len)
-        {
-          cout << "ERROR: ring buffer full!" << endl;
-          return;
-        }
+        if (COMTime(index_record.time) < _range_start) continue;
+        if (COMTime(index_record.time) > _range_end) break;
 
-        if (write_len > 300) write_len = 300;
+        file.seek(index_record.position);
+        ring.clear();
+
+        // Solange lesen, bis ein Tag komplett ist
+        while (1)
+        {
+          ring.write_info(&write_ptr, &write_len);
         
-        file.read(write_ptr, write_len, &write_len);
+          if (!write_len)
+          {
+            cout << "FEHLER: Ringpuffer zum Lesen der Messages voll!" << endl;
+            return;
+          }
 
-        if (!write_len)
-        {
-          cout << "ERROR: EOF in message file!" << endl;
-          return;
-        }
+          if (write_len > 300) write_len = 300;
+        
+          file.read(write_ptr, write_len, &write_len);
+          
+          if (!write_len)
+          {
+            cout << "FEHLER: Message-Datei zuende!" << endl;
+            return;
+          }
 
-        ring.written(write_len);
+          ring.written(write_len);
+
+          try
+          {
+            xml.parse(&ring);
+          }
+          catch (ECOMXMLParserEOF &e)
+          {
+            // Noch nicht genug Daten. Mehr einlesen!
+            continue;
+          }
+
+          break;
+        } 
+
+        msg.time = index_record.time;
 
         try
         {
-          xml.parse(&ring);
+          msg.text = xml.tag()->att("text")->to_str();
         }
-        catch (ECOMXMLParserEOF &e)
+        catch (ECOMXMLTag &e)
         {
-          // Noch nicht genug Daten. Mehr einlesen!
-          continue;
+          cout << "WARUNG: Kein Text-Attribut im Message-Tag: " << e.msg << " Tag: " << e.tag << endl;
+          msg.text = "??? Kein Text";
         }
 
-        break;
-      } 
-
-      msg.time = index_record.time;
-
-      try
-      {
-        msg.text = xml.tag()->att("text")->to_str();
-      }
-      catch (ECOMXMLTag &e)
-      {
-        cout << "WARNING: no text attribute in message tag: " << e.msg << " tag: " << e.tag << endl;
-        msg.text = "??? (no text in tag!)";
-      }
-
-      if (xml.tag()->title() == "info")            msg.type = MSG_INFO;
-      else if (xml.tag()->title() == "warning")    msg.type = MSG_WARNING;
-      else if (xml.tag()->title() == "error")      msg.type = MSG_ERROR;
-      else if (xml.tag()->title() == "crit_error") msg.type = MSG_CRITICAL;
-      else if (xml.tag()->title() == "broadcast")  msg.type = MSG_BROADCAST;
-      else msg.type = MSG_UNKNOWN;
+        if (xml.tag()->title() == "info")            msg.type = MSG_INFO;
+        else if (xml.tag()->title() == "warning")    msg.type = MSG_WARNING;
+        else if (xml.tag()->title() == "error")      msg.type = MSG_ERROR;
+        else if (xml.tag()->title() == "crit_error") msg.type = MSG_CRITICAL;
+        else if (xml.tag()->title() == "broadcast")  msg.type = MSG_BROADCAST;
+        else msg.type = MSG_UNKNOWN;
       
-      _messages.push_back(msg);
+        _messages.push_back(msg);
+      }
     }
-  }
-  catch (ECOMIndexT &e)
-  {
-    cout << "ERROR in message index: " << e.msg << endl;
-    return;
-  }
-  catch (ECOMFile &e)
-  {
-    cout << "ERROR in message file: " << e.msg << endl;
-    return;
-  }
-  catch (ECOMXMLParser &e)
-  {
-    cout << "ERROR while parsing of message file: " << e.msg << endl;
-    return;
+    catch (ECOMIndexT &e)
+    {
+      cout << "FEHLER im Message-Index: " << e.msg << endl;
+      return;
+    }
+    catch (ECOMFile &e)
+    {
+      cout << "FEHLER in der Message-Datei: " << e.msg << endl;
+      return;
+    }
+    catch (ECOMXMLParser &e)
+    {
+      cout << "FEHLER beim Parsen: " << e.msg << endl;
+      return;
+    }
   }
 
 #ifdef DEBUG
@@ -283,14 +363,6 @@ void ViewViewMsg::draw()
     msg_i = _messages.begin();
     while (msg_i != _messages.end())
     {
-#ifdef DEBUG
-      fl_color(FL_GRAY);
-      fl_line(x() + FRAME_WIDTH,
-              y() + FRAME_WIDTH + i * LINE_HEIGHT,
-              x() + h() - 2 * FRAME_WIDTH,
-              y() + FRAME_WIDTH + i * LINE_HEIGHT);
-#endif
-
       if (msg_i->level == i)
       {
         xp = (int) ((msg_i->time - _range_start).to_dbl() * scale_x);

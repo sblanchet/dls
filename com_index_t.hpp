@@ -128,7 +128,7 @@ void COMIndexT<REC>::open_read(const string &file_name)
 
   if (size % sizeof(REC) != 0)
   {
-    err << "illegal size of index file \"" << file_name << "\"";
+    err << "Illegal size of index file \"" << file_name << "\"";
 
     try
     {
@@ -176,7 +176,7 @@ void COMIndexT<REC>::open_read_write(const string &file_name)
   
   if (size % sizeof(REC) != 0)
   {
-    err << "illegal size of index file \"" << file_name << "\"";
+    err << "Illegal size of index file \"" << file_name << "\"";
 
     try
     {
@@ -224,7 +224,7 @@ void COMIndexT<REC>::open_read_append(const string &file_name)
   
   if (size % sizeof(REC) != 0)
   {
-    err << "illegal size of index file \"" << file_name << "\"";
+    err << "Illegal size of index file \"" << file_name << "\"";
 
     try
     {
@@ -312,12 +312,12 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 
   if (!_file.open())
   {
-    throw ECOMIndexT("index not open!");
+    throw ECOMIndexT("Index not open!");
   }
 
   if (index >= _record_count)
   {
-    throw ECOMIndexT("index out of range!");
+    throw ECOMIndexT("Index out of range!");
   }
 
   try
@@ -331,7 +331,7 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 
     if (bytes_read != sizeof(REC))
     {
-      err << "did not read enough bytes!";
+      err << "Did not read enough bytes!";
 
       try
       {
@@ -370,12 +370,12 @@ void COMIndexT<REC>::append_record(const REC *index_record)
 {
   if (!_file.open())
   {
-    throw ECOMIndexT("index not open!");
+    throw ECOMIndexT("Index not open!");
   }
 
   if (_file.open_mode() != fomOpenReadAppend)
   {
-    throw ECOMIndexT("index not opened for appending!");
+    throw ECOMIndexT("Index not opened for appending!");
   }
 
   try
@@ -407,12 +407,12 @@ void COMIndexT<REC>::change_record(unsigned int index,
 {
   if (_file.open_mode() != fomOpenReadWrite)
   {
-    throw ECOMIndexT("index not open for writing!");
+    throw ECOMIndexT("Index not open for writing!");
   }
 
   if (index >= _record_count)
   {
-    throw ECOMIndexT("index out of range!");
+    throw ECOMIndexT("Index out of range!");
   }
 
   try

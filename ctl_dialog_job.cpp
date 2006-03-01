@@ -18,11 +18,11 @@ using namespace std;
 #include "ctl_dialog_channels.hpp"
 #include "ctl_dialog_job_edit.hpp"
 #include "ctl_dialog_job.hpp"
-#include "ctl_msg_wnd.hpp"
+#include "ctl_dialog_msg.hpp"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job.cpp,v 1.16 2005/02/22 15:36:31 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job.cpp,v 1.22 2005/03/09 10:23:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -48,9 +48,6 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _wnd->callback(_callback, this);
   _wnd->set_modal();
 
-  _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schliessen");
-  _button_close->callback(_callback, this);
-
   _output_desc = new Fl_Output(10, 25, 200, 25, "Beschreibung");
   _output_desc->align(FL_ALIGN_TOP_LEFT);
   _output_desc->callback(_callback, this);
@@ -66,27 +63,16 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _button_change = new Fl_Button(WIDTH - 90, 25, 80, 25, "Ändern...");
   _button_change->callback(_callback, this);
 
-  _tile = new Fl_Tile(10, 60, WIDTH - 20, 350);
-
-  _grid_channels = new Fl_Grid(10, 60, WIDTH - 20, 200);
+  _grid_channels = new Fl_Grid(10, 60, WIDTH - 20, HEIGHT - 105);
   _grid_channels->add_column("name", "Kanal", 300);
+  _grid_channels->add_column("type", "Typ");
   _grid_channels->add_column("freq", "Abtastrate");
   _grid_channels->add_column("block", "Blockgröße");
-  _grid_channels->add_column("mask", "Meta-Maske");
-  _grid_channels->add_column("red", "Untersetzung");
   _grid_channels->add_column("format", "Format", 200);
   _grid_channels->callback(_callback, this);
   _grid_channels->take_focus();
   _grid_channels->select_mode(flgMultiSelect);
   
-  _grid_messages = new Fl_Grid(10, 260, WIDTH - 20, 160);
-  _grid_messages->add_column("time", "Zeit");
-  _grid_messages->add_column("text", "Nachricht", 230);
-  _grid_messages->select_mode(flgNoSelect);
-  _grid_messages->callback(_callback, this);
-
-  _tile->end();
-
   _button_add = new Fl_Button(10, HEIGHT - 35, 150, 25, "Kanäle hinzufügen...");
   _button_add->callback(_callback, this);
 
@@ -97,6 +83,9 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
   _button_rem = new Fl_Button(330, HEIGHT - 35, 150, 25, "Kanäle entfernen");
   _button_rem->callback(_callback, this);
   _button_rem->deactivate();
+
+  _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schliessen");
+  _button_close->callback(_callback, this);
 
   _wnd->end();
 
@@ -111,8 +100,6 @@ CTLDialogJob::CTLDialogJob(const string &dls_dir)
 
 CTLDialogJob::~CTLDialogJob()
 {
-  Fl::remove_timeout(_static_timeout, this);
-
   delete _wnd;
 }
 
@@ -137,14 +124,9 @@ void CTLDialogJob::show(CTLJobPreset *job)
 
   _grid_channels->record_count(_job->channels()->size());
 
-  if (_load_messages())
-  {
-    _wnd->show();
+  _wnd->show();
 
-    //Fl::add_timeout(1.0, _static_timeout, this);
-
-    while (_wnd->shown()) Fl::wait();
-  }
+  while (_wnd->shown()) Fl::wait();
 }
 
 //---------------------------------------------------------------
@@ -161,7 +143,6 @@ void CTLDialogJob::_callback(Fl_Widget *sender, void *data)
   CTLDialogJob *dialog = (CTLDialogJob *) data;
 
   if (sender == dialog->_grid_channels) dialog->_grid_channels_callback();
-  if (sender == dialog->_grid_messages) dialog->_grid_messages_callback();
   if (sender == dialog->_button_close) dialog->_button_close_clicked();
   if (sender == dialog->_wnd) dialog->_button_close_clicked();
   if (sender == dialog->_button_add) dialog->_button_add_clicked();
@@ -192,6 +173,10 @@ void CTLDialogJob::_grid_channels_callback()
       {
         _grid_channels->current_content(channel->name);
       }
+      else if (_grid_channels->current_col() == "type")
+      {
+        _grid_channels->current_content(dls_channel_type_to_str(channel->type));
+      }
       else if (_grid_channels->current_col() == "freq")
       {
         str << channel->sample_frequency << " Hz";
@@ -200,16 +185,6 @@ void CTLDialogJob::_grid_channels_callback()
       else if (_grid_channels->current_col() == "block")
       {
         str << channel->block_size;
-        _grid_channels->current_content(str.str());
-      }
-      else if (_grid_channels->current_col() == "mask")
-      {
-        str << channel->meta_mask;
-        _grid_channels->current_content(str.str());
-      }
-      else if (_grid_channels->current_col() == "red")
-      {
-        str << channel->meta_reduction;
         _grid_channels->current_content(str.str());
       }
       else if (_grid_channels->current_col() == "format")
@@ -232,41 +207,6 @@ void CTLDialogJob::_grid_channels_callback()
 
     case flgDoubleClick:
       _edit_channels();
-      break;
-
-    default:
-      break;
-  }
-}
-
-//---------------------------------------------------------------
-
-/**
-   Callback-Methode des Meldungs-Grids
-*/
-
-void CTLDialogJob::_grid_messages_callback()
-{
-  unsigned int i;
-
-  switch (_grid_messages->current_event())
-  {
-    case flgContent:
-      i = _grid_messages->current_record();
-
-      if (_grid_messages->current_col() == "time")
-      {
-        _grid_messages->current_content(_messages[i].time);
-      }
-      else if (_grid_messages->current_col() == "text")
-      {
-        if (_messages[i].type == 1 && !_grid_messages->current_selected())
-        {
-          _grid_messages->current_content_color(FL_RED);
-        }
-
-        _grid_messages->current_content(_messages[i].text);
-      }
       break;
 
     default:
@@ -351,35 +291,6 @@ void CTLDialogJob::_button_edit_clicked()
 //---------------------------------------------------------------
 
 /**
-   Callback des Meldungs-Grids
-
-   \todo Messages für Job anzeigen
-*/
-
-bool CTLDialogJob::_load_messages()
-{
-#if 0
-  for...
-  {
-
-    struct DLSMessage msg;
-
-    msg.time = 
-    msg.type = 
-    msg.text = 
-
-    _messages.push_back(msg);
-  }
-
-  _grid_messages->record_count(count);
-#endif
-
-  return true;
-}
-
-//---------------------------------------------------------------
-
-/**
    Editieren eines oder mehrerer Kanäle
 
    Öffnet für die gewählten Kanäle den Änderungsdialog
@@ -436,7 +347,7 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   {
     if (job_copy.channel_exists(ch_i->name))
     {
-      msg_win->str() << "Channel \"" << ch_i->name << "\" already exists!";
+      msg_win->str() << "Kanal \"" << ch_i->name << "\" ist bereits in der Liste!";
       msg_win->warning();
     }
     else
@@ -447,6 +358,7 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
       new_channel.meta_mask = 7;
       new_channel.meta_reduction = 30;
       new_channel.format_index = DLS_FORMAT_ZLIB;
+      new_channel.type = ch_i->type;
 
       job_copy.add_channel(&new_channel);
     }
@@ -460,7 +372,7 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "Writing preset file: " << e.msg;
+    msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
     msg_win->error();
     return;
   }
@@ -471,7 +383,7 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
     msg_win->warning();
   }
 
@@ -500,7 +412,7 @@ void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
   {
     if (*sel_i >= _job->channels()->size())
     {
-      msg_win->str() << "Channel index out of range!";
+      msg_win->str() << "Ungültiger Kanal-Index!";
       msg_win->error();
       return;
     }
@@ -516,7 +428,7 @@ void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "Writing preset file: " << e.msg;
+    msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
     msg_win->error();
     return;
   }
@@ -527,7 +439,7 @@ void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
   }
   catch (ECOMJobPreset &e)
   {
-    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
     msg_win->warning();
   }
 
@@ -556,60 +468,6 @@ void CTLDialogJob::_grid_selection_changed()
     _button_rem->deactivate();
     _button_edit->deactivate();
   }
-}
-
-//---------------------------------------------------------------
-
-/**
-   Statische Callback-Funktion für den Aktualisierungsintervall
-
-   \param data Zeiger auf den Dialog
-*/
-
-void CTLDialogJob::_static_timeout(void *data)
-{
-  CTLDialogJob *dialog = (CTLDialogJob *) data;
-
-  dialog->_timeout();
-}
-
-//---------------------------------------------------------------
-
-/**
-   Callback-Methode: Die Meldungen sollen aktualisiert werden
-*/
-
-void CTLDialogJob::_timeout()
-{
-  unsigned int i, top = 0;
-  string top_time;
-  bool found;
-
-  if (_messages.size() > 0)
-  {
-    top = _grid_messages->top_index();
-    top_time = _messages[top].time;
-  }
-
-  _load_messages();
-
-  if (top > 0)
-  {
-    i = 0;
-    found = false;
-    while (i < _messages.size() && !found)
-    {
-      if (_messages[i].time == top_time) found = true;
-      else i++;
-    }
-
-    if (found)
-    {
-      _grid_messages->scroll(i);
-    }
-  }
-
-  Fl::add_timeout(1.0, _static_timeout, this);
 }
 
 //---------------------------------------------------------------

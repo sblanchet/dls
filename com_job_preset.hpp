@@ -59,9 +59,6 @@ public:
   const vector<COMChannelPreset> *channels() const;
   bool channel_exists(const string &) const;
 
-  // Prototypen
-  //void description(const string &);
-
 protected:
   unsigned int _id;                   /**< Auftrags-ID */
   string _description;                /**< Beschreibender Name des Auftrages */

@@ -21,7 +21,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_file.cpp,v 1.10 2005/02/01 12:40:40 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_file.cpp,v 1.11 2005/03/11 10:43:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -72,7 +72,7 @@ void COMFile::open_read(const char *filename)
 
   if ((_fd = ::open(filename, O_RDONLY)) == -1)
   {
-    err << "could not open file";
+    err << "Could not open file";
     err << " \"" << filename << "\"";
     err << " for reading: " << strerror(errno);
     throw ECOMFile(err.str());
@@ -110,7 +110,7 @@ void COMFile::open_read_write(const char *filename)
       // Datei neu erstellen
       if ((_fd = ::open(filename, O_RDWR | O_CREAT, 0644)) == -1)
       {
-        err << "could not create file";
+        err << "Could not create file";
         err << " \"" << filename << "\"";
         err << " for writing: " << strerror(errno);
         throw ECOMFile(err.str());
@@ -118,7 +118,7 @@ void COMFile::open_read_write(const char *filename)
     }
     else // Fehler in stat
     {
-      err << "could not stat file \"" << filename << "\": " << strerror(errno);
+      err << "Could not stat file \"" << filename << "\": " << strerror(errno);
       throw ECOMFile(err.str());
     }
   }
@@ -127,7 +127,7 @@ void COMFile::open_read_write(const char *filename)
     // Existierende Datei zum Schreiben öffnen
     if ((_fd = ::open(filename, O_RDWR)) == -1)
     {
-      err << "could not open file";
+      err << "Could not open file";
       err << " \"" << filename << "\"";
       err << " for writing: " << strerror(errno);
       throw ECOMFile(err.str());
@@ -166,7 +166,7 @@ void COMFile::open_read_append(const char *filename)
       // Datei neu erstellen
       if ((_fd = ::open(filename, O_RDWR | O_CREAT | O_APPEND, 0644)) == -1)
       {
-        err << "could not create file";
+        err << "Could not create file";
         err << " \"" << filename << "\"";
         err << " for appending: " << strerror(errno);
         throw ECOMFile(err.str());
@@ -174,7 +174,7 @@ void COMFile::open_read_append(const char *filename)
     }
     else // Fehler in stat
     {
-      err << "could not stat file \"" << filename << "\": " << strerror(errno);
+      err << "Could not stat file \"" << filename << "\": " << strerror(errno);
       throw ECOMFile(err.str());
     }
   }
@@ -183,7 +183,7 @@ void COMFile::open_read_append(const char *filename)
     // Existierende Datei zum Schreiben öffnen und leeren
     if ((_fd = ::open(filename, O_RDWR | O_APPEND)) == -1)
     {
-      err << "could not open file";
+      err << "Could not open file";
       err << " \"" << filename << "\"";
       err << " for appending: " << strerror(errno);
       throw ECOMFile(err.str());
@@ -213,7 +213,7 @@ void COMFile::close()
     if (fsync(_fd) == -1)
     {
       error = true;
-      err << "could not sync pending data (" << strerror(errno) << ").";
+      err << "Could not sync pending data (" << strerror(errno) << ").";
     }
 
     do
@@ -231,7 +231,7 @@ void COMFile::close()
           error = true;
         }
 
-        err << "could not close file (" << strerror(errno) << ").";
+        err << "Could not close file (" << strerror(errno) << ").";
       }
     }
     while (errno == EINTR);
@@ -270,17 +270,17 @@ void COMFile::write(const char *buffer, unsigned int length)
 
   if (_mode == fomClosed)
   {
-    throw ECOMFile("file not open.");
+    throw ECOMFile("File not open.");
   }
 
   if (_mode == fomOpenRead)
   {
-    throw ECOMFile("file opened read only.");
+    throw ECOMFile("File opened read only.");
   }
 
   if (_mode == fomOpenReadAppend)
   {
-    throw ECOMFile("file opened for appending. use append().");
+    throw ECOMFile("File opened for appending. Use append().");
   }
 
   while (written < length) // Solange, wie noch
@@ -351,17 +351,17 @@ void COMFile::append(const char *buffer, unsigned int length)
 
   if (_mode == fomClosed)
   {
-    throw ECOMFile("file not open.");
+    throw ECOMFile("File not open.");
   }
 
   if (_mode == fomOpenRead)
   {
-    throw ECOMFile("file opened read only.");
+    throw ECOMFile("File opened read only.");
   }
 
   if (_mode == fomOpenReadWrite)
   {
-    throw ECOMFile("file opened for writing. use write()!");
+    throw ECOMFile("File opened for writing. Use write()!");
   }
 
   while (written < length) // Solange noch nicht alles geschrieben
@@ -406,7 +406,7 @@ void COMFile::append(const char *buffer, unsigned int length)
   }
 
 #ifdef DEBUG
-  msg() << "appended " << written << " byte(s).";
+  msg() << "Appended " << written << " byte(s).";
   log(DLSDebug);
 #endif
 }
@@ -426,12 +426,12 @@ void COMFile::seek(unsigned int position)
 
   if (_mode == fomClosed)
   {
-    throw ECOMFile("file not open.");
+    throw ECOMFile("File not open.");
   }
 
   if (lseek(_fd, position, SEEK_SET) == (off_t) - 1)
   {
-    err << "position could not be reached! seek: " << strerror(errno);
+    err << "Position could not be reached! Seek: " << strerror(errno);
     throw ECOMFile(err.str());
   }
 }
@@ -457,7 +457,7 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
 
   if (_mode == fomClosed)
   {
-    throw ECOMFile("file not open.");
+    throw ECOMFile("File not open.");
   }
 
   if (length > 0)
@@ -468,7 +468,7 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
       {
         if (errno != EINTR)
         {
-          err << "read error: " << strerror(errno);
+          err << "Read error: " << strerror(errno);
           throw ECOMFile(err.str());
         }
       }
@@ -500,7 +500,7 @@ long long COMFile::calc_size()
 
   if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
   {
-    err << "could not determine file size! seek: " << strerror(errno);
+    err << "Could not determine file size! Seek: " << strerror(errno);
 
     try
     {
@@ -508,7 +508,7 @@ long long COMFile::calc_size()
     }
     catch (ECOMFile &e)
     {
-      err << " - close: " << e.msg;
+      err << " - Close: " << e.msg;
     }
 
     throw ECOMFile(err.str());

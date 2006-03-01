@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_dialog_main.cpp,v 1.7 2005/02/01 10:24:49 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_dialog_main.cpp,v 1.9 2005/03/11 11:17:43 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -70,7 +70,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
 
   _tile_hor->end();
-  _tile_hor->resizable(_view_data);
+  //_tile_hor->resizable(_view_data); // Setzt Datenansicht fest
 
   _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
   _grid_channels->add_column("channel", "Kanal");
@@ -79,7 +79,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _grid_channels->callback(_callback, this);
 
   _tile_ver->end();
-  _tile_ver->resizable(_tile_hor);
+  //_tile_ver->resizable(_tile_hor);
 
   _view_data->range_callback(_data_range_callback, this);
 
@@ -247,7 +247,7 @@ void ViewDialogMain::_data_range_callback(COMTime start, COMTime end, void *data
 /**
    Laden aller Aufträge
 
-   \return true, wenn alle Aufträger geladen werden konnten
+   \return true, wenn alle Aufträge geladen werden konnten
 */
 
 bool ViewDialogMain::_load_jobs()
@@ -257,7 +257,9 @@ bool ViewDialogMain::_load_jobs()
   struct dirent *dir_ent;
   COMJobPreset job;
   string dir_name;
-  int index;
+  unsigned int job_id;
+  list<unsigned int> job_ids;
+  list<unsigned int>::const_iterator job_id_i;
 
   str.exceptions(ios::failbit | ios::badbit);
 
@@ -282,16 +284,28 @@ bool ViewDialogMain::_load_jobs()
 
     try
     {
-      str >> index;
+      str >> job_id;
     }
     catch (...)
     {
       continue;
     }
 
+    job_ids.push_back(job_id);
+  }
+
+  // Verzeichnis schliessen
+  closedir(dir);
+
+  // Nach Job-ID sortieren
+  job_ids.sort();
+
+  // Alle Jobs importieren
+  for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
+  {
     try
     {
-      job.import(_dls_dir, index);
+      job.import(_dls_dir, *job_id_i);
     }
     catch (ECOMJobPreset &e)
     {
@@ -302,8 +316,6 @@ bool ViewDialogMain::_load_jobs()
     _jobs.push_back(job);
     _choice_job->add(job.id_desc().c_str());
   }
-
-  closedir(dir);
 
   return true;  
 }

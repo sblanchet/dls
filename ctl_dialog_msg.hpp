@@ -1,11 +1,11 @@
 //---------------------------------------------------------------
 //
-//  C O M _ D I A L O G _ M S G . H P P
+//  C T L _ D I A L O G _ M S G . H P P
 //
 //---------------------------------------------------------------
 
-#ifndef ComDialogMsgHpp
-#define ComDialogMsgHpp
+#ifndef CTLDialogMsgHpp
+#define CTLDialogMsgHpp
 
 //---------------------------------------------------------------
 
@@ -23,7 +23,7 @@ using namespace std;
 //---------------------------------------------------------------
 
 /**
-   Nachricht mit Text und Typ für COMDialogMsg
+   Nachricht mit Text und Typ für CTLDialogMsg
 */
 
 struct COMMsg
@@ -38,11 +38,11 @@ struct COMMsg
    Allgemeiner Dialog zum Anzeigen von Fehlern und Warnungen
 */
 
-class COMDialogMsg
+class CTLDialogMsg
 {
 public:
-  COMDialogMsg();
-  ~COMDialogMsg();
+  CTLDialogMsg();
+  ~CTLDialogMsg();
 
   stringstream &str();
   void error();
@@ -63,7 +63,7 @@ private:
 
 //---------------------------------------------------------------
 
-inline stringstream &COMDialogMsg::str()
+inline stringstream &CTLDialogMsg::str()
 {
   return _str;
 }

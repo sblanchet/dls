@@ -17,7 +17,7 @@ using namespace std;
 
 #define DLS_MASTER_VERSION  0
 #define DLS_SUB_VERSION     9
-#define DLS_SUB_SUB_VERSION 1
+#define DLS_SUB_SUB_VERSION 2
 
 #define LITERAL(X) #X
 #define STRINGIFY(X) LITERAL(X)
@@ -33,7 +33,7 @@ using namespace std;
 #define MSRD_PORT 2345
 
 #define REC_BUFFER_SIZE         4096 // Bytes
-#define COMPRESSION_BUFFER_SIZE 8192 // Bytes. Nach belieben verdoppelt.
+#define COMPRESSION_BUFFER_SIZE 8192 // Bytes. Wird nach Belieben verdoppelt.
 
 #define DEFAULT_DLS_DIR "/vol/dls_data"
 #define DLS_PID_FILE "dlsd.pid"
@@ -49,6 +49,7 @@ using namespace std;
 
 enum COMChannelType
 {
+  TUNKNOWN,
   TCHAR,
   TUCHAR,
   TINT,
