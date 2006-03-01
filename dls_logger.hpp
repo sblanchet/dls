@@ -1,28 +1,28 @@
-//---------------------------------------------------------------
-//
-//  D L S _ L O G G E R . H P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #ifndef DLSLoggerHpp
 #define DLSLoggerHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include <string>
 using namespace std;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_exception.hpp"
 #include "com_channel_preset.hpp"
 #include "dls_saver_gen_t.hpp"
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 class DLSJob; // Nötig, da gegenseitige Referenzierung
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Allgemeine Exception eines Logger-Objektes
@@ -34,7 +34,7 @@ public:
   EDLSLogger(string pmsg) : COMException(pmsg) {};
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Speichert Daten für einen Kanal entsprechend einer Vorgabe.
@@ -122,7 +122,7 @@ private:
   bool _finished; /**< Keine Daten mehr im Speicher - kein Datenverlust bei "delete"  */
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf die aktuellen Kanalvorgaben
@@ -135,7 +135,7 @@ inline const COMChannelPreset *DLSLogger::channel_preset() const
   return &_channel_preset;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf die Eigenschaften des
@@ -149,7 +149,7 @@ inline const COMRealChannel *DLSLogger::real_channel() const
   return &_real_channel;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Prüft, ob ein aktuelles Chunk-Verzeichnis erstellt wurde
@@ -164,7 +164,7 @@ inline bool DLSLogger::chunk_created() const
   return _chunk_created;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Auslesen des aktuellen Chunk-Verzeichnisses
@@ -177,7 +177,7 @@ inline const string &DLSLogger::chunk_dir() const
   return _chunk_dir;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Teilt dem Logger mit, dass Daten gespeichert wurden
@@ -192,7 +192,7 @@ inline void DLSLogger::bytes_written(unsigned int bytes)
   _data_size += bytes;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Gibt die Größe des Chunks in Bytes zurück
@@ -203,6 +203,6 @@ inline long long DLSLogger::data_size() const
   return _data_size;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #endif

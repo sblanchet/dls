@@ -1,8 +1,8 @@
-//---------------------------------------------------------------
-//
-//  V I E W _ V I E W _ D A T A . C P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #include <math.h>
 #include <dirent.h>
@@ -18,7 +18,7 @@ using namespace std;
 #include <FL/Fl.h>
 #include <FL/fl_draw.h>
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_xml_parser.hpp"
 #include "com_ring_buffer_t.hpp"
@@ -28,11 +28,7 @@ using namespace std;
 #include "view_chunk.hpp"
 #include "view_view_data.hpp"
 
-//---------------------------------------------------------------
-
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_data.cpp,v 1.21 2005/01/25 15:39:25 fp Exp $");
-
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 //#define DEBUG
 
@@ -52,7 +48,7 @@ RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_data.cpp,v 1.21 2005/01/25 15:39
 #define STEP_FACTOR_COUNT 7
 const int step_factors[] = {1, 2, 5, 10, 20, 50, 100};
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Konstruktor
@@ -81,7 +77,7 @@ ViewViewData::ViewViewData(int x, int y, int w, int h, const char *label)
   _calc_range();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Destruktor
@@ -94,7 +90,7 @@ ViewViewData::~ViewViewData()
   delete _track_bar;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Setzt das DLS-Datenverzeichnis und die Auftrags-ID
@@ -115,7 +111,7 @@ void ViewViewData::set_job(const string &dls_dir, unsigned int job_id)
   _job_id = job_id;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Setzt die Callback-Funktion für den Zeitbereich
@@ -134,7 +130,7 @@ void ViewViewData::range_callback(void (*cb)(COMTime, COMTime, void *), void *da
   _range_cb_data = data;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Fügt einen Kanal zur Anzeige hinzu
@@ -196,7 +192,7 @@ void ViewViewData::add_channel(const ViewChannel *channel)
   fl_cursor(FL_CURSOR_DEFAULT);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Entfernt einen Kanal aus der Anzeige
@@ -264,7 +260,7 @@ void ViewViewData::rem_channel(const ViewChannel *channel)
   _do_not_draw = false;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Entfernt alle Kanäle
@@ -276,7 +272,7 @@ void ViewViewData::clear()
   redraw();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zoomt auf die Gesamtdaten
@@ -317,7 +313,7 @@ void ViewViewData::full_range()
   fl_cursor(FL_CURSOR_DEFAULT);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Lädt neue Daten für den aktuellen Zeitbereich
@@ -351,7 +347,7 @@ void ViewViewData::update()
   fl_cursor(FL_CURSOR_DEFAULT);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Überprüft, ob ein bestimmter Kanal schon angezeigt wird
@@ -375,7 +371,7 @@ bool ViewViewData::has_channel(const ViewChannel *channel) const
   return false;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Berechnet die gesamte Zeitspanne aller Kanäle
@@ -409,7 +405,7 @@ void ViewViewData::_calc_range()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Lädt alle Daten zur aktuellen Zeitspanne
@@ -431,7 +427,7 @@ void ViewViewData::_load_data()
   if (_range_cb) _range_cb(_range_start, _range_end, _range_cb_data);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    FLTK-Zeichenfunktion
@@ -583,7 +579,7 @@ void ViewViewData::draw()
   _draw_interactions();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet die Lücken der Erfassung
@@ -682,7 +678,7 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Prädikatsfunktion, wird von _draw_gaps beim Sortieren verwendet.
@@ -702,7 +698,7 @@ bool ViewViewData::range_before(const ViewViewDataChunkRange &range1,
   return range1.start < range2.start;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet die Zeitskala
@@ -789,7 +785,7 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet eine Kanalzeile
@@ -881,7 +877,7 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
   _draw_scan(channel, left, drawing_top, width, drawing_height);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet generische Datenwerte
@@ -991,7 +987,7 @@ void ViewViewData::_draw_gen(const ViewChunk *chunk,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet Meta-Datenwerte
@@ -1162,7 +1158,7 @@ void ViewViewData::_draw_min_max(const ViewChunk *chunk,
   delete [] max_px;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet die Scanlinie mit Schnittlinien und Beschriftung
@@ -1278,7 +1274,7 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Zeichnet die Zoom-Linien oder den Verschiebungs-Pfeil
@@ -1360,7 +1356,7 @@ void ViewViewData::_draw_interactions()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    FLTK-Ereignisfunktion
@@ -1619,7 +1615,7 @@ int ViewViewData::handle(int event)
   return 0;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 
 

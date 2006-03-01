@@ -1,19 +1,19 @@
-//---------------------------------------------------------------
-//
-//  C O M _ M D C T _ T. H P P
-//
-//---------------------------------------------------------------
- 
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
+
 #ifndef COMMDCTTHpp
 #define COMMDCTTHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 //#define MDCT_DEBUG
 
 #define MDCT_MAX_BYTES 4 // Maximal 32 Bit für Quantisierung
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #ifdef MDCT_DEBUG
 #include <iomanip>
@@ -24,7 +24,7 @@ using namespace std;
 #include "com_exception.hpp"
 #include "mdct.h"
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Exception eines COMMDCTT-Objektes
@@ -36,7 +36,7 @@ public:
   ECOMMDCT(const string &pmsg) : COMException(pmsg) {};
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Überlappende, diskrete Cosinus-Transformation
@@ -96,7 +96,7 @@ private:
   COMMDCTT(); // Privater Default-Konstruktor (soll nicht aufgerufen werden!)
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Konstruktor
@@ -158,7 +158,7 @@ COMMDCTT<T>::COMMDCTT(unsigned int dim, double acc)
   clear();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Destruktor
@@ -174,7 +174,7 @@ COMMDCTT<T>::~COMMDCTT()
   if (_imdct_output) delete [] _imdct_output;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Persistenten Speicher leeren
@@ -204,7 +204,7 @@ void COMMDCTT<T>::clear()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Liefert die maximale Größe komprimierter MDCT-Daten
@@ -235,7 +235,7 @@ unsigned int COMMDCTT<T>::max_compressed_size(unsigned int length) const
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Führt eine MDCT aus
@@ -364,7 +364,7 @@ void COMMDCTT<T>::transform(const T *input, unsigned int input_length)
   delete [] mdct_buffer;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Führt alle nötigen Einzel-DCTs aus
@@ -511,7 +511,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
   return data_size;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Absolute Quantisierung
@@ -566,7 +566,7 @@ void COMMDCTT<T>::_int_quant(const double *koeff,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Gepacktes Speichern der quantisierten Koeffizienten
@@ -634,7 +634,7 @@ unsigned int COMMDCTT<T>::_store_quant(unsigned char bits,
   return current_byte + 1;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Führt die letzte DCT aus
@@ -693,7 +693,7 @@ void COMMDCTT<T>::flush_transform()
   delete [] mdct_buffer;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Führt eine MDCT-Rücktransformation aus
@@ -812,7 +812,7 @@ void COMMDCTT<T>::detransform(const char *input,
   _last_length = input_length;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMMDCTT<T>::_detransform_all(const char *input,
@@ -909,7 +909,7 @@ void COMMDCTT<T>::_detransform_all(const char *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Führt die letzte Rück-DCT über dem Blockrest aus
@@ -987,7 +987,7 @@ void COMMDCTT<T>::flush_detransform(const char *input, unsigned int input_size)
   delete [] mdct_buffer;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 const char *COMMDCTT<T>::mdct_output() const
@@ -995,7 +995,7 @@ const char *COMMDCTT<T>::mdct_output() const
   return _mdct_output;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 unsigned int COMMDCTT<T>::mdct_output_size() const
@@ -1003,7 +1003,7 @@ unsigned int COMMDCTT<T>::mdct_output_size() const
   return _mdct_output_size;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 const T *COMMDCTT<T>::imdct_output() const
@@ -1011,7 +1011,7 @@ const T *COMMDCTT<T>::imdct_output() const
   return _imdct_output;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 unsigned int COMMDCTT<T>::imdct_output_length() const
@@ -1019,7 +1019,7 @@ unsigned int COMMDCTT<T>::imdct_output_length() const
   return _imdct_output_length;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 unsigned int COMMDCTT<T>::block_size() const
@@ -1027,6 +1027,6 @@ unsigned int COMMDCTT<T>::block_size() const
   return _dim;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #endif

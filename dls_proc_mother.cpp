@@ -1,8 +1,8 @@
-//---------------------------------------------------------------
-//
-//  D L S _ P R O C _ M O T H E R . C P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -16,7 +16,7 @@
 #include <fstream>
 using namespace std;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_xml_parser.hpp"
 #include "com_time.hpp"
@@ -24,15 +24,11 @@ using namespace std;
 #include "dls_globals.hpp"
 #include "dls_proc_mother.hpp"
 
-//---------------------------------------------------------------
-
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.14 2005/03/11 10:44:26 fp Exp $");
-
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 //#define DEBUG
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Konstruktor
@@ -51,7 +47,7 @@ DLSProcMother::DLSProcMother()
   openlog("dlsd_mother", LOG_PID, LOG_DAEMON);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Destruktor
@@ -65,7 +61,7 @@ DLSProcMother::~DLSProcMother()
   closelog();
 } 
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Starten des Mutterprozesses
@@ -94,7 +90,7 @@ int DLSProcMother::start(const string &dls_dir)
   msg() << "----- DLS Mother process started -----";
   log(DLSInfo);
 
-  msg() << dls_version_str;
+  msg() << "dlsd " << DLS_VERSION_STR << " revision " << STRINGIFY(SVNREV);
   log(DLSInfo);
 
   msg() << "Using dir \"" << _dls_dir << "\"";
@@ -153,7 +149,7 @@ int DLSProcMother::start(const string &dls_dir)
   return _exit_error ? -1 : 0;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Löscht den gesamten Inhalt des Spooling-Verzeichnisses
@@ -202,7 +198,7 @@ void DLSProcMother::_empty_spool()
   closedir(dir);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Alle Auftragsvorgaben importieren
@@ -288,7 +284,7 @@ void DLSProcMother::_check_jobs()
   closedir(dir);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Überprüft, ob zwischenzeitlich Signale empfangen wurden
@@ -376,7 +372,7 @@ void DLSProcMother::_check_signals()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Durchsucht das Spooling-Verzeichnis nach Änderungen
@@ -461,7 +457,7 @@ void DLSProcMother::_check_spool()
   closedir(dir);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Bestimmt, wie mit einer "gespoolten" Job-ID verfahren wird
@@ -516,7 +512,7 @@ bool DLSProcMother::_spool_job(unsigned int job_id)
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Fügt einen neuen Auftrag in die Liste ein
@@ -548,7 +544,7 @@ bool DLSProcMother::_add_job(unsigned int job_id)
   return true;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Importiert einen Auftrag neu
@@ -605,7 +601,7 @@ bool DLSProcMother::_change_job(DLSJobPreset *job)
   return true;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Entfernt einen Auftrag aus der Liste und beendet die Erfassung
@@ -657,7 +653,7 @@ bool DLSProcMother::_remove_job(unsigned int job_id)
   return false;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Überwacht die aktuellen Erfassungsprozesse
@@ -727,7 +723,7 @@ void DLSProcMother::_check_processes()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Prüft, ob ein Auftrag mit einer bestimmten ID in der Liste ist
@@ -757,7 +753,7 @@ DLSJobPreset *DLSProcMother::_job_exists(unsigned int id)
   return 0;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Prüft, ob noch Erfassungprozesse laufen
@@ -784,4 +780,4 @@ unsigned int DLSProcMother::_processes_running()
   return process_count;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/

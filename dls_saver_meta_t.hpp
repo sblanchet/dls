@@ -1,25 +1,25 @@
-//---------------------------------------------------------------
-//
-//  D L S _ S A V E R _ M E T A _ T . H P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #ifndef DLSSaverMetaTHpp
 #define DLSSaverMetaTHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_time.hpp"
 #include "dls_saver_t.hpp"
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 // Beim Erweitern bitte auch die Behandlungszweige
 // in "_meta_value()" und "_ending()" anpassen!
 
 enum DLSMetaType {DLSMetaMean = 1, DLSMetaMin = 2, DLSMetaMax = 4};
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Saver-Objekt für Meta-Daten
@@ -47,7 +47,7 @@ private:
   string _meta_type() const;
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 DLSSaverMetaT<T>::DLSSaverMetaT(DLSLogger *parent_logger,
@@ -61,7 +61,7 @@ DLSSaverMetaT<T>::DLSSaverMetaT(DLSLogger *parent_logger,
   _level = level;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 DLSSaverMetaT<T>::~DLSSaverMetaT()
@@ -78,7 +78,7 @@ DLSSaverMetaT<T>::~DLSSaverMetaT()
   if (_next_saver) delete _next_saver;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Generiert einen Meta-Wert aus den gegebenen Daten
@@ -123,7 +123,7 @@ void DLSSaverMetaT<T>::generate_meta_data(COMTime start_time,
   if (_block_buf_index == 0 && _meta_buf_index == 0) _finished = true;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 T DLSSaverMetaT<T>::_meta_value(const T *buffer, unsigned int length)
@@ -163,7 +163,7 @@ T DLSSaverMetaT<T>::_meta_value(const T *buffer, unsigned int length)
   return meta_val;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void DLSSaverMetaT<T>::_pass_meta_data()
@@ -183,7 +183,7 @@ void DLSSaverMetaT<T>::_pass_meta_data()
   _meta_buf_index = 0;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void DLSSaverMetaT<T>::flush()
@@ -208,7 +208,7 @@ void DLSSaverMetaT<T>::flush()
   if (_next_saver) _next_saver->flush();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 inline int DLSSaverMetaT<T>::_meta_level() const
@@ -216,7 +216,7 @@ inline int DLSSaverMetaT<T>::_meta_level() const
   return _level;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 string DLSSaverMetaT<T>::_meta_type() const
@@ -230,6 +230,6 @@ string DLSSaverMetaT<T>::_meta_type() const
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #endif

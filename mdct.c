@@ -1,8 +1,8 @@
-/****************************************************************
-
-  M D C T . C
-
-****************************************************************/
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #include <stdlib.h>
 #include <math.h>
@@ -22,19 +22,17 @@ static double *sin_win_buffer[MDCT_MAX_EXP2 + 1];
 static double *w_r[MDCT_MAX_EXP2 + 1];
 static double *w_i[MDCT_MAX_EXP2 + 1];
 static double pi;
- 
-/****************************************************************
 
-  mdct_init
+/*****************************************************************************/
 
-  Initialisiert die Puffer für eine Dimension, die durch eine
-  Zweierpotenz gegeben ist.
+/**
+   Initialisiert die Puffer für eine Dimension, die durch eine
+   Zweierpotenz gegeben ist.
 
-  Parameter: exp2 - Zweierexponent der Dimension
+   \param exp2 Zweierexponent der Dimension
 
-  Rückgabe: 0 bei Erfolg, sonst negativer Fehlercode
-
-****************************************************************/
+   \return 0 bei Erfolg, sonst negativer Fehlercode
+*/
 
 int mdct_init(unsigned int exp2)
 {
@@ -103,16 +101,14 @@ int mdct_init(unsigned int exp2)
   return 0;
 }
 
-/****************************************************************
+/*****************************************************************************/
 
-  mdct_cleanup
+/**
+   Löscht alle allokierten Speicherbereiche.
 
-  Löscht alle allokierten Speicherbereiche.
-
-  Diese Funktion sollte nur vor beendigung des Prozesses
-  aufgerufen werden.
-
-****************************************************************/
+   Diese Funktion sollte nur vor beendigung des Prozesses
+   aufgerufen werden.
+*/
 
 void mdct_cleanup()
 {
@@ -134,23 +130,21 @@ void mdct_cleanup()
   global_buffers_initialized = 0;
 }
 
-/****************************************************************
+/*****************************************************************************/
 
-  mdct
+/**
+   Führt eine einzelne MDC-Transformation aus.
 
-  Führt eine einzelne MDC-Transformation aus.
+   Verfahren nach Marios Athineos, marios@ee.columbia.edu
+   http://www.ee.columbia.edu/~marios/
+   Copyright (c) 2002 by Columbia University.
 
-  Verfahren nach Marios Athineos, marios@ee.columbia.edu
-  http://www.ee.columbia.edu/~marios/
-  Copyright (c) 2002 by Columbia University.
+   Siehe kompression/fftw-test/mdct4.m
 
-  Siehe kompression/fftw-test/mdct4.m
-
-  Parameter: exp2   - Zweierexponent der Dimension
-             input  - Speicher mit 2^(exp2) double-Werten
-             output - Speicher für 2^(exp2)/2 double-Werte
-
-****************************************************************/
+   \param exp2 Zweierexponent der Dimension
+   \param x Input-Speicher mit 2^(exp2) double-Werten
+   \param y Output-Speicher für 2^(exp2)/2 double-Werte
+*/
 
 void mdct(unsigned int exp2, const double *x, double *y)
 {
@@ -199,7 +193,7 @@ void mdct(unsigned int exp2, const double *x, double *y)
   }
 
   // c = fft(c, N4);
-  
+
   p = fftw_plan_dft_1d(n4, in, out, FFTW_FORWARD, FFTW_PATIENT);
   fftw_execute(p);
 
@@ -213,7 +207,7 @@ void mdct(unsigned int exp2, const double *x, double *y)
     c_r[t] = 2.0 * (w_r[exp2][t] * out[t][0] - w_i[exp2][t] * out[t][1]); // Jeweils " / sqrt(n)" entfernt
     c_i[t] = 2.0 * (w_r[exp2][t] * out[t][1] + w_i[exp2][t] * out[t][0]);
   }
-  
+
   // t = (0:(N4-1)).';
   // y(2*t+1,:)     =  real(c(t+1,:));
   // y(M-1-2*t+1,:) = -imag(c(t+1,:));
@@ -233,23 +227,21 @@ void mdct(unsigned int exp2, const double *x, double *y)
   fftw_free(out);
 }
 
-/****************************************************************
+/*****************************************************************************/
 
-  imdct
+/**
+   Führt eine inverse MDC-Transformation aus.
 
-  Führt eine inverse MDC-Transformation aus.
+   Verfahren nach Marios Athineos, marios@ee.columbia.edu
+   http://www.ee.columbia.edu/~marios/
+   Copyright (c) 2002 by Columbia University.
 
-  Verfahren nach Marios Athineos, marios@ee.columbia.edu
-  http://www.ee.columbia.edu/~marios/
-  Copyright (c) 2002 by Columbia University.
+   Siehe kompression/fftw-test/imdct4.m
 
-  Siehe kompression/fftw-test/imdct4.m
-
-  Parameter: exp2   - Zweierexponent der Dimension
-             input  - Speicher mit 2^(exp2)/2 double-Koeffizienten
-             output - Speicher für 2^(exp2) double-Werte
-
-****************************************************************/
+   \param exp2 Zweierexponent der Dimension
+   \param x Input-Speicher mit 2^(exp2)/2 double-Koeffizienten
+   \param y Output-Speicher für 2^(exp2) double-Werte
+*/
 
 void imdct(unsigned int exp2, const double *x, double *y)
 {
@@ -340,4 +332,4 @@ void imdct(unsigned int exp2, const double *x, double *y)
   fftw_free(out);
 }
 
-/***************************************************************/
+/*****************************************************************************/

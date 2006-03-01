@@ -1,19 +1,19 @@
-//---------------------------------------------------------------
-//
-//  C O M _ G L O B A L S . H P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #ifndef COMGlobalsHpp
 #define COMGlobalsHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include <string>
 #include <sstream>
 using namespace std;
 
-//--------------------------------------------------------------- 
+/*****************************************************************************/
 
 #define DLS_MASTER_VERSION  0
 #define DLS_SUB_VERSION     9
@@ -27,8 +27,6 @@ using namespace std;
 #define DLS_VERSION_CODE(M, S, U) (((M) << 16) | ((S) << 8) | (U))
 
 #define DLS_VERSION (DLS_VERSION_CODE(DLS_MASTER_VERSION, DLS_SUB_VERSION, DLS_SUB_SUB_VERSION))
-
-#define RCS_ID(ID) static char *RCSID = RCSID = "RCS ID: " ID 
 
 #define MSRD_PORT 2345
 
@@ -52,7 +50,7 @@ using namespace std;
       - com_compression_t.hpp (Neue Klasse)
  */
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 enum COMChannelType
 {
@@ -80,7 +78,7 @@ enum COMChannelType
 
 */
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Index-Record für einen Datendatei-Index innerhalb eines Chunks
@@ -93,7 +91,7 @@ struct COMIndexRecord
   unsigned int position;
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Index für alle Datendateien eines Chunks
@@ -105,7 +103,7 @@ struct COMGlobalIndexRecord
   long long end_time;
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Index für Messages
@@ -117,7 +115,7 @@ struct COMMessageIndexRecord
   unsigned int position;
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Beschreibt einen Kanal des MSR-Moduls
@@ -133,7 +131,7 @@ struct COMRealChannel
   unsigned int frequency; /**< Maximale Abtastrate des Kanals */
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 enum DLSLogType
 {
@@ -143,7 +141,7 @@ enum DLSLogType
   DLSDebug
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 stringstream &msg();
 void log(DLSLogType, int = 0);
@@ -152,7 +150,7 @@ COMChannelType dls_str_to_channel_type(const string &);
 char *dls_channel_type_to_str(COMChannelType);
 string convert_to_bin(const void *, unsigned int, int);
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 // Globale Variablen
 
@@ -162,6 +160,6 @@ extern const char *dls_format_strings[DLS_FORMAT_COUNT];
 // Daemon
 extern bool is_daemon;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #endif

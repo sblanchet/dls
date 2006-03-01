@@ -1,13 +1,13 @@
-//---------------------------------------------------------------
-//
-//  C O M _ C O M P R E S S I O N _ T. H P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #ifndef COMCompressionTHpp
 #define COMCompressionTHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_zlib.hpp"
 #include "com_base64.hpp"
@@ -17,7 +17,7 @@
 
 //#define DEBUG
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Exception eines DLSCompression-Objektes
@@ -29,7 +29,7 @@ public:
   ECOMCompression(const string &pmsg) : COMException(pmsg) {};
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Abstrakte Basisklasse eines Kompressionsobjektes
@@ -138,11 +138,11 @@ public:
   virtual unsigned int decompressed_length() const = 0;
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 //
 //  ZLib / Base64
 //
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Kompressionsobjekt: Erst ZLib, dann Base64
@@ -177,14 +177,14 @@ private:
   COMBase64 _base64;        /**< Base64-Objekt zum Kodieren */
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_ZLib<T>::COMCompressionT_ZLib()
 {
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_ZLib<T>::~COMCompressionT_ZLib()
@@ -192,7 +192,7 @@ COMCompressionT_ZLib<T>::~COMCompressionT_ZLib()
   free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::free()
@@ -201,7 +201,7 @@ void COMCompressionT_ZLib<T>::free()
   _base64.free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::compress(const T *input,
@@ -226,7 +226,7 @@ void COMCompressionT_ZLib<T>::compress(const T *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::uncompress(const char *input,
@@ -261,14 +261,14 @@ void COMCompressionT_ZLib<T>::uncompress(const char *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::clear()
 {
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::flush_compress()
@@ -276,7 +276,7 @@ void COMCompressionT_ZLib<T>::flush_compress()
   free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_ZLib<T>::flush_uncompress(const char *input,
@@ -285,7 +285,7 @@ void COMCompressionT_ZLib<T>::flush_uncompress(const char *input,
   free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const char *COMCompressionT_ZLib<T>::compression_output() const
@@ -293,7 +293,7 @@ const char *COMCompressionT_ZLib<T>::compression_output() const
   return _base64.output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_ZLib<T>::compressed_size() const
@@ -301,7 +301,7 @@ unsigned int COMCompressionT_ZLib<T>::compressed_size() const
   return _base64.output_size();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const T *COMCompressionT_ZLib<T>::decompression_output() const
@@ -309,7 +309,7 @@ const T *COMCompressionT_ZLib<T>::decompression_output() const
   return (T *) _zlib.output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_ZLib<T>::decompressed_length() const
@@ -317,11 +317,11 @@ unsigned int COMCompressionT_ZLib<T>::decompressed_length() const
   return _zlib.output_size() / sizeof(T);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 //
 //  MDCT / ZLib / Base64
 //
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Kompressionsobjekt: Erst MDCT, dann ZLib und dann Base64
@@ -359,7 +359,7 @@ private:
   COMCompressionT_MDCT() {}; // privat!
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_MDCT<T>::COMCompressionT_MDCT(unsigned int dim,
@@ -381,7 +381,7 @@ COMCompressionT_MDCT<T>::COMCompressionT_MDCT(unsigned int dim,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_MDCT<T>::~COMCompressionT_MDCT()
@@ -389,7 +389,7 @@ COMCompressionT_MDCT<T>::~COMCompressionT_MDCT()
   if (_mdct) delete _mdct;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::free()
@@ -398,7 +398,7 @@ void COMCompressionT_MDCT<T>::free()
   _base64.free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::compress(const T *input,
@@ -429,7 +429,7 @@ void COMCompressionT_MDCT<T>::compress(const T *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::uncompress(const char *input,
@@ -464,7 +464,7 @@ void COMCompressionT_MDCT<T>::uncompress(const char *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::clear()
@@ -472,7 +472,7 @@ void COMCompressionT_MDCT<T>::clear()
   _mdct->clear();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::flush_compress()
@@ -502,7 +502,7 @@ void COMCompressionT_MDCT<T>::flush_compress()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_MDCT<T>::flush_uncompress(const char *input,
@@ -537,7 +537,7 @@ void COMCompressionT_MDCT<T>::flush_uncompress(const char *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const char *COMCompressionT_MDCT<T>::compression_output() const
@@ -545,7 +545,7 @@ const char *COMCompressionT_MDCT<T>::compression_output() const
   return _base64.output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_MDCT<T>::compressed_size() const
@@ -553,7 +553,7 @@ unsigned int COMCompressionT_MDCT<T>::compressed_size() const
   return _base64.output_size();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const T *COMCompressionT_MDCT<T>::decompression_output() const
@@ -561,7 +561,7 @@ const T *COMCompressionT_MDCT<T>::decompression_output() const
   return _mdct->imdct_output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_MDCT<T>::decompressed_length() const
@@ -569,11 +569,11 @@ unsigned int COMCompressionT_MDCT<T>::decompressed_length() const
   return _mdct->imdct_output_length();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 //
 //  Quant / ZLib / Base64
 //
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Kompressionsobjekt: Erst Quantisierung, dann ZLib, dann Base64
@@ -611,7 +611,7 @@ private:
   COMCompressionT_Quant();
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_Quant<T>::COMCompressionT_Quant(double acc)
@@ -632,7 +632,7 @@ COMCompressionT_Quant<T>::COMCompressionT_Quant(double acc)
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 COMCompressionT_Quant<T>::~COMCompressionT_Quant()
@@ -642,7 +642,7 @@ COMCompressionT_Quant<T>::~COMCompressionT_Quant()
   if (_quant) delete _quant;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::free()
@@ -653,7 +653,7 @@ void COMCompressionT_Quant<T>::free()
   _base64.free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::compress(const T *input,
@@ -686,7 +686,7 @@ void COMCompressionT_Quant<T>::compress(const T *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::uncompress(const char *input,
@@ -731,14 +731,14 @@ void COMCompressionT_Quant<T>::uncompress(const char *input,
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::clear()
 {
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::flush_compress()
@@ -746,7 +746,7 @@ void COMCompressionT_Quant<T>::flush_compress()
   free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template <class T>
 void COMCompressionT_Quant<T>::flush_uncompress(const char *input,
@@ -755,7 +755,7 @@ void COMCompressionT_Quant<T>::flush_uncompress(const char *input,
   free();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const char *COMCompressionT_Quant<T>::compression_output() const
@@ -763,7 +763,7 @@ const char *COMCompressionT_Quant<T>::compression_output() const
   return _base64.output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_Quant<T>::compressed_size() const
@@ -771,7 +771,7 @@ unsigned int COMCompressionT_Quant<T>::compressed_size() const
   return _base64.output_size();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 const T *COMCompressionT_Quant<T>::decompression_output() const
@@ -781,7 +781,7 @@ const T *COMCompressionT_Quant<T>::decompression_output() const
   return _quant->dequant_output();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 template<class T>
 unsigned int COMCompressionT_Quant<T>::decompressed_length() const
@@ -791,7 +791,7 @@ unsigned int COMCompressionT_Quant<T>::decompressed_length() const
   return _quant->dequant_output_length();
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #ifdef DEBUG
 #undef DEBUG

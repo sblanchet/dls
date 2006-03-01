@@ -1,8 +1,10 @@
-#----------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
-#  Makefile für DLS
+#  DLS-Makefile
 #
-#----------------------------------------------------------------
+#  $Id$
+#
+#------------------------------------------------------------------------------
 
 DLSD_OBJECTS = \
 	com_globals.o com_time.o com_file.o \
@@ -39,21 +41,20 @@ VIEW_OBJECTS = \
 
 # DIRECTORIES
 
-BIN = .
-INSTALL = ../bin
+INST_DIR = /usr/local/bin
+FFTW_DIR = /vol/projekte/dls_data_logging_server/soft/fftw-install
 
 # LIBRARIES
 
 # FLTK-Configure:
-# ./configure --enable-threads --enable-xft --prefix=/vol/projekte/dls_data_logging_server/soft/fltk-1.1-install
+# ./configure --enable-threads --enable-xft \
+#             --prefix=/vol/projekte/dls_data_logging_server/soft/fltk-1.1-install
 
 FLTK_INC = `fltk-config --cxxflags`
 FLTK_LIB = `fltk-config --ldflags`
 
 Z_INC = -I /usr/local/include
 Z_LIB = -L /usr/local/lib -lz
-
-FFTW_DIR = /vol/projekte/dls_data_logging_server/soft/fftw-install
 
 FFTW_INC = -I $(FFTW_DIR)/include
 FFTW_LIB = -L $(FFTW_DIR)/lib -lfftw3 -lm
@@ -78,96 +79,90 @@ VIEW_EXE = dls_view
 
 # FLAGS
 
-COMPILER_FLAGS := -Wall
-LINKER_FLAGS := -Wall
-BUILD_FLAGS := -D BUILDER=$(USER)
+SVNREV := $(shell svnversion .)
+
+CFLAGS += -Wall -DSVNREV="$(SVNREV)"
+LDFLAGS += -Wall
 
 ifneq ($(DIST), true)
-COMPILER_FLAGS += -g
-BUILD_FLAGS += -D DEBUG_INFO
+CFLAGS += -g
 endif
 
-#----------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-first: normal
-
-normal: $(BIN)/$(DLSD_EXE) $(BIN)/$(CTL_EXE) $(BIN)/$(VIEW_EXE)
+first: $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
 
 all: mrproper depend install doc
 
-dist: 
+dist:
 	$(MAKE) DIST=true all
 
 backup: clean
 	tar -cjf ../backup/dls`date +%y%m%d`.tar.bz2 *
 
-install: $(INSTALL)/$(DLSD_EXE) $(INSTALL)/$(CTL_EXE) $(INSTALL)/$(VIEW_EXE)
+install: $(INST_DIR)/$(DLSD_EXE) $(INST_DIR)/$(CTL_EXE) $(INST_DIR)/$(VIEW_EXE)
 
 uninstall:
-	rm -f $(INSTALL)/$(DLSD_EXE) $(INSTALL)/$(CTL_EXE) $(INSTALL)/$(VIEW_EXE)
+	rm -f $(INST_DIR)/$(DLSD_EXE) $(INST_DIR)/$(CTL_EXE) $(INST_DIR)/$(VIEW_EXE)
 
-$(BIN)/$(DLSD_EXE): $(DLSD_OBJECTS)
-	./dls_build_inc
-	g++ -c $(BUILD_FLAGS) dls_build.cpp -o dls_build.o
-	g++ $(LINKER_FLAGS) $(DLSD_OBJECTS) dls_build.o $(DLSD_LIB) -o $(BIN)/$(DLSD_EXE)
+$(DLSD_EXE): $(DLSD_OBJECTS)
+	g++ $(LINKER_FLAGS) $(DLSD_OBJECTS) $(DLSD_LIB) -o $(DLSD_EXE)
 
-$(INSTALL)/$(DLSD_EXE): $(BIN)/$(DLSD_EXE)
-	cp $(BIN)/$(DLSD_EXE) $(INSTALL)
+$(INST_DIR)/$(DLSD_EXE): $(DLSD_EXE)
+	cp $(DLSD_EXE) $(INST_DIR)
 
-$(BIN)/$(CTL_EXE): $(CTL_OBJECTS)
-	./ctl_build_inc
-	g++ -c $(BUILD_FLAGS) ctl_build.cpp -o ctl_build.o
-	g++ $(LINKER_FLAGS) $(CTL_OBJECTS) ctl_build.o $(CTL_LIB) -o $(BIN)/$(CTL_EXE)
+$(CTL_EXE): $(CTL_OBJECTS)
+	g++ $(LINKER_FLAGS) $(CTL_OBJECTS) $(CTL_LIB) -o $(CTL_EXE)
 
-$(INSTALL)/$(CTL_EXE): $(BIN)/$(CTL_EXE)
-	cp $(BIN)/$(CTL_EXE) $(INSTALL)
+$(INST_DIR)/$(CTL_EXE): $(CTL_EXE)
+	cp $(CTL_EXE) $(INST_DIR)
 
-$(BIN)/$(VIEW_EXE): $(VIEW_OBJECTS)
-	./view_build_inc
-	g++ -c $(BUILD_FLAGS) view_build.cpp -o view_build.o
-	g++ $(LINKER_FLAGS) $(VIEW_OBJECTS) view_build.o $(VIEW_LIB) -o $(BIN)/$(VIEW_EXE)
+$(VIEW_EXE): $(VIEW_OBJECTS)
+	g++ $(LINKER_FLAGS) $(VIEW_OBJECTS) $(VIEW_LIB) -o $(VIEW_EXE)
 
-$(INSTALL)/$(VIEW_EXE): $(BIN)/$(VIEW_EXE)
-	cp $(BIN)/$(VIEW_EXE) $(INSTALL)
+$(INST_DIR)/$(VIEW_EXE): $(VIEW_EXE)
+	cp $(VIEW_EXE) $(INST_DIR)
 
 doc:
 	doxygen Doxyfile
 
-# Compiler-Anweisungen ------------------------------------------
+# Compiler-Anweisungen --------------------------------------------------------
 
 com_%.o: com_%.cpp
-	g++ -c $(COMPILER_FLAGS) $< -o $@
+	g++ -c $(CFLAGS) $< -o $@
 
 dls_%.o: dls_%.cpp
-	g++ -c $(COMPILER_FLAGS) $< -o $@
+	g++ -c $(CFLAGS) $< -o $@
 
 ctl_%.o: ctl_%.cpp
-	g++ -c $(COMPILER_FLAGS) $(CTL_INC) $< -o $@
+	g++ -c $(CFLAGS) $(CTL_INC) $< -o $@
 
 view_%.o: view_%.cpp
-	g++ -c $(COMPILER_FLAGS) $(VIEW_INC) $< -o $@
+	g++ -c $(CFLAGS) $(VIEW_INC) $< -o $@
 
 fl_%.o: fl_%.cpp
-	g++ -c $(COMPILER_FLAGS) $(FLTK_INC) $< -o $@
+	g++ -c $(CFLAGS) $(FLTK_INC) $< -o $@
 
 mdct.o: mdct.c
-	g++ -c $(COMPILER_FLAGS) $(FFTW_INC) $< -o $@
+	g++ -c $(CFLAGS) $(FFTW_INC) $< -o $@
 
-# Abhängigkeiten ------------------------------------------------
+# Abhängigkeiten --------------------------------------------------------------
 
 depend:
 	(for file in *.cpp mdct.c; \
 	   do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $(FFTW_INC) $$file; \
 	done) > .depend
 
+ifneq ($(wildcard .depend),)
 include .depend
+endif
 
-# Clean ---------------------------------------------------------
+# Clean -----------------------------------------------------------------------
 
 clean:
-	rm -f *.o $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
+	rm -f *.o *~ $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
 
 mrproper: clean
 	echo "" > .depend
 
-#----------------------------------------------------------------
+#------------------------------------------------------------------------------

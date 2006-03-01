@@ -1,8 +1,8 @@
-//---------------------------------------------------------------
-//
-//  D L S _ M A I N . C P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #include <signal.h>
 #include <sys/types.h>
@@ -14,21 +14,16 @@
 #include <sys/resource.h>
 #include <pwd.h>
 
-
 #include <iostream>
 using namespace std;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "dls_globals.hpp"
 #include "dls_proc_mother.hpp"
 #include "dls_proc_logger.hpp"
 
-//---------------------------------------------------------------
-
-RCS_ID("$Header: /home/fp/projekte/dls_data_logging_server/src/RCS/dls_main.cpp,v 1.28 2005/08/08 13:01:34 fp Exp $");
-
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
@@ -41,7 +36,7 @@ DLSArchitecture source_arch;
 char user_name[100 + 1];
 unsigned long num_files;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void get_options(int, char **);
 void print_usage();
@@ -55,7 +50,7 @@ void create_pid_file(const string *);
 void remove_pid_file(const string *);
 void get_endianess();
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Hauptfunktion
@@ -78,7 +73,8 @@ int main(int argc, char **argv)
   struct rlimit rlim;
   struct passwd *pwd;
 
-  cout << dls_version_str << endl;
+  cout << "dlsd " << DLS_VERSION_STR
+       << " revision " << STRINGIFY(SVNREV) << endl;
 
   is_daemon = true;
   strcpy(user_name, "");
@@ -111,7 +107,7 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    getrlimit(RLIMIT_NOFILE, &rlim); 
+    getrlimit(RLIMIT_NOFILE, &rlim);
     cout << "Maximal number of open files:" << endl;
     cout << "   Soft: " << rlim.rlim_cur;
     cout << "Hard: " << rlim.rlim_max;
@@ -137,7 +133,7 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
-  
+
   // PID-Datei erzeugen
   create_pid_file(&dls_dir);
 
@@ -187,7 +183,7 @@ int main(int argc, char **argv)
   exit(exit_code);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void get_options(int argc, char **argv)
 {
@@ -235,7 +231,7 @@ void get_options(int argc, char **argv)
     }
   }
   while (c != -1);
-  
+
   // Weitere Parameter vorhanden?
   if (optind < argc)
   {
@@ -260,7 +256,7 @@ void get_options(int argc, char **argv)
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void print_usage()
 {
@@ -273,7 +269,7 @@ void print_usage()
   exit(0);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void signal_handler(int sig)
 {
@@ -282,23 +278,23 @@ void signal_handler(int sig)
     case SIGHUP:
       sig_hangup++;
       break;
-      
+
     case SIGCHLD:
       sig_child++;
       break;
-      
+
     case SIGINT:
     case SIGTERM:
       sig_int_term++;
       break;
-      
+
     default:
       dump_signal(sig);
       _exit(E_DLS_SIGNAL);
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void set_signal_handlers()
 {
@@ -324,7 +320,7 @@ void set_signal_handlers()
   sigaction(SIGTRAP, &action, 0);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void dump_signal(int sig)
 {
@@ -347,7 +343,7 @@ void dump_signal(int sig)
   if (!is_daemon) cout << "CRITICAL: " << err;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void init_daemon()
 {
@@ -379,7 +375,7 @@ void init_daemon()
   umask(0); // Datei-Erstellungsmaske (kann keinen Fehler erzeugen)
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void closeSTDXXX()
 {
@@ -399,7 +395,7 @@ void closeSTDXXX()
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void check_running(const string *dls_dir)
 {
@@ -453,7 +449,7 @@ void check_running(const string *dls_dir)
     if (errno == ESRCH) // Prozess mit angegebener PID existiert nicht
     {
       cout << "INFO: deleting old pid file" << endl;
-      
+
       if (unlink(pid_file_name.c_str()) == -1)
       {
         cerr << "ERROR: could not delete pid file \"" << pid_file_name << "\"!" << endl;
@@ -473,7 +469,7 @@ void check_running(const string *dls_dir)
   exit(-1);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void create_pid_file(const string *dls_dir)
 {
@@ -490,7 +486,7 @@ void create_pid_file(const string *dls_dir)
   }
 
   str << getpid() << endl;
-  
+
   if ((ret = write(pid_fd, str.str().c_str(), str.str().length())) != (int) str.str().length())
   {
     cerr << "ERROR: could not write to PID file \"" << pid_file_name << "\"!" << endl;
@@ -500,7 +496,7 @@ void create_pid_file(const string *dls_dir)
   close(pid_fd);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void remove_pid_file(const string *dls_dir)
 {
@@ -516,7 +512,7 @@ void remove_pid_file(const string *dls_dir)
   }
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 void get_endianess()
 {
@@ -527,12 +523,12 @@ void get_endianess()
   // Test-Integer vorbelegen
   value = 0;
   for (i = 0; i < sizeof(value); i++) value += (1 << (i * 8)) * (i + 1);
-  
+
   byte = (unsigned char *) &value;
 
   is_little_endian = true;
   for (i = 0; i < sizeof(value); i++) if (byte[i] != (i + 1)) is_little_endian = false;
-  
+
   if (is_little_endian)
   {
     arch = LittleEndian;
@@ -541,7 +537,7 @@ void get_endianess()
 
   is_big_endian = true;
   for (i = 0; i < sizeof(value); i++) if (byte[i] != sizeof(value) - i) is_big_endian = false;
-  
+
   if (is_big_endian)
   {
     arch = BigEndian;
@@ -552,4 +548,4 @@ void get_endianess()
   exit(-1);
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/

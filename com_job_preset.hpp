@@ -1,25 +1,25 @@
-//---------------------------------------------------------------
-//
-//  C O M _ J O B _ P R E S E T . H P P
-//
-//---------------------------------------------------------------
+/******************************************************************************
+ *
+ *  $Id$
+ *
+ *****************************************************************************/
 
 #ifndef COMJobPresetHpp
 #define COMJobPresetHpp
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include <string>
 #include <vector>
 using namespace std;
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #include "com_exception.hpp"
 #include "com_time.hpp"
 #include "com_channel_preset.hpp"
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Exception eines COMJobPreset-Objektes
@@ -31,7 +31,7 @@ public:
   ECOMJobPreset(const string &pmsg) : COMException(pmsg) {};
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Auftragsvorgaben mit Liste der Kanalvorgaben
@@ -71,7 +71,7 @@ protected:
   vector<COMChannelPreset> _channels; /**< Liste der Kanalvorgaben */
 };
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf die ID
@@ -85,7 +85,7 @@ inline unsigned int COMJobPreset::id() const
   return _id;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf die Beschreibung
@@ -99,7 +99,7 @@ inline const string &COMJobPreset::description() const
   return _description;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf das Besitzer-Attribut
@@ -113,7 +113,7 @@ inline const string &COMJobPreset::owner() const
   return _owner;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf den Sollzustand
@@ -127,7 +127,7 @@ inline bool COMJobPreset::running() const
   return _running;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf die Adresse der Datenquelle
@@ -141,7 +141,7 @@ inline const string &COMJobPreset::source() const
   return _source;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf den Trigger-Attribut
@@ -155,7 +155,7 @@ inline const string &COMJobPreset::trigger() const
   return _trigger;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf das Zeit-Quota-Attribut
@@ -169,7 +169,7 @@ inline long long COMJobPreset::quota_time() const
   return _quota_time;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf das Daten-Quota-Attribut
@@ -183,7 +183,7 @@ inline long long COMJobPreset::quota_size() const
   return _quota_size;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 /**
    Ermöglicht Lesezugriff auf den Vektor der Kanalvorgaben
@@ -197,6 +197,6 @@ inline const vector<COMChannelPreset> *COMJobPreset::channels() const
   return &_channels;
 }
 
-//---------------------------------------------------------------
+/*****************************************************************************/
 
 #endif
