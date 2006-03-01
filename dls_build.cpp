@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------
 
-#define DLS_BUILD 6 // Build-Nummer, wird automatisch erhöht!
+#define DLS_BUILD 7 // Build-Nummer, wird automatisch erhöht!
 
 #ifndef BUILDER
 #define BUILDER ???

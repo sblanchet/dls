@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------
 
-#define VIEW_BUILD 4 // Build-Nummer, wird automatisch erhöht!
+#define VIEW_BUILD 5 // Build-Nummer, wird automatisch erhöht!
 
 #ifndef BUILDER
 #define BUILDER ???
