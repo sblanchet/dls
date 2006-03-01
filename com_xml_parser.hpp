@@ -86,7 +86,7 @@ public:
                          const string & = "",
                          COMXMLTagType = dxttSingle);
   
-  const COMXMLTag *last_tag() const;
+  const COMXMLTag *tag() const;
 
 private:
   COMXMLTag _tag; /**< Zuletzt geparstes XML-Tag */
@@ -110,12 +110,12 @@ private:
 //---------------------------------------------------------------
 
 /**
-   Gibt einen konstanten zeiger auf das letzte Tag zurück
+   Liefert einen konstanten Zeiger auf das zuletzt geparste Tag
 
    \return Letztes Tag
 */
 
-inline const COMXMLTag *COMXMLParser::last_tag() const
+inline const COMXMLTag *COMXMLParser::tag() const
 {
   return &_tag;
 }

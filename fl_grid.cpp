@@ -21,7 +21,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/fl_grid.cpp,v 1.5 2004/12/20 09:37:31 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/fl_grid.cpp,v 1.6 2005/02/22 15:27:57 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -769,9 +769,8 @@ void Fl_Grid::draw()
    Diese Funktion wird nur von FLTK aufgerufen und sollte
    nicht manuell aufgerufen werden!
 
-   \todo Doppelklick auf die selbe Stelle funktioniert nicht!
-
    \param e Ereigniscode
+   \return 1, wenn das Ereignis verarbeitet wurde, sonst 0
 */
 
 int Fl_Grid::handle(int e)
@@ -1012,10 +1011,3 @@ int Fl_Grid::handle(int e)
 }
 
 //---------------------------------------------------------------
-
-
-
-
-
-
-

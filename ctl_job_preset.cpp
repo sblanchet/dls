@@ -15,12 +15,11 @@ using namespace std;
 //---------------------------------------------------------------
 
 #include "com_globals.hpp"
-#include "com_xml_parser.hpp"
 #include "ctl_job_preset.hpp"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_job_preset.cpp,v 1.4 2005/01/21 09:06:30 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_job_preset.cpp,v 1.7 2005/02/24 11:49:43 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -156,45 +155,6 @@ void CTLJobPreset::write(const string &dls_dir)
 //---------------------------------------------------------------
 
 /**
-   Teilt dem DLS-Mutterprozess mit, dass es einen neuen Auftrag gibt
-
-   \param dls_dir DLS-Datenverzeichnis
-*/
-
-void CTLJobPreset::notify_new(const string &dls_dir)
-{
-  _write_spooling_file(dls_dir, "new");
-}
-
-//---------------------------------------------------------------
-
-/**
-   Teilt dem DLS-Mutterprozess mit, dass ein Auftrag geändert wurde
-
-   \param dls_dir DLS-Datenverzeichnis
-*/
-
-void CTLJobPreset::notify_changed(const string &dls_dir)
-{
-  _write_spooling_file(dls_dir, "change");
-}
-
-//---------------------------------------------------------------
-
-/**
-   Teilt dem DLS-Mutterprozess mit, dass ein Auftrag gelöscht wurde
-
-   \param dls_dir DLS-Datenverzeichnis
-*/
-
-void CTLJobPreset::notify_deleted(const string &dls_dir)
-{
-  _write_spooling_file(dls_dir, "delete");
-}
-
-//---------------------------------------------------------------
-
-/**
    Spooling-Datei erzeugen, um den Server zu benachrichtigen
 
    Diese Methode benachrichtigt den Server bezüglich
@@ -203,21 +163,17 @@ void CTLJobPreset::notify_deleted(const string &dls_dir)
    vorhandene Vorgabe kann sich geändert haben, oder es
    wurde eine Vorgabe gelöscht.
 
+   Die Spooling-Datei enthält nur die ID des Auftrags. Der
+   Server entscheidet damit selbstständig, was zu tun ist.
+
    \param dls_dir DLS-Datenverzeichnis
-   \param action "new", "change", oder "delete"
 */
 
-void CTLJobPreset::_write_spooling_file(const string &dls_dir,
-                                        const string &action)
+void CTLJobPreset::spool(const string &dls_dir)
 {
   fstream file;
   stringstream filename, err;
-  COMXMLTag tag;
   struct timeval tv;
-
-  tag.title("dls");
-  tag.push_att("action", action);
-  tag.push_att("job", _id);
 
   gettimeofday(&tv, 0);
 
@@ -230,11 +186,11 @@ void CTLJobPreset::_write_spooling_file(const string &dls_dir,
 
   if (!file.is_open())
   {
-    err << "could not write spooling file \"" << filename.str() << "\"!";
+    err << "Could not write spooling file \"" << filename.str() << "\"!";
     throw ECOMJobPreset(err.str());
   }
 
-  file << tag.tag() << endl;
+  file << _id << endl;
   file.close();
 }     
 
@@ -244,7 +200,7 @@ void CTLJobPreset::_write_spooling_file(const string &dls_dir,
    Setzt die Auftrags-ID
 */
 
-void CTLJobPreset::id(int id)
+void CTLJobPreset::id(unsigned int id)
 {
   _id = id;
 }

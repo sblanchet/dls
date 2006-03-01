@@ -13,7 +13,7 @@
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_base64.cpp,v 1.4 2005/01/05 09:24:24 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_base64.cpp,v 1.8 2005/02/04 15:33:18 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -31,6 +31,7 @@ static const char pad64 = '=';
 COMBase64::COMBase64()
 {
   _out_buf = 0;
+  _out_size = 0;
 }
 
 //---------------------------------------------------------------
@@ -41,7 +42,24 @@ COMBase64::COMBase64()
 
 COMBase64::~COMBase64()
 {
-  if (_out_buf) delete [] _out_buf;
+  free();
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt den reservierten Speicher vorrübergehend frei
+*/
+
+void COMBase64::free()
+{
+  _out_size = 0;
+
+  if (_out_buf)
+  {
+    delete [] _out_buf;
+    _out_buf = 0;
+  }
 }
 
 //---------------------------------------------------------------
@@ -50,23 +68,21 @@ COMBase64::~COMBase64()
    Kodiert beliebige Binärdaten in Base64
 
    \param src Zeiger auf den Puffer mit den Binärdaten
-   \param src_len Länge der Binärdaten
+   \param src_size Länge der Binärdaten
    \throw ECOMBase64 Zu wenig Speicher beim Kodieren
  */
 
-void COMBase64::encode(const char *src, unsigned int src_len)
+void COMBase64::encode(const char *src, unsigned int src_size)
 {
-  unsigned int datalength = 0, out_size = (int) (src_len * 4.0 / 3 + 4);
+  unsigned int datalength = 0, out_size = (int) (src_size * 4.0 / 3 + 4);
   unsigned char input[3];
   unsigned char output[4];
   unsigned int i;
+  stringstream err;
 
-  _out_len = 0;
+  free();
 
-  if (!src_len) return;
-
-  if (_out_buf) delete [] _out_buf;
-  _out_buf = 0;
+  if (!src_size) return;
 
   try
   {
@@ -74,15 +90,16 @@ void COMBase64::encode(const char *src, unsigned int src_len)
   }
   catch (...)
   {
-    throw ECOMBase64("could not allocate enough memory!");
+    err << "Could not allocate " << out_size << " bytes of memory!";
+    throw ECOMBase64(err.str());
   }
 
-  while (2 < src_len)
+  while (2 < src_size)
   {
     input[0] = *src++;
     input[1] = *src++;
     input[2] = *src++;
-    src_len -= 3;
+    src_size -= 3;
 
     output[0] = input[0] >> 2;
     output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
@@ -91,7 +108,7 @@ void COMBase64::encode(const char *src, unsigned int src_len)
 
     if (datalength + 4 > out_size)
     {
-      throw ECOMBase64("output buffer full!");
+      throw ECOMBase64("Output buffer full!");
     }
 
     _out_buf[datalength++] = base64[output[0]];
@@ -100,10 +117,10 @@ void COMBase64::encode(const char *src, unsigned int src_len)
     _out_buf[datalength++] = base64[output[3]];
   }
 
-  if (0 != src_len)
+  if (0 != src_size)
   {
     input[0] = input[1] = input[2] = '\0';
-    for (i = 0; i < src_len; i++) input[i] = *src++;
+    for (i = 0; i < src_size; i++) input[i] = *src++;
 
     output[0] = input[0] >> 2;
     output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
@@ -111,13 +128,13 @@ void COMBase64::encode(const char *src, unsigned int src_len)
 
     if (datalength + 4 > out_size)
     {
-      throw ECOMBase64("output buffer full!");
+      throw ECOMBase64("Output buffer full!");
     }
 
     _out_buf[datalength++] = base64[output[0]];
     _out_buf[datalength++] = base64[output[1]];
 
-    if (src_len == 1) _out_buf[datalength++] = pad64;
+    if (src_size == 1) _out_buf[datalength++] = pad64;
     else _out_buf[datalength++] = base64[output[2]];
 
     _out_buf[datalength++] = pad64;
@@ -125,12 +142,12 @@ void COMBase64::encode(const char *src, unsigned int src_len)
 
   if (datalength >= out_size)
   {
-    throw ECOMBase64("output buffer full!");
+    throw ECOMBase64("Output buffer full!");
   }
 
   _out_buf[datalength] = '\0';
 
-  _out_len = datalength;
+  _out_size = datalength;
 }
 
 //---------------------------------------------------------------
@@ -139,22 +156,20 @@ void COMBase64::encode(const char *src, unsigned int src_len)
    Dekodiert Base64-Daten
 
    \param src Zeiger auf einen Puffer mit Base64-Daten
-   \param src_len Länge der Base64-Daten
+   \param src_size Länge der Base64-Daten
    \throw ECOMBase64 Zu wenig Speicher oder Formatfehler
  */
 
-void COMBase64::decode(const char *src, unsigned int src_len)
+void COMBase64::decode(const char *src, unsigned int src_size)
 {
   int tarindex, state, ch;
-  unsigned int out_size = src_len + 1;
+  unsigned int out_size = src_size + 1;
   char *pos;
+  stringstream err;
 
-  _out_len = 0;
+  free();
 
-  if (!src_len) return;
-
-  if (_out_buf) delete [] _out_buf;
-  _out_buf = 0;
+  if (!src_size) return;
 
   try
   {
@@ -162,7 +177,8 @@ void COMBase64::decode(const char *src, unsigned int src_len)
   }
   catch (...)
   {
-    throw ECOMBase64("could not allocate enough memory!");
+    err << "Could not allocate " << out_size << " bytes of memory!";
+    throw ECOMBase64(err.str());
   }
 
   state = 0;
@@ -176,7 +192,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
     pos = strchr(base64, ch);
     if (pos == 0)
     {
-      throw ECOMBase64("found illegal character while decoding!");
+      throw ECOMBase64("Found illegal character while decoding!");
     }
 
     switch (state)
@@ -186,7 +202,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
         {
           if ((size_t) tarindex >= out_size)
           {
-            throw ECOMBase64("output buffer full!");
+            throw ECOMBase64("Output buffer full!");
           }
 
           _out_buf[tarindex] = (pos - base64) << 2;
@@ -199,7 +215,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
         {
           if ((size_t) tarindex + 1 >= out_size)
           {
-            throw ECOMBase64("output buffer full!");
+            throw ECOMBase64("Output buffer full!");
           }
 
           _out_buf[tarindex] |= (pos - base64) >> 4;
@@ -214,7 +230,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
         {
           if ((size_t) tarindex + 1 >= out_size)
           {
-            throw ECOMBase64("output buffer full!");
+            throw ECOMBase64("Output buffer full!");
           }
 
           _out_buf[tarindex] |= (pos - base64) >> 2;
@@ -229,7 +245,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
         {
           if ((size_t) tarindex >= out_size)
           {
-            throw ECOMBase64("output buffer full!");
+            throw ECOMBase64("Output buffer full!");
           }
 
           _out_buf[tarindex] |= (pos - base64);
@@ -238,7 +254,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
         state = 0;
         break;
 
-      default: throw ECOMBase64("unknown state!");
+      default: throw ECOMBase64("Unknown state!");
     }
   }
 
@@ -249,7 +265,7 @@ void COMBase64::decode(const char *src, unsigned int src_len)
     switch (state)
     {
       case 0:
-      case 1: throw ECOMBase64("unknown state (padding)!");
+      case 1: throw ECOMBase64("Unknown state (padding)!");
 
       case 2:
         for ((void) NULL; ch != '\0'; ch = *src++)
@@ -257,21 +273,21 @@ void COMBase64::decode(const char *src, unsigned int src_len)
           if (ch != ' ') break;
         }
 
-        if (ch != pad64) throw ECOMBase64("unexpected character!");
+        if (ch != pad64) throw ECOMBase64("Unexpected character!");
         ch = *src++;
 
       case 3:
         for ((void) NULL; ch != '\0'; ch = *src++)
         {
-          if (ch != ' ') throw ECOMBase64("unexpected character!");
+          if (ch != ' ') throw ECOMBase64("Unexpected character!");
         }
 
-        if (_out_buf && _out_buf[tarindex] != 0) throw ECOMBase64("error ???");
+        if (_out_buf && _out_buf[tarindex] != 0) throw ECOMBase64("Check error!");
     }
   }
-  else if (state != 0) throw ECOMBase64("unknown ending state!");
+  else if (state != 0) throw ECOMBase64("Illegal final state!");
 
-  _out_len = tarindex;
+  _out_size = tarindex;
 }
 
 //---------------------------------------------------------------

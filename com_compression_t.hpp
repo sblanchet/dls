@@ -14,6 +14,8 @@
 #include "com_mdct_t.hpp"
 #include "com_exception.hpp"
 
+//#define DEBUG
+
 //---------------------------------------------------------------
 
 /**
@@ -40,78 +42,99 @@ public:
   virtual ~COMCompressionT() {};
 
   /**
-     Komprimiert ein Array von Datenwerten beliebigen, aber gleichen Typs
+     Gibt alle persistenten Speicher frei.
+
+     Die Speicher werden bei der nächsten Anforderung immer
+     neu angelegt. Durch den Aufruf von free() wird der
+     Speicher in der Zwischenzeit nicht unnötig belegt.
+  */
+
+  virtual void free() = 0;
+
+  /**
+     Komprimiert ein Array von Datenwerten beliebigen Typs
 
      \param input Konstanter Zeiger auf ein Array von Werten
-     \param input_length Anzahl der Werte im Input-Array
-     \param output Zeiger auf einen Speicherbereich zum Ablegen
-                   der komprimierten Daten
-     \param output_size Größe des reservierten Ausgabespeichers in Bytes
-     \return Größe der komprimierten Daten in Bytes
+     \param length Anzahl der Werte im Input-Array
      \throw ECOMCompression Fehler beim Komprimieren
   */
 
-  virtual unsigned int compress(const T *input,
-                                unsigned int input_length,
-                                char *output,
-                                unsigned int output_size) = 0;
+  virtual void compress(const T *input,
+                        unsigned int length) = 0;
 
   /**
      Wandelt komprimierte Binärdaten in ein Array von Datenwerten um
 
      \param input Konstanter Zeiger auf den Speicherbereich mit
                   den komprimierten Binärdaten
-     \param input_length Größe der komprimierten Daten in Bytes
-     \param output Zeiger auf einen Speicherbereich zum Ablegen
-                   der dekomprimierten Datenwerte
-     \param output_size Maximale Anzahl der zu dekomprimierenden Datenwerte
-     \return Anzahl tatsächlich dekomprimierter Datenwerte
+     \param size Größe der komprimierten Daten in Bytes
+     \param length Erwartete Anzahl von Datenwerten
      \throw ECOMCompression Fehler beim Dekomprimieren
   */
 
-  virtual unsigned int uncompress(const char *input,
-                                  unsigned int input_length,
-                                  T *output,
-                                  unsigned int output_size) = 0;
+  virtual void uncompress(const char *input,
+                          unsigned int size,
+                          unsigned int length) = 0;
 
   /**
      Leert den persistenten Speicher des Komprimierungsvorganges
      und liefert die restlichen, komprimierten Daten zurück
 
-     \param output Zeiger auf einen Speicherbereich zum Ablegen
-                   der komprimierten Datenwerte
-     \param output_size Größe des Ausgabespeichers
-     \return Größe der komprimierten Daten in Bytes
      \throw ECOMCompression Fehler beim Komprimieren
   */
 
-  virtual unsigned int flush_compress(char *output,
-                                      unsigned int output_size) = 0;
+  virtual void flush_compress() = 0;
 
   /**
      Leert den persistenten Speicher des Dekomprimierungsvorganges
      und liefert die restlichen, dekomprimierten Daten
 
-     Die Größe des Ausgabespeichers liegt in diesem Fall fest.
-
      \param input Konstanter Zeiger auf den Speicherbereich mit
                   den zuvor von flush_compress() gelieferten Binärdaten
-     \param input_length Größe der komprimierten Daten in Bytes
-     \param output Zeiger auf einen Speicherbereich zum Ablegen
-                   der dekomprimierten Datenwerte
-     \return Anzahl tatsächlich dekomprimierter Datenwerte
+     \param size Größe der komprimierten Daten in Bytes
      \throw ECOMCompression Fehler beim Dekomprimieren
   */
 
-  virtual unsigned int flush_uncompress(const char *input,
-                                        unsigned int input_length,
-                                        T *output) = 0;
+  virtual void flush_uncompress(const char *input,
+                                unsigned int size) = 0;
 
   /**
-     Löscht alle Komprimierungsoperationen, die von vorherigen Daten abhängig sind
+     Löscht alle Persistenzen, die von vorherigen Daten abhängig sind
   */
 
   virtual void clear() = 0;
+
+  /**
+     Liefert die Komprimierten Daten
+
+     \return Konstanter Zeiger auf die komprimierten Daten
+  */
+
+  virtual const char *compression_output() const = 0;
+
+  /**
+     Liefert die Größe der komprimierten Daten
+
+     \return Größe in Bytes
+  */
+
+  virtual unsigned int compressed_size() const = 0;
+  
+  /**
+     Liefert die Dekomprimierten Daten
+
+     \return Konstanter Zeiger auf die dekomprimierten Daten
+  */
+
+  virtual const T *decompression_output() const = 0;
+
+  /**
+     Liefert die Anzahl der dekomprimierten Datenwerte
+
+     \return Anzahl Datenwerte
+  */
+  
+  virtual unsigned int decompressed_length() const = 0;
 };
 
 //---------------------------------------------------------------
@@ -128,41 +151,67 @@ template <class T>
 class COMCompressionT_ZLib : public COMCompressionT<T>
 {
 public:
-  virtual unsigned int compress(const T *input,
-                                unsigned int input_length,
-                                char *output,
-                                unsigned int output_size);
-  virtual unsigned int uncompress(const char *input,
-                                  unsigned int input_length,
-                                  T *output,
-                                  unsigned int output_size);
-  virtual void clear();
-  virtual unsigned int flush_compress(char *output,
-                                      unsigned int output_size);
-  virtual unsigned int flush_uncompress(const char *input,
-                                        unsigned int input_length,
-                                        T *output);
+  COMCompressionT_ZLib();
+  ~COMCompressionT_ZLib();
 
-protected:
-  COMZLib _zlib;     /**< ZLib-Objekt zum Komprimieren */
-  COMBase64 _base64; /**< Base64-Objekt zum Kodieren */
+  void compress(const T *input,
+                unsigned int length);
+  void uncompress(const char *input,
+                  unsigned int size,
+                  unsigned int length);
+  void clear();
+  void flush_compress();
+  void flush_uncompress(const char *input,
+                        unsigned int size);
+
+  void free();
+
+  const char *compression_output() const;
+  unsigned int compressed_size() const;
+  const T *decompression_output() const;
+  unsigned int decompressed_length() const;
+
+private:
+  COMZLib _zlib;            /**< ZLib-Objekt zum Komprimieren */
+  COMBase64 _base64;        /**< Base64-Objekt zum Kodieren */
 };
 
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_ZLib<T>::compress(const T *input,
-                                               unsigned int input_length,
-                                               char *output,
-                                               unsigned int output_size)
+COMCompressionT_ZLib<T>::COMCompressionT_ZLib()
+{
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+COMCompressionT_ZLib<T>::~COMCompressionT_ZLib()
+{
+  free();
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_ZLib<T>::free()
+{
+  _zlib.free();
+  _base64.free();
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_ZLib<T>::compress(const T *input,
+                                       unsigned int length)
 {
   stringstream err;
-  unsigned int i;
 
   try
   {
-    _zlib.compress((char *) input, input_length * sizeof(T));
-    _base64.encode(_zlib.output(), _zlib.output_length());
+    _zlib.compress((char *) input, length * sizeof(T));
+    _base64.encode(_zlib.output(), _zlib.output_size());
   }
   catch (ECOMZLib &e)
   {
@@ -174,65 +223,41 @@ unsigned int COMCompressionT_ZLib<T>::compress(const T *input,
     err << "Base64: " << e.msg;
     throw ECOMCompression(err.str());
   }
-
-  if (_base64.output_length() + 1 > output_size)
-  {
-    throw ECOMCompression("output buffer too small!");
-  }
-
-  // Komprimierte Daten in Ausgabepuffer kopieren
-  for (i = 0; i < _base64.output_length(); i++)
-  {
-    output[i] = _base64.output()[i];
-  }
-
-  output[_base64.output_length()] = 0;
-
-  return _base64.output_length();
 }
 
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_ZLib<T>::uncompress(const char *input,
-                                                 unsigned int input_length,
-                                                 T *output,
-                                                 unsigned int output_size)
+void COMCompressionT_ZLib<T>::uncompress(const char *input,
+                                         unsigned int size,
+                                         unsigned int length)
 {
   stringstream err;
-  unsigned int i;
+  
+  free();
 
   try
   {
-    _base64.decode(input, input_length);
-    _zlib.uncompress(_base64.output(), _base64.output_length(), output_size * sizeof(T));
+    _base64.decode(input, size);
+    _zlib.uncompress(_base64.output(), _base64.output_size(), length * sizeof(T));
   }
   catch (ECOMBase64 &e)
   {
-    err << "error while base64-decoding: " << e.msg << endl;
+    err << "While Base64-decoding: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
   catch (ECOMZLib &e)
   {
-    err << "error while zlib-uncompressing: " << e.msg << endl;
+    err << "While ZLib-uncompressing: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
 
-  if (_zlib.output_length() % sizeof(T) != 0
-      || _zlib.output_length() / sizeof(T) != output_size)
+  if (_zlib.output_size() != length * sizeof(T))
   {
-    err << "zlib output (" << _zlib.output_length();
-    err << ") does not fit to expected values (" << output_size;
-    err << ")!" << endl;
+    err << "ZLib output does not have expected size: ";
+    err << _zlib.output_size() << " / " << length * sizeof(T);
     throw ECOMCompression(err.str());
   }
-
-  for (i = 0; i < output_size; i++)
-  {
-    output[i] = ((T *) _zlib.output())[i];
-  }
-
-  return output_size;
 }
 
 //---------------------------------------------------------------
@@ -245,20 +270,50 @@ void COMCompressionT_ZLib<T>::clear()
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_ZLib<T>::flush_compress(char *output,
-                                                     unsigned int output_size)
+void COMCompressionT_ZLib<T>::flush_compress()
 {
-  return 0;
+  free();
 }
 
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_ZLib<T>::flush_uncompress(const char *input,
-                                                       unsigned int input_length,
-                                                       T *output)
+void COMCompressionT_ZLib<T>::flush_uncompress(const char *input,
+                                               unsigned int size)
 {
-  return 0;
+  free();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+const char *COMCompressionT_ZLib<T>::compression_output() const
+{
+  return _base64.output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_ZLib<T>::compressed_size() const
+{
+  return _base64.output_size();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+const T *COMCompressionT_ZLib<T>::decompression_output() const
+{
+  return (T *) _zlib.output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_ZLib<T>::decompressed_length() const
+{
+  return _zlib.output_size() / sizeof(T);
 }
 
 //---------------------------------------------------------------
@@ -272,28 +327,32 @@ unsigned int COMCompressionT_ZLib<T>::flush_uncompress(const char *input,
 */
 
 template <class T>
-class COMCompressionT_MDCT : public COMCompressionT_ZLib<T>
+class COMCompressionT_MDCT : public COMCompressionT<T>
 {
 public:
   COMCompressionT_MDCT(unsigned int, double);
   ~COMCompressionT_MDCT();
 
-  unsigned int compress(const T *input,
-                        unsigned int input_length,
-                        char *output,
-                        unsigned int output_size);
-  unsigned int uncompress(const char *input,
-                          unsigned int input_length,
-                          T *output,
-                          unsigned int output_size);
+  void compress(const T *input,
+                unsigned int length);
+  void uncompress(const char *input,
+                  unsigned int size,
+                  unsigned int length);
   void clear();
-  unsigned int flush_compress(char *output,
-                              unsigned int output_size);
-  unsigned int flush_uncompress(const char *input,
-                                unsigned int input_length,
-                                T *output);
+  void flush_compress();
+  void flush_uncompress(const char *input,
+                        unsigned int size);
+
+  void free();
+
+  const char *compression_output() const;
+  unsigned int compressed_size() const;
+  const T *decompression_output() const;
+  unsigned int decompressed_length() const;
 
 private:
+  COMBase64 _base64;  /**< Base64-Objekt zum Kodieren */
+  COMZLib _zlib;      /**< ZLib-Objekt zum Komprimieren */
   COMMDCTT<T> *_mdct; /**< MDCT-Objekt zum Transformieren */
 
   COMCompressionT_MDCT() {}; // privat!
@@ -317,7 +376,7 @@ COMCompressionT_MDCT<T>::COMCompressionT_MDCT(unsigned int dim,
   }
   catch (...)
   {
-    throw ECOMCompression("could not allocate memory for MDCT object!");
+    throw ECOMCompression("Could not allocate memory for MDCT object!");
   }
 }
 
@@ -332,79 +391,76 @@ COMCompressionT_MDCT<T>::~COMCompressionT_MDCT()
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_MDCT<T>::compress(const T *input,
-                                               unsigned int input_length,
-                                               char *output,
-                                               unsigned int output_size)
+void COMCompressionT_MDCT<T>::free()
+{
+  _zlib.free();
+  _base64.free();
+}
+
+//---------------------------------------------------------------
+
+template <class T>
+void COMCompressionT_MDCT<T>::compress(const T *input,
+                                       unsigned int length)
 {
   stringstream err;
 
   try
   {
-    _mdct->transform(input, input_length);
+    _mdct->transform(input, length);
+    _zlib.compress((char *) _mdct->mdct_output(), _mdct->mdct_output_size());
+    _base64.encode(_zlib.output(), _zlib.output_size());
   }
   catch (ECOMMDCT &e)
   {
     err << "MDCT: " << e.msg;
     throw ECOMCompression(err.str());
   }
-
-  return COMCompressionT_ZLib<T>::compress(_mdct->output(),
-                                           _mdct->output_length(),
-                                           output,
-                                           output_size);
+  catch (ECOMZLib &e)
+  {
+    err << "ZLib: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMBase64 &e)
+  {
+    err << "Base64: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
 }
 
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_MDCT<T>::uncompress(const char *input,
-                                                 unsigned int input_length,
-                                                 T *output,
-                                                 unsigned int output_size)
+void COMCompressionT_MDCT<T>::uncompress(const char *input,
+                                         unsigned int size,
+                                         unsigned int length)
 {
   stringstream err;
-  unsigned int i, real_size;
+  unsigned int max_size;
 
-  if (output_size % _mdct->block_size() == 0)
-  {
-    real_size = output_size;
-  }
-  else
-  {
-    real_size = (output_size / _mdct->block_size() + 1) * _mdct->block_size();
-  }
-
-  real_size++; // Einen Wert mehr für MDCT-Mittelwert
+  max_size = _mdct->max_compressed_size(length);
 
   try
   {
-    _base64.decode(input, input_length);
-    _zlib.uncompress(_base64.output(), _base64.output_length(), real_size * sizeof(T));
-    _mdct->detransform((T *) _zlib.output(), output_size + 1);
+    _base64.decode(input, size);
+    _zlib.uncompress(_base64.output(), _base64.output_size(), max_size);
+    _mdct->detransform(_zlib.output(), length);
   }
   catch (ECOMBase64 &e)
   {
-    err << "error while base64-decoding: " << e.msg << endl;
+    err << "While Base64-decoding: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
   catch (ECOMZLib &e)
   {
-    err << "error while zlib-uncompressing: " << e.msg << endl;
+    err << "While ZLib-uncompressing: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
   catch (ECOMMDCT &e)
   {
-    err << "error while MDCT-detransforming: " << e.msg << endl;
+    err << "While MDCT-detransforming: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
-
-  for (i = 0; i < _mdct->output_length(); i++)
-  {
-    output[i] = _mdct->output()[i];
-  }
-
-  return _mdct->output_length();
 }
 
 //---------------------------------------------------------------
@@ -418,68 +474,104 @@ void COMCompressionT_MDCT<T>::clear()
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_MDCT<T>::flush_compress(char *output,
-                                                     unsigned int output_size)
+void COMCompressionT_MDCT<T>::flush_compress()
 {
   stringstream err;
 
   try
   {
     _mdct->flush_transform();
+    _zlib.compress(_mdct->mdct_output(), _mdct->mdct_output_size());
+    _base64.encode(_zlib.output(), _zlib.output_size());
   }
   catch (ECOMMDCT &e)
   {
     err << "MDCT flush: " << e.msg;
     throw ECOMCompression(err.str());
   }
-
-  return COMCompressionT_ZLib<T>::compress(_mdct->output(),
-                                           _mdct->output_length(),
-                                           output,
-                                           output_size);
+  catch (ECOMZLib &e)
+  {
+    err << "ZLib: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
+  catch (ECOMBase64 &e)
+  {
+    err << "Base64: " << e.msg;
+    throw ECOMCompression(err.str());
+  }
 }
 
 //---------------------------------------------------------------
 
 template <class T>
-unsigned int COMCompressionT_MDCT<T>::flush_uncompress(const char *input,
-                                                       unsigned int input_length,
-                                                       T *output)
+void COMCompressionT_MDCT<T>::flush_uncompress(const char *input,
+                                               unsigned int size)
 {
   stringstream err;
-  unsigned int i;
+  unsigned int max_size;
+
+  // Die maximale Datengröße vor ZLib ermitteln
+  max_size = _mdct->max_compressed_size(0);
 
   try
   {
-    _base64.decode(input, input_length);
-    _zlib.uncompress(_base64.output(), _base64.output_length(),
-                     (_mdct->block_size() / 2 + 1) * sizeof(T));
-    _mdct->flush_detransform((T *) _zlib.output());
+    _base64.decode(input, size);
+    _zlib.uncompress(_base64.output(), _base64.output_size(), max_size);
+    _mdct->flush_detransform(_zlib.output(), _zlib.output_size());
   }
   catch (ECOMBase64 &e)
   {
-    err << "error while base64-decoding: " << e.msg << endl;
+    err << "While Base64-decoding: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
   catch (ECOMZLib &e)
   {
-    err << "error while zlib-uncompressing: " << e.msg << endl;
+    err << "While ZLib-uncompressing: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
   catch (ECOMMDCT &e)
   {
-    err << "error while MDCT-detransforming: " << e.msg << endl;
+    err << "While MDCT-detransforming: " << e.msg << endl;
     throw ECOMCompression(err.str());
   }
-
-  for (i = 0; i < _mdct->output_length(); i++)
-  {
-    output[i] = _mdct->output()[i];
-  }
-
-  return _mdct->output_length();
 }
 
 //---------------------------------------------------------------
+
+template<class T>
+const char *COMCompressionT_MDCT<T>::compression_output() const
+{
+  return _base64.output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_MDCT<T>::compressed_size() const
+{
+  return _base64.output_size();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+const T *COMCompressionT_MDCT<T>::decompression_output() const
+{
+  return _mdct->imdct_output();
+}
+
+//---------------------------------------------------------------
+
+template<class T>
+unsigned int COMCompressionT_MDCT<T>::decompressed_length() const
+{
+  return _mdct->imdct_output_length();
+}
+
+//---------------------------------------------------------------
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
 
 #endif

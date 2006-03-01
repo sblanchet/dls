@@ -78,7 +78,8 @@ public:
 /**
    Speichern von generischen Daten
 
-   \todo DOC
+   Nimmt generische Daten entgegen und speichert diese. Hält die
+   Meta-Saver vor und verteilt anfallende Daten an sie.
 */
 
 template <class T>
@@ -109,6 +110,8 @@ private:
 
   int _meta_level() const;
   string _meta_type() const;
+
+  void _convert_endianess(unsigned char *, unsigned int) const;
 
   DLSSaverGenT(); // Default-Konstruktor privat: Darf nicht aufgerufen werden!
 };
@@ -209,10 +212,7 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
   if (size == 0) return;
 
   // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-  if (size % sizeof(T) != 0)
-  {
-    throw EDLSSaver("illegal data size!");
-  }
+  if (size % sizeof(T)) throw EDLSSaver("illegal data size!");
 
   values_in_buffer = size / sizeof(T);
 
@@ -241,8 +241,27 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
     }
   }
 
+  // Endianess konvertieren, falls nötig
+  _convert_endianess((unsigned char *) buffer, size);
+
   // Daten speichern
   _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
+}
+
+//---------------------------------------------------------------
+
+/**
+   Konvertieren der Endianess
+
+   \param buffer Adresse des Datenspeichers
+   \param size Anzahl der Bytes im Speicher
+*/
+
+template <class T>
+void DLSSaverGenT<T>::_convert_endianess(unsigned char *buffer,
+                                         unsigned int size) const
+{
+  // FIXME
 }
 
 //---------------------------------------------------------------
@@ -323,35 +342,40 @@ void DLSSaverGenT<T>::flush()
   _save_rest();
 
 #ifdef DEBUG
-  cout << "DLSSaverGenT: _finish_files() for channel " << _parent_logger->channel_preset()->name << endl;
+  msg() << "DLSSaverGenT: _finish_files() for channel " << _parent_logger->channel_preset()->name;
+  log(DLSDebug);
 #endif
 
   // Dateien beenden
   _finish_files();
 
 #ifdef DEBUG
-  cout << "DLSSaverGenT: _compression_clear()" << endl;
+  msg() << "DLSSaverGenT: _compression_clear()";
+  log(DLSDebug);
 #endif
 
   // Persistenten Speicher des Kompressionsobjekt leeren
   _compression->clear();
 
 #ifdef DEBUG
-  cout << "DLSSaverGenT: _flush_savers()" << endl;
+  msg() << "DLSSaverGenT: _flush_savers()";
+  log(DLSDebug);
 #endif
 
   // Metadaten speichern
   _flush_savers();
 
 #ifdef DEBUG
-  cout << "DLSSaverGenT: _clear_savers()" << endl;
+  msg() << "DLSSaverGenT: _clear_savers()";
+  log(DLSDebug);
 #endif
 
   // Alle Saver beenden
   _clear_savers();
 
 #ifdef DEBUG
-  cout << "DLSSaverGenT: flush finished!" << endl;
+  msg() << "DLSSaverGenT: flush finished!";
+  log(DLSDebug);
 #endif
 
   // Jetzt ist nichts mehr im Speicher
@@ -396,6 +420,7 @@ void DLSSaverGenT<T>::_generate_meta_data()
 //---------------------------------------------------------------
 
 /**
+   Veranlasst alle Saver, ihre Daten zu schreiben
 */
 
 template <class T>
@@ -498,5 +523,9 @@ inline string DLSSaverGenT<T>::_meta_type() const
 }
 
 //---------------------------------------------------------------
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
 
 #endif

@@ -23,7 +23,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_chunk.cpp,v 1.10 2005/01/05 09:21:30 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_chunk.cpp,v 1.11 2005/02/23 13:22:44 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -88,9 +88,9 @@ void ViewChunk::import()
     xml.parse(&file, "dlschunk", dxttBegin);
     xml.parse(&file, "chunk", dxttSingle);
     
-    _sample_frequency = xml.last_tag()->att("sample_frequency")->to_int();
-    _meta_reduction = xml.last_tag()->att("meta_reduction")->to_int();
-    format_str = xml.last_tag()->att("format")->to_str(); 
+    _sample_frequency = xml.tag()->att("sample_frequency")->to_int();
+    _meta_reduction = xml.tag()->att("meta_reduction")->to_int();
+    format_str = xml.tag()->att("format")->to_str(); 
 
     _format_index = DLS_FORMAT_INVALID;
     for (i = 0; i < DLS_FORMAT_COUNT; i++)
@@ -109,7 +109,7 @@ void ViewChunk::import()
 
     if (_format_index == DLS_FORMAT_MDCT)
     {
-      _mdct_block_size = xml.last_tag()->att("mdct_block_size")->to_int(); 
+      _mdct_block_size = xml.tag()->att("mdct_block_size")->to_int(); 
     }
 
     //xml.parse(&file, "dlschunk", dxttEnd);

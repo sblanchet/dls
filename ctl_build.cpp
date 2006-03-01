@@ -5,7 +5,7 @@
 
 //---------------------------------------------------------------
 
-#define CTL_BUILD 41 // Build-Nummer, wird automatisch erhöht!
+#define CTL_BUILD 59 // Build-Nummer, wird automatisch erhöht!
 
 #ifndef BUILDER
 #define BUILDER ???

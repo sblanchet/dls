@@ -43,15 +43,17 @@ private:
   unsigned int _sig_child;     /**< Zähler für empfangene SIGCHLD-Signale */
   bool _exit;                  /**< true, wenn der Prozess beendet werden soll */
   bool _exit_error;            /**< true, wenn die Beendigung mit Fehler erfolgen soll */
-  stringstream _msg;           /**< Auszugebende Nachricht */
 
   void _empty_spool();
   void _check_jobs();
   void _check_signals();
   void _check_spool();
+  bool _spool_job(unsigned int);
+  bool _add_job(unsigned int);
+  bool _change_job(DLSJobPreset *);
+  bool _remove_job(unsigned int);
   void _check_processes();
-  DLSJobPreset *_job_exists(int);
-  void _log(DLSLogType);
+  DLSJobPreset *_job_exists(unsigned int);
   unsigned int _processes_running();
 };
 

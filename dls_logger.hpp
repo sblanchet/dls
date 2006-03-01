@@ -89,11 +89,6 @@ public:
 
   void bytes_written(unsigned int);
 
-  //@{
-  stringstream &msg() const;
-  void log(DLSLogType) const;
-  //@}
-
 private:
   const DLSJob *_parent_job; /**< Zeiger auf das besitzende Auftragsobjekt */
   string _dls_dir;           /**< DLS-Datenverzeichnis */

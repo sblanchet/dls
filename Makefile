@@ -9,7 +9,8 @@ DLSD_OBJECTS = \
 	com_zlib.o com_base64.o \
 	com_xml_tag.o com_xml_parser.o \
 	com_channel_preset.o com_job_preset.o \
-	dls_job_preset.o dls_job.o dls_logger.o \
+	mdct.o \
+	dls_job_preset.o dls_logger.o dls_job.o \
 	dls_proc_logger.o dls_proc_mother.o \
 	dls_main.o
 
@@ -32,6 +33,7 @@ VIEW_OBJECTS = \
 	com_xml_tag.o com_xml_parser.o \
 	com_channel_preset.o com_job_preset.o \
 	com_dialog_msg.o \
+	mdct.o \
 	view_data.o view_chunk.o view_channel.o \
 	view_view_data.o view_view_msg.o \
 	view_dialog_main.o \
@@ -89,7 +91,7 @@ first: normal
 
 normal: $(BIN)/$(DLSD_EXE) $(BIN)/$(CTL_EXE) $(BIN)/$(VIEW_EXE)
 
-all: mrproper depend $(BIN)/$(DLSD_EXE) $(BIN)/$(CTL_EXE) $(BIN)/$(VIEW_EXE) doc
+all: mrproper depend install doc
 
 dist: 
 	$(MAKE) DIST=true all
@@ -102,13 +104,8 @@ install: $(INSTALL)/$(DLSD_EXE) $(INSTALL)/$(CTL_EXE) $(INSTALL)/$(VIEW_EXE)
 uninstall:
 	rm -f $(INSTALL)/$(DLSD_EXE) $(INSTALL)/$(CTL_EXE) $(INSTALL)/$(VIEW_EXE)
 
-time:
-	-@echo "making TIME"
-	-@echo `for i in 1 .. 10; do sleep 1 && echo "."; done`
-	-@echo "added 2 hours to the current day!";
-
 $(BIN)/$(DLSD_EXE): $(DLSD_OBJECTS)
-	./dls_build_inc.pl
+	./dls_build_inc
 	g++ -c $(BUILD_FLAGS) dls_build.cpp -o dls_build.o
 	g++ $(LINKER_FLAGS) $(DLSD_OBJECTS) dls_build.o $(DLSD_LIB) -o $(BIN)/$(DLSD_EXE)
 
@@ -116,7 +113,7 @@ $(INSTALL)/$(DLSD_EXE): $(BIN)/$(DLSD_EXE)
 	cp $(BIN)/$(DLSD_EXE) $(INSTALL)
 
 $(BIN)/$(CTL_EXE): $(CTL_OBJECTS)
-	./ctl_build_inc.pl
+	./ctl_build_inc
 	g++ -c $(BUILD_FLAGS) ctl_build.cpp -o ctl_build.o
 	g++ $(LINKER_FLAGS) $(CTL_OBJECTS) ctl_build.o $(CTL_LIB) -o $(BIN)/$(CTL_EXE)
 
@@ -124,7 +121,7 @@ $(INSTALL)/$(CTL_EXE): $(BIN)/$(CTL_EXE)
 	cp $(BIN)/$(CTL_EXE) $(INSTALL)
 
 $(BIN)/$(VIEW_EXE): $(VIEW_OBJECTS)
-	./view_build_inc.pl
+	./view_build_inc
 	g++ -c $(BUILD_FLAGS) view_build.cpp -o view_build.o
 	g++ $(LINKER_FLAGS) $(VIEW_OBJECTS) view_build.o $(VIEW_LIB) -o $(BIN)/$(VIEW_EXE)
 
@@ -151,12 +148,13 @@ view_%.o: view_%.cpp
 fl_%.o: fl_%.cpp
 	g++ -c $(COMPILER_FLAGS) $(FLTK_INC) $< -o $@
 
+mdct.o: mdct.c
+	g++ -c $(COMPILER_FLAGS) $< -o $@
+
 # Abhängigkeiten ------------------------------------------------
 
 depend:
-	(for file in *.cpp; do \
-		g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $$file; \
-	done) > .depend
+	(for file in *.cpp *.c; do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $$file; done) > .depend
 
 include .depend
 

@@ -14,9 +14,11 @@ using namespace std;
 #include "com_globals.hpp"
 #include "com_zlib.hpp"
 
+//#define DEBUG
+
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_zlib.cpp,v 1.6 2004/12/17 10:07:43 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_zlib.cpp,v 1.13 2005/02/22 15:23:20 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -27,6 +29,7 @@ RCS_ID("$Header: /home/fp/dls/src/RCS/com_zlib.cpp,v 1.6 2004/12/17 10:07:43 fp 
 COMZLib::COMZLib()
 {
   _out_buf = 0;
+  _out_size = 0;
 }
 
 //---------------------------------------------------------------
@@ -37,7 +40,24 @@ COMZLib::COMZLib()
 
 COMZLib::~COMZLib()
 {
-  if (_out_buf) delete [] _out_buf;
+  free();
+}
+
+//---------------------------------------------------------------
+
+/**
+   Gibt alle Speicherbereiche vorübergehend frei
+*/
+
+void COMZLib::free()
+{
+  _out_size = 0;
+
+  if (_out_buf)
+  {
+    delete [] _out_buf;
+    _out_buf = 0;
+  }
 }
 
 //---------------------------------------------------------------
@@ -49,40 +69,57 @@ COMZLib::~COMZLib()
    Ergebnis im internen Ausgabepuffer.
 
    \param src Konstanter zeiger auf die zu komprimierenden Daten
-   \param src_len Anzahl der zu komprimierenden Zeichen
+   \param src_size Anzahl der zu komprimierenden Zeichen
    \throw ECOMZLib Fehler beim Komprimieren
 */
 
-void COMZLib::compress(const char *src, unsigned int src_len)
+void COMZLib::compress(const char *src, unsigned int src_size)
 {
-  unsigned int out_len;
+  unsigned int out_size;
   int comp_ret;
   stringstream err;
 
-  _out_len = 0;
+  free();
 
   // Keine Daten - Nichts zu komprimieren
-  if (!src_len) return;
+  if (!src_size) return;
   
   // Die komprimierten Daten können in sehr ungünstigen Fällen
-  // größer sein, als die Quelldaten. 1K mehr allokieren.
-  out_len = src_len + 1024;
-  _realloc(out_len);
+  // größer sein, als die Quelldaten. Siehe ZLib-Doku:
+  // http://www.gzip.org/zlib/manual.html#compress
+  out_size = (unsigned int) (src_size * 1.01 + 12);
 
-  // Komprimieren
-  comp_ret = ::compress((Bytef *) _out_buf, (uLongf *) &out_len,
-                        (const Bytef *) src, src_len);
-
-  if (comp_ret != Z_OK) // Fehler beim Komprimieren
+  try
   {
-    err << "error " << comp_ret;
-    if (comp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
-    err << ", out_len=" << out_len;
-    err << ", src_len=" << src_len;
+    _out_buf = new char[out_size];
+  }
+  catch (...)
+  {
+    err << "Could not allocate " << out_size << " bytes!";
     throw ECOMZLib(err.str());
   }
 
-  _out_len = out_len;
+  // Komprimieren
+  comp_ret = ::compress((Bytef *) _out_buf, (uLongf *) &out_size,
+                        (const Bytef *) src, src_size);
+
+  if (comp_ret != Z_OK) // Fehler beim Komprimieren
+  {
+    err << "compress returned " << comp_ret;
+    if (comp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
+    err << ", out_size=" << out_size;
+    err << ", src_size=" << src_size;
+    throw ECOMZLib(err.str());
+  }
+
+#ifdef DEBUG
+  msg() << "ZLib compression: input=" << src_size;
+  msg() << " output=" << out_size;
+  msg() << " quote=" << (float) out_size / src_size * 100 << "%";
+  log(DLSDebug);
+#endif
+
+  _out_size = out_size;
 }
 
 //---------------------------------------------------------------
@@ -91,68 +128,46 @@ void COMZLib::compress(const char *src, unsigned int src_len)
    Dekomprimieren
 
    \param src Konstanter Zeiger auf die komprimierten Daten
-   \param src_len Größe der komprimierten Daten
-   \param out_len Erwartete Größe der dekomprimierten Daten
+   \param src_size Größe der komprimierten Daten in Bytes
+   \param out_size Erwartete Größe der dekomprimierten Daten in Bytes
    \throw ECOMZLib Fehler beim Dekomprimieren
 */
 
-void COMZLib::uncompress(const char *src, unsigned int src_len,
-                         unsigned int out_len)
+void COMZLib::uncompress(const char *src, unsigned int src_size,
+                         unsigned int out_size)
 {
   int uncomp_ret;
   stringstream err;
 
-  _out_len = 0;
+  _out_size = 0;
 
   // Keine Eingabedaten - keine Dekompression
-  if (!src_len) return;
-
-  // Speicher für die Ausgabe reservieren
-  _realloc(out_len);
-
-  // Dekomprimieren
-  uncomp_ret = ::uncompress((Bytef *) _out_buf, (uLongf *) &out_len,
-                            (const Bytef *) src, src_len);
-
-  if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
-  {
-    err << "error " << uncomp_ret;
-    if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
-    err << ", out_len=" << out_len;
-    err << ", src_len=" << src_len;
-    throw ECOMZLib(err.str());
-  }
-
-  _out_len = out_len;
-}
-
-//---------------------------------------------------------------
-
-/**
-   Reserviert Speicher für die Ausgabe
-
-   \param size Größe des Ausgabespeichers
-   \throw ECOMZLib Es konnte kein Speicher reserviert werden
-*/
-
-void COMZLib::_realloc(unsigned int size)
-{
-  stringstream err;
-
-  // Alten Speicher freigeben
-  if (_out_buf) delete [] _out_buf;
-  _out_buf = 0;
+  if (!src_size) return;
 
   try
   {
-    // Neuen Speicher allokieren
-    _out_buf = new char[size];
+    _out_buf = new char[out_size];
   }
   catch (...)
   {
-    err << "could not allocate " << size << " bytes of memory!";
+    err << "Could not allocate " << out_size << " bytes!";
     throw ECOMZLib(err.str());
   }
+
+  // Dekomprimieren
+  uncomp_ret = ::uncompress((Bytef *) _out_buf, (uLongf *) &out_size,
+                            (const Bytef *) src, src_size);
+
+  if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
+  {
+    err << "uncompress returned " << uncomp_ret;
+    if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
+    err << ", out_size=" << out_size;
+    err << ", src_size=" << src_size;
+    throw ECOMZLib(err.str());
+  }
+
+  _out_size = out_size;
 }
 
 //---------------------------------------------------------------

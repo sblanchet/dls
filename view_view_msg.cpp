@@ -38,7 +38,7 @@ const Fl_Color msg_colors[MSG_COUNT] =
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_msg.cpp,v 1.8 2005/01/14 13:25:20 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_view_msg.cpp,v 1.9 2005/02/23 13:22:28 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -187,7 +187,7 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
 
       try
       {
-        msg.text = xml.last_tag()->att("text")->to_str();
+        msg.text = xml.tag()->att("text")->to_str();
       }
       catch (ECOMXMLTag &e)
       {
@@ -195,11 +195,11 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
         msg.text = "??? (no text in tag!)";
       }
 
-      if (xml.last_tag()->title() == "info")            msg.type = MSG_INFO;
-      else if (xml.last_tag()->title() == "warning")    msg.type = MSG_WARNING;
-      else if (xml.last_tag()->title() == "error")      msg.type = MSG_ERROR;
-      else if (xml.last_tag()->title() == "crit_error") msg.type = MSG_CRITICAL;
-      else if (xml.last_tag()->title() == "broadcast")  msg.type = MSG_BROADCAST;
+      if (xml.tag()->title() == "info")            msg.type = MSG_INFO;
+      else if (xml.tag()->title() == "warning")    msg.type = MSG_WARNING;
+      else if (xml.tag()->title() == "error")      msg.type = MSG_ERROR;
+      else if (xml.tag()->title() == "crit_error") msg.type = MSG_CRITICAL;
+      else if (xml.tag()->title() == "broadcast")  msg.type = MSG_BROADCAST;
       else msg.type = MSG_UNKNOWN;
       
       _messages.push_back(msg);

@@ -26,7 +26,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.11 2005/01/25 08:48:00 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_proc_mother.cpp,v 1.13 2005/02/03 09:43:24 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -91,14 +91,14 @@ int DLSProcMother::start(const string &dls_dir)
 
   _dls_dir = dls_dir;
 
-  _msg << "----- mother process started -----";
-  _log(DLSInfo);
+  msg() << "----- mother process started -----";
+  log(DLSInfo);
 
-  _msg << dls_version_str;
-  _log(DLSInfo);
+  msg() << dls_version_str;
+  log(DLSInfo);
 
-  _msg << "using dir \"" << _dls_dir << "\"";
-  _log(DLSInfo);
+  msg() << "using dir \"" << _dls_dir << "\"";
+  log(DLSInfo);
 
   // Spooling-Verzeichnis leeren
   _empty_spool();
@@ -106,7 +106,7 @@ int DLSProcMother::start(const string &dls_dir)
   // Anfangs einmal alle Aufträge laden
   _check_jobs();
 
-  while (1)
+  while (!_exit)
   {
     // Sind zwischenzeitlich Signale eingetroffen?
     _check_signals();
@@ -133,8 +133,8 @@ int DLSProcMother::start(const string &dls_dir)
 #ifdef DEBUG
     while ((p = _processes_running()) > 0)
     {
-      _msg << "waiting for " << p << " process(es) to exit...";
-      _log(DLSInfo);
+      msg() << "waiting for " << p << " process(es) to exit...";
+      log(DLSInfo);
 #else
     while (_processes_running())
     {
@@ -146,8 +146,8 @@ int DLSProcMother::start(const string &dls_dir)
       _check_signals();
     }
 
-    _msg << "----- mother process finished. -----";
-    _log(DLSInfo);
+    msg() << "----- mother process finished. -----";
+    log(DLSInfo);
   }
 
   return _exit_error ? -1 : 0;
@@ -173,8 +173,8 @@ void DLSProcMother::_empty_spool()
     _exit = true;
     _exit_error = true;
 
-    _msg << "could not open spooling directory \"" << dirname << "\"";
-    _log(DLSError);
+    msg() << "could not open spooling directory \"" << dirname << "\"";
+    log(DLSError);
 
     return;
   }
@@ -193,16 +193,16 @@ void DLSProcMother::_empty_spool()
       _exit = true;
       _exit_error = true;
 
-      _msg << "could not empty spooling directory \"" << dirname << "\"!";
-      _log(DLSError);
+      msg() << "could not empty spooling directory \"" << dirname << "\"!";
+      log(DLSError);
       break;
     }
   }
 
   if (closedir(dir) == -1)
   {
-    _msg << "closedir failed.";
-    _log(DLSError);
+    msg() << "closedir failed.";
+    log(DLSError);
   }
 }
 
@@ -235,8 +235,8 @@ void DLSProcMother::_check_jobs()
     _exit = true;
     _exit_error = true;
 
-    _msg << "could not open dls directory \"" << _dls_dir << "\"";
-    _log(DLSError);
+    msg() << "could not open dls directory \"" << _dls_dir << "\"";
+    log(DLSError);
 
     return;
   }
@@ -280,8 +280,8 @@ void DLSProcMother::_check_jobs()
     }
     catch (ECOMJobPreset &e)
     {
-      _msg << "importing job (" << job_id << "): " << e.msg;
-      _log(DLSError);
+      msg() << "importing job (" << job_id << "): " << e.msg;
+      log(DLSError);
       continue;
     }
 
@@ -291,8 +291,8 @@ void DLSProcMother::_check_jobs()
 
   if (closedir(dir) == -1)
   {
-    _msg << "closedir failed.";
-    _log(DLSError);
+    msg() << "closedir failed.";
+    log(DLSError);
   }
 }
 
@@ -326,8 +326,8 @@ void DLSProcMother::_check_signals()
 
     _exit = true;
 
-    _msg << "SIGINT or SIGTERM received.";
-    _log(DLSInfo);
+    msg() << "SIGINT or SIGTERM received.";
+    log(DLSInfo);
 
     // Alle Kindprozesse beenden
     job_i = _jobs.begin();
@@ -335,9 +335,9 @@ void DLSProcMother::_check_signals()
     {
       if (job_i->process_exists())
       {
-        _msg << "terminating process for job " << job_i->id_desc();
-        _msg << " with PID " << job_i->process_id();
-        _log(DLSInfo);
+        msg() << "terminating process for job " << job_i->id_desc();
+        msg() << " with PID " << job_i->process_id();
+        log(DLSInfo);
 
         try
         {
@@ -346,8 +346,8 @@ void DLSProcMother::_check_signals()
         }
         catch (ECOMJobPreset &e)
         {
-          _msg << e.msg;
-          _log(DLSWarning);
+          msg() << e.msg;
+          log(DLSWarning);
         }
       }
 
@@ -371,10 +371,10 @@ void DLSProcMother::_check_signals()
       {
         job_i->process_exited(exit_code);
 
-        _msg << "process for job " << job_i->id_desc();
-        _msg << " with PID " << pid;
-        _msg << " exited with code " << exit_code;
-        _log(DLSInfo);
+        msg() << "process for job " << job_i->id_desc();
+        msg() << " with PID " << pid;
+        msg() << " exited with code " << exit_code;
+        log(DLSInfo);
 
         break;
       }
@@ -416,12 +416,11 @@ void DLSProcMother::_check_spool()
   DIR *dir;
   struct dirent *dir_ent;
   string spool_dir = _dls_dir + "/spool";
-  COMXMLParser parser;
-  int job_id;
-  string action, filename;
+  unsigned int job_id;
+  string filename;
   fstream file;
-  DLSJobPreset new_job, *job;
-  list<DLSJobPreset>::iterator job_i;
+
+  file.exceptions(ios::badbit | ios::failbit);
 
   // Das Spoolverzeichnis öffnen
   if ((dir = opendir(spool_dir.c_str())) == NULL)
@@ -429,8 +428,8 @@ void DLSProcMother::_check_spool()
     _exit = true;
     _exit_error = true;
 
-    _msg << "could not open spool directory \"" << spool_dir << "\"";
-    _log(DLSError);
+    msg() << "could not open spool directory \"" << spool_dir << "\"";
+    log(DLSError);
 
     return;
   }
@@ -449,9 +448,7 @@ void DLSProcMother::_check_spool()
 
     try
     {
-      parser.parse(&file, "dls");
-      action = parser.last_tag()->att("action")->to_str();
-      job_id = parser.last_tag()->att("job")->to_int();
+      file >> job_id;
     }
     catch (...)
     {
@@ -461,127 +458,215 @@ void DLSProcMother::_check_spool()
 
     file.close();
 
-    if (action == "new")
+    // Auftrag überprüfen
+    if (_spool_job(job_id))
     {
-      try
-      {
-        // Auftragsdatei auswerten
-        new_job.import(_dls_dir, job_id);
-      }
-      catch (ECOMJobPreset &e)
-      {
-        continue;
-      }
-
       // Spooling-Datei löschen
-      if (unlink(filename.c_str()) != 0) continue;
-
-      // Auftrag in die Liste einfügen
-      _jobs.push_back(new_job);
-
-      _msg << "new job " << new_job.id_desc();
-      _log(DLSInfo);
-    }
-
-    else if (action == "change")
-    {
-      // Abbrechen, wenn der Auftrag nicht existiert
-      if ((job = _job_exists(job_id)) == 0) continue;
-
-      try
-      {
-        // Auftragsdatei auswerten
-        new_job.import(_dls_dir, job_id);
-      }
-      catch (ECOMJobPreset &e)
-      {
-        continue;
-      }
-
-      // ERST Spooling-Datei löschen
-      if (unlink(filename.c_str()) != 0) continue;
-
-      // PID des laufenden Prozesses übernehmen
-      new_job.process_started(job->process_id());
-
-      // Daten kopieren
-      *job = new_job;
-
-      _msg << "changed job " << new_job.id_desc();
-      _log(DLSInfo);
-
-      if (job->process_exists())
-      {
-        _msg << "notifying process for job " << job->id_desc();
-        _msg << " with PID " << job->process_id();
-        _log(DLSInfo);
-
-        try
-        {
-          // Prozess benachrichtigen
-          job->process_notify();
-        }
-        catch (ECOMJobPreset &e)
-        {
-          _msg << e.msg;
-          _log(DLSWarning);
-        }
-      }
-      else
-      {
-        job->allow_restart();
-      }
-    }
-
-    else if (action == "delete")
-    {
-      // Auftrag suchen
-      job_i = _jobs.begin();
-      while (job_i != _jobs.end())
-      {
-        if (job_i->id() == job_id)
-        {
-          if (job_i->process_exists())
-          {
-            _msg << "terminating process for job " << job_i->id_desc();
-            _msg << " with PID " << job_i->process_id();
-            _log(DLSInfo);
-            
-            try
-            {
-              job_i->process_terminate();
-            }
-            catch (ECOMJobPreset &e)
-            {
-              _msg << e.msg;
-              _log(DLSWarning);
-            }
-          }
-
-
-          // TODO: Hier nocht nicht löschen, erst wenn Prozess beendet.
-          _jobs.erase(job_i);
-
-          // Spooling-Datei löschen
-          unlink(filename.c_str());
-
-          continue;
-        }
-        job_i++;
-      }
-
-      // Auftrag nicht gefunden!
-      _msg << "job (" << job_id << ") not found!";
-      _log(DLSError);
-      continue;
+      unlink(filename.c_str());
     }
   }
 
   if (closedir(dir) == -1)
   {
-    _msg << "closedir failed.";
-    _log(DLSError);
+    msg() << "closedir failed.";
+    log(DLSError);
   }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Bestimmt, wie mit einer "gespoolten" Job-ID verfahren wird
+
+   Der Rückgabewert dient vornehmlich dazu, festzustellen,
+   ob die Spooling-Datei gelöscht werden kann.
+
+   \param job_id Auftrags-ID aus einer Spooling-Datei
+   \return true, wenn das Spooling erfolgreich war
+*/
+
+bool DLSProcMother::_spool_job(unsigned int job_id)
+{
+  DLSJobPreset *job;
+  stringstream job_file_name;
+  struct stat stat_buf;
+
+  // Prüfen, ob ein Auftrag mit dieser ID schon in der Liste ist
+  if ((job = _job_exists(job_id)) == 0) 
+  {
+    // Nein. Den Auftrag zur Liste hinzufügen
+    return _add_job(job_id);
+  }
+  else // Der Auftrag existiert in der Liste
+  {
+    job_file_name << _dls_dir << "/job" << job_id << "/job.xml";
+
+    // Prüfen, ob die Auftragsvorgabendatei noch existiert
+    if (stat(job_file_name.str().c_str(), &stat_buf) == -1)
+    {
+      if (errno == ENOENT) // Datei existiert nicht
+      {
+        // Den entsprechenden Auftrag entfernen
+        return _remove_job(job_id);
+      }
+      else // Fehler beim Aufruf von stat()
+      {
+        _exit = true;
+        _exit_error = E_DLS_ERROR;
+
+        msg() << "Calling stat() on \"" << job_file_name.str() << "\": " << strerror(errno);
+        log(DLSError);
+
+        return false;
+      }
+    }
+    else // Auftrags-Vorgabendatei existiert noch
+    {
+      // Den Auftrag neu importieren
+      return _change_job(job);
+    }
+  }
+}
+
+//---------------------------------------------------------------
+
+/**
+   Fügt einen neuen Auftrag in die Liste ein
+
+   \param job_id Auftrags-ID des neuen Auftrags
+   \return true, wenn der Auftrag importiert und hinzugefügt wurde
+*/
+
+bool DLSProcMother::_add_job(unsigned int job_id)
+{
+  DLSJobPreset new_job;
+
+  try
+  {
+    // Auftragsdatei auswerten
+    new_job.import(_dls_dir, job_id);
+  }
+  catch (ECOMJobPreset &e)
+  {
+    return false;
+  }
+
+  // Auftrag in die Liste einfügen
+  _jobs.push_back(new_job);
+
+  msg() << "new job " << new_job.id_desc();
+  log(DLSInfo);
+
+  return true;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Importiert einen Auftrag neu
+
+   \param job Zeiger auf den zu ändernden Auftrags
+   \return true, wenn der Auftrag importiert und geändert wurde
+*/
+
+bool DLSProcMother::_change_job(DLSJobPreset *job)
+{
+  DLSJobPreset changed_job;
+
+  try
+  {
+    // Auftragsdatei auswerten
+    changed_job.import(_dls_dir, job->id());
+  }
+  catch (ECOMJobPreset &e)
+  {
+    return false;
+  }
+
+  msg() << "changed job " << job->id_desc();
+  log(DLSInfo);
+
+  // PID des laufenden Prozesses übernehmen
+  changed_job.process_started(job->process_id());
+      
+  // Daten kopieren
+  *job = changed_job;
+
+  if (job->process_exists())
+  {
+    msg() << "notifying process for job " << job->id_desc();
+    msg() << " with PID " << job->process_id();
+    log(DLSInfo);
+
+    try
+    {
+      // Prozess benachrichtigen
+      job->process_notify();
+    }
+    catch (ECOMJobPreset &e)
+    {
+      msg() << e.msg;
+      log(DLSWarning);
+    }
+  }
+  else
+  {
+    job->allow_restart();
+  }
+  
+  return true;
+}
+
+//---------------------------------------------------------------
+
+/**
+   Entfernt einen Auftrag aus der Liste und beendet die Erfassung
+
+   \param job_id Auftrags-ID des zu entfernenden Auftrags
+   \return true, wenn der Auftrag gefunden und entfernt wurde
+*/
+
+bool DLSProcMother::_remove_job(unsigned int job_id)
+{
+  list<DLSJobPreset>::iterator job_i;
+
+  // Auftrag suchen
+  job_i = _jobs.begin();
+  while (job_i != _jobs.end())
+  {
+    if (job_i->id() == job_id)
+    {
+      if (job_i->process_exists())
+      {
+        msg() << "terminating process for job " << job_i->id_desc();
+        msg() << " with PID " << job_i->process_id();
+        log(DLSInfo);
+            
+        try
+        {
+          job_i->process_terminate();
+        }
+        catch (ECOMJobPreset &e)
+        {
+          msg() << e.msg;
+          log(DLSWarning);
+        }
+      }
+
+      // TODO: Hier noch nicht löschen, erst wenn Prozess beendet.
+      _jobs.erase(job_i);
+
+      return true;
+    }
+
+    job_i++;
+  }
+
+  // Auftrag nicht gefunden!
+  msg() << "job (" << job_id << ") not found!";
+  log(DLSError);
+
+  return false;
 }
 
 //---------------------------------------------------------------
@@ -618,15 +703,15 @@ void DLSProcMother::_check_processes()
     {
       if (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE)
       {
-        _msg << "restarting process for job " << job_i->id_desc();
-        _msg << " after time tolerance error";
+        msg() << "restarting process for job " << job_i->id_desc();
+        msg() << " after time tolerance error";
       }
       else
       {
-        _msg << "starting process for job " << job_i->id_desc();
+        msg() << "starting process for job " << job_i->id_desc();
       }
 
-      _log(DLSInfo);
+      log(DLSInfo);
       
       if ((fork_ret = fork()) == 0) // Kindprozess
       {
@@ -640,13 +725,13 @@ void DLSProcMother::_check_processes()
       {
         job_i->process_started(fork_ret);
 
-        _msg << "started process with PID " << job_i->process_id();
-        _log(DLSInfo);
+        msg() << "started process with PID " << job_i->process_id();
+        log(DLSInfo);
       }
       else // Fehler
       {
-        _msg << "error " << errno << " in fork()";
-        _log(DLSError);
+        msg() << "error " << errno << " in fork()";
+        log(DLSError);
       }
     }
 
@@ -667,7 +752,7 @@ void DLSProcMother::_check_processes()
    \return Zeiger auf Auftragsvorgaben oder 0
 */
 
-DLSJobPreset *DLSProcMother::_job_exists(int id)
+DLSJobPreset *DLSProcMother::_job_exists(unsigned int id)
 {
   list<DLSJobPreset>::iterator job_i = _jobs.begin();
 
@@ -709,35 +794,6 @@ unsigned int DLSProcMother::_processes_running()
   }
 
   return process_count;
-}
-
-//---------------------------------------------------------------
-
-/**
-   Schreibt eine Nachricht in die Logging-Dateien
-
-   Die Nachricht muss zuvor in _msg gespeichert
-   worden sein. _msg wird dann geleert.
-
-   \param type Typ der Nachricht
-*/
-
-void DLSProcMother::_log(DLSLogType type)
-{
-  string mode;
-  COMTime time;
-
-  time.set_now();
-
-  if (type == DLSError) mode = "ERROR";
-  else if (type == DLSInfo) mode = "INFO";
-  else if (type == DLSWarning) mode = "WARNING";
-  else mode = "UNKNOWN";
-
-  syslog(LOG_INFO, "%s: %s", mode.c_str(), _msg.str().c_str());
-  
-  // Nachricht entfernen
-  _msg.str("");
 }
 
 //---------------------------------------------------------------

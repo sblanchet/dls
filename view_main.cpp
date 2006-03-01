@@ -14,10 +14,11 @@ using namespace std;
 
 #include "view_globals.hpp"
 #include "view_dialog_main.hpp"
+#include "mdct.h"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_main.cpp,v 1.3 2005/01/24 13:16:45 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_main.cpp,v 1.5 2005/01/27 11:34:00 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -42,6 +43,9 @@ int main(int argc, char **argv)
   dialog = new ViewDialogMain(dls_dir);
   dialog->show();
   delete dialog;
+
+  // Evtl. allokierte Speicher der MDCT freigeben
+  mdct_cleanup();
 
   return 0;
 }

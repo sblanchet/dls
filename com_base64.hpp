@@ -43,11 +43,13 @@ public:
   void decode(const char *, unsigned int);
 
   const char *output() const;
-  unsigned int output_length() const;
+  unsigned int output_size() const;
+
+  void free();
 
 private:
-  char *_out_buf;        /**< Zeiger auf den Ergebnispuffer */
-  unsigned int _out_len; /**< Länge des Ergebnispuffers */
+  char *_out_buf;         /**< Zeiger auf den Ergebnispuffer */
+  unsigned int _out_size; /**< Länge des Ergebnispuffers */
 };
 
 //---------------------------------------------------------------
@@ -71,9 +73,9 @@ inline const char *COMBase64::output() const
    \return Länge in Bytes
 */
 
-inline unsigned int COMBase64::output_length() const
+inline unsigned int COMBase64::output_size() const
 {
-  return _out_len;
+  return _out_size;
 }
 
 //---------------------------------------------------------------

@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_job_preset.cpp,v 1.8 2005/01/21 08:59:31 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_job_preset.cpp,v 1.12 2005/03/07 09:15:44 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -59,7 +59,7 @@ COMJobPreset::~COMJobPreset()
    \throw ECOMJobPreset Fehler während des Importierens
 */
 
-void COMJobPreset::import(const string &dls_dir, int id)
+void COMJobPreset::import(const string &dls_dir, unsigned int id)
 {
   COMChannelPreset channel;
   string value;
@@ -80,7 +80,7 @@ void COMJobPreset::import(const string &dls_dir, int id)
 
   if (!file.is_open())
   {
-    err << "could not open file \"" << file_name.str() << "\""; 
+    err << "Could not open file \"" << file_name.str() << "\""; 
     throw ECOMJobPreset(err.str());
   }
 
@@ -97,25 +97,25 @@ void COMJobPreset::import(const string &dls_dir, int id)
     else
     {
       file.close();
-      throw ECOMJobPreset("unknown state \"" + value + "\"!");
+      throw ECOMJobPreset("Unknown state \"" + value + "\"!");
     }
 
     _source = parser.parse(&file, "source", dxttSingle)->att("address")->to_str();
 
     parser.parse(&file, "quota", dxttSingle);
 
-    if (parser.last_tag()->has_att("time"))
+    if (parser.tag()->has_att("time"))
     {
-      _quota_time = parser.last_tag()->att("time")->to_ll();
+      _quota_time = parser.tag()->att("time")->to_ll();
     }
     else
     {
       _quota_time = 0;
     }
 
-    if (parser.last_tag()->has_att("size"))
+    if (parser.tag()->has_att("size"))
     {
-      _quota_size = parser.last_tag()->att("size")->to_ll();
+      _quota_size = parser.tag()->att("size")->to_ll();
     }
     else
     {
@@ -130,23 +130,21 @@ void COMJobPreset::import(const string &dls_dir, int id)
     {
       parser.parse(&file);
 
-      if (parser.last_tag()->title() == "channels"
-          && parser.last_tag()->type() == dxttEnd)
+      if (parser.tag()->title() == "channels" && parser.tag()->type() == dxttEnd)
       {
         break;
       }
 
-      if (parser.last_tag()->title() == "channel"
-          && parser.last_tag()->type() == dxttSingle)
+      if (parser.tag()->title() == "channel" && parser.tag()->type() == dxttSingle)
       {
         try
         {
-          channel.read_from_tag(parser.last_tag());
+          channel.read_from_tag(parser.tag());
         }
         catch (ECOMChannelPreset &e)
         {
           file.close();
-          err << "error reading channel: " << e.msg;
+          err << "Error reading channel: " << e.msg;
           throw ECOMJobPreset(err.str());
         }
 
@@ -155,7 +153,7 @@ void COMJobPreset::import(const string &dls_dir, int id)
       else
       {
         file.close();
-        err << "expected channel/ or /channels!";
+        err << "Expected channel/ or /channels!";
         throw ECOMJobPreset(err.str());
       }
     }
@@ -165,19 +163,19 @@ void COMJobPreset::import(const string &dls_dir, int id)
   catch (ECOMXMLParser &e)
   {
     file.close();
-    err << "parsing: " << e.msg;
+    err << "Parsing: " << e.msg;
     throw ECOMJobPreset(err.str());
   }
   catch (ECOMXMLParserEOF &e)
   {
     file.close();
-    err << "parsing: " << e.msg;
+    err << "Parsing: " << e.msg;
     throw ECOMJobPreset(err.str());
   }
   catch (ECOMXMLTag &e)
   {
     file.close();
-    err << "tag: " << e.msg;
+    err << "Tag: " << e.msg;
     throw ECOMJobPreset(err.str());
   }
 

@@ -11,7 +11,7 @@
 
 #include "com_dialog_msg.hpp"
 
-extern COMDialogMsg *msg;
+extern COMDialogMsg *msg_win;
 
 //---------------------------------------------------------------
 

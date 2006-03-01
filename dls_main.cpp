@@ -21,20 +21,18 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_main.cpp,v 1.17 2005/01/25 08:46:48 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_main.cpp,v 1.26 2005/02/23 13:44:09 fp Exp $");
 
 //---------------------------------------------------------------
 
-// Globale Variablen (extern)
 unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
-
-enum DLSProcessType process_type = dlsMotherProcess;
+DLSProcessType process_type = dlsMotherProcess;
 unsigned int job_id = 0;
-bool is_daemon = true;
-
-string dls_dir;
+string dls_dir = "";
+DLSArchitecture arch;
+DLSArchitecture source_arch;
 
 //---------------------------------------------------------------
 
@@ -48,6 +46,7 @@ void closeSTDXXX();
 void check_running(const string *);
 void create_pid_file(const string *);
 void remove_pid_file(const string *);
+void get_endianess();
 
 //---------------------------------------------------------------
 
@@ -58,8 +57,6 @@ void remove_pid_file(const string *);
    Wenn dieser zurückkommt, handelt es sich entweder um ein
    ge'fork'tes Kind, in dem Fall einen Logging-Prozess, oder
    um die Beendigung des Mutterprozesses.
-
-   \todo Prüfen, ob schon gestartet!
 
    \param argc Anzahl der Kommandozeilenparameter
    \param argv Array der Kommandozeilenparameter
@@ -74,14 +71,19 @@ int main(int argc, char **argv)
 
   cout << dls_version_str << endl;
 
-  // Kommandozeilenparameter parsen
+  is_daemon = true;
+
+  // Endianess ermitteln
+  get_endianess();
+
+  // Kommandozeilenparameter verarbeiten
   get_options(argc, argv);
 
   // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
   // schon ein Daemon läuft
   check_running(&dls_dir);
 
-  // Jetzt in einen Daemon verwandeln
+  // In einen Daemon verwandeln, wenn gewuenscht
   if (is_daemon) init_daemon();
   
   // PID-Datei erzeugen
@@ -90,12 +92,12 @@ int main(int argc, char **argv)
   // Signalhandler installieren
   set_signal_handlers();
 
-  // Alles ok. Wir laufen!
+  // "Up and running!"
   cout << "DLS running with PID " << getpid();
   if (is_daemon) cout << " [daemon]";
   cout << endl;
 
-  // STDIN, STDOUT und STDERR schliessen
+  // Bei Bedarf STDIN, STDOUT und STDERR schliessen
   if (is_daemon) closeSTDXXX();
 
   try
@@ -126,6 +128,9 @@ int main(int argc, char **argv)
   {
     syslog(LOG_INFO, "CRITICAL: UNCATCHED UNKNOWN EXCEPTION!");
   }
+
+  // Evtl. allokierte Speicher der MDCT freigeben
+  mdct_cleanup();
 
   exit(exit_code);
 }
@@ -247,6 +252,7 @@ void set_signal_handlers()
   sigaction(SIGALRM, &action, 0);
   sigaction(SIGUSR1, &action, 0);
   sigaction(SIGUSR2, &action, 0);
+  sigaction(SIGTRAP, &action, 0);
 }
 
 //---------------------------------------------------------------
@@ -269,7 +275,7 @@ void dump_signal(int sig)
     close(fd);
   }
 
-  if (!is_daemon) cout << err;
+  if (!is_daemon) cout << "CRITICAL: " << err;
 }
 
 //---------------------------------------------------------------
@@ -443,5 +449,38 @@ void remove_pid_file(const string *dls_dir)
 
 //---------------------------------------------------------------
 
+void get_endianess()
+{
+  unsigned int i, value;
+  unsigned char *byte;
+  bool is_little_endian, is_big_endian;
 
+  // Test-Integer vorbelegen
+  value = 0;
+  for (i = 0; i < sizeof(value); i++) value += (1 << (i * 8)) * (i + 1);
+  
+  byte = (unsigned char *) &value;
 
+  is_little_endian = true;
+  for (i = 0; i < sizeof(value); i++) if (byte[i] != (i + 1)) is_little_endian = false;
+  
+  if (is_little_endian)
+  {
+    arch = LittleEndian;
+    return;
+  }
+
+  is_big_endian = true;
+  for (i = 0; i < sizeof(value); i++) if (byte[i] != sizeof(value) - i) is_big_endian = false;
+  
+  if (is_big_endian)
+  {
+    arch = BigEndian;
+    return;
+  }
+
+  cerr << "ERROR: Unknown architecture!" << endl;
+  exit(-1);
+}
+
+//---------------------------------------------------------------

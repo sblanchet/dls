@@ -21,7 +21,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_file.cpp,v 1.9 2004/12/21 15:23:07 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_file.cpp,v 1.10 2005/02/01 12:40:40 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -406,7 +406,8 @@ void COMFile::append(const char *buffer, unsigned int length)
   }
 
 #ifdef DEBUG
-  cout << "appended " << written << " byte(s)." << endl;
+  msg() << "appended " << written << " byte(s).";
+  log(DLSDebug);
 #endif
 }
 

@@ -22,7 +22,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job.cpp,v 1.12 2005/01/24 10:15:04 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job.cpp,v 1.16 2005/02/22 15:36:31 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -352,14 +352,13 @@ void CTLDialogJob::_button_edit_clicked()
 
 /**
    Callback des Meldungs-Grids
+
+   \todo Messages für Job anzeigen
 */
 
 bool CTLDialogJob::_load_messages()
 {
-  /** \todo Messages für Job */
-
-  /*
-
+#if 0
   for...
   {
 
@@ -373,8 +372,7 @@ bool CTLDialogJob::_load_messages()
   }
 
   _grid_messages->record_count(count);
-
-  */
+#endif
 
   return true;
 }
@@ -438,8 +436,8 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   {
     if (job_copy.channel_exists(ch_i->name))
     {
-      msg->str() << "Channel \"" << ch_i->name << "\" already exists!";
-      msg->warning();
+      msg_win->str() << "Channel \"" << ch_i->name << "\" already exists!";
+      msg_win->warning();
     }
     else
     { 
@@ -462,19 +460,19 @@ void CTLDialogJob::_insert_channels(const list<COMRealChannel> *channels)
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "Writing preset file: " << e.msg;
-    msg->error();
+    msg_win->str() << "Writing preset file: " << e.msg;
+    msg_win->error();
     return;
   }
 
   try
   {
-    job_copy.notify_changed(_dls_dir);
+    job_copy.spool(_dls_dir);
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "Could not notify dlsd: " << e.msg;
-    msg->warning();
+    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->warning();
   }
 
   *_job = job_copy;
@@ -502,8 +500,8 @@ void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
   {
     if (*sel_i >= _job->channels()->size())
     {
-      msg->str() << "Channel index out of range!";
-      msg->error();
+      msg_win->str() << "Channel index out of range!";
+      msg_win->error();
       return;
     }
 
@@ -518,19 +516,19 @@ void CTLDialogJob::_remove_channels(const list<unsigned int> *sel_list)
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "Writing preset file: " << e.msg;
-    msg->error();
+    msg_win->str() << "Writing preset file: " << e.msg;
+    msg_win->error();
     return;
   }
 
   try
   {
-    job_copy.notify_changed(_dls_dir);
+    job_copy.spool(_dls_dir);
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "Could not notify dlsd: " << e.msg;
-    msg->warning();
+    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->warning();
   }
 
   *_job = job_copy;

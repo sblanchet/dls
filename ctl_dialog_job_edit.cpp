@@ -18,7 +18,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /vol/projekte/dls_data_logging_server/src-0.9/RCS/ctl_dialog_job_edit.cpp,v 1.12 2005/01/24 13:29:16 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_job_edit.cpp,v 1.14 2005/02/02 10:36:41 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -226,8 +226,8 @@ bool CTLDialogJobEdit::_save_job()
     {
       // Fehler! Alte Daten zurückladen
       *_job = job_copy;
-      msg->str() << e.msg;
-      msg->error();
+      msg_win->str() << e.msg;
+      msg_win->error();
       return false;
     }
     
@@ -237,13 +237,13 @@ bool CTLDialogJobEdit::_save_job()
     try
     {
       // Versuchen, einen Spooling-Eintrag zu erzeugen
-      _job->notify_changed(_dls_dir);
+      _job->spool(_dls_dir);
     }
     catch (ECOMJobPreset &e)
     {
       // Fehler! Aber nur Warnung ausgeben.
-      msg->str() << "could not notify dlsd: " << e.msg;
-      msg->warning();
+      msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
+      msg_win->warning();
     }
   }
   
@@ -270,8 +270,8 @@ bool CTLDialogJobEdit::_create_job()
   // Neue Job-ID aus der ID-Sequence-Datei lesen
   if (!_get_new_id(&new_id))
   {
-    msg->str() << "Could not fetch new id!";
-    msg->error();
+    msg_win->str() << "Could not fetch new id!";
+    msg_win->error();
     return false;
   }
 
@@ -292,8 +292,8 @@ bool CTLDialogJobEdit::_create_job()
   catch (ECOMJobPreset &e)
   {
     // Fehler beim Speichern!
-    msg->str() << e.msg;
-    msg->error();
+    msg_win->str() << e.msg;
+    msg_win->error();
     return false;
   }
   
@@ -303,13 +303,13 @@ bool CTLDialogJobEdit::_create_job()
   try
   {
     // Versuchen, eine Spooling-Eintrag zu erzeugen
-    job.notify_new(_dls_dir);
+    job.spool(_dls_dir);
   }
   catch (ECOMJobPreset &e)
   {
     // Fehler! Aber nur eine Warnung ausgeben.
-    msg->str() << "Could not notify dlsd: " << e.msg;
-    msg->warning();
+    msg_win->str() << "Could not notify dlsd: " << e.msg;
+    msg_win->warning();
   }
   
   return true;
@@ -489,8 +489,8 @@ bool CTLDialogJobEdit::_convert_str_to_time_quota(const string &quota_str,
     }
     catch (...)
     {
-      msg->str() << "Time quota must be numeric!";
-      msg->error();
+      msg_win->str() << "Time quota must be numeric!";
+      msg_win->error();
       return false;
     }
 
@@ -512,8 +512,8 @@ bool CTLDialogJobEdit::_convert_str_to_time_quota(const string &quota_str,
       }
       else
       {
-        msg->str() << "Unknown time extension! Valid are s, m, h and d.";
-        msg->error();
+        msg_win->str() << "Unknown time extension! Valid are s, m, h and d.";
+        msg_win->error();
         return false;
       }
     }
@@ -554,8 +554,8 @@ bool CTLDialogJobEdit::_convert_str_to_size_quota(const string &quota_str,
     }
     catch (...)
     {
-      msg->str() << "Size quota must be numeric!";
-      msg->error();
+      msg_win->str() << "Size quota must be numeric!";
+      msg_win->error();
       return false;
     }
 
@@ -573,8 +573,8 @@ bool CTLDialogJobEdit::_convert_str_to_size_quota(const string &quota_str,
       }
       else
       {
-        msg->str() << "Unknown size extension! Valid M and G.";
-        msg->error();
+        msg_win->str() << "Unknown size extension! Valid M and G.";
+        msg_win->error();
         return false;
       }
     }

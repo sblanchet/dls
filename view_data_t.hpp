@@ -99,101 +99,62 @@ bool ViewDataT<T>::load_data_tag(const ViewChunk *chunk,
                                  unsigned int block_size,
                                  COMCompressionT<T> *comp)
 {
-  T *data;
-  unsigned int i, count, alloc_size;
+  unsigned int i;
 
   if (block_size)
   {
-    alloc_size = block_size;
-
-    if (chunk->format_index() == DLS_FORMAT_MDCT)
-    {
-      if (block_size % chunk->mdct_block_size())
-      {
-        alloc_size = (block_size / chunk->mdct_block_size() + 1) * chunk->mdct_block_size(); 
-      }
-    }
-
     try
     {
-      data = new T[alloc_size];
-    }
-    catch (...)
-    {
-      cout << "ERROR: could not allocate " << block_size << " bytes of memory!" << endl;
-      return false;
-    }
-    
-    try
-    {
-      count = comp->uncompress(block_data, strlen(block_data), data, block_size);
+      comp->uncompress(block_data, strlen(block_data), block_size);
     }
     catch (ECOMCompression &e)
     {
-      delete [] data;
       cout << "ERROR while uncompressing: " << e.msg << endl;
       return false;
     }
-
-    for (i = 0; i < count; i++)
+      
+    for (i = 0; i < comp->decompressed_length(); i++)
     {
-      _data.push_back(data[i]);
+      _data.push_back(comp->decompression_output()[i]);
     }
     
-    delete [] data;
-
     return true;
   }
 
   else if (chunk->format_index() == DLS_FORMAT_MDCT)
   {
-    count = chunk->mdct_block_size() / 2;
-
 #ifdef DEBUG
-    cout << "reading overlapping mdct block. dim/2 = " << count << endl;
+    cout << "reading overlapping mdct block. dim/2 = " << chunk->mdct_block_size() / 2 << endl;
 #endif
 
     try
     {
-      data = new T[count];
-    }
-    catch (...)
-    {
-      cout << "ERROR: could not allocate " << count << " bytes of memory!" << endl;
-      return false;
-    }
-    
-    try
-    {
-      count = comp->flush_uncompress(block_data, strlen(block_data), data);
+      comp->flush_uncompress(block_data, strlen(block_data));
     }
     catch (ECOMCompression &e)
     {
-      delete [] data;
       cout << "ERROR while uncompressing: " << e.msg << endl;
       return false;
     }
 
 #ifdef DEBUG
-    cout << "count=" << count << endl;
+    cout << "decompressed values: " << comp->decompressed_length() << endl;
 #endif
-
-    for (i = 0; i < count; i++)
+      
+    for (i = 0; i < comp->decompressed_length(); i++)
     {
-      _data.push_back(data[i]);
+      _data.push_back(comp->decompression_output()[i]);
     }
 
 #ifdef DEBUG
     cout << "values: " << endl;
-    for (i = 0; i < count; i++)
+    for (i = 0; i < data.size(); i++)
     {
-      cout << data[i] << ", ";
+        cout << data[i] << ", ";
     }
     cout << endl;
 #endif
     
-    delete [] data;
-
     return true;
   }
   
@@ -301,5 +262,9 @@ unsigned int ViewDataT<T>::size() const
 }
 
 //---------------------------------------------------------------
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
 
 #endif

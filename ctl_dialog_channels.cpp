@@ -24,7 +24,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channels.cpp,v 1.6 2005/01/24 10:15:00 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channels.cpp,v 1.7 2005/02/01 12:21:52 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -217,8 +217,8 @@ void CTLDialogChannels::show()
   }
   else
   {
-    msg->str() << "Could not start thread!";
-    msg->error();
+    msg_win->str() << "Could not start thread!";
+    msg_win->error();
   }
 }
 
@@ -412,8 +412,8 @@ void CTLDialogChannels::_thread_finished()
   }
   else if (_error != "")
   {
-    msg->str() << _error;
-    msg->error();
+    msg_win->str() << _error;
+    msg_win->error();
   }
 }
 

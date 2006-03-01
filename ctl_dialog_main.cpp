@@ -30,7 +30,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.11 2005/01/24 13:00:42 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_main.cpp,v 1.16 2005/02/23 11:59:35 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -368,7 +368,7 @@ void CTLDialogMain::_button_rem_clicked()
     }
     catch (EDLSDB &e)
     {
-      cout << "error deleting job: " << e.msg << endl;
+      // Error enzeigen
     }
     
     _load_jobs();
@@ -389,8 +389,8 @@ void CTLDialogMain::_button_state_clicked()
 
   if (index < 0 || index >= (int) _jobs.size())
   {
-    msg->str() << "Job index out of range!";
-    msg->error();
+    msg_win->str() << "Job index out of range!";
+    msg_win->error();
     return;
   }
 
@@ -404,19 +404,19 @@ void CTLDialogMain::_button_state_clicked()
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "Error writing preset file: " << e.msg;
-    msg->error();
+    msg_win->str() << "Error writing preset file: " << e.msg;
+    msg_win->error();
     return;
   }
 
   try
   {
-    job_copy.notify_changed(_dls_dir);
+    job_copy.spool(_dls_dir);
   }
   catch (ECOMJobPreset &e)
   {
-    msg->str() << "WARNING: dlsd could not be notified!";
-    msg->warning();
+    msg_win->str() << "WARNING: dlsd could not be notified!";
+    msg_win->warning();
   }
 
   _jobs[index] = job_copy;
@@ -583,11 +583,17 @@ void CTLDialogMain::_load_watchdogs()
 
 /**
    Alle Erfassungsaufträge laden
+
+   Läuft durch das Verzeichnis, merkt sich alle Einträge, die
+   "jobXXX" heissen, sortiert diese Liste und überprüft dann
+   jeweils, ob es sich um ein gültiges Auftragsverzeichnis
+   handelt. Wenn ja, wird der entsprechende Auftrag importiert
+   und in die Liste eingefügt.
 */
 
 void CTLDialogMain::_load_jobs()
 {
-  int job_id;
+  unsigned int job_id;
   DIR *dir;
   struct dirent *dir_ent;
   string dirname;
@@ -596,6 +602,8 @@ void CTLDialogMain::_load_jobs()
   CTLJobPreset job;
   struct stat file_stat;
   stringstream watch_file_name;
+  list<unsigned int> job_ids;
+  list<unsigned int>::iterator job_id_i;
 
   str.exceptions(ios::failbit | ios::badbit);
 
@@ -606,8 +614,8 @@ void CTLDialogMain::_load_jobs()
    // Das Hauptverzeichnis öffnen
   if ((dir = opendir(_dls_dir.c_str())) == NULL)
   {
-    msg->str() << "Could not open dls directory \"" << _dls_dir << "\"";
-    msg->error();
+    msg_win->str() << "Could not open dls directory \"" << _dls_dir << "\"";
+    msg_win->error();
     return;
   }
 
@@ -635,22 +643,30 @@ void CTLDialogMain::_load_jobs()
       continue;
     }
 
+    job_ids.push_back(job_id);
+  }
+
+  // Auftrags-IDs aufsteigend sortieren
+  job_ids.sort();
+
+  // Alle "gemerkten", potentiellen Auftrags-IDs durchlaufen
+  for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
+  {
     // Gibt es in dem Verzeichnis eine Datei job.xml?
     str.str("");
     str.clear();
-    str << _dls_dir << "/" << dirname << "/job.xml";
+    str << _dls_dir << "/job" << *job_id_i << "/job.xml";
     file.open(str.str().c_str(), ios::in);
     if (!file.is_open()) continue;
-    file.close();
 
     try
     {
-      job.import(_dls_dir, job_id);
+      job.import(_dls_dir, *job_id_i);
     }
     catch (ECOMJobPreset &e)
     {
-      msg->str() << "Could not import job " << job_id << ": " << e.msg;
-      msg->error();
+      msg_win->str() << "Could not import job " << *job_id_i << ": " << e.msg;
+      msg_win->error();
       continue;
     }
 
@@ -667,7 +683,7 @@ void CTLDialogMain::_load_jobs()
     // Dateinamen konstruieren
     watch_file_name.str("");
     watch_file_name.clear();
-    watch_file_name << _dls_dir << "/job" << job_id << "/watchdog";
+    watch_file_name << _dls_dir << "/job" << *job_id_i << "/watchdog";
 
     if (stat(watch_file_name.str().c_str(), &file_stat) == 0)
     {
@@ -676,7 +692,7 @@ void CTLDialogMain::_load_jobs()
 
     watch_file_name.str("");
     watch_file_name.clear();
-    watch_file_name << _dls_dir << "/job" << job_id << "/logging";
+    watch_file_name << _dls_dir << "/job" << *job_id_i << "/logging";
 
     if (stat(watch_file_name.str().c_str(), &file_stat) == 0)
     {
@@ -713,7 +729,7 @@ void CTLDialogMain::_load_messages()
   }
   catch (EDLSDB &e)
   {
-    cout << "error fetching messages: " << e.msg << endl;
+    // << "error fetching messages: " << e.msg << endl;
     return;
   }
 
@@ -729,7 +745,7 @@ void CTLDialogMain::_load_messages()
     }
     catch (EDLSDB &e)
     {
-      cout << "error reading msg: " << e.msg << endl;
+      // << "error reading msg: " << e.msg << endl;
       delete query;
       return;
     }
@@ -828,9 +844,9 @@ void CTLDialogMain::_check_dls_dir()
 
     if (mkdir(_dls_dir.c_str(), 0755) == -1)
     {
-      msg->str() << "Konnte das Verzeichnis \"" << _dls_dir << "\"";
-      msg->str() << " nicht anlegen: " << strerror(errno);
-      msg->error();
+      msg_win->str() << "Konnte das Verzeichnis \"" << _dls_dir << "\"";
+      msg_win->str() << " nicht anlegen: " << strerror(errno);
+      msg_win->error();
       return;
     }
   }
@@ -840,8 +856,8 @@ void CTLDialogMain::_check_dls_dir()
     // ein Verzeichnis ist
     if (!S_ISDIR(stat_buf.st_mode))
     {
-      msg->str() << "\"" << _dls_dir << "\" ist kein Verzeichnis!";
-      msg->error();
+      msg_win->str() << "\"" << _dls_dir << "\" ist kein Verzeichnis!";
+      msg_win->error();
       return;
     }
   }
@@ -865,9 +881,9 @@ void CTLDialogMain::_check_dls_dir()
     // Spooling-Verzeichnis anlegen
     if (mkdir((_dls_dir + "/spool").c_str(), 0755) == -1)
     {
-      msg->str() << "Konnte das Verzeichnis \"" << (_dls_dir + "/spool") << "\"";
-      msg->str() << " nicht anlegen: " << strerror(errno);
-      msg->error();
+      msg_win->str() << "Konnte das Verzeichnis \"" << (_dls_dir + "/spool") << "\"";
+      msg_win->str() << " nicht anlegen: " << strerror(errno);
+      msg_win->error();
       return;
     }
   }
@@ -891,18 +907,18 @@ void CTLDialogMain::_check_dls_dir()
     // Datei anlegen
     if ((fd = open((_dls_dir + "/id_sequence").c_str(), O_WRONLY | O_CREAT, 0644)) == -1)
     {
-      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
-      msg->str() << " nicht anlegen: " << strerror(errno);
-      msg->error();
+      msg_win->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
+      msg_win->str() << " nicht anlegen: " << strerror(errno);
+      msg_win->error();
       return;
     }
 
     if (write(fd, "100\n", 4) != 4)
     {
       close(fd);
-      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
-      msg->str() << " nicht beschreiben! Bitte manuell löschen!";
-      msg->error();
+      msg_win->str() << "Konnte die Datei \"" << (_dls_dir + "/id_sequence") << "\"";
+      msg_win->str() << " nicht beschreiben! Bitte manuell löschen!";
+      msg_win->error();
       return;
     }
 
@@ -924,8 +940,8 @@ void CTLDialogMain::_check_dls_dir()
 
     if (!pid_file.is_open())
     {
-      msg->str() << "Konnte die Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" nicht öffnen!";
-      msg->error();
+      msg_win->str() << "Konnte die Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" nicht öffnen!";
+      msg_win->error();
       return;
     }
 
@@ -937,8 +953,8 @@ void CTLDialogMain::_check_dls_dir()
     {
       pid_file.close();
 
-      msg->str() << "Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" ist korrupt!";
-      msg->error();
+      msg_win->str() << "Datei \"" << (_dls_dir + "/" + DLS_PID_FILE) << "\" ist korrupt!";
+      msg_win->error();
       return;
     }
 
@@ -952,8 +968,8 @@ void CTLDialogMain::_check_dls_dir()
       }
       else
       {
-        msg->str() << "Konnte Prozess " << pid << "nicht signalisieren!";
-        msg->error();
+        msg_win->str() << "Konnte Prozess " << pid << "nicht signalisieren!";
+        msg_win->error();
         return;
       }
     }
@@ -970,8 +986,8 @@ void CTLDialogMain::_check_dls_dir()
     {
       if ((pid = fork()) == -1)
       {
-        msg->str() << "Could not fork()!";
-        msg->error();
+        msg_win->str() << "Could not fork()!";
+        msg_win->error();
         return;
       }
 
@@ -991,8 +1007,8 @@ void CTLDialogMain::_check_dls_dir()
         
         if ((signed char) WEXITSTATUS(status) == -1)
         {
-          msg->str() << "Could not execute dlsd! See console for error message.";
-          msg->error();
+          msg_win->str() << "Could not execute dlsd! See console for error message.";
+          msg_win->error();
           return;
         }
       }

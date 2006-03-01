@@ -21,11 +21,11 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_main.cpp,v 1.5 2005/01/24 13:08:54 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_main.cpp,v 1.7 2005/03/07 09:15:48 fp Exp $");
 
 //---------------------------------------------------------------
 
-COMDialogMsg *msg = 0;
+COMDialogMsg *msg_win = 0;
 string dls_dir;
 
 void get_options(int, char **);
@@ -45,13 +45,13 @@ int main(int argc, char **argv)
   Fl::visual(FL_DOUBLE | FL_INDEX);
   Fl::lock();
 
-  msg = new COMDialogMsg();
+  msg_win = new COMDialogMsg();
 
   dialog_main = new CTLDialogMain(dls_dir);
   dialog_main->show();
   delete dialog_main;
 
-  delete msg;
+  delete msg_win;
 
   return 0;
 }
@@ -102,7 +102,7 @@ void get_options(int argc, char **argv)
   }
 
   // Benutztes Verzeichnis ausgeben
-  cout << "using dls directory \"" << dls_dir << "\"" << endl;
+  cout << "Using dls directory \"" << dls_dir << "\"" << endl;
 }
 
 //---------------------------------------------------------------

@@ -36,11 +36,9 @@ public:
   CTLJobPreset();
 
   void write(const string &);
-  void notify_new(const string &);
-  void notify_changed(const string &);
-  void notify_deleted(const string &);
+  void spool(const string &);
 
-  void id(int);
+  void id(unsigned int);
   void description(const string &);
   void running(bool);
   void source(const string &);
@@ -61,9 +59,6 @@ public:
   unsigned int logging_bad_count; /**< Anzahl letzter Logging-Watchdog-Prüfungen,
                                        ohne dass sich etwas geändert hat */
   bool logging_watch_determined;  /**< Logging-Watchdog-Information steht fest */
-
-private:
-  void _write_spooling_file(const string &, const string &);
 };
 
 //---------------------------------------------------------------

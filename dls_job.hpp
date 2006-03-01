@@ -52,10 +52,10 @@ public:
 class DLSJob
 {
 public:
-  DLSJob(DLSProcLogger *, const string &, int);
+  DLSJob(DLSProcLogger *, const string &);
   ~DLSJob();
 
-  void import();
+  void import(unsigned int);
 
   //@{
   void start_logging();
@@ -73,23 +73,15 @@ public:
   void finish();
   void discard_data();
 
-  //@{
-  stringstream &msg() const;
-  void log(DLSLogType) const;
-  //@}
-
   const COMJobPreset *preset() const;
 
 private:
   DLSProcLogger *_parent_proc; /**< Zeiger auf den besitzenden Logging-Prozess */
-  int _job_id;                 /**< ID des aktuellen Auftrags */
   string _dls_dir;             /**< DLS-Datenverzeichnis */
   COMJobPreset _preset;        /**< Auftragsvorgaben */
   list<DLSLogger *> _loggers;  /**< Zeigerliste aller aktiven Logger */
   unsigned int _id_gen;        /**< Sequenz für die ID-Generierung */
   bool _logging_started;       /**< Logging gestartet? */
-  bool _finished;              /**< Wenn true, dann sind keine Daten im
-                                    Speicher - ein "delete" ist unbedenklich */
 
   //@{
   COMFile _message_file;                           /**< Dateiobjekt für Messages */

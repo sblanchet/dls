@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_parser.cpp,v 1.6 2004/12/15 14:43:16 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/com_xml_parser.cpp,v 1.7 2005/02/01 12:40:40 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -352,7 +352,8 @@ char COMXMLParser::_data(COMXMLParserType parse_type, unsigned int index)
       }
 
 #ifdef DEBUG_XML_PARSER
-      cout << _data_stream_char;
+      msg() << _data_stream_char;
+      log(DLSDebug);
 #endif
 
       return _data_stream_char;

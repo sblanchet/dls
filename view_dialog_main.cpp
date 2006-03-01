@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/view_dialog_main.cpp,v 1.6 2005/01/10 12:27:32 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/view_dialog_main.cpp,v 1.7 2005/02/01 10:24:49 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -70,6 +70,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
 
   _tile_hor->end();
+  _tile_hor->resizable(_view_data);
 
   _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
   _grid_channels->add_column("channel", "Kanal");
@@ -78,6 +79,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _grid_channels->callback(_callback, this);
 
   _tile_ver->end();
+  _tile_ver->resizable(_tile_hor);
 
   _view_data->range_callback(_data_range_callback, this);
 

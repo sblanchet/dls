@@ -20,7 +20,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.15 2005/01/21 08:52:40 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_logger.cpp,v 1.17 2005/02/04 11:19:22 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -473,7 +473,7 @@ void DLSLogger::process_data(const string &data, COMTime time)
   {
     // Daten an Saver übergeben
     _gen_saver->process_data(base64.output(),
-                             base64.output_length(),
+                             base64.output_size(),
                              time);
   }
   catch (EDLSSaver &e)
@@ -767,34 +767,6 @@ void DLSLogger::finish()
 #endif
 
   _finished = true;
-}
-
-//---------------------------------------------------------------
-
-/**
-   Nimmt eine Nachricht zum späteren Loggen auf
-
-   \return Referenz auf den msg-Stream des Logging-Prozesses
-   \see DLSJob::msg()
-*/
-
-stringstream &DLSLogger::msg() const
-{
-  return _parent_job->msg();
-}
-
-//---------------------------------------------------------------
-
-/**
-   Speichert eine vorher aufgezeichnete Nachricht
-
-   \param type Typ der Nachricht
-   \see DLSJob::log()
-*/
-
-void DLSLogger::log(DLSLogType type) const
-{
-  _parent_job->log(type);
 }
 
 //---------------------------------------------------------------

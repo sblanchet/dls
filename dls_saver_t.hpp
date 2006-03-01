@@ -21,6 +21,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
+#include "dls_globals.hpp"
 #include "com_exception.hpp"
 #include "com_zlib.hpp"
 #include "com_base64.hpp"
@@ -30,7 +31,6 @@ using namespace std;
 #include "com_compression_t.hpp"
 
 //#define DEBUG
-//#define DEBUG_SIZES
 
 //---------------------------------------------------------------
 
@@ -102,8 +102,6 @@ protected:
   void _save_block();
   void _finish_files();
   void _save_rest();
-  stringstream &msg();
-  void log(DLSLogType);
 
 /**
    Meta-Level ausgeben
@@ -130,9 +128,8 @@ protected:
   virtual string _meta_type() const = 0;
 
 private:
-  COMFile _data_file;               /**< Datei-Objekt zum Speichern der Blöcke */
-  COMFile _index_file;              /**< Datei-Objekt zum Speichern der Block-Indizes */
-  char *_write_buf;                 /**< Schreibpuffer zum Zwischenspeichern vor der Ausgabe */
+  COMFile _data_file;  /**< Datei-Objekt zum Speichern der Blöcke */
+  COMFile _index_file; /**< Datei-Objekt zum Speichern der Block-Indizes */
 
   void _begin_files(COMTime);
 };
@@ -162,14 +159,12 @@ DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
 
   _block_buf = 0;
   _meta_buf = 0;
-  _write_buf = 0;
   _compression = 0;
 
   try
   {
     _block_buf = new T[_block_buf_size];
     _meta_buf = new T[_meta_buf_size];
-    _write_buf = new char[SAVER_BUF_SIZE];
   }
   catch (...)
   {
@@ -230,7 +225,6 @@ template <class T>
 DLSSaverT<T>::~DLSSaverT()
 {
   if (_compression) delete _compression;
-  if (_write_buf) delete [] _write_buf;
   if (_block_buf) delete [] _block_buf;
   if (_meta_buf) delete [] _meta_buf;
 }
@@ -258,64 +252,23 @@ DLSSaverT<T>::~DLSSaverT()
 template <class T>
 void DLSSaverT<T>::_save_block()
 {
-  unsigned int data_length;
   COMIndexRecord index_record;
-  stringstream str, err;
+  stringstream pre, post, err;
   COMTime start_time, end_time;
 
   // Wenn keine Daten im Puffer sind, beenden.
   if (_block_buf_index == 0) return;
 
-  // Tag-Anfang in einen Stream schreiben
-  str << "<d t=\"" << _block_time << "\"";
-  str << " s=\"" << _block_buf_index << "\"";
-  str << " d=\"";
-  
-  // Stream in Schreibpuffer schieben
-  strcpy(_write_buf, str.str().c_str());
-
-  // Länge des bisherigen Tags ermitteln
-  data_length = strlen(_write_buf);
-
   if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
 
-  try
-  {
-    data_length += _compression->compress(_block_buf,                      // Adresse des Input-Puffers
-                                          _block_buf_index,                // Größe des Input-Puffers
-                                          _write_buf + data_length,        // Adresse des Ausgabepuffers
-                                          SAVER_BUF_SIZE - data_length - 1 // Größe des Ausgabepuffers
-                                          );
-  }
-  catch (ECOMCompression &e)
-  {
-    err << "block compression: " << e.msg;
-    throw EDLSSaver(err.str());
-  }
+#ifdef DEBUG
+  msg() << "compressing data for channel " << _parent_logger->channel_preset()->name;
+  log(DLSDebug);
+#endif
 
-  // Tag-Ende anhängen
-  strcpy(_write_buf + data_length, "\"/>\n");
-  data_length += 4;
-
-  // Prüfen ob die reine Datenlänge bereits größer ist, als erlaubt
-  if (data_length >= SAVER_MAX_FILE_SIZE - 1)
+  // Bei Bedarf neue Dateien beginnen
+  if (!_data_file.open() || _data_file.calc_size() >= SAVER_MAX_FILE_SIZE)
   {
-    throw EDLSSaver("data length exceeds maximum file size!");
-  }
-
-  if (_data_file.open()) // Wenn die Datendatei bereits geöffnet ist
-  {
-    // Würde die aktuelle Dateigröße plus den hinzukommenden
-    // Daten die Maximalgröße überschreiten?
-    if (_data_file.calc_size() + data_length >= SAVER_MAX_FILE_SIZE - 1)
-    {
-      // Dann neue Dateien beginnen
-      _begin_files(_block_time);
-    }
-  }
-  else // Dateien sind noch nicht offen
-  {
-    // Neue Dateien beginnen
     _begin_files(_block_time);
   }
 
@@ -324,27 +277,42 @@ void DLSSaverT<T>::_save_block()
   index_record.end_time = _time_of_last.to_ll();
   index_record.position = _data_file.calc_size();
 
+  try
+  {
+    // Daten komprimieren
+    _compression->compress(_block_buf, _block_buf_index);
+  }
+  catch (ECOMCompression &e)
+  {
+    err << "Block compression: " << e.msg;
+    throw EDLSSaver(err.str());
+  }
+
   start_time.set_now(); // Zeiterfassung
 
   try
   {
-    // Buffer in die Datei schreiben
-    _data_file.append(_write_buf, data_length);
+    // Tag-Anfang in die Datei schreiben
+    pre << "<d t=\"" << _block_time << "\"";
+    pre << " s=\"" << _block_buf_index << "\"";
+    pre << " d=\"";
+    _data_file.append(pre.str().c_str(), pre.str().length());
+
+    // Komprimierte Daten in die Datei schreiben
+    _data_file.append(_compression->compression_output(), _compression->compressed_size());
+
+    // Tag-Ende in die Datei schreiben
+    post << "\"/>" << endl;
+    _data_file.append(post.str().c_str(), post.str().length());
   }
   catch (ECOMFile &e)
   {
-    err << "could not write to file! (disk full?): " << e.msg;
+    _compression->free();
+    err << "Could not write to file! (disk full?): " << e.msg;
     throw EDLSSaver(err.str());
   }
 
   end_time.set_now(); // Zeiterfassung
-
-  // Dem Logger mitteilen, dass Daten gespeichert wurden
-  _parent_logger->bytes_written(data_length);
-
-#ifdef DEBUG_SIZES
-  cout << "WRITTEN " << data_length << " to " << _data_file.path() << endl;
-#endif
 
   // Warnen, wenn Aufruf von write() sehr lange gebraucht hat
   if (end_time - start_time > (long long) 1000000)
@@ -353,6 +321,11 @@ void DLSSaverT<T>::_save_block()
     log(DLSWarning);
   }
 
+  _compression->free();
+
+  // Dem Logger mitteilen, dass Daten gespeichert wurden
+  _parent_logger->bytes_written(pre.str().length() + _compression->compressed_size() + post.str().length());
+
   try
   {
     // Index aktualisieren
@@ -360,17 +333,13 @@ void DLSSaverT<T>::_save_block()
   }
   catch (ECOMFile &e)
   {
-    err << "could not add index record! (disk full?): " << e.msg;
+    err << "Could not add index record! (disk full?): " << e.msg;
     throw EDLSSaver(err.str());
   }
 
   // Dem Logger mitteilen, dass Daten gespeichert wurden
   _parent_logger->bytes_written(sizeof(COMIndexRecord));
 
-#ifdef DEBUG_SIZES
-  cout << "WRITTEN " << sizeof(COMIndexRecord) << " to index" << endl;
-#endif
-  
   _block_buf_index = 0;
 }
 
@@ -388,66 +357,62 @@ void DLSSaverT<T>::_save_block()
 template <class T>
 void DLSSaverT<T>::_save_rest()
 {
-  stringstream str, err;
+  stringstream pre, post, err;
   COMTime start_time, end_time;
-  unsigned int data_length, flush_length;
 
 #ifdef DEBUG
-  cout << "save rest" << endl;
+  msg() << "save rest";
+  log(DLSDebug);
 #endif
-
-  if (!_data_file.open()) throw EDLSSaver("data file closed!"); // Sollte nie passieren
-
-  // Tag-Anfang in einen Stream schreiben
-  str << "<d t=\"0\"";
-  str << " s=\"0\"";
-  str << " d=\"";
-
-  // Stream in Schreibpuffer schieben
-  strcpy(_write_buf, str.str().c_str());
-  data_length = strlen(_write_buf);
 
   if (!_compression) throw EDLSSaver("no compression object!"); // Sollte nie passieren...
 
   try
   {
-    flush_length = _compression->flush_compress(_write_buf + data_length, SAVER_BUF_SIZE - data_length - 1);
+    _compression->flush_compress();
   }
   catch (ECOMCompression &e)
   {
     err << "block flush compression: " << e.msg;
     throw EDLSSaver(err.str());
   }
+  
+#ifdef DEBUG
+  msg() << "saving " << _compression->compressed_size() << " bytes rest";
+  log(DLSDebug);
+#endif
 
-  if (flush_length > 0)
+  if (_compression->compressed_size())
   {
-    data_length += flush_length;
-
-    // Tag-Ende anhängen
-    strcpy(_write_buf + data_length, "\"/>\n");
-    data_length += 4;
-
     try
     {
-      // Buffer in die Datei schreiben
-      _data_file.append(_write_buf, data_length);
+      // Tag-Anfang in Datei schreiben
+      pre << "<d t=\"0\" s=\"0\" d=\"";
+      _data_file.append(pre.str().c_str(), pre.str().length());
+
+      // Komprimierte Daten in die Datei schreiben
+      _data_file.append(_compression->compression_output(), _compression->compressed_size());
+      
+      // Tag-Ende anhängen
+      post << "\"/>" << endl;
+      _data_file.append(post.str().c_str(), post.str().length());
     }
     catch (ECOMFile &e)
     {
+      _compression->free();
       err << "could not write to file! (disk full?): " << e.msg;
       throw EDLSSaver(err.str());
     }
 
-    // Dem Logger mitteilen, dass Daten gespeichert wurden
-    _parent_logger->bytes_written(data_length);
+    _compression->free();
 
-#ifdef DEBUG_SIZES
-    cout << "WRITTEN " << data_length << " rest to " << _data_file.path() << endl;
-#endif
+    // Dem Logger mitteilen, dass Daten gespeichert wurden
+    _parent_logger->bytes_written(pre.str().length() + _compression->compressed_size() + post.str().length());
   }
 
 #ifdef DEBUG
-  cout << "save rest finished" << endl;
+  msg() << "save rest finished";
+  log(DLSDebug);
 #endif
 }
 
@@ -494,7 +459,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
   {
     if (errno != EEXIST)
     {
-      err << "could not create \"" << dir_name.str() << "\" (errno " << errno << ")!";
+      err << "Could not create \"" << dir_name.str() << "\" (errno " << errno << ")!";
       throw EDLSSaver(err.str());     
     }
   }
@@ -512,7 +477,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
   }
   catch (ECOMFile &e)
   {
-    err << "could not open file \"" << file_name.str();
+    err << "Could not open file \"" << file_name.str();
     err << "\": " << e.msg;
     throw EDLSSaver(err.str());
   }
@@ -525,7 +490,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
   }
   catch (ECOMFile &e)
   {
-    err << "could not open index file \"" << file_name.str();
+    err << "Could not open index file \"" << file_name.str();
     err << "\": " << e.msg;
     throw EDLSSaver(err.str());
   }
@@ -548,24 +513,18 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
   }
   catch (ECOMIndexT &e)
   {
-    err << "could not write to global index file \"" << file_name.str() << "\": " << e.msg;
+    err << "Could not write to global index file \"" << file_name.str() << "\": " << e.msg;
     throw EDLSSaver(err.str());
   }
 
   // Dem Logger mitteilen, dass Daten gespeichert wurden
   _parent_logger->bytes_written(sizeof(COMGlobalIndexRecord));
-
-#ifdef DEBUG_SIZES
-  cout << "WRITTEN " << sizeof(COMGlobalIndexRecord) << " to global index" << endl;
-#endif
 }
 
 //---------------------------------------------------------------
 
 /**
    Schließt Daten- und Index-Dateien
-
-   \todo Erste Bedingung korrekt? Daten?
 
    \throw EDLSSaver Ebenen-Verzeichnis oder Datendatei konnte
                     nicht erstellt werden
@@ -586,7 +545,7 @@ void DLSSaverT<T>::_finish_files()
   }
   catch (ECOMFile &e)
   {
-    msg() << "could not close data file: " << e.msg;
+    msg() << "Could not close data file: " << e.msg;
     log(DLSWarning);
   }
 
@@ -596,7 +555,7 @@ void DLSSaverT<T>::_finish_files()
   }
   catch (ECOMFile &e)
   {
-    msg() << "could not close index file: " << e.msg;
+    msg() << "Could not close index file: " << e.msg;
     log(DLSWarning);
   }
 
@@ -617,7 +576,7 @@ void DLSSaverT<T>::_finish_files()
       {
         // Das darf nicht passieren, da doch beim Anlagen der Datendateien
         // ein globaler Index-Record angelegt wurde...
-        err << "global index file has no entries!";
+        err << "Global index file has no entries!";
         throw EDLSSaver(err.str());
       }
 
@@ -627,7 +586,7 @@ void DLSSaverT<T>::_finish_files()
 
       if (global_index_record.end_time != 0)
       {
-        err << "end time of last record in global index is not 0!";
+        err << "End time of last record in global index is not 0!";
         throw EDLSSaver(err.str());
       }
 
@@ -638,7 +597,7 @@ void DLSSaverT<T>::_finish_files()
     }
     catch (ECOMIndexT &e)
     {
-      err << "updating global index: " << e.msg;
+      err << "Updating global index: " << e.msg;
       throw EDLSSaver(err.str());
     }
   }
@@ -646,33 +605,9 @@ void DLSSaverT<T>::_finish_files()
 
 //---------------------------------------------------------------
 
-/**
-   Speichert eine später zu loggende Nachricht
-
-   \return Referenz auf den msg-Stream des Logging-Prozesses
-*/
-
-template <class T>
-stringstream &DLSSaverT<T>::msg()
-{
-  return _parent_logger->msg();
-}
-
-//---------------------------------------------------------------
-
-/**
-   Loggt eine vorher zwischengespeicherte Nachricht.
-
-   \param type Type der Nachricht
-*/
-
-template <class T>
-void DLSSaverT<T>::log(DLSLogType type)
-{
-  _parent_logger->log(type);
-}
-
-//---------------------------------------------------------------
+#ifdef DEBUG
+#undef DEBUG
+#endif
 
 #endif
 

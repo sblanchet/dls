@@ -42,18 +42,17 @@ enum DLSProcLoggerState
 class DLSProcLogger
 {
 public:
-  DLSProcLogger(const string &, int);
+  DLSProcLogger(const string &, unsigned int);
   ~DLSProcLogger();
 
   int start();
   void send_command(const string &);
   double max_frequency() const;
   const list<COMRealChannel> *real_channels() const;
-  void log(DLSLogType);
-  stringstream &msg();
 
 private:
   string _dls_dir;
+  unsigned int _job_id;
   DLSJob *_job;
   int _socket;
   COMRingBufferT<char, unsigned int> *_ring_buf;
@@ -71,7 +70,6 @@ private:
   COMTime _data_time;
   COMTime _first_data_time;
   bool _got_channels;
-  stringstream _msg;
   struct timeval _last_trigger_requested;
   struct timeval _last_watchdog;
   COMTime _last_data_received;
@@ -97,13 +95,6 @@ private:
 inline double DLSProcLogger::max_frequency() const
 {
   return _max_frequency;
-}
-
-//---------------------------------------------------------------
-
-inline stringstream &DLSProcLogger::msg()
-{
-  return _msg;
 }
 
 //---------------------------------------------------------------

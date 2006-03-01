@@ -16,7 +16,7 @@ using namespace std;
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/dls_job.cpp,v 1.19 2005/01/18 10:47:27 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/dls_job.cpp,v 1.23 2005/03/07 09:15:51 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -30,38 +30,27 @@ RCS_ID("$Header: /home/fp/dls/src/RCS/dls_job.cpp,v 1.19 2005/01/18 10:47:27 fp 
 
    \param parent_proc Zeiger auf den besitzenden Logging-Prozess
    \param dls_dir DLS-Datenverzeichnis
-   \param id Auftrags-ID
 */
 
-DLSJob::DLSJob(DLSProcLogger *parent_proc, const string &dls_dir, int id)
+DLSJob::DLSJob(DLSProcLogger *parent_proc, const string &dls_dir)
 {
   stringstream dir;
 
   _parent_proc = parent_proc;
   _dls_dir = dls_dir;
-  _job_id = id;
 
   _id_gen = 0;
   _logging_started = false;
-  _finished = true;
 }
 
 //---------------------------------------------------------------
 
 /**
    Destruktor
-
-   Gibt eine Warnung aus, wenn wartende Daten nicht gesichert wurden.
 */
 
 DLSJob::~DLSJob()
 {
-  if (!_finished)
-  {
-    msg() << "job not finished!";
-    log(DLSWarning);
-  }
-
   _clear_loggers();
 }
 
@@ -70,18 +59,19 @@ DLSJob::~DLSJob()
 /**
    Importiert die Vorgaben für den aktuellen Auftrag
 
+   \param job_id ID des zu importierenden Auftrags
    \throw EDLSJob Fehler während des Importierens
 */
 
-void DLSJob::import()
+void DLSJob::import(unsigned int job_id)
 {
   try
   {
-    _preset.import(_dls_dir, _job_id);
+    _preset.import(_dls_dir, job_id);
   }
   catch (ECOMJobPreset &e)
   {
-    throw EDLSJob("jobinfo::import(): " + e.msg);
+    throw EDLSJob("Importing job preset: " + e.msg);
   }
 }
 
@@ -658,7 +648,7 @@ void DLSJob::message(const COMXMLTag *info_tag)
 
   if (!_message_file.open() || !_message_index.open())
   {
-    filename << _dls_dir << "/job" << _job_id << "/messages";
+    filename << _dls_dir << "/job" << _preset.id() << "/messages";
 
     try
     {
@@ -667,13 +657,13 @@ void DLSJob::message(const COMXMLTag *info_tag)
     }
     catch (ECOMFile &e)
     {
-      msg() << "could not open message file for message \"" << info_tag << "\": " << e.msg;
+      msg() << "Could not open message file for message \"" << info_tag << "\": " << e.msg;
       log(DLSError);
       return;
     }
     catch (ECOMIndexT &e)
     {
-      msg() << "could not open message index for message \"" << info_tag << "\": " << e.msg;
+      msg() << "Could not open message index for message \"" << info_tag << "\": " << e.msg;
       log(DLSError);
       return;
     }
@@ -686,7 +676,7 @@ void DLSJob::message(const COMXMLTag *info_tag)
   }
   catch (ECOMXMLTag &e)
   {
-    msg() << "could not log message file (no time) for message \"" << info_tag << "\": " << e.msg;
+    msg() << "Could not log message file (no time) for message \"" << info_tag << "\": " << e.msg;
     log(DLSError);
     return;
   }
@@ -704,42 +694,16 @@ void DLSJob::message(const COMXMLTag *info_tag)
   }
   catch (ECOMFile &e)
   {
-    msg() << "could not write file for message \"" << info_tag << "\": " << e.msg;
+    msg() << "Could not write file for message \"" << info_tag << "\": " << e.msg;
     log(DLSError);
     return;
   }
   catch (ECOMIndexT &e)
   {
-    msg() << "could not write index for message \"" << info_tag << "\": " << e.msg;
+    msg() << "Could not write index for message \"" << info_tag << "\": " << e.msg;
     log(DLSError);
     return;
   }
-}
-
-//---------------------------------------------------------------
-
-/**
-   Nimmt eine Logging-Nachricht als Stream auf
-
-   \return Referenz auf den Nachrichtenstream des Logging-Prozesses
-*/
-
-stringstream &DLSJob::msg() const
-{
-  return _parent_proc->msg();
-}
-
-//---------------------------------------------------------------
-
-/**
-   Loggt eine vorher aufgezeichnete Nachricht
-
-   \param type Typ der Nachricht
-*/
-
-void DLSJob::log(DLSLogType type) const
-{
-  _parent_proc->log(type);
 }
 
 //---------------------------------------------------------------

@@ -242,12 +242,12 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
 
   try
   {
-    // Wenn noch kein Ring-Lesepuffer allokiert wurde, dies jetzt tun
+    // Wenn noch kein Ring-Lesespeicher reserviert wurde, dies jetzt tun
     if (!_ring) _ring = new COMRingBufferT<char, unsigned int>(READ_RING_SIZE);
   }
   catch (...)
   {
-    cout << "ERROR: could not allocate memory for ring buffer!" << endl;
+    cout << "ERROR: Could not allocate memory for ring buffer!" << endl;
     return;
   }
 
@@ -282,7 +282,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
   }
   else
   {
-    cout << "ERROR: unknown compression type!" << endl;
+    cout << "ERROR: Unknown compression type index: " << _format_index << endl;
     return;
   }
 
@@ -296,8 +296,8 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
     }
     catch (ECOMIndexT &e)
     {
-      cout << "ERROR: could not read record " << i << " from global index \"";
-      cout << global_index_file_name << "\": " << e.msg << endl;
+      cout << "ERROR: Could not read record " << i << " from global index \"";
+      cout << global_index_file_name << "\". Reason: " << e.msg << endl;
       return;
     }
 
@@ -330,13 +330,13 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
     }
     catch (ECOMIndexT &e)
     {
-      cout << "ERROR: could not open index \"";
+      cout << "ERROR: Could not open index \"";
       cout << data_file_name.str() << ".idx\": " << e.msg << endl;
       return;
     }
     catch (ECOMFile &e)
     {
-      cout << "ERROR: could not open data file \"";
+      cout << "ERROR: Could not open data file \"";
       cout << data_file_name.str() << "\": " << e.msg << endl;
       return;
     }
@@ -350,12 +350,12 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       }
       catch (ECOMIndexT &e)
       {
-        cout << "ERROR: could not read from index: " << e.msg << endl;
+        cout << "ERROR: Could not read from index: " << e.msg << endl;
         return;
       }
 
 #ifdef DEBUG
-      cout << "trying record " << i << endl;
+      cout << "Trying record " << i << endl;
 #endif
 
       // Der Block liegt noch vor der gesuchten Zeit. Den Nächsten versuchen!
@@ -365,7 +365,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       if (COMTime(index_record.start_time) >= end) break;
       
 #ifdef DEBUG
-      cout << "passt!" << endl;
+      cout << "Record ok!" << endl;
 #endif
       
       try
@@ -375,7 +375,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       }
       catch (ECOMFile &e)
       {
-        cout << "ERROR: could not seek in data file!" << endl;
+        cout << "ERROR: Could not seek in data file!" << endl;
         return;
       }
       
@@ -391,7 +391,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
         if (write_len > 1024) write_len = 1024;
         
 #ifdef DEBUG
-        cout << "trying to read " << write_len << " byte(s)..." << endl;
+        cout << "Trying to read " << write_len << " byte(s)..." << endl;
 #endif
 
         try
@@ -400,12 +400,12 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
         }
         catch (ECOMFile &e)
         { 
-          cout << "ERROR: could not read from data file: " << e.msg << endl;
+          cout << "ERROR: Could not read from data file: " << e.msg << endl;
           return;
         }
         
 #ifdef DEBUG
-        cout << "read " << write_len << " byte(s)." << endl;
+        cout << write_len << " byte(s) read." << endl;
 #endif
         
         if (write_len == 0) // Datei zuende! (Darf normalerweise nicht vorkommen)
@@ -436,10 +436,10 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
         }
         
 #ifdef DEBUG
-        cout << "tag parsed: " << xml.last_tag()->title() << endl;
+        cout << "Tag parsed: " << xml.tag()->title() << endl;
 #endif
      
-        if (xml.last_tag()->title() == "d") // Ein Daten-Tag ist komplett
+        if (xml.tag()->title() == "d") // Ein Daten-Tag ist komplett
         {
           // Zeiten der Datenliste aktualisieren
           if (data_list->size() == 0)
@@ -467,13 +467,13 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
           {
             // Daten aus Tag laden und dekomprimieren
             data_list->load_data_tag(this,
-                                     xml.last_tag()->att("d")->to_str().c_str(),
-                                     xml.last_tag()->att("s")->to_int(),
+                                     xml.tag()->att("d")->to_str().c_str(),
+                                     xml.tag()->att("s")->to_int(),
                                      _compression);
           }
           catch (ECOMXMLTag &e)
           {
-            cout << "ERROR: could not read block!" << endl;
+            cout << "ERROR: Could not read block: " << e.msg << endl;
             return;
           }
 
@@ -495,9 +495,9 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
     // Jetzt noch einen Block zusätzlich lesen
     
 #ifdef DEBUG
-    cout << "loading one more record... ring size: " << _ring->length() << endl;
+    cout << "Loading one more record... Ring size: " << _ring->length() << endl;
 
-    cout << "ring content: " << endl;
+    cout << "Ring content: " << endl;
     for (i = 0; i < _ring->length(); i++) cout << (*_ring)[i];
     cout << endl;
 #endif
@@ -511,7 +511,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
     catch (ECOMXMLParser &e)
     {
       // Fehler beim Parsen! Abbrechen.
-      cout << "parsing error: " << e.msg << endl;
+      cout << "ERROR: While parsing: " << e.msg << endl;
       return;
     }
     catch (ECOMXMLParserEOF &e)
@@ -530,7 +530,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       if (write_len > 1024) write_len = 1024;
         
 #ifdef DEBUG
-      cout << "trying to read " << write_len << " byte(s)..." << endl;
+      cout << "Trying to read " << write_len << " byte(s)..." << endl;
 #endif
 
       try
@@ -539,17 +539,21 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       }
       catch (ECOMFile &e)
       { 
-        cout << "ERROR: could not read from data file: " << e.msg << endl;
+        cout << "ERROR: Could not read data file: " << e.msg << endl;
         return;
       }
         
 #ifdef DEBUG
-      cout << "read " << write_len << " byte(s)." << endl;
+      cout << write_len << " byte(s) read." << endl;
 #endif
         
-      if (write_len == 0) // Datei zuende! (Darf normalerweise nicht vorkommen)
+      if (write_len == 0) // Datei zuende!
       {
-        cout << "ERROR: EOF in file \"" << data_file_name.str() << "\"" << endl;
+        // Dies kommt vor, wenn z. B. während der Erfassung einer MDCT noch kein
+        // Folgeblock existiert. Wenn die Erfassung abgeschlossen ist, sollte
+        // dies allerdings nicht auftreten!
+
+        //cout << "WARNING: No succeding MDCT block available in \"" << data_file_name.str() << "\"" << endl;
         return;
       }
         
@@ -565,7 +569,7 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
       catch (ECOMXMLParser &e)
       {
         // Fehler beim Parsen! Abbrechen.
-        cout << "parsing error: " << e.msg << endl;
+        cout << "ERROR: While parsing: " << e.msg << endl;
         return;
       }
       catch (ECOMXMLParserEOF &e)
@@ -575,22 +579,22 @@ void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
     }
  
 #ifdef DEBUG
-    cout << "tag parsed: " << xml.last_tag()->title() << endl;
+    cout << "Tag parsed: " << xml.tag()->title() << endl;
 #endif
      
-    if (xml.last_tag()->title() == "d") // Ein Daten-Tag ist komplett
+    if (xml.tag()->title() == "d") // Ein Daten-Tag ist komplett
     {
       try
       {
         // Daten aus Tag laden und dekomprimieren
         data_list->load_data_tag(this,
-                                 xml.last_tag()->att("d")->to_str().c_str(),
-                                 xml.last_tag()->att("s")->to_int(),
+                                 xml.tag()->att("d")->to_str().c_str(),
+                                 xml.tag()->att("s")->to_int(),
                                  _compression);
       }
       catch (ECOMXMLTag &e)
       {
-        cout << "ERROR: could not read block!" << endl;
+        cout << "ERROR: Could not read block!" << endl;
         return;
       }
           
@@ -635,7 +639,7 @@ void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
   if (_gen_data.size())
   {
 #ifdef DEBUG
-    cout << "using gen data for min/max calc" << endl;
+    cout << "Using gen data for min/max calc" << endl;
 #endif
 
     current_min = _gen_data.min();
@@ -646,7 +650,7 @@ void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
   if (_min_data.size())
   {
 #ifdef DEBUG
-    cout << "using min data for min/max calc" << endl;
+    cout << "Using min data for min/max calc" << endl;
 #endif
 
     data_min = _min_data.min();
@@ -668,7 +672,7 @@ void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
   if (_max_data.size())
   {
 #ifdef DEBUG
-    cout << "using max data for min/max calc" << endl;
+    cout << "Using max data for min/max calc" << endl;
 #endif
 
     data_min = _max_data.min();
@@ -692,5 +696,9 @@ void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
 }
 
 //---------------------------------------------------------------
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
 
 #endif

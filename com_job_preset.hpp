@@ -45,9 +45,9 @@ public:
   COMJobPreset();
   ~COMJobPreset();
 
-  void import(const string &, int);
+  void import(const string &, unsigned int);
 
-  int id() const;
+  unsigned int id() const;
   const string &description() const;
   string id_desc() const;
   const string &owner() const;
@@ -59,11 +59,11 @@ public:
   const vector<COMChannelPreset> *channels() const;
   bool channel_exists(const string &) const;
 
-  // prototypen
-  void description(const string &);
+  // Prototypen
+  //void description(const string &);
 
 protected:
-  int _id;                            /**< Auftrags-ID */
+  unsigned int _id;                   /**< Auftrags-ID */
   string _description;                /**< Beschreibender Name des Auftrages */
   string _owner;                      /**< Besitzer des Auftrages \todo Nicht genutzt */
   bool _running;                      /**< Soll erfasst werden? */
@@ -83,7 +83,7 @@ protected:
    \see _id
 */
 
-inline int COMJobPreset::id() const
+inline unsigned int COMJobPreset::id() const
 {
   return _id;
 }

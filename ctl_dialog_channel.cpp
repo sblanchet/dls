@@ -19,10 +19,11 @@ using namespace std;
 #include "ctl_job_preset.hpp"
 #include "ctl_dialog_channel.hpp"
 #include "ctl_msg_wnd.hpp"
+#include "mdct.h"
 
 //---------------------------------------------------------------
 
-RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channel.cpp,v 1.12 2005/01/24 10:14:55 fp Exp $");
+RCS_ID("$Header: /home/fp/dls/src/RCS/ctl_dialog_channel.cpp,v 1.15 2005/02/02 10:36:55 fp Exp $");
 
 //---------------------------------------------------------------
 
@@ -101,7 +102,7 @@ CTLDialogChannel::CTLDialogChannel(const string &dls_dir)
   _choice_mdct_selected = false;
 
   // Alle gültigen MDCT-Blockgrößen einfügen
-  for (i = MDCT_MIN_EXP2; i < MDCT_MAX_EXP2_PLUS_ONE; i++)
+  for (i = MDCT_MIN_EXP2; i <= MDCT_MAX_EXP2; i++)
   {
     str.str("");
     str.clear();
@@ -239,10 +240,10 @@ void CTLDialogChannel::show(CTLJobPreset *job,
     }
     else if (mdct_equal) // MDCT gewählt und alle MDCT-Parameter gleich
     {
-      exp2 = logb(mdct_block_size) / logb(2);
+      exp2 = log10((double) mdct_block_size) / log10((double) 2);
       
       // MDCT-Blockgröße gültig?
-      if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 < MDCT_MAX_EXP2_PLUS_ONE)
+      if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 <= MDCT_MAX_EXP2)
       {
         _choice_format->value(format_index);
         _choice_format_selected = true;
@@ -411,15 +412,15 @@ bool CTLDialogChannel::_save_channels()
     {
       if (!write_block)
       {
-        msg->str() << "no blocksize chosen!";
-        msg->error();
+        msg_win->str() << "no blocksize chosen!";
+        msg_win->error();
         return false;
       }
 
       if (!_choice_mdct_selected)
       {
-        msg->str() << "no mdct blocksize selected!";
-        msg->error();
+        msg_win->str() << "no mdct blocksize selected!";
+        msg_win->error();
         return false;
       }
 
@@ -428,8 +429,8 @@ bool CTLDialogChannel::_save_channels()
       // Blockgröße kein Vielfaches von MDCT-Dimension?
       if (block % mdct_block_size)
       {
-        msg->str() << "MDCT block size must fit into data block size!";
-        msg->error();
+        msg_win->str() << "MDCT block size must fit into data block size!";
+        msg_win->error();
         return false;
       }
 
@@ -439,8 +440,8 @@ bool CTLDialogChannel::_save_channels()
 
       if (str.str() == "")
       {
-        msg->str() << "No MDCT accuracy selected!";
-        msg->error();
+        msg_win->str() << "No MDCT accuracy selected!";
+        msg_win->error();
         return false;
       }
 
@@ -449,8 +450,8 @@ bool CTLDialogChannel::_save_channels()
   }
   catch (...)
   {
-    msg->str() << "Illegal value!";
-    msg->error();
+    msg_win->str() << "Illegal value!";
+    msg_win->error();
     return false;
   }
 
@@ -509,8 +510,8 @@ bool CTLDialogChannel::_save_channels()
       }
       catch (ECOMJobPreset &e)
       {
-        msg->str() << e.msg;
-        msg->error();
+        msg_win->str() << e.msg;
+        msg_win->error();
         return false;
       }
 
@@ -528,8 +529,8 @@ bool CTLDialogChannel::_save_channels()
     }
     catch (ECOMJobPreset &e)
     {
-      msg->str() << e.msg;
-      msg->error();
+      msg_win->str() << e.msg;
+      msg_win->error();
 
       try
       {
@@ -542,9 +543,9 @@ bool CTLDialogChannel::_save_channels()
       }
       catch (ECOMChannelPreset &e)
       {
-        msg->str() << "FATAL: " << e.msg << "!";
-        msg->str() << " Please restart application to avoid data loss!";
-        msg->error();
+        msg_win->str() << "FATAL: " << e.msg << "!";
+        msg_win->str() << " Please restart application to avoid data loss!";
+        msg_win->error();
       }
     
       return false;
@@ -552,12 +553,12 @@ bool CTLDialogChannel::_save_channels()
 
     try
     {
-      _job->notify_changed(_dls_dir);
+      _job->spool(_dls_dir);
     }
     catch (ECOMJobPreset &e)
     {
-      msg->str() << "Could not notify dlsd: " << e.msg;
-      msg->warning();
+      msg_win->str() << "Could not notify dlsd: " << e.msg;
+      msg_win->warning();
     }
   
     _updated = true;
