@@ -1,21 +1,26 @@
 #------------------------------------------------------------------------------
 #
-#  DLS-Makefile
+#  DLS sysconfig file
 #
 #  $Id$
 #
 #------------------------------------------------------------------------------
 
-all:
-	make -C src all
+#
+#  DLS data directory
+#
+#DLS_DATA=/vol/dls_data
 
-install:
-	@script/install.sh
+#
+#  DLS user
+#  Switch to this user after startup
+#
+#DLS_USER=dls
 
-doc:
-	doxygen Doxyfile
-
-clean:
-	make -C src clean
+#
+#  Maximum number of open files
+#  Set open file limit
+#
+#DLS_FILES=10000
 
 #------------------------------------------------------------------------------
