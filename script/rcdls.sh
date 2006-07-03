@@ -11,9 +11,9 @@
 ### BEGIN INIT INFO
 # Provides:          dls
 # Required-Start:    $local_fs $syslog $network
-# Should-Start:      $time ethercat etherlab
+# Should-Start:      $time msr etherlab
 # Required-Stop:     $local_fs $syslog $network
-# Should-Stop:       $time ethercat etherlab
+# Should-Stop:       $time msr etherlab
 # Default-Start:     3 5
 # Default-Stop:      0 1 2 6
 # Short-Description: Data Logging Server
@@ -82,6 +82,7 @@ case "$1" in
 	    rc_exit
 	fi
 
+	sleep 1
 	checkpid
 
 	rc_status -v
