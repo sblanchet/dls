@@ -46,14 +46,19 @@ fi
 
 #------------------------------------------------------------------------------
 
+DLSD=/usr/local/bin/dlsd
+PIDFILE=$DLS_DATA/dlsd.pid
+
+#------------------------------------------------------------------------------
+
 checkpid() {
-    if [ ! -r $DLS_DATA/dlsd.pid ]; then
+    if [ ! -r $PIDFILE ]; then
 	/bin/false
 	rc_status -v
 	rc_exit
     fi
 
-    PID=`cat $DLS_DATA/dlsd.pid`
+    PID=`cat $PIDFILE`
 
     if ! kill -0 $PID 2>/dev/null; then
 	/bin/false
@@ -71,7 +76,7 @@ case "$1" in
     start)
 	echo -n "Starting DLS Daemon "
 
-	if ! dlsd $PDATA $PUSER $PFILES > /dev/null; then
+	if ! $DLSD $PDATA $PUSER $PFILES > /dev/null; then
 	    /bin/false
 	    rc_status -v
 	    rc_exit
@@ -85,8 +90,8 @@ case "$1" in
     stop)
 	echo -n "Shutting down DLS Daemon "
 
-	if [ -r $DLS_DATA/dlsd.pid ]; then
-	    PID=`cat $DLS_DATA/dlsd.pid`
+	if [ -r $PIDFILE ]; then
+	    PID=`cat $PIDFILE`
 
 	    if ! kill -TERM $PID 2>/dev/null; then
 		/bin/false
