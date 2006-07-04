@@ -36,6 +36,7 @@ using namespace std;
 #define DEFAULT_DLS_DIR "/vol/dls_data"
 #define DLS_PID_FILE "dlsd.pid"
 #define ENV_DLS_DIR "DLS_DIR" // Name der Umgebungsvariablen
+#define ENV_DLS_USER "DLS_USER" // Name der Umgebungsvariablen
 
 #define DLS_FORMAT_COUNT 3
 

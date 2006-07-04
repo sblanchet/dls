@@ -5,6 +5,8 @@
  *****************************************************************************/
 
 #include <unistd.h>
+#include <pwd.h>
+#include <errno.h>
 
 #include <iostream>
 #include <string>
@@ -21,7 +23,7 @@ using namespace std;
 /*****************************************************************************/
 
 CTLDialogMsg *msg_win = 0;
-string dls_dir;
+string dls_dir, dls_user;
 
 void get_options(int, char **);
 void print_usage();
@@ -31,6 +33,7 @@ void print_usage();
 int main(int argc, char **argv)
 {
   CTLDialogMain *dialog_main;
+  struct passwd *pwd;
 
   cout << "dls_ctl " << DLS_VERSION_STR
        << " revision " << STRINGIFY(SVNREV) << endl;
@@ -41,9 +44,27 @@ int main(int argc, char **argv)
   Fl::visual(FL_DOUBLE | FL_INDEX);
   Fl::lock();
 
+  // Erst Fenster erstellen
   msg_win = new CTLDialogMsg();
-
   dialog_main = new CTLDialogMain(dls_dir);
+
+  // Zu angegebenem Benutzer wechseln
+  if (dls_user != "") {
+      if (!(pwd = getpwnam(dls_user.c_str()))) {
+	  cerr << "FEHLER: Benutzer \"" << dls_user
+	       << "\" existiert nicht!" << endl;
+	  exit(1);
+      }
+
+      cout << "Wechsele zu UID " << pwd->pw_uid << "." << endl;
+
+      if (setuid(pwd->pw_uid) == -1) {
+	  cerr << "FEHLER: Wechseln zu UID " << pwd->pw_uid;
+	  cerr << "fehlgeschlagen: " << strerror(errno);
+	  exit(1);
+      }
+  }
+
   dialog_main->show();
   delete dialog_main;
 
@@ -57,18 +78,23 @@ int main(int argc, char **argv)
 void get_options(int argc, char **argv)
 {
   int c;
-  bool dir_set = false;
+  bool dir_set = false, user_set = false;
   char *env;
 
   do
   {
-    c = getopt(argc, argv, "d:h");
+    c = getopt(argc, argv, "d:u:h");
 
     switch (c)
     {
       case 'd':
         dir_set = true;
         dls_dir = optarg;
+        break;
+
+      case 'u':
+        user_set = true;
+        dls_user = optarg;
         break;
 
       case 'h':
@@ -83,18 +109,21 @@ void get_options(int argc, char **argv)
   while (c != -1);
 
   // Weitere Parameter vorhanden?
-  if (optind < argc)
-  {
+  if (optind < argc) {
     print_usage();
   }
 
-  if (!dir_set)
-  {
+  if (!dir_set) {
     // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
     if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
     // $DLS_DIR leer: Standardverzeichnis nutzen
     else dls_dir = DEFAULT_DLS_DIR;
+  }
+
+  if (!user_set) {
+    // DLS-Benutzer aus Umgebungsvariable $DLS_USER einlesen
+    if ((env = getenv(ENV_DLS_USER)) != 0) dls_user = env;
   }
 
   // Benutztes Verzeichnis ausgeben
@@ -107,6 +136,7 @@ void print_usage()
 {
   cout << "Aufruf: dls_ctl [OPTIONEN]" << endl;
   cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
+  cout << "        -u [Benutzer]      DLS-Benutzer angeben" << endl;
   cout << "        -h                 Diese Hilfe anzeigen" << endl;
   exit(0);
 }

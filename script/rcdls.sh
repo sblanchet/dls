@@ -32,8 +32,8 @@ test -r $SYSCONFIG || { echo "$SYSCONFIG not existing";
 
 #------------------------------------------------------------------------------
 
-if [ -n "$DLS_DATA" ]; then
-    PDATA="-d $DLS_DATA"
+if [ -n "$DLS_DIR" ]; then
+    PDIR="-d $DLS_DIR"
 fi
 
 if [ -n "$DLS_USER" ]; then
@@ -47,7 +47,7 @@ fi
 #------------------------------------------------------------------------------
 
 DLSD=/usr/local/bin/dlsd
-PIDFILE=$DLS_DATA/dlsd.pid
+PIDFILE=$DLS_DIR/dlsd.pid
 
 #------------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ case "$1" in
     start)
 	echo -n "Starting DLS Daemon "
 
-	if ! $DLSD $PDATA $PUSER $PFILES > /dev/null; then
+	if ! $DLSD $PDIR $PUSER $PFILES > /dev/null; then
 	    /bin/false
 	    rc_status -v
 	    rc_exit

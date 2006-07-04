@@ -9,7 +9,7 @@
 #
 #  DLS data directory
 #
-#DLS_DATA=/vol/dls_data
+#DLS_DIR=/vol/dls_data
 
 #
 #  DLS user
