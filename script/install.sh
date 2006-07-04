@@ -11,7 +11,7 @@
 CONFIGFILE=/etc/sysconfig/dls
 INITSCRIPT=/etc/init.d/dls
 RCLINK=/usr/sbin/rcdls
-DLSSCRIPT=/usr/local/bin/dls
+DLSSCRIPT=/usr/local/bin/dls_status
 QUOTASCRIPT=/usr/local/bin/dls_quota
 
 if [ -s $CONFIGFILE ]; then
@@ -29,7 +29,7 @@ if [ ! -L $RCLINK ]; then
 fi
 
 echo "  Installing tools"
-cp script/dls.pl $DLSSCRIPT || exit 1
+cp script/dls_status.pl $DLSSCRIPT || exit 1
 chmod +x $DLSSCRIPT || exit 1
 cp script/dls_quota.pl $QUOTASCRIPT || exit 1
 chmod +x $QUOTASCRIPT || exit 1
