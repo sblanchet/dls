@@ -134,28 +134,46 @@ sub check_dls_dir
 	return;
     }
 
-    if (-r $pid_file) {
-	$pid = `cat $pid_file`;
-	chomp $pid;
-	
-	# Der Inhalt der ersten Zeile muss eine Nummer sein
-	unless ($pid =~ /^\d+$/) {
-	    print "FEHLER: \"$pid_file\" ist korrupt!\n\n";
-	}
-	else {
-	    `ps ax | grep -q -E "^ +$pid.*dlsd"`;
-	    $mother_running = 1 unless $?;
-	}
-    }
+    $mother_running = &check_pid($pid_file);
 
     if ($mother_running == 0) {
 	print "DLS-Mutterprozess LAEUFT NICHT!\n";
     }
     else {
-	print "DLS-Mutterprozess laeuft mit PID $pid.\n";
+	print "DLS-Mutterprozess laeuft mit PID $mother_running.\n";
     }
 
     &check_jobs;
+}
+
+#----------------------------------------------------------------
+#
+#  check_pid
+#
+#  Prüft, ob ein Prozess zu einer PID-Datei noch läuft.
+#  Gibt die PID zurück, wenn ja, sonst 0.
+#
+#----------------------------------------------------------------
+
+sub check_pid
+{
+    my ($pid_file) = @_;
+
+    return 0 if ! -r $pid_file;
+
+    my $pid = `cat $pid_file`;
+    chomp $pid;
+	
+    # Der Inhalt der ersten Zeile muss eine Nummer sein
+    unless ($pid =~ /^\d+$/) {
+	print "FEHLER: \"$pid_file\" ist korrupt!\n\n";
+	return 0;
+    }
+
+    `ps ax | grep -q -E "^ *$pid.*dlsd"`;
+
+    return $pid unless $?;
+    return 0;
 }
 
 #----------------------------------------------------------------
@@ -253,23 +271,11 @@ sub check_job
 	}
     }
 
-    if (-r $pid_file) { # Wenn PID-Datei existiert
-	$pid = `cat $pid_file`;
-	chomp $pid; # Newline entfernen
-
-	unless ($pid =~ /^(\d+)$/) { # PID ist keine Nummer
-	    print "\nFEHLER: PID-Datei \"$pid_file\" ist korrupt!\n";
-	    $running = -1; # unbekannt
-	}
-	else {
-	    `ps ax | grep -q -E "^ +$pid.*dlsd"`;
-	    $running = 1 unless $?;
-	}
-    }
+    $running = &check_pid($pid_file);
 
     # Informationen für die Ausgabe auswerten
     $proc = "UNBEKANNT";
-    $proc = "laeuft" if $running == 1;
+    $proc = "laeuft" if $running > 0;
     $proc = "LAEUFT NICHT!" if $running == 0;
     $proc = "" if $state eq "paused";
     $desc = "UNBEKANNT" if $desc eq "";
