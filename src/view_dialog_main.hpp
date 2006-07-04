@@ -44,7 +44,7 @@ private:
   Fl_Choice *_choice_job;    /**< Auswahlfeld zum Wählen des Auftrags */
   Fl_Button *_button_full;   /**< Button zum Anzeigen der gesamten Zeitspanne */
   Fl_Button *_button_reload; /**< Button zum erneuten laden der Daten */
-  Fl_Button *_button_export; /**< Button zum Exportieren der sichtbaren Daten */
+  
   Fl_Button *_button_close;  /**< "Schliessen"-Button */
   Fl_Grid *_grid_channels;   /**< Grid zum Anzeigen der Kanalliste*/
   ViewViewData *_view_data;  /**< Anzeige für die Kanaldaten */

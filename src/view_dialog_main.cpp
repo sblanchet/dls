@@ -52,9 +52,6 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
   _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
   _button_reload->callback(_callback, this);
 
-  _button_export = new Fl_Button(500, 25, 120, 25, "Exportieren...");
-  _button_export->callback(_callback, this);
-
   _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
   _button_close->callback(_callback, this);
 
