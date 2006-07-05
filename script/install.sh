@@ -37,6 +37,7 @@ chmod +x $QUOTASCRIPT || exit 1
 echo "  Installing binaries"
 cp src/dlsd /usr/local/bin || exit 1
 cp src/dls_ctl /usr/local/bin || exit 1
+chmod +s /usr/local/bin/dls_ctl || exit 1
 cp src/dls_view /usr/local/bin || exit 1
 
 #------------------------------------------------------------------------------
