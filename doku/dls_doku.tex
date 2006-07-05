@@ -8,32 +8,22 @@
 %
 %----------------------------------------------------------------
 
-\documentclass[a4paper,10pt,twoside]{article}
+\documentclass[a4paper,twopage,12pt]{scrbook}
 
-\usepackage{german,a4}
+\usepackage[german]{babel}
 \usepackage[latin1]{inputenc}
-\usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage[automark,headsepline]{scrpage2}
+\usepackage{makeidx}
 \usepackage{alltt}         % Für Codebeispiele
-\usepackage{makeidx}       % Index
-\usepackage{fullpage}      % Ganze A4-Seite nutzen
-\usepackage{fancyheadings} % Schöne Kopfzeilen
+%\usepackage{svn}
+\usepackage{hyperref}
 
 \setlength{\parskip}{1.5ex plus 0.8ex minus 0.5ex}
 \setlength{\parindent}{0mm}
 
-\addtolength{\headheight}{0.2in} % Höhe der Kopfzeile
-\addtolength{\headsep}{0.2in}    % Abstand zwischen Kopfzeile und Text
-
-% Kopfzeile
-\lhead[\leftmark]{\thepage} % Oben links. Recto: Kapitel, Verso: Seite
-\chead[]{}
-\rhead[\thepage]{\rightmark} % Oben rechts. Recto: Seite, Verso: Unterkapitel
-
-% Fußzeile
-\lfoot[]{}
-\cfoot[]{}
-\rfoot[]{}
+%\SVN $Date$
+%\SVN $Revision$
 
 \makeindex
 
@@ -43,8 +33,8 @@
 
 % Titelseite
 
-\pagestyle{empty}
 \pagenumbering{roman}
+\pagestyle{empty}
 
 \begin{titlepage}
   \title{\bf Dokumentation Data-Logging-Server}
@@ -53,42 +43,34 @@
 
 \maketitle
 
-\hspace{60mm}
-
-\begin{abstract}
-Der \glqq\textsl{DLS}\grqq\ ist ein Messdaten-Erfassungssystem, das
-in der Lage ist, hochfrequente Daten über lange Zeit zu sammeln und
-stark komprimiert abzulegen. Die Zielsetzung ist, dem Benutzer dabei
-jederzeit uneingeschränkten und performanten Zugriff auf die erfassten
-Daten zu gewähren: Sei es der gesamte Jahresüberblick oder eine
-winzige Schwankung im Bruchteil einer Sekunde.
-\end{abstract}
-
-\newpage
+% \begin{abstract}
+% Der \glqq\textsl{DLS}\grqq\ ist ein Messdaten-Erfassungssystem, das
+% in der Lage ist, hochfrequente Daten über lange Zeit zu sammeln und
+% stark komprimiert abzulegen. Die Zielsetzung ist, dem Benutzer dabei
+% jederzeit uneingeschränkten und performanten Zugriff auf die erfassten
+% Daten zu gewähren: Sei es der gesamte Jahresüberblick oder eine
+% winzige Schwankung im Bruchteil einer Sekunde.
+% \end{abstract}
 
 %----------------------------------------------------------------
 
 % Inhaltsverzeichnis
 
-\pagestyle{plain}
+\pagestyle{scrheadings}
 
 \tableofcontents
-
-\newpage
 
 %----------------------------------------------------------------
 
 % Dokument
 
-\pagestyle{fancy}
-\pagenumbering{arabic}
-
-\section{Allgemeines}
+\chapter{Allgemeines}
 \label{sec:allg}
+\pagenumbering{arabic}
 
 %----------------------------------------------------------------
 
-\subsection{Grundlagen der Datenerfassung}
+\section{Grundlagen der Datenerfassung}
 \label{sec:allg_grund}
 
 Der \glqq Data-Logging-Server\grqq\ (im Folgenden \glqq\textsl{DLS}\grqq) 
@@ -118,7 +100,7 @@ empfangen.
 
 %----------------------------------------------------------------
 
-\subsection{Messaufträge}
+\section{Messaufträge}
 \label{sec:allg_jobs}
 
 Der \textsl{DLS} erfasst Daten über sog. \glqq\textsl{Messaufträge}\grqq.
@@ -138,7 +120,7 @@ Meta-Untersetzung und die Kopressionsmethode.
 
 %----------------------------------------------------------------
 
-\subsection{Datenablage}
+\section{Datenablage}
 \label{sec:allg_ablage}
 
 Erfasste Daten werden zusammen mit den Erfassungsvorgaben, Zeit- und
@@ -162,7 +144,7 @@ der darin enthaltene Daten befindet sich in Kapitel
 
 %----------------------------------------------------------------
 
-\subsection{Werkzeuge}
+\section{Werkzeuge}
 \label{sec:allg_tools}
 
 \index{Werkzeuge}
@@ -196,7 +178,7 @@ der darin enthaltene Daten befindet sich in Kapitel
 
 %----------------------------------------------------------------
 
-\section{Der \textsl{DLS}-Daemon (\textsl{dlsd})}
+\chapter{Der \textsl{DLS}-Daemon (\textsl{dlsd})}
 \label{sec:dlsd}
 
 Für die gesamte Datenerfassung und -ablage ist der \textsl{DLS-Daemon}
@@ -219,7 +201,7 @@ bietet Abbildung \ref{fig:arch}.
 
 %----------------------------------------------------------------
 
-\subsection{Der \textsl{dlsd}-Mutterprozess}
+\section{Der \textsl{dlsd}-Mutterprozess}
 \label{sec:dlsd_mother}
 
 \index{dlsd@\textsl{dlsd}!Mutterprozess}
@@ -240,7 +222,7 @@ Schutzmechanismen implementiert, die dieses gewährleisten
 
 %----------------------------------------------------------------
 
-\subsubsection{Verhalten des Mutterprozesses}
+\subsection{Verhalten des Mutterprozesses}
 \label{sec:dlsd_mother_behaviour}
 
 Anfangs liest der Mutterprozess alle Messauftrags-Vorgaben im
@@ -271,7 +253,7 @@ Aufgaben aus:
 
 %----------------------------------------------------------------
 
-\subsubsection{Spooling}
+\subsection{Spooling}
 \label{sec:dlsd_mother_spooling}
 
 \index{Spooling}
@@ -320,7 +302,7 @@ ein Fehler auf, wird die Datei im Spooling-Verzeichnis belassen.
 
 %----------------------------------------------------------------
 
-\subsubsection{Signalbehandlung}
+\subsection{Signalbehandlung}
 \label{sec:dlsd_mother_signals}
 
 Folgende Signale \index{Signalbehandlung} werden vom \textsl{dlsd}-Mutterprozess
@@ -370,7 +352,7 @@ verarbeitet:
 
 %----------------------------------------------------------------
 
-\subsection{Der \textsl{dlsd}-Erfassungsprozess}
+\section{Der \textsl{dlsd}-Erfassungsprozess}
 \label{sec:dlsd_logger}
 
 \index{dlsd@\textsl{dlsd}!Erfassungsprozess}
@@ -388,7 +370,7 @@ zu diesem Auftrag werden dort im Unterverzeichnis
 
 %----------------------------------------------------------------
 
-\subsubsection{Verhalten des Erfassungsprozesses}
+\subsection{Verhalten des Erfassungsprozesses}
 \label{sec:dlsd_logger_behaviour}
 
 Der \textsl{dlsd}-Erfassungsprozess importiert zunächst die Vorgaben seines
@@ -417,7 +399,7 @@ entsprechenden Kanals der Datenquelle und den letztendlich erfassten Daten
 
 %----------------------------------------------------------------
 
-\subsubsection{Erzeugung von Meta-Daten}
+\subsection{Erzeugung von Meta-Daten}
 \label{sec:dlsd_data_meta}
 
 Um auch auf großen Datenmengen einen schnellen Überblick bieten zu
@@ -487,7 +469,7 @@ verworfen.
 
 %----------------------------------------------------------------
 
-\subsubsection{Kommunikation mit der Datenquelle}
+\subsection{Kommunikation mit der Datenquelle}
 \label{sec:dlsd_logger_comm}
 
 Die Kommunikation mit der Datenquelle erfolgt über das an XML
@@ -625,7 +607,7 @@ der Erfassungsprozess endgültig auf die neuen Kanalvorgaben umgestellt.
 
 %----------------------------------------------------------------
 
-\subsubsection{Begrenzung des Datenvolumens (Quota)}
+\subsection{Begrenzung des Datenvolumens (Quota)}
 \label{sec:dlsd_logger_quota}
 
 \index{Quota}
@@ -691,7 +673,7 @@ sich der Aufräumprozess selbstständig.
 
 %----------------------------------------------------------------
 
-\subsubsection{Nachrichten der Datenquelle}
+\subsection{Nachrichten der Datenquelle}
 \label{sec:dlsd_logger_msg}
 
 Die Datenquelle kann -neben den Messdaten- auch jederzeit Nachrichten
@@ -734,7 +716,7 @@ Zeitspannen mit Nachrichten einfacher löschen zu können.
 
 %----------------------------------------------------------------
 
-\subsubsection{Signalbehandlung}
+\subsection{Signalbehandlung}
 \label{sec:dlsd_logger_signals}
 
 Folgende Signale \index{Signalbehandlung} werden vom \textsl{dlsd}-Erfassungsprozess
@@ -774,7 +756,7 @@ verarbeitet:
 
 %----------------------------------------------------------------
 
-\section{Das \textsl{DLS}-Datenverzeichnis}
+\chapter{Das \textsl{DLS}-Datenverzeichnis}
 \label{sec:data}
 
 Alle persistenten Daten des \textsl{DLS}-Systems sind in
@@ -792,7 +774,7 @@ grund\-sätzliche Struktur zeigt Abbildung \ref{fig:dls_data}.
 
 %----------------------------------------------------------------
 
-\subsection{Wurzelverzeichnis}
+\section{Wurzelverzeichnis}
 \label{sec:data_root}
 
 Das Wurzelverzeichnis ist die oberste Verzeichnisebene innerhalb des
@@ -827,7 +809,7 @@ Dateien und Unterverzeichnisse im Wurzelverzeichnis:
 
 %----------------------------------------------------------------
 
-\subsection{Auftrags-Verzeichnisse}
+\section{Auftrags-Verzeichnisse}
 \label{sec:data_jobs}
 
 Jedes Auftragsverzeichnis (\glqq\texttt{job\textsl{<ID>}}\grqq) wird im
@@ -915,7 +897,7 @@ Dateien und Unterverzeichnisse in einem Auftragsverzeichnis:
 
 %----------------------------------------------------------------
 
-\subsection{Kanalverzeichnisse}
+\section{Kanalverzeichnisse}
 \label{sec:data_channels}
 
 In den Kanal-Verzeichnissen (\glqq\texttt{channel\textsl{<INDEX>}}\grqq)
@@ -940,7 +922,7 @@ Kanaldaten (Name, Index, Einheit und Typ) sich nicht geändert haben.
 
 %----------------------------------------------------------------
 
-\subsection{Chunk-Verzeichnisse}
+\section{Chunk-Verzeichnisse}
 \label{sec:data_chunks}
 
 Die erfassten Daten eines Kanals sind in \glqq\textsl{Chunks}\grqq\ 
@@ -976,7 +958,7 @@ der ersten Meta-Ebene in \texttt{level1} usw.).
 
 %----------------------------------------------------------------
 
-\subsection{Daten-Verzeichnisse} 
+\section{Daten-Verzeichnisse} 
 \label{sec:data_data}
 
 Die Datenverzeichnisse (\glqq\texttt{level\textsl{<Meta-Ebene>}}\grqq), die
@@ -1080,7 +1062,7 @@ richtigen\grqq\ Wert belegt.
 
 %----------------------------------------------------------------
 
-\subsection{Nachrichtenverzeichnis}
+\section{Nachrichtenverzeichnis}
 \label{sec:data_msg}
 
 Nachrichten der Datenquelle sind im Nachrichtenverzeichnis
@@ -1123,7 +1105,7 @@ Abbildung \ref{fig:dls_data_index_msg}.
 
 %----------------------------------------------------------------
 
-\section{Der \textsl{DLS Manager}}
+\chapter{Der \textsl{DLS Manager}}
 \label{sec:manager}
 
 Der \textsl{DLS Manager} \index{DLS Manager@\textsl{DLS Manager}} ist
@@ -1149,7 +1131,7 @@ Prüfungen durch:
 
 %----------------------------------------------------------------
 
-\subsection{Hauptdialog}
+\section{Hauptdialog}
 
 Abbildung \ref{fig:dls_ctl_main} zeigt das Hauptfenster des
 \textsl{DLS Managers}, welches direkt nach dem Starten des Programmes
@@ -1165,7 +1147,7 @@ sichtbar wird.
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 Im Hauptdialog werden die einzelnen Messaufträge \index{Messauftrag}
 als Zeilen in einer Tabelle angezeigt. Folgende Informationen stehen
@@ -1201,7 +1183,7 @@ in den Spalten bereit:
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item Die Zeilen mit den einzelnen Aufträgen können mit dem Mauscursor
@@ -1216,7 +1198,7 @@ in den Spalten bereit:
 
 %----------------------------------------------------------------
 
-\subsection{Dialoge \glqq Auftrag erstellen\grqq\ und \glqq Auftrag
+\section{Dialoge \glqq Auftrag erstellen\grqq\ und \glqq Auftrag
   ändern\grqq} 
 \label{sec:manager_auftrag_create}
 
@@ -1237,7 +1219,7 @@ Erstellen eines Auftrages geändert werden kann.
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 Die Dialogmaske bietet dem Benutzer die Möglichkeit, mehrerere Angaben
 zum Messauftrag zu machen:
@@ -1281,7 +1263,7 @@ zum Messauftrag zu machen:
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item Betätigen der Schaltfläche \glqq OK\grqq\ (oder Drücken der
@@ -1298,7 +1280,7 @@ zum Messauftrag zu machen:
 
 %----------------------------------------------------------------
 
-\subsection{Dialog \glqq Auftrag bearbeiten\grqq}
+\section{Dialog \glqq Auftrag bearbeiten\grqq}
 \label{sec:manager_auftrag_edit}
 
 Abbildung \ref{fig:dls_ctl_edit} zeigt den Dialog zum Bearbeiten eines
@@ -1315,7 +1297,7 @@ Hauptdialogfenster erscheint.
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 Im oberen Bereich werden ausgewählte Stammdaten zum Auftrag
 angezeigt. Darunter befindet sich die Liste der zu erfassenden Kanäle
@@ -1339,7 +1321,7 @@ mit den wichtigsten Parametern. Diese sind:
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item Der Dialog zum Editieren der Auftrags-Stammdaten kann über die
@@ -1370,7 +1352,7 @@ mit den wichtigsten Parametern. Diese sind:
 
 %----------------------------------------------------------------
 
-\subsection{Dialog \glqq Kanäle hinzufügen\grqq}
+\section{Dialog \glqq Kanäle hinzufügen\grqq}
 \label{sec:manager_kanaele_hinzu}
 
 Nach dem Betätigen der Schaltfläche \glqq Kanäle hinzufügen\grqq\ im
@@ -1389,7 +1371,7 @@ Kanäle abzurufen.
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 \begin{itemize}
 \item Während versucht wird, die Verbindung mit der Datenquelle
@@ -1406,7 +1388,7 @@ Kanäle abzurufen.
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item Der Benutzer kann einzelne Kanäle mit dem Cursor selektieren. Durch
@@ -1429,7 +1411,7 @@ Kanäle abzurufen.
 
 %----------------------------------------------------------------
 
-\subsection{Dialog \glqq Kanäle bearbeiten\grqq}
+\section{Dialog \glqq Kanäle bearbeiten\grqq}
 \label{sec:manager_kanaele_edit}
 
 Der in Abbildung \ref{fig:dls_ctl_channel} dargestellte Dialog zum
@@ -1448,7 +1430,7 @@ mehrere Kanäle selektiert wurden.
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 Folgende Eingabefelder stehen dem Benutzer zur Parametrisierung der
 Kanalvorgabe(n) bereit:
@@ -1489,7 +1471,7 @@ Kanalvorgabe(n) bereit:
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item Betätigen der Schaltfläche \glqq OK\grqq\ prüft die angegebenen 
@@ -1505,7 +1487,7 @@ Kanalvorgabe(n) bereit:
 
 %----------------------------------------------------------------
 
-\subsubsection{Gleichzeitiges Editieren mehrerer Kanalvorgaben}
+\subsection{Gleichzeitiges Editieren mehrerer Kanalvorgaben}
 \label{sec:manager_kanaele_edit_parallel}
 
 Der Dialog zum Bearbeiten von Kanalvorgaben (Abbildung
@@ -1538,7 +1520,7 @@ Kanäle gleichzeitig zu editieren. In diesem Fall gilt Folgendes:
 
 %----------------------------------------------------------------
 
-\section{Der Betrachter \textsl{DLS View}}
+\chapter{Der Betrachter \textsl{DLS View}}
 \label{sec:view}
 
 \index{DLS View@\textsl{DLS View}}
@@ -1549,7 +1531,7 @@ einem einzelnen Dialog (siehe Abbildung \ref{fig:dls_view_main}).
 
 %----------------------------------------------------------------
 
-\subsection{Hauptdialog}
+\section{Hauptdialog}
 
 \begin{figure}[tbh]
   \begin{center}
@@ -1561,7 +1543,7 @@ einem einzelnen Dialog (siehe Abbildung \ref{fig:dls_view_main}).
 
 %----------------------------------------------------------------
 
-\subsubsection{Anzeigen}
+\subsection{Anzeigen}
 
 \begin{itemize}
 \item Am oberen Rand befindet sich links ein Auswahlfeld, in dem der
@@ -1595,7 +1577,7 @@ einem einzelnen Dialog (siehe Abbildung \ref{fig:dls_view_main}).
 
 %----------------------------------------------------------------
 
-\subsubsection{Interaktionen}
+\subsection{Interaktionen}
 
 \begin{itemize}
 \item In der Auswahlliste \glqq Auftrag\grqq\ kann der Benutzer den
@@ -1662,7 +1644,7 @@ einem einzelnen Dialog (siehe Abbildung \ref{fig:dls_view_main}).
 
 %----------------------------------------------------------------
 
-\section{Kompressionsmethoden}
+\chapter{Kompressionsmethoden}
 \label{sec:comp}
 
 \index{Kompression}
@@ -1696,7 +1678,7 @@ Folgende Kompressionsmethoden werden vom \textsl{DLS} unterstützt:
 
 %----------------------------------------------------------------
 
-\subsection{Kompression mit der ZLib}
+\section{Kompression mit der ZLib}
 \label{sec:comp_zlib}
 
 Kompressionsverfahren: \texttt{ZLib/Base64} \\
@@ -1714,7 +1696,7 @@ in \textsl{Base64} kodiert gespeichert.
 
 %----------------------------------------------------------------
 
-\subsection{Kompression mit der MDCT}
+\section{Kompression mit der MDCT}
 \label{sec:comp_mdct}
 
 \index{MDCT}
@@ -1730,7 +1712,7 @@ folgende Kompression mit der ZLib effektiver zu machen. Dabei wird das Ziel
 verfolgt, die Messdaten zwar verlustbehaftet, aber mit begrenztem Fehler zu
 komprimieren.
 
-\subsubsection{MDCT}
+\subsection{MDCT}
 
 Die MDCT eine Art diskretes Äquivalent zur Fourier-Transformation, dass ein
 Signal in die entsprechende Repräsentation als Koeffizienten von harmonischen
@@ -1762,7 +1744,7 @@ Fehler an den Randbereichen der Einzeltransformationen zu \glqq
 Artefakten\grqq\ führen und das Originalsignal sich nahtlos wiederherstellen
 lässt. 
 
-\subsubsection{Quantisierung}
+\subsection{Quantisierung}
 
 Die durch die MDCT ermittelten Koeffizienten werden einer
 Integer-Quantisierung unterzogen. Dabei wird mit einem
@@ -1789,7 +1771,7 @@ Koeffizienten oft nicht stark ausgeprägt sind und durch die
 Quantisierung weitestgehend angeglichen werden können. Das führt
 später zu einer guten Kompressiblität.
 
-\subsubsection{Transponierung}
+\subsection{Transponierung}
 \label{sec:comp_mdct_trans}
 
 Die Transponierung wird deshalb benötigt, weil das
@@ -1809,7 +1791,7 @@ der quantisierten Koeffizienten (4 Bytes, bzw. 8 Bytes), der Anzahl
 $q$ der benutzten Quantisierungsbits (1 Byte), $n$ Vorzeichnenbits und
 schliesslich $q \cdot (n - 1) $ Koeffizientenbits.
 
-\subsubsection{MDCT über schnelle FFT}
+\subsection{MDCT über schnelle FFT}
 
 Marios Athineos\footnote{marios@ee.columbia.edu,
   http://www.ee.columbia.edu/\textasciitilde{}marios, Columbia
@@ -1823,7 +1805,7 @@ Marios Athineos\footnote{marios@ee.columbia.edu,
 
 %----------------------------------------------------------------
 
-\subsection{Kompression über Quantisierung}
+\section{Kompression über Quantisierung}
 \label{sec:comp_quant}
 
 \index{Quantisierung}
@@ -1837,7 +1819,7 @@ differentiert diese, und speichert sie transponiert ab. Dieses
 Verfahren bereitet die \glqq Rohdaten\grqq\ auf und macht so die
 darauffolgende Kompression mit der ZLib noch effektiver.
 
-\subsubsection{Quantisierung}
+\subsection{Quantisierung}
 
 Bei der Quantisierung werden die einzelnen (Fließkomma-)Werte über
 einen Skalierungsfaktor auf einen begrenztes Intervall der natürlichen
@@ -1847,7 +1829,7 @@ quantisierten Werte mit wenigen Bits kodieren zu können. Dies wird
 allerdings nur soweit verfolgt, wie der dadurch entstehende Fehler
 unter einer vom Benutzer festgelegten Grenze bleibt.
 
-\subsubsection{Differentierung}
+\subsection{Differentierung}
 
 Zusätzlich werden die quantisierten Werte differentiert, um lineare
 Signalverläufe in der Kodierung gleichartiger werden zu lassen, so
@@ -1856,24 +1838,16 @@ wird am Anfang des komprimierten Datensatzes das (Integer-)Offset
 abgelegt und von dort an nur noch die Differenz von Wert zu Wert
 gespeichert.
 
-\subsubsection{Transponierung}
+\subsection{Transponierung}
 
 Die Transponierung erfolgt aus den selben Gründen wie im Verfahren
 \textbf{MDCT/ZLib/Base64}. Siehe dazu Kapitel \ref{sec:comp_mdct_trans}.
 
 %----------------------------------------------------------------
 
-\newpage
-
 \appendix
 
-\huge
-
-Anhang
-
-\normalsize
-
-\section{Systemvoraussetzungen}
+\chapter{Systemvoraussetzungen}
 \label{sec:apx_soft}
 
 Der \textsl{DLS} ist größtenteils in der Programmiersprache C++ \index{C++}
@@ -1924,7 +1898,7 @@ installiert sein:
 
 %----------------------------------------------------------------
 
-\section{Datentypen}
+\chapter{Datentypen}
 \label{sec:apx_types}
 
 Tabelle \ref{tab:typen} zeigt alle bisher unterstützten
@@ -1990,7 +1964,7 @@ Kompressionsmethoden.
 
 %----------------------------------------------------------------
 
-\section{PID-Dateien}
+\chapter{PID-Dateien}
 \label{sec:apx_pid}
 
 Das \textsl{DLS}-System verwendet an mehreren Stellen
@@ -2009,11 +1983,11 @@ kann zuvor gelöscht werden.
 
 %----------------------------------------------------------------
 
-\section{Kommandozeilenparameter}
+\chapter{Kommandozeilenparameter}
 
 %----------------------------------------------------------------
 
-\subsection{dlsd}
+\section{dlsd}
 
 \index{dlsd@\textsl{dlsd}!Kommandozeilenparameter}
 
@@ -2027,7 +2001,7 @@ Aufruf: dlsd [OPTIONEN]
 
 %----------------------------------------------------------------
 
-\subsection{dls}
+\section{dls}
 
 \index{dls@\texttt{dls} (Script)!Kommandozeilenparameter}
 
@@ -2059,7 +2033,7 @@ Aufruf: dls_ctl [OPTIONEN]
 
 %----------------------------------------------------------------
 
-\subsection{dls\_view}
+\section{dls\_view}
 
 \index{DLS View@\textsl{DLS View}!Kommandozeilenparameter}
 
@@ -2072,7 +2046,7 @@ Aufruf: dls_view [OPTIONEN]
 
 %----------------------------------------------------------------
 
-\subsection{dls\_quota}
+\section{dls\_quota}
 \label{sec:apx_cmd_quota}
 
 \index{dls_quota@\texttt{dls\_quota} (Script)!Kommandozeilenparameter}
