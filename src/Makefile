@@ -106,7 +106,7 @@ mdct.o: mdct.c
 
 depend:
 	(for file in *.cpp mdct.c; \
-	   do g++ -M $(DLSD_INC) $(CTL_INC) $(VIEW_INC) $(FFTW_INC) $$file; \
+	   do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
 	done) > .depend
 
 ifneq ($(wildcard .depend),)

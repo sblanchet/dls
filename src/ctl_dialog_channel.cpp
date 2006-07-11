@@ -193,7 +193,7 @@ void CTLDialogChannel::show(CTLJobPreset *job,
     if ((*channel_i)->accuracy != accuracy) accuracy_equal = false;
     channel_i++;
   }
-  
+
   if (freq_equal)
   {
     str.str("");
@@ -236,13 +236,13 @@ void CTLDialogChannel::show(CTLJobPreset *job,
       if (mdct_equal) // MDCT gewählt und MDCT-Parameter gleich
       {
         exp2 = log10((double) mdct_block_size) / log10((double) 2);
-        
+
         // MDCT-Blockgröße gültig?
         if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 <= MDCT_MAX_EXP2)
         {
           _choice_format->value(format_index);
           _choice_format_selected = true;
-          
+
           _choice_mdct->value((int) exp2 - MDCT_MIN_EXP2);
           _choice_mdct_selected = true;
         }
@@ -395,7 +395,7 @@ bool CTLDialogChannel::_save_channels()
       str << _input_freq->value();
       str >> freq;
     }
-    
+
     if ((write_block = (string(_input_block->value()) != "")))
     {
       str.str("");
@@ -403,7 +403,7 @@ bool CTLDialogChannel::_save_channels()
       str << _input_block->value();
       str >> block;
     }
-    
+
     if ((write_mask = (string(_input_mask->value()) != "")))
     {
       str.str("");
@@ -438,14 +438,16 @@ bool CTLDialogChannel::_save_channels()
         {
           if ((*channel_i)->type == TUNKNOWN)
           {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" hat keine Typinformation!";
             msg_win->error();
             return false;
           }
-          
+
           if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
           {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" hat keinen Gleitkommatyp!";
             msg_win->error();
             return false;
           }
@@ -458,7 +460,7 @@ bool CTLDialogChannel::_save_channels()
             msg_win->error();
             return false;
           }
-            
+
           channel_i++;
         }
 
@@ -476,7 +478,8 @@ bool CTLDialogChannel::_save_channels()
         {
           if (block % mdct_block_size)
           {
-            msg_win->str() << "Die Blockgröße muss ein Vielfaches der MDCT-Blockgröße sein!";
+            msg_win->str() << "Die Blockgröße muss ein Vielfaches"
+                           << " der MDCT-Blockgröße sein!";
             msg_win->error();
             return false;
           }
@@ -496,7 +499,7 @@ bool CTLDialogChannel::_save_channels()
               msg_win->error();
               return false;
             }
-           
+
             channel_i++;
           }
         }
@@ -509,7 +512,8 @@ bool CTLDialogChannel::_save_channels()
         {
           if ((*channel_i)->type == TUNKNOWN)
           {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keine Typinformation!";
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" hat keine Typinformation!";
             msg_win->error();
             return false;
           }
@@ -517,7 +521,8 @@ bool CTLDialogChannel::_save_channels()
           // Quantisierung nur für Fließkommatypen
           if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
           {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name << "\" hat keinen Gleitkommatyp!";
+            msg_win->str() << "Kanal \"" << (*channel_i)->name
+                           << "\" hat keinen Gleitkommatyp!";
             msg_win->error();
             return false;
           }
@@ -574,7 +579,7 @@ bool CTLDialogChannel::_save_channels()
         channel_changed = true;
       }
     }
-      
+
     if (channel_changed)
     {
       // Alte Vorgaben sichern, falls etwas schief geht
@@ -639,7 +644,7 @@ bool CTLDialogChannel::_save_channels()
         msg_win->str() << " Bitte starten Sie die Anwendung neu!";
         msg_win->error();
       }
-    
+
       return false;
     }
 
@@ -652,7 +657,7 @@ bool CTLDialogChannel::_save_channels()
       msg_win->str() << "Konnte dlsd nicht benachrichtigen: " << e.msg;
       msg_win->warning();
     }
-  
+
     _updated = true;
   }
   else
@@ -661,6 +666,6 @@ bool CTLDialogChannel::_save_channels()
   }
 
   return true;
-}  
+}
 
 /*****************************************************************************/
