@@ -22,11 +22,15 @@ using namespace std;
 #define LITERAL(X) #X
 #define STRINGIFY(X) LITERAL(X)
 
-#define DLS_VERSION_STR STRINGIFY(DLS_MASTER_VERSION) "." STRINGIFY(DLS_SUB_VERSION) "." STRINGIFY(DLS_SUB_SUB_VERSION)
+#define DLS_VERSION_STR STRINGIFY(DLS_MASTER_VERSION) \
+                        "." STRINGIFY(DLS_SUB_VERSION) \
+                        "." STRINGIFY(DLS_SUB_SUB_VERSION)
 
 #define DLS_VERSION_CODE(M, S, U) (((M) << 16) | ((S) << 8) | (U))
 
-#define DLS_VERSION (DLS_VERSION_CODE(DLS_MASTER_VERSION, DLS_SUB_VERSION, DLS_SUB_SUB_VERSION))
+#define DLS_VERSION (DLS_VERSION_CODE(DLS_MASTER_VERSION, \
+                                      DLS_SUB_VERSION, \
+                                      DLS_SUB_SUB_VERSION))
 
 #define MSRD_PORT 2345
 
@@ -46,26 +50,26 @@ using namespace std;
 #define DLS_FORMAT_QUANT   (2)
 
 /*
-   Hinzufügen von Kompressionsarten:
-      - com_globals.cpp       (String-Array)
-      - com_compression_t.hpp (Neue Klasse)
- */
+  Hinzufügen von Kompressionsarten:
+  - com_globals.cpp       (String-Array)
+  - com_compression_t.hpp (Neue Klasse)
+*/
 
 /*****************************************************************************/
 
 enum COMChannelType
 {
-  TUNKNOWN,
-  TCHAR,
-  TUCHAR,
-  TSHORT,
-  TUSHORT,
-  TINT,
-  TUINT,
-  TLINT,
-  TULINT,
-  TFLT,
-  TDBL
+    TUNKNOWN,
+    TCHAR,
+    TUCHAR,
+    TSHORT,
+    TUSHORT,
+    TINT,
+    TUINT,
+    TLINT,
+    TULINT,
+    TFLT,
+    TDBL
 };
 
 /*
@@ -87,9 +91,9 @@ enum COMChannelType
 
 struct COMIndexRecord
 {
-  long long start_time;
-  long long end_time;
-  unsigned int position;
+    long long start_time;
+    long long end_time;
+    unsigned int position;
 };
 
 /*****************************************************************************/
@@ -100,8 +104,8 @@ struct COMIndexRecord
 
 struct COMGlobalIndexRecord
 {
-  long long start_time;
-  long long end_time;
+    long long start_time;
+    long long end_time;
 };
 
 /*****************************************************************************/
@@ -112,8 +116,8 @@ struct COMGlobalIndexRecord
 
 struct COMMessageIndexRecord
 {
-  long long time;
-  unsigned int position;
+    long long time;
+    unsigned int position;
 };
 
 /*****************************************************************************/
@@ -124,22 +128,22 @@ struct COMMessageIndexRecord
 
 struct COMRealChannel
 {
-  string name;            /**< Name des Kanals */
-  string unit;            /**< Einheit */
-  int index;              /**< Index */
-  COMChannelType type;    /**< Kanaltyp (TUINT, TDBL, usw.) */
-  unsigned int bufsize;   /**< Größe des Kanalpuffers im MSR-Modul */
-  unsigned int frequency; /**< Maximale Abtastrate des Kanals */
+    string name;            /**< Name des Kanals */
+    string unit;            /**< Einheit */
+    int index;              /**< Index */
+    COMChannelType type;    /**< Kanaltyp (TUINT, TDBL, usw.) */
+    unsigned int bufsize;   /**< Größe des Kanalpuffers im MSR-Modul */
+    unsigned int frequency; /**< Maximale Abtastrate des Kanals */
 };
 
 /*****************************************************************************/
 
 enum DLSLogType
 {
-  DLSInfo,
-  DLSError,
-  DLSWarning,
-  DLSDebug
+    DLSInfo,
+    DLSError,
+    DLSWarning,
+    DLSDebug
 };
 
 /*****************************************************************************/

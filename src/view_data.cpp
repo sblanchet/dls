@@ -37,7 +37,7 @@ ViewData::~ViewData()
 
 void ViewData::start_time(COMTime time)
 {
-  _start_time = time;
+    _start_time = time;
 }
 
 /*****************************************************************************/
@@ -50,7 +50,7 @@ void ViewData::start_time(COMTime time)
 
 void ViewData::end_time(COMTime time)
 {
-  _end_time = time;
+    _end_time = time;
 }
 
 /*****************************************************************************/
@@ -63,7 +63,7 @@ void ViewData::end_time(COMTime time)
 
 void ViewData::time_per_value(double tpv)
 {
-  _time_per_value = tpv;
+    _time_per_value = tpv;
 }
 
 /*****************************************************************************/

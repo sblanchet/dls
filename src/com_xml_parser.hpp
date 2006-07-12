@@ -31,8 +31,10 @@ using namespace std;
 class ECOMXMLParser : public COMException
 {
 public:
-  ECOMXMLParser(const string &pmsg, string ptag = "") : COMException(pmsg) {tag = ptag;};
-  string tag;
+    ECOMXMLParser(const string &pmsg, string ptag = "") : COMException(pmsg) {
+        tag = ptag;
+    };
+    string tag;
 };
 
 /*****************************************************************************/
@@ -48,15 +50,15 @@ public:
 class ECOMXMLParserEOF : public COMException
 {
 public:
-  ECOMXMLParserEOF() : COMException("unexpected EOF!") {};
+    ECOMXMLParserEOF() : COMException("unexpected EOF!") {};
 };
 
 /*****************************************************************************/
 
 enum COMXMLParserType
 {
-  ptStream,
-  ptRing
+    ptStream,
+    ptRing
 };
 
 /*****************************************************************************/
@@ -76,35 +78,39 @@ enum COMXMLParserType
 class COMXMLParser
 {
 public:
-  COMXMLParser();
-  ~COMXMLParser();
+    COMXMLParser();
+    ~COMXMLParser();
 
-  const COMXMLTag *parse(istream *,
-                         const string & = "",
-                         COMXMLTagType = dxttSingle);
-  const COMXMLTag *parse(COMRingBufferT<char, unsigned int> *,
-                         const string & = "",
-                         COMXMLTagType = dxttSingle);
-  
-  const COMXMLTag *tag() const;
+    const COMXMLTag *parse(istream *,
+                           const string & = "",
+                           COMXMLTagType = dxttSingle);
+    const COMXMLTag *parse(COMRingBufferT<char, unsigned int> *,
+                           const string & = "",
+                           COMXMLTagType = dxttSingle);
+
+    const COMXMLTag *tag() const;
 
 private:
-  COMXMLTag _tag; /**< Zuletzt geparstes XML-Tag */
-  string _current_tag;
+    COMXMLTag _tag; /**< Zuletzt geparstes XML-Tag */
+    string _current_tag;
 
-  COMRingBufferT<char, unsigned int> *_data_ring; /**< Zeiger auf zu parsenden Ring */
+    COMRingBufferT<char, unsigned int> *_data_ring; /**< Zeiger auf zu
+                                                       parsenden Ring */
 
-  istream *_data_stream;                /**< Zeiger auf zu parsenden Stream */
-  unsigned int _data_stream_start;      /**< Ürsprüngliche Startposition im Stream */
-  unsigned int _data_stream_pos;        /**< Aktuelle Position im Stream */
-  char _data_stream_char;               /**< Aktuelles Zeichen im Stream */
-  bool _data_stream_char_fetched;       /**< Wurde das aktuelle Zeichen schon gelesen? */
-  unsigned int _data_stream_char_index; /**< Index des aktuell gelesenen Zeichens im Stream */
+    istream *_data_stream; /**< Zeiger auf zu parsenden Stream */
+    unsigned int _data_stream_start; /**< Ürsprüngliche Startposition
+                                        im Stream */
+    unsigned int _data_stream_pos; /**< Aktuelle Position im Stream */
+    char _data_stream_char; /**< Aktuelles Zeichen im Stream */
+    bool _data_stream_char_fetched; /**< Wurde das aktuelle Zeichen
+                                       schon gelesen? */
+    unsigned int _data_stream_char_index; /**< Index des aktuell
+                                             gelesenen Zeichens im Stream */
 
-  void _parse(COMXMLParserType, const string &, COMXMLTagType);
-  char _data(COMXMLParserType, unsigned int);
-  void _erase(COMXMLParserType, unsigned int);
-  bool _alphanum(char);
+    void _parse(COMXMLParserType, const string &, COMXMLTagType);
+    char _data(COMXMLParserType, unsigned int);
+    void _erase(COMXMLParserType, unsigned int);
+    bool _alphanum(char);
 };
 
 /*****************************************************************************/
@@ -117,7 +123,7 @@ private:
 
 inline const COMXMLTag *COMXMLParser::tag() const
 {
-  return &_tag;
+    return &_tag;
 }
 
 /*****************************************************************************/

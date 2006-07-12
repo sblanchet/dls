@@ -28,7 +28,7 @@ using namespace std;
 class ECOMJobPreset : public COMException
 {
 public:
-  ECOMJobPreset(const string &pmsg) : COMException(pmsg) {};
+    ECOMJobPreset(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -42,33 +42,33 @@ public:
 class COMJobPreset
 {
 public:
-  COMJobPreset();
-  ~COMJobPreset();
+    COMJobPreset();
+    ~COMJobPreset();
 
-  void import(const string &, unsigned int);
+    void import(const string &, unsigned int);
 
-  unsigned int id() const;
-  const string &description() const;
-  string id_desc() const;
-  const string &owner() const;
-  bool running() const;
-  long long quota_time() const;
-  long long quota_size() const;
-  const string &source() const;
-  const string &trigger() const;
-  const vector<COMChannelPreset> *channels() const;
-  bool channel_exists(const string &) const;
+    unsigned int id() const;
+    const string &description() const;
+    string id_desc() const;
+    const string &owner() const;
+    bool running() const;
+    long long quota_time() const;
+    long long quota_size() const;
+    const string &source() const;
+    const string &trigger() const;
+    const vector<COMChannelPreset> *channels() const;
+    bool channel_exists(const string &) const;
 
 protected:
-  unsigned int _id;                   /**< Auftrags-ID */
-  string _description;                /**< Beschreibender Name des Auftrages */
-  string _owner;                      /**< Besitzer des Auftrages \todo Nicht genutzt */
-  bool _running;                      /**< Soll erfasst werden? */
-  long long _quota_time;              /**< Auftrags-Quota nach Zeit */
-  long long _quota_size;              /**< Auftrags-Quota nach Datengröße */
-  string _source;                     /**< IP-Adresse oder Hostname der Datenquelle */
-  string _trigger;                    /**< Name des Trigger-Parameters, andernfalls leer */  
-  vector<COMChannelPreset> _channels; /**< Liste der Kanalvorgaben */
+    unsigned int _id; /**< Auftrags-ID */
+    string _description; /**< Beschreibender Name des Auftrages */
+    string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
+    bool _running; /**< Soll erfasst werden? */
+    long long _quota_time; /**< Auftrags-Quota nach Zeit */
+    long long _quota_size; /**< Auftrags-Quota nach Datengröße */
+    string _source; /**< IP-Adresse oder Hostname der Datenquelle */
+    string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
+    vector<COMChannelPreset> _channels; /**< Liste der Kanalvorgaben */
 };
 
 /*****************************************************************************/
@@ -82,7 +82,7 @@ protected:
 
 inline unsigned int COMJobPreset::id() const
 {
-  return _id;
+    return _id;
 }
 
 /*****************************************************************************/
@@ -96,7 +96,7 @@ inline unsigned int COMJobPreset::id() const
 
 inline const string &COMJobPreset::description() const
 {
-  return _description;
+    return _description;
 }
 
 /*****************************************************************************/
@@ -110,7 +110,7 @@ inline const string &COMJobPreset::description() const
 
 inline const string &COMJobPreset::owner() const
 {
-  return _owner;
+    return _owner;
 }
 
 /*****************************************************************************/
@@ -124,7 +124,7 @@ inline const string &COMJobPreset::owner() const
 
 inline bool COMJobPreset::running() const
 {
-  return _running;
+    return _running;
 }
 
 /*****************************************************************************/
@@ -138,7 +138,7 @@ inline bool COMJobPreset::running() const
 
 inline const string &COMJobPreset::source() const
 {
-  return _source;
+    return _source;
 }
 
 /*****************************************************************************/
@@ -152,7 +152,7 @@ inline const string &COMJobPreset::source() const
 
 inline const string &COMJobPreset::trigger() const
 {
-  return _trigger;
+    return _trigger;
 }
 
 /*****************************************************************************/
@@ -166,7 +166,7 @@ inline const string &COMJobPreset::trigger() const
 
 inline long long COMJobPreset::quota_time() const
 {
-  return _quota_time;
+    return _quota_time;
 }
 
 /*****************************************************************************/
@@ -180,7 +180,7 @@ inline long long COMJobPreset::quota_time() const
 
 inline long long COMJobPreset::quota_size() const
 {
-  return _quota_size;
+    return _quota_size;
 }
 
 /*****************************************************************************/
@@ -194,7 +194,7 @@ inline long long COMJobPreset::quota_size() const
 
 inline const vector<COMChannelPreset> *COMJobPreset::channels() const
 {
-  return &_channels;
+    return &_channels;
 }
 
 /*****************************************************************************/

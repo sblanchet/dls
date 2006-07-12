@@ -20,7 +20,7 @@ using namespace std;
 
 COMXMLTag::COMXMLTag()
 {
-  clear();
+    clear();
 }
 
 /*****************************************************************************/
@@ -41,9 +41,9 @@ COMXMLTag::~COMXMLTag()
 
 void COMXMLTag::clear()
 {
-  _title.clear();
-  _atts.clear();
-  _type = dxttSingle;
+    _title.clear();
+    _atts.clear();
+    _type = dxttSingle;
 }
 
 /*****************************************************************************/
@@ -54,7 +54,7 @@ void COMXMLTag::clear()
 
 void COMXMLTag::title(const string &title)
 {
-  _title = title;
+    _title = title;
 }
 
 /*****************************************************************************/
@@ -67,7 +67,7 @@ void COMXMLTag::title(const string &title)
 
 void COMXMLTag::type(COMXMLTagType type)
 {
-  _type = type;
+    _type = type;
 }
 
 /*****************************************************************************/
@@ -82,16 +82,16 @@ void COMXMLTag::type(COMXMLTagType type)
 
 const COMXMLAtt *COMXMLTag::att(const string &name) const
 {
-  list<COMXMLAtt>::const_iterator iter = _atts.begin();
+    list<COMXMLAtt>::const_iterator iter = _atts.begin();
 
-  // Liste der Attribute durchsuchen
-  while (iter != _atts.end())
-  { 
-    if (iter->name() == name) return &(*iter);
-    iter++;
-  }
+    // Liste der Attribute durchsuchen
+    while (iter != _atts.end())
+    {
+        if (iter->name() == name) return &(*iter);
+        iter++;
+    }
 
-  throw ECOMXMLTag("Attribute \"" + name + "\" does not exist!", tag());
+    throw ECOMXMLTag("Attribute \"" + name + "\" does not exist!", tag());
 }
 
 /*****************************************************************************/
@@ -105,16 +105,16 @@ const COMXMLAtt *COMXMLTag::att(const string &name) const
 
 bool COMXMLTag::has_att(const string &name) const
 {
-  list<COMXMLAtt>::const_iterator iter = _atts.begin();
+    list<COMXMLAtt>::const_iterator iter = _atts.begin();
 
-  // Liste der Attribute durchsuchen
-  while (iter != _atts.end())
-  { 
-    if (iter->name() == name) return true;
-    iter++;
-  }
+    // Liste der Attribute durchsuchen
+    while (iter != _atts.end())
+    {
+        if (iter->name() == name) return true;
+        iter++;
+    }
 
-  return false;
+    return false;
 }
 
 /*****************************************************************************/
@@ -128,7 +128,7 @@ bool COMXMLTag::has_att(const string &name) const
 
 void COMXMLTag::push_att(const string &name, const string &value)
 {
-  _atts.push_back(COMXMLAtt(name, value));
+    _atts.push_back(COMXMLAtt(name, value));
 }
 
 /*****************************************************************************/
@@ -145,9 +145,9 @@ void COMXMLTag::push_att(const string &name, const string &value)
 
 void COMXMLTag::push_att(const string &name, int value)
 {
-  stringstream str;
-  str << value;
-  _atts.push_back(COMXMLAtt(name, str.str()));
+    stringstream str;
+    str << value;
+    _atts.push_back(COMXMLAtt(name, str.str()));
 }
 
 /*****************************************************************************/
@@ -164,9 +164,9 @@ void COMXMLTag::push_att(const string &name, int value)
 
 void COMXMLTag::push_att(const string &name, unsigned int value)
 {
-  stringstream str;
-  str << value;
-  _atts.push_back(COMXMLAtt(name, str.str()));
+    stringstream str;
+    str << value;
+    _atts.push_back(COMXMLAtt(name, str.str()));
 }
 
 /*****************************************************************************/
@@ -183,9 +183,9 @@ void COMXMLTag::push_att(const string &name, unsigned int value)
 
 void COMXMLTag::push_att(const string &name, double value)
 {
-  stringstream str;
-  str << fixed << value;
-  _atts.push_back(COMXMLAtt(name, str.str()));
+    stringstream str;
+    str << fixed << value;
+    _atts.push_back(COMXMLAtt(name, str.str()));
 }
 
 /*****************************************************************************/
@@ -202,9 +202,9 @@ void COMXMLTag::push_att(const string &name, double value)
 
 void COMXMLTag::push_att(const string &name, long long value)
 {
-  stringstream str;
-  str << value;
-  _atts.push_back(COMXMLAtt(name, str.str()));
+    stringstream str;
+    str << value;
+    _atts.push_back(COMXMLAtt(name, str.str()));
 }
 
 /*****************************************************************************/
@@ -217,7 +217,7 @@ void COMXMLTag::push_att(const string &name, long long value)
 
 int COMXMLTag::att_count() const
 {
-  return _atts.size();
+    return _atts.size();
 }
 
 /*****************************************************************************/
@@ -232,27 +232,27 @@ int COMXMLTag::att_count() const
 
 string COMXMLTag::tag() const
 {
-  string str;
-  list<COMXMLAtt>::const_iterator iter;
+    string str;
+    list<COMXMLAtt>::const_iterator iter;
 
-  str = "<";
+    str = "<";
 
-  if (_type == dxttEnd) str += "/";
+    if (_type == dxttEnd) str += "/";
 
-  str += _title;
+    str += _title;
 
-  iter = _atts.begin();
-  while (iter != _atts.end())
-  {
-    str += " " + iter->name() + "=\"" + iter->to_str() + "\"";
-    iter++;
-  }
+    iter = _atts.begin();
+    while (iter != _atts.end())
+    {
+        str += " " + iter->name() + "=\"" + iter->to_str() + "\"";
+        iter++;
+    }
 
-  if (_type == dxttSingle) str += "/";
+    if (_type == dxttSingle) str += "/";
 
-  str += ">";
+    str += ">";
 
-  return str;
+    return str;
 }
 
 /*****************************************************************************/
@@ -267,21 +267,21 @@ string COMXMLTag::tag() const
 
 COMXMLAtt::COMXMLAtt(const string &name, const string &value)
 {
-  _name = name;
-  _value = value;
+    _name = name;
+    _value = value;
 }
 
 /*****************************************************************************/
 
 /**
    Gibt den Wert des Attributes als String zurück
-   
+
    \return Attributwert
 */
 
 const string & COMXMLAtt::to_str() const
 {
-  return _value;
+    return _value;
 }
 
 /*****************************************************************************/
@@ -294,21 +294,21 @@ const string & COMXMLAtt::to_str() const
 
 int COMXMLAtt::to_int() const
 {
-  int i;
-  stringstream str;
-  str.exceptions(stringstream::failbit | stringstream::badbit);
-  str << _value;
+    int i;
+    stringstream str;
+    str.exceptions(stringstream::failbit | stringstream::badbit);
+    str << _value;
 
-  try
-  {
-    str >> i;
-  }
-  catch (...)
-  {
-    throw ECOMXMLTag("\"" + _value + "\" is no integer!", "");
-  }
+    try
+    {
+        str >> i;
+    }
+    catch (...)
+    {
+        throw ECOMXMLTag("\"" + _value + "\" is no integer!", "");
+    }
 
-  return i;
+    return i;
 }
 
 /*****************************************************************************/
@@ -321,21 +321,21 @@ int COMXMLAtt::to_int() const
 
 double COMXMLAtt::to_dbl() const
 {
-  double d;
-  stringstream str;
-  str.exceptions(stringstream::failbit | stringstream::badbit);
-  str << _value;
+    double d;
+    stringstream str;
+    str.exceptions(stringstream::failbit | stringstream::badbit);
+    str << _value;
 
-  try
-  {
-    str >> d;
-  }
-  catch (...)
-  {
-    throw ECOMXMLTag("\"" + _value + "\" is no double!", "");
-  }
+    try
+    {
+        str >> d;
+    }
+    catch (...)
+    {
+        throw ECOMXMLTag("\"" + _value + "\" is no double!", "");
+    }
 
-  return d;
+    return d;
 }
 
 /*****************************************************************************/
@@ -348,21 +348,21 @@ double COMXMLAtt::to_dbl() const
 
 long long COMXMLAtt::to_ll() const
 {
-  long long value;
-  stringstream str;
-  str.exceptions(stringstream::failbit | stringstream::badbit);
-  str << _value;
+    long long value;
+    stringstream str;
+    str.exceptions(stringstream::failbit | stringstream::badbit);
+    str << _value;
 
-  try
-  {
-    str >> value;
-  }
-  catch (...)
-  {
-    throw ECOMXMLTag("\"" + _value + "\" is no long long!", "");
-  }
+    try
+    {
+        str >> value;
+    }
+    catch (...)
+    {
+        throw ECOMXMLTag("\"" + _value + "\" is no long long!", "");
+    }
 
-  return value;
+    return value;
 }
 
 /*****************************************************************************/

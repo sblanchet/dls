@@ -20,7 +20,7 @@ using namespace std;
 
 COMTime::COMTime()
 {
-  set_null();
+    set_null();
 }
 
 /*****************************************************************************/
@@ -33,7 +33,7 @@ COMTime::COMTime()
 
 COMTime::COMTime(long long t)
 {
-  *this = t;
+    *this = t;
 }
 
 /*****************************************************************************/
@@ -46,7 +46,7 @@ COMTime::COMTime(long long t)
 
 COMTime::COMTime(double t)
 {
-  *this = t;
+    *this = t;
 }
 
 /*****************************************************************************/
@@ -59,7 +59,7 @@ COMTime::COMTime(double t)
 
 COMTime::COMTime(struct timeval tv)
 {
-  *this = tv;
+    *this = tv;
 }
 
 /*****************************************************************************/
@@ -73,8 +73,8 @@ COMTime::COMTime(struct timeval tv)
 
 COMTime &COMTime::operator =(long long t)
 {
-  _time = t;
-  return *this;
+    _time = t;
+    return *this;
 }
 
 /*****************************************************************************/
@@ -88,8 +88,8 @@ COMTime &COMTime::operator =(long long t)
 
 COMTime &COMTime::operator =(double t)
 {
-  _time = (long long) t;
-  return *this;
+    _time = (long long) t;
+    return *this;
 }
 
 /*****************************************************************************/
@@ -103,8 +103,8 @@ COMTime &COMTime::operator =(double t)
 
 COMTime &COMTime::operator =(struct timeval tv)
 {
-  _time = ((long long) tv.tv_sec) * 1000000 + (long long) tv.tv_usec;
-  return *this;
+    _time = ((long long) tv.tv_sec) * 1000000 + (long long) tv.tv_usec;
+    return *this;
 }
 
 /*****************************************************************************/
@@ -121,7 +121,7 @@ COMTime &COMTime::operator =(struct timeval tv)
 
 void COMTime::from_dbl_time(double t)
 {
-  _time = (long long) (t * 1000000.0 + 0.5);
+    _time = (long long) (t * 1000000.0 + 0.5);
 }
 
 /*****************************************************************************/
@@ -132,7 +132,7 @@ void COMTime::from_dbl_time(double t)
 
 void COMTime::set_null()
 {
-  _time = (long long) 0;
+    _time = (long long) 0;
 }
 
 /*****************************************************************************/
@@ -145,7 +145,7 @@ void COMTime::set_null()
 
 bool COMTime::is_null() const
 {
-  return _time == (long long) 0;
+    return _time == (long long) 0;
 }
 
 /*****************************************************************************/
@@ -159,7 +159,7 @@ bool COMTime::is_null() const
 
 bool COMTime::operator ==(const COMTime &right) const
 {
-  return _time == right._time;
+    return _time == right._time;
 }
 
 /*****************************************************************************/
@@ -173,7 +173,7 @@ bool COMTime::operator ==(const COMTime &right) const
 
 bool COMTime::operator !=(const COMTime &right) const
 {
-  return _time != right._time;
+    return _time != right._time;
 }
 
 /*****************************************************************************/
@@ -187,7 +187,7 @@ bool COMTime::operator !=(const COMTime &right) const
 
 bool COMTime::operator <(const COMTime &right) const
 {
-  return _time < right._time;
+    return _time < right._time;
 }
 
 /*****************************************************************************/
@@ -201,7 +201,7 @@ bool COMTime::operator <(const COMTime &right) const
 
 bool COMTime::operator >(const COMTime &right) const
 {
-  return _time > right._time;
+    return _time > right._time;
 }
 
 /*****************************************************************************/
@@ -211,12 +211,12 @@ bool COMTime::operator >(const COMTime &right) const
 
    \param right Zeit, mit der verglichen wird
    \returns true, wenn die Zeit des linken Operanden kleiner
-            oder gleich der Zeit des rechten Operanden ist
+   oder gleich der Zeit des rechten Operanden ist
 */
 
 bool COMTime::operator <=(const COMTime &right) const
 {
-  return _time <= right._time;
+    return _time <= right._time;
 }
 
 /*****************************************************************************/
@@ -226,12 +226,12 @@ bool COMTime::operator <=(const COMTime &right) const
 
    \param right Zeit, mit der verglichen wird
    \returns true, wenn die Zeit des linken Operanden größer
-            oder gleich der Zeit des rechten Operanden ist
+   oder gleich der Zeit des rechten Operanden ist
 */
 
 bool COMTime::operator >=(const COMTime &right) const
 {
-  return _time >= right._time;
+    return _time >= right._time;
 }
 
 /*****************************************************************************/
@@ -245,7 +245,7 @@ bool COMTime::operator >=(const COMTime &right) const
 
 COMTime COMTime::operator +(const COMTime &right) const
 {
-  return _time + right._time;
+    return _time + right._time;
 }
 
 /*****************************************************************************/
@@ -259,7 +259,7 @@ COMTime COMTime::operator +(const COMTime &right) const
 
 COMTime COMTime::operator -(const COMTime &right) const
 {
-  return _time - right._time;
+    return _time - right._time;
 }
 
 /*****************************************************************************/
@@ -275,9 +275,9 @@ COMTime COMTime::operator -(const COMTime &right) const
 
 COMTime &COMTime::operator +=(const COMTime &right)
 {
-  _time += right._time;
+    _time += right._time;
 
-  return *this;
+    return *this;
 }
 
 /*****************************************************************************/
@@ -287,12 +287,12 @@ COMTime &COMTime::operator +=(const COMTime &right)
 
    \param factor Faktor, mit dem multipliziert wird
    \returns Produkt der Zeit des linken Operanden
-            mit dem Faktor
+   mit dem Faktor
 */
 
 COMTime COMTime::operator *(long long factor) const
 {
-  return _time * factor;
+    return _time * factor;
 }
 
 /*****************************************************************************/
@@ -307,9 +307,9 @@ COMTime COMTime::operator *(long long factor) const
 
 ostream &operator <<(ostream &o, const COMTime &time)
 {
-  o << fixed << time._time;
+    o << fixed << time._time;
 
-  return o;
+    return o;
 }
 
 /*****************************************************************************/
@@ -322,7 +322,7 @@ ostream &operator <<(ostream &o, const COMTime &time)
 
 double COMTime::to_dbl() const
 {
-  return (double) _time;
+    return (double) _time;
 }
 
 /*****************************************************************************/
@@ -336,7 +336,7 @@ double COMTime::to_dbl() const
 
 double COMTime::to_dbl_time() const
 {
-  return (double) _time / 1000000.0;
+    return (double) _time / 1000000.0;
 }
 
 /*****************************************************************************/
@@ -349,7 +349,7 @@ double COMTime::to_dbl_time() const
 
 long long COMTime::to_ll() const
 {
-  return _time;
+    return _time;
 }
 
 /*****************************************************************************/
@@ -362,12 +362,12 @@ long long COMTime::to_ll() const
 
 struct timeval COMTime::to_tv() const
 {
-  struct timeval tv;
+    struct timeval tv;
 
-  tv.tv_sec = _time / 1000000;
-  tv.tv_usec = _time % 1000000;
+    tv.tv_sec = _time / 1000000;
+    tv.tv_usec = _time % 1000000;
 
-  return tv;
+    return tv;
 }
 
 /*****************************************************************************/
@@ -380,45 +380,45 @@ struct timeval COMTime::to_tv() const
 
 string COMTime::to_str() const
 {
-  stringstream str;
+    stringstream str;
 
-  str << fixed << *this;
+    str << fixed << *this;
 
-  return str.str();
+    return str.str();
 }
 
 /*****************************************************************************/
 
 string COMTime::to_real_time() const
 {
-  stringstream str;
-  struct tm time;
-  time_t secs_since_epoch;
-  float secs;
+    stringstream str;
+    struct tm time;
+    time_t secs_since_epoch;
+    float secs;
 
-  secs_since_epoch = to_tv().tv_sec;
-  time = *localtime(&secs_since_epoch);
-  secs = time.tm_sec + to_tv().tv_usec / 1000000.0;
+    secs_since_epoch = to_tv().tv_sec;
+    time = *localtime(&secs_since_epoch);
+    secs = time.tm_sec + to_tv().tv_usec / 1000000.0;
 
-  if (time.tm_mday < 10) str << "0";
-  str << time.tm_mday << ".";
+    if (time.tm_mday < 10) str << "0";
+    str << time.tm_mday << ".";
 
-  if (time.tm_mon + 1 < 10) str << "0";
-  str << time.tm_mon + 1 << ".";
+    if (time.tm_mon + 1 < 10) str << "0";
+    str << time.tm_mon + 1 << ".";
 
-  if (time.tm_year % 100 < 10) str << "0";
-  str << time.tm_year % 100 << " ";
+    if (time.tm_year % 100 < 10) str << "0";
+    str << time.tm_year % 100 << " ";
 
-  if (time.tm_hour < 10) str << "0";
-  str << time.tm_hour << ":";
+    if (time.tm_hour < 10) str << "0";
+    str << time.tm_hour << ":";
 
-  if (time.tm_min < 10) str << "0";
-  str << time.tm_min << ":";
+    if (time.tm_min < 10) str << "0";
+    str << time.tm_min << ":";
 
-  if (secs < 10) str << "0";
-  str << fixed << secs;
+    if (secs < 10) str << "0";
+    str << fixed << secs;
 
-  return str.str();
+    return str.str();
 }
 
 /*****************************************************************************/
@@ -431,7 +431,7 @@ string COMTime::to_real_time() const
 
 void COMTime::set_now()
 {
-  *this = COMTime::now();
+    *this = COMTime::now();
 }
 
 /*****************************************************************************/
@@ -444,9 +444,9 @@ void COMTime::set_now()
 
 COMTime COMTime::now()
 {
-  struct timeval tv;
-  gettimeofday(&tv, 0);
-  return tv; // Nutzt Konstruktor mit Parameter "struct timeval"
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+    return tv; // Nutzt Konstruktor mit Parameter "struct timeval"
 }
 
 /*****************************************************************************/

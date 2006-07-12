@@ -20,7 +20,7 @@
 class ECOMZLib : public COMException
 {
 public:
-  ECOMZLib(const string &pmsg) : COMException(pmsg) {};
+    ECOMZLib(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -35,20 +35,20 @@ public:
 class COMZLib
 {
 public:
-  COMZLib();
-  ~COMZLib();
+    COMZLib();
+    ~COMZLib();
 
-  void compress(const char *, unsigned int);
-  void uncompress(const char *, unsigned int, unsigned int);
+    void compress(const char *, unsigned int);
+    void uncompress(const char *, unsigned int, unsigned int);
 
-  const char *output() const;
-  unsigned int output_size() const;
+    const char *output() const;
+    unsigned int output_size() const;
 
-  void free();
+    void free();
 
 private:
-  char *_out_buf;         /**< Ausgabepuffer */
-  unsigned int _out_size; /**< Länge der datem im Ausgabepuffer */
+    char *_out_buf;         /**< Ausgabepuffer */
+    unsigned int _out_size; /**< Länge der datem im Ausgabepuffer */
 };
 
 /*****************************************************************************/
@@ -61,7 +61,7 @@ private:
 
 inline const char *COMZLib::output() const
 {
-  return _out_buf;
+    return _out_buf;
 }
 
 /*****************************************************************************/
@@ -74,7 +74,7 @@ inline const char *COMZLib::output() const
 
 inline unsigned int COMZLib::output_size() const
 {
-  return _out_size;
+    return _out_size;
 }
 
 /*****************************************************************************/

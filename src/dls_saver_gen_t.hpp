@@ -41,36 +41,36 @@ using namespace std;
 class DLSSaverGen
 {
 public:
-  DLSSaverGen() {};
-  virtual ~DLSSaverGen() {};
+    DLSSaverGen() {};
+    virtual ~DLSSaverGen() {};
 
-  /**
-     Fügt einen Meta-Saver für einen bestimmten Meta-Typ hinzu
+    /**
+       Fügt einen Meta-Saver für einen bestimmten Meta-Typ hinzu
 
-     \param type Meta-Typ
-   */
+       \param type Meta-Typ
+    */
 
-  virtual void add_meta_saver(DLSMetaType type) = 0;
+    virtual void add_meta_saver(DLSMetaType type) = 0;
 
-  /**
-     Schreibt alle wartenden Daten ins Dateisystem
-   */
+    /**
+       Schreibt alle wartenden Daten ins Dateisystem
+    */
 
-  virtual void flush() = 0;
+    virtual void flush() = 0;
 
-  /**
-     Nimmt einen Puffer voller Binärdaten entgegen
+    /**
+       Nimmt einen Puffer voller Binärdaten entgegen
 
-     \param buffer Adresse des Puffers mit den zu speichernden Daten
-     \param length Anzahl der Datenwerte
-     \param time_of_last Zeit des letzten Datenwertes
-     \throw EDLSSaver Fehler beim Verarbeiten der Daten
-     \throw EDLSTimeTolerance Zeit-Toleranzfehler!
-   */
+       \param buffer Adresse des Puffers mit den zu speichernden Daten
+       \param length Anzahl der Datenwerte
+       \param time_of_last Zeit des letzten Datenwertes
+       \throw EDLSSaver Fehler beim Verarbeiten der Daten
+       \throw EDLSTimeTolerance Zeit-Toleranzfehler!
+    */
 
-  virtual void process_data(const void *buffer,
-                            unsigned int length,
-                            COMTime time_of_last) = 0;
+    virtual void process_data(const void *buffer,
+                              unsigned int length,
+                              COMTime time_of_last) = 0;
 };
 
 /*****************************************************************************/
@@ -101,34 +101,34 @@ class DLSSaverGenT : public DLSSaverGen, public DLSSaverT<T>
     using DLSSaverT<T>::_save_block;
 
 public:
-  DLSSaverGenT(DLSLogger *);
-  virtual ~DLSSaverGenT();
+    DLSSaverGenT(DLSLogger *);
+    virtual ~DLSSaverGenT();
 
-  void add_meta_saver(DLSMetaType type);
-  void process_data(const void *, unsigned int, COMTime);
-  void flush();
+    void add_meta_saver(DLSMetaType type);
+    void process_data(const void *, unsigned int, COMTime);
+    void flush();
 
 private:
-  list<DLSMetaType> _meta_types;         /**< Liste der zu erfassenden Meta-Typen */
-  list<DLSSaverMetaT<T> *> _meta_savers; /**< Liste der aktiven Meta-Saver */
-  bool _savers_created;                  /**< Wurden bereits alle Meta-Saver erstellt? */
-  bool _finished;                        /**< true, wenn keine Daten mehr im Speicher */
+    list<DLSMetaType> _meta_types; /**< Liste der zu erfassenden Meta-Typen */
+    list<DLSSaverMetaT<T> *> _meta_savers; /**< Liste der aktiven Meta-Saver */
+    bool _savers_created; /**< Wurden bereits alle Meta-Saver erstellt? */
+    bool _finished; /**< true, wenn keine Daten mehr im Speicher */
 
-  void _fill_buffers(const T *, unsigned int, COMTime);
+    void _fill_buffers(const T *, unsigned int, COMTime);
 
-  //@{
-  void _create_savers();
-  void _generate_meta_data();
-  void _flush_savers();
-  void _clear_savers();
-  //@}
+    //@{
+    void _create_savers();
+    void _generate_meta_data();
+    void _flush_savers();
+    void _clear_savers();
+    //@}
 
-  int _meta_level() const;
-  string _meta_type() const;
+    int _meta_level() const;
+    string _meta_type() const;
 
-  void _convert_endianess(unsigned char *, unsigned int) const;
+    void _convert_endianess(unsigned char *, unsigned int) const;
 
-  DLSSaverGenT(); // Default-Konstruktor privat: Darf nicht aufgerufen werden!
+    DLSSaverGenT(); // Default-Konstruktor darf nicht aufgerufen werden!
 };
 
 /*****************************************************************************/
@@ -141,10 +141,10 @@ private:
 
 template <class T>
 DLSSaverGenT<T>::DLSSaverGenT(DLSLogger *parent_logger)
-  : DLSSaverT<T>(parent_logger)
+    : DLSSaverT<T>(parent_logger)
 {
-  _savers_created = false;
-  _finished = true;
+    _savers_created = false;
+    _finished = true;
 }
 
 /*****************************************************************************/
@@ -159,15 +159,15 @@ template <class T>
 DLSSaverGenT<T>::~DLSSaverGenT()
 {
 #if 0
-  if (!_finished)
-  {
-    msg() << "saver_gen not finished!";
-    log(DLSWarning);
-  }
+    if (!_finished)
+    {
+        msg() << "saver_gen not finished!";
+        log(DLSWarning);
+    }
 #endif
 
-  // Saver löschen
-  _clear_savers();
+    // Saver löschen
+    _clear_savers();
 }
 
 /*****************************************************************************/
@@ -187,8 +187,8 @@ DLSSaverGenT<T>::~DLSSaverGenT()
 template <class T>
 void DLSSaverGenT<T>::add_meta_saver(DLSMetaType type)
 {
-  _meta_types.push_back(type);
-  _savers_created = false;
+    _meta_types.push_back(type);
+    _savers_created = false;
 }
 
 /*****************************************************************************/
@@ -218,49 +218,53 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
                                    unsigned int size,
                                    COMTime time_of_last)
 {
-  COMTime diff_time, time_of_first, actual_diff, target_diff;
-  float error_percent;
-  double freq = _parent_logger->channel_preset()->sample_frequency;
-  unsigned int values_in_buffer;
-  stringstream err;
+    COMTime diff_time, time_of_first, actual_diff, target_diff;
+    float error_percent;
+    double freq = _parent_logger->channel_preset()->sample_frequency;
+    unsigned int values_in_buffer;
+    stringstream err;
 
-  if (size == 0) return;
+    if (size == 0) return;
 
-  // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-  if (size % sizeof(T)) throw EDLSSaver("Illegal data size!");
+    // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
+    if (size % sizeof(T)) throw EDLSSaver("Illegal data size!");
 
-  values_in_buffer = size / sizeof(T);
+    values_in_buffer = size / sizeof(T);
 
-  diff_time.from_dbl_time((values_in_buffer - 1) / freq);
-  time_of_first = time_of_last - diff_time; // Zeit des ersten neuen Wertes
+    diff_time.from_dbl_time((values_in_buffer - 1) / freq);
+    time_of_first = time_of_last - diff_time; // Zeit des ersten neuen Wertes
 
-  // Wenn Werte in den Puffern sind
-  if (_block_buf_index || _meta_buf_index)
-  {
-    // Zeitabstände errechnen
-    target_diff.from_dbl_time(1 / freq);         // Erwarteter Zeitabstand
-    actual_diff = time_of_first - _time_of_last; // Tatsächlicher Zeitabstand
-
-    // Relativen Fehler errechnen
-    error_percent = (actual_diff.to_dbl() - target_diff.to_dbl()) / target_diff.to_dbl() * 100;
-    if (error_percent < 0) error_percent *= -1;
-
-    // Toleranzbereich verletzt?
-    if (error_percent > ALLOWED_TIME_VARIANCE)
+    // Wenn Werte in den Puffern sind
+    if (_block_buf_index || _meta_buf_index)
     {
-      // Fehler! Prozess beenden!
-      err << "Time diff of " << actual_diff;
-      err << " (expected: " << target_diff << ", error: " << error_percent << "%)";
-      err << " channel \"" << _parent_logger->channel_preset()->name << "\".";
-      throw EDLSTimeTolerance(err.str());
+        // Zeitabstände errechnen
+        target_diff.from_dbl_time(1 / freq);         // Erwarteter Zeitabstand
+        actual_diff = time_of_first - _time_of_last; // Tats. Zeitabstand
+
+        // Relativen Fehler errechnen
+        error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
+            / target_diff.to_dbl() * 100;
+        if (error_percent < 0) error_percent *= -1;
+
+        // Toleranzbereich verletzt?
+        if (error_percent > ALLOWED_TIME_VARIANCE)
+        {
+            // Fehler! Prozess beenden!
+            err << "Time diff of " << actual_diff;
+            err << " (expected: " << target_diff
+                << ", error: " << error_percent << "%)";
+            err << " channel \"" << _parent_logger->channel_preset()->name
+                << "\".";
+            throw EDLSTimeTolerance(err.str());
+        }
     }
-  }
 
-  // Endianess konvertieren, falls nötig
-  if (arch != source_arch) _convert_endianess((unsigned char *) buffer, size);
+    // Endianess konvertieren, falls nötig
+    if (arch != source_arch)
+        _convert_endianess((unsigned char *) buffer, size);
 
-  // Daten speichern
-  _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
+    // Daten speichern
+    _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
 }
 
 /*****************************************************************************/
@@ -278,33 +282,33 @@ template <class T>
 void DLSSaverGenT<T>::_convert_endianess(unsigned char *buffer,
                                          unsigned int size) const
 {
-  unsigned int i, j, k, bytes_per_value, values;
-  unsigned char tmp;
+    unsigned int i, j, k, bytes_per_value, values;
+    unsigned char tmp;
 
-  bytes_per_value = sizeof(T);
-  values = size / bytes_per_value;
+    bytes_per_value = sizeof(T);
+    values = size / bytes_per_value;
 
-  // "Byteweise drehen"
-  if ((arch == LittleEndian && source_arch == BigEndian) ||
-      (arch == BigEndian && source_arch == LittleEndian))
-  {
-    for (i = 0; i < values; i++)
+    // "Byteweise drehen"
+    if ((arch == LittleEndian && source_arch == BigEndian) ||
+        (arch == BigEndian && source_arch == LittleEndian))
     {
-      for (j = 0; j < bytes_per_value / 2; j++)
-      {
-        k = bytes_per_value - j - 1;
-        tmp = buffer[j];
-        buffer[j] = buffer[k];
-        buffer[k] = tmp;
-      }
-      
-      buffer += bytes_per_value;
+        for (i = 0; i < values; i++)
+        {
+            for (j = 0; j < bytes_per_value / 2; j++)
+            {
+                k = bytes_per_value - j - 1;
+                tmp = buffer[j];
+                buffer[j] = buffer[k];
+                buffer[k] = tmp;
+            }
+
+            buffer += bytes_per_value;
+        }
     }
-  }
-  else
-  {
-    throw EDLSTimeTolerance("Unknown architecture conversion!");
-  }
+    else
+    {
+        throw EDLSTimeTolerance("Unknown architecture conversion!");
+    }
 }
 
 /*****************************************************************************/
@@ -331,38 +335,38 @@ void DLSSaverGenT<T>::_fill_buffers(const T *buffer,
                                     unsigned int length,
                                     COMTime time_of_first)
 {
-  COMTime time_of_one;
-  double freq = _parent_logger->channel_preset()->sample_frequency;
+    COMTime time_of_one;
+    double freq = _parent_logger->channel_preset()->sample_frequency;
 
-  time_of_one.from_dbl_time(1 / freq); // Zeit eines Wertes
+    time_of_one.from_dbl_time(1 / freq); // Zeit eines Wertes
 
-  // Ab jetzt sind Werte im Speicher!
-  _finished = false;
+    // Ab jetzt sind Werte im Speicher!
+    _finished = false;
 
-  // Alle Werte übernehmen
-  for (unsigned int i = 0; i < length; i++)
-  {
-    // Zeit des zuletzt eingefügten Wertes setzen
-    _time_of_last = time_of_first + time_of_one * i;
+    // Alle Werte übernehmen
+    for (unsigned int i = 0; i < length; i++)
+    {
+        // Zeit des zuletzt eingefügten Wertes setzen
+        _time_of_last = time_of_first + time_of_one * i;
 
-    // Bei Blockanfang, Zeiten vermerken
-    if (_block_buf_index == 0) _block_time = _time_of_last;
-    if (_meta_buf_index == 0) _meta_time = _time_of_last;
+        // Bei Blockanfang, Zeiten vermerken
+        if (_block_buf_index == 0) _block_time = _time_of_last;
+        if (_meta_buf_index == 0) _meta_time = _time_of_last;
 
-    // Wert in die Puffer übernehmen
-    _block_buf[_block_buf_index++] = buffer[i];
-    _meta_buf[_meta_buf_index++] = buffer[i];
+        // Wert in die Puffer übernehmen
+        _block_buf[_block_buf_index++] = buffer[i];
+        _meta_buf[_meta_buf_index++] = buffer[i];
 
-    // Block-Puffer voll?
-    if (_block_buf_index == _block_buf_size) _save_block();
+        // Block-Puffer voll?
+        if (_block_buf_index == _block_buf_size) _save_block();
 
-    // Meta-Puffer voll?
-    if (_meta_buf_index == _meta_buf_size) _generate_meta_data();
-  }
+        // Meta-Puffer voll?
+        if (_meta_buf_index == _meta_buf_size) _generate_meta_data();
+    }
 }
 
 /*****************************************************************************/
- 
+
 /**
    Alle wartenden Daten in's Dateisystem schreiben
 
@@ -378,51 +382,52 @@ void DLSSaverGenT<T>::_fill_buffers(const T *buffer,
 template <class T>
 void DLSSaverGenT<T>::flush()
 {
-  // Blockdaten speichern
-  _save_block();
+    // Blockdaten speichern
+    _save_block();
 
-  // Eventuell restliche Daten des Kompressionsobjektes speichern
-  _save_rest();
-
-#ifdef DEBUG
-  msg() << "DLSSaverGenT: _finish_files() for channel " << _parent_logger->channel_preset()->name;
-  log(DLSDebug);
-#endif
-
-  // Dateien beenden
-  _finish_files();
+    // Eventuell restliche Daten des Kompressionsobjektes speichern
+    _save_rest();
 
 #ifdef DEBUG
-  msg() << "DLSSaverGenT: _compression_clear()";
-  log(DLSDebug);
+    msg() << "DLSSaverGenT: _finish_files() for channel "
+          << _parent_logger->channel_preset()->name;
+    log(DLSDebug);
 #endif
 
-  // Persistenten Speicher des Kompressionsobjekt leeren
-  _compression->clear();
+    // Dateien beenden
+    _finish_files();
 
 #ifdef DEBUG
-  msg() << "DLSSaverGenT: _flush_savers()";
-  log(DLSDebug);
+    msg() << "DLSSaverGenT: _compression_clear()";
+    log(DLSDebug);
 #endif
 
-  // Metadaten speichern
-  _flush_savers();
+    // Persistenten Speicher des Kompressionsobjekt leeren
+    _compression->clear();
 
 #ifdef DEBUG
-  msg() << "DLSSaverGenT: _clear_savers()";
-  log(DLSDebug);
+    msg() << "DLSSaverGenT: _flush_savers()";
+    log(DLSDebug);
 #endif
 
-  // Alle Saver beenden
-  _clear_savers();
+    // Metadaten speichern
+    _flush_savers();
 
 #ifdef DEBUG
-  msg() << "DLSSaverGenT: flush finished!";
-  log(DLSDebug);
+    msg() << "DLSSaverGenT: _clear_savers()";
+    log(DLSDebug);
 #endif
 
-  // Jetzt ist nichts mehr im Speicher
-  _finished = true;
+    // Alle Saver beenden
+    _clear_savers();
+
+#ifdef DEBUG
+    msg() << "DLSSaverGenT: flush finished!";
+    log(DLSDebug);
+#endif
+
+    // Jetzt ist nichts mehr im Speicher
+    _finished = true;
 }
 
 /*****************************************************************************/
@@ -443,21 +448,21 @@ void DLSSaverGenT<T>::flush()
 template <class T>
 void DLSSaverGenT<T>::_generate_meta_data()
 {
-  typename list<DLSSaverMetaT<T> *>::iterator meta_i;
+    typename list<DLSSaverMetaT<T> *>::iterator meta_i;
 
-  // Wenn Meta-Saver noch nicht existieren - erzeugen
-  if (!_savers_created) _create_savers();
+    // Wenn Meta-Saver noch nicht existieren - erzeugen
+    if (!_savers_created) _create_savers();
 
-  // Meta-Daten generieren
-  meta_i = _meta_savers.begin();
-  while (meta_i != _meta_savers.end())
-  {
-    (*meta_i)->generate_meta_data(_meta_time, _time_of_last,
-                                  _meta_buf_index, _meta_buf);
-    meta_i++;
-  }
+    // Meta-Daten generieren
+    meta_i = _meta_savers.begin();
+    while (meta_i != _meta_savers.end())
+    {
+        (*meta_i)->generate_meta_data(_meta_time, _time_of_last,
+                                      _meta_buf_index, _meta_buf);
+        meta_i++;
+    }
 
-  _meta_buf_index = 0;
+    _meta_buf_index = 0;
 }
 
 /*****************************************************************************/
@@ -469,18 +474,18 @@ void DLSSaverGenT<T>::_generate_meta_data()
 template <class T>
 void DLSSaverGenT<T>::_flush_savers()
 {
-  typename list<DLSSaverMetaT<T> *>::iterator meta_i;
+    typename list<DLSSaverMetaT<T> *>::iterator meta_i;
 
-  meta_i = _meta_savers.begin();
-  while (meta_i != _meta_savers.end())
-  {
-    // Alle Daten im Speicher auf die Festplatte schreiben
-    (*meta_i)->flush();
-    meta_i++;
-  }
+    meta_i = _meta_savers.begin();
+    while (meta_i != _meta_savers.end())
+    {
+        // Alle Daten im Speicher auf die Festplatte schreiben
+        (*meta_i)->flush();
+        meta_i++;
+    }
 
-  // Alle Saver haben die Restdaten verwertet. Meta-Puffer leeren.
-  _meta_buf_index = 0;
+    // Alle Saver haben die Restdaten verwertet. Meta-Puffer leeren.
+    _meta_buf_index = 0;
 }
 
 /*****************************************************************************/
@@ -496,28 +501,28 @@ void DLSSaverGenT<T>::_flush_savers()
 template <class T>
 void DLSSaverGenT<T>::_create_savers()
 {
-  list<DLSMetaType>::iterator meta_i;
-  DLSSaverMetaT<T> *_new_saver;
+    list<DLSMetaType>::iterator meta_i;
+    DLSSaverMetaT<T> *_new_saver;
 
-  _clear_savers();
+    _clear_savers();
 
-  meta_i = _meta_types.begin();
-  while (meta_i != _meta_types.end())
-  {
-    try
+    meta_i = _meta_types.begin();
+    while (meta_i != _meta_types.end())
     {
-      _new_saver = new DLSSaverMetaT<T>(_parent_logger, *meta_i, 1);
-    }
-    catch (EDLSSaver &e)
-    {
-      throw EDLSSaver(e);
+        try
+        {
+            _new_saver = new DLSSaverMetaT<T>(_parent_logger, *meta_i, 1);
+        }
+        catch (EDLSSaver &e)
+        {
+            throw EDLSSaver(e);
+        }
+
+        _meta_savers.push_back(_new_saver);
+        meta_i++;
     }
 
-    _meta_savers.push_back(_new_saver);
-    meta_i++;
-  }
-
-  _savers_created = true;
+    _savers_created = true;
 }
 
 /*****************************************************************************/
@@ -531,18 +536,18 @@ void DLSSaverGenT<T>::_create_savers()
 template <class T>
 void DLSSaverGenT<T>::_clear_savers()
 {
-  typename list<DLSSaverMetaT<T> *>::iterator meta_i;
+    typename list<DLSSaverMetaT<T> *>::iterator meta_i;
 
-  // Meta-Saver löschen
-  meta_i = _meta_savers.begin();
-  while (meta_i != _meta_savers.end())
-  {
-    delete *meta_i;
-    meta_i++;
-  }
+    // Meta-Saver löschen
+    meta_i = _meta_savers.begin();
+    while (meta_i != _meta_savers.end())
+    {
+        delete *meta_i;
+        meta_i++;
+    }
 
-  _meta_savers.clear();
-  _savers_created = false;
+    _meta_savers.clear();
+    _savers_created = false;
 }
 
 /*****************************************************************************/
@@ -552,7 +557,7 @@ void DLSSaverGenT<T>::_clear_savers()
 template <class T>
 inline int DLSSaverGenT<T>::_meta_level() const
 {
-  return 0;
+    return 0;
 }
 
 /*****************************************************************************/
@@ -562,7 +567,7 @@ inline int DLSSaverGenT<T>::_meta_level() const
 template <class T>
 inline string DLSSaverGenT<T>::_meta_type() const
 {
-  return "gen";
+    return "gen";
 }
 
 /*****************************************************************************/

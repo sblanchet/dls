@@ -36,87 +36,88 @@ using namespace std;
 
 CTLDialogChannel::CTLDialogChannel(const string &dls_dir)
 {
-  stringstream str;
-  string format;
-  int i, x, y;
-  unsigned int j;
+    stringstream str;
+    string format;
+    int i, x, y;
+    unsigned int j;
 
-  x = Fl::w() / 2 - WIDTH / 2;
-  y = Fl::h() / 2 - HEIGHT / 2;
+    x = Fl::w() / 2 - WIDTH / 2;
+    y = Fl::h() / 2 - HEIGHT / 2;
 
-  _dls_dir = dls_dir;
+    _dls_dir = dls_dir;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Kanäle bearbeiten");
-  _wnd->callback(_callback, this);
-  _wnd->set_modal();
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Kanäle bearbeiten");
+    _wnd->callback(_callback, this);
+    _wnd->set_modal();
 
-  _input_freq = new Fl_Input(10, 25, 120, 25, "Abtastrate (Hz)");
-  _input_freq->align(FL_ALIGN_TOP_LEFT);
-  _input_freq->callback(_callback, this);
+    _input_freq = new Fl_Input(10, 25, 120, 25, "Abtastrate (Hz)");
+    _input_freq->align(FL_ALIGN_TOP_LEFT);
+    _input_freq->callback(_callback, this);
 
-  _input_block = new Fl_Input(140, 25, 120, 25, "Blockgröße");
-  _input_block->align(FL_ALIGN_TOP_LEFT);
-  _input_block->callback(_callback, this);
+    _input_block = new Fl_Input(140, 25, 120, 25, "Blockgröße");
+    _input_block->align(FL_ALIGN_TOP_LEFT);
+    _input_block->callback(_callback, this);
 
-  _input_mask = new Fl_Input(10, 70, 120, 25, "Meta-Maske");
-  _input_mask->align(FL_ALIGN_TOP_LEFT);
-  _input_mask->callback(_callback, this);
-  _input_mask->readonly(META_MASK_FIXED);
+    _input_mask = new Fl_Input(10, 70, 120, 25, "Meta-Maske");
+    _input_mask->align(FL_ALIGN_TOP_LEFT);
+    _input_mask->callback(_callback, this);
+    _input_mask->readonly(META_MASK_FIXED);
 
-  _input_red = new Fl_Input(140, 70, 120, 25, "Untersetzung");
-  _input_red->align(FL_ALIGN_TOP_LEFT);
-  _input_red->callback(_callback, this);
-  _input_red->readonly(META_REDUCTION_FIXED);
+    _input_red = new Fl_Input(140, 70, 120, 25, "Untersetzung");
+    _input_red->align(FL_ALIGN_TOP_LEFT);
+    _input_red->callback(_callback, this);
+    _input_red->readonly(META_REDUCTION_FIXED);
 
-  _choice_format = new Fl_Choice(10, 115, 250, 25, "Format");
-  _choice_format->align(FL_ALIGN_TOP_LEFT);
-  _choice_format->callback(_callback, this);
-  _choice_format_selected = false;
+    _choice_format = new Fl_Choice(10, 115, 250, 25, "Format");
+    _choice_format->align(FL_ALIGN_TOP_LEFT);
+    _choice_format->callback(_callback, this);
+    _choice_format_selected = false;
 
-  // Alle Kompressionsformate einfügen
-  for (i = 0; i < DLS_FORMAT_COUNT; i++)
-  {
-    format = dls_format_strings[i];
-
-    // Slashes escapen, FLTK macht aus Strings mit
-    // Slashes entsprechende Untermenüs...
-    for (j = 1; j <= format.length(); j++)
+    // Alle Kompressionsformate einfügen
+    for (i = 0; i < DLS_FORMAT_COUNT; i++)
     {
-      if (format[j] == '/')
-      {
-        format.insert(j, "\\");
-        j++;
-      }
+        format = dls_format_strings[i];
+
+        // Slashes escapen, FLTK macht aus Strings mit
+        // Slashes entsprechende Untermenüs...
+        for (j = 1; j <= format.length(); j++)
+        {
+            if (format[j] == '/')
+            {
+                format.insert(j, "\\");
+                j++;
+            }
+        }
+
+        _choice_format->add(format.c_str());
     }
 
-    _choice_format->add(format.c_str());
-  }
+    _choice_mdct = new Fl_Choice(10, 160, 120, 25, "MDCT-Blockgröße");
+    _choice_mdct->align(FL_ALIGN_TOP_LEFT);
+    _choice_mdct->callback(_callback, this);
+    _choice_mdct_selected = false;
 
-  _choice_mdct = new Fl_Choice(10, 160, 120, 25, "MDCT-Blockgröße");
-  _choice_mdct->align(FL_ALIGN_TOP_LEFT);
-  _choice_mdct->callback(_callback, this);
-  _choice_mdct_selected = false;
+    // Alle gültigen MDCT-Blockgrößen einfügen
+    for (i = MDCT_MIN_EXP2; i <= MDCT_MAX_EXP2; i++)
+    {
+        str.str("");
+        str.clear();
+        str << (1 << i);
+        _choice_mdct->add(str.str().c_str());
+    }
 
-  // Alle gültigen MDCT-Blockgrößen einfügen
-  for (i = MDCT_MIN_EXP2; i <= MDCT_MAX_EXP2; i++)
-  {
-    str.str("");
-    str.clear();
-    str << (1 << i);
-    _choice_mdct->add(str.str().c_str());
-  }
+    _input_accuracy = new Fl_Input(140, 160, 120, 25, "Genauigkeit");
+    _input_accuracy->align(FL_ALIGN_TOP_LEFT);
+    _input_accuracy->callback(_callback, this);
 
-  _input_accuracy = new Fl_Input(140, 160, 120, 25, "Genauigkeit");
-  _input_accuracy->align(FL_ALIGN_TOP_LEFT);
-  _input_accuracy->callback(_callback, this);
+    _button_ok = new Fl_Return_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "OK");
+    _button_ok->callback(_callback, this);
 
-  _button_ok = new Fl_Return_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "OK");
-  _button_ok->callback(_callback, this);
+    _button_cancel = new Fl_Button(WIDTH - 180, HEIGHT - 35, 80, 25,
+                                   "Abbrechen");
+    _button_cancel->callback(_callback, this);
 
-  _button_cancel = new Fl_Button(WIDTH - 180, HEIGHT - 35, 80, 25, "Abbrechen");
-  _button_cancel->callback(_callback, this);
-
-  _wnd->end();
+    _wnd->end();
 }
 
 /*****************************************************************************/
@@ -127,7 +128,7 @@ CTLDialogChannel::CTLDialogChannel(const string &dls_dir)
 
 CTLDialogChannel::~CTLDialogChannel()
 {
-  delete _wnd;
+    delete _wnd;
 }
 
 /*****************************************************************************/
@@ -137,143 +138,147 @@ CTLDialogChannel::~CTLDialogChannel()
 
    \param job Zeiger auf den Auftrag, dessen Kanäle geändert werden sollen
    \param channels Zeiger auf eine Liste von konstanten
-                   Zeigern auf die zu ändernden Kanäle
+   Zeigern auf die zu ändernden Kanäle
 */
 
 void CTLDialogChannel::show(CTLJobPreset *job,
                             const list<const COMChannelPreset *> *channels)
 {
-  stringstream str;
-  list<const COMChannelPreset *>::const_iterator channel_i;
-  unsigned int freq, block, mask, red, mdct_block_size;
-  int format_index;
-  bool freq_equal = true, block_equal = true, mask_equal = true, red_equal = true;
-  bool format_equal = true, mdct_equal = true, accuracy_equal = true;
-  double accuracy, exp2;
+    stringstream str;
+    list<const COMChannelPreset *>::const_iterator channel_i;
+    unsigned int freq, block, mask, red, mdct_block_size;
+    int format_index;
+    bool freq_equal = true, block_equal = true;
+    bool mask_equal = true, red_equal = true;
+    bool format_equal = true, mdct_equal = true, accuracy_equal = true;
+    double accuracy, exp2;
 
-  _job = job;
-  _channels = channels;
+    _job = job;
+    _channels = channels;
 
-  _input_freq->value("");
-  _input_block->value("");
-  _input_red->value("");
-  _input_mask->value("");
-  _input_accuracy->value("");
+    _input_freq->value("");
+    _input_block->value("");
+    _input_red->value("");
+    _input_mask->value("");
+    _input_accuracy->value("");
 
-  _choice_mdct->deactivate();
-  _input_accuracy->deactivate();
+    _choice_mdct->deactivate();
+    _input_accuracy->deactivate();
 
-  ((Fl_Menu_ *) _choice_format)->value((Fl_Menu_Item *) 0);
-  _choice_format->redraw();
-  ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
-  _choice_mdct->redraw();
+    ((Fl_Menu_ *) _choice_format)->value((Fl_Menu_Item *) 0);
+    _choice_format->redraw();
+    ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
+    _choice_mdct->redraw();
 
-  if (_channels->size() == 0) return;
+    if (_channels->size() == 0) return;
 
-  channel_i = _channels->begin();
+    channel_i = _channels->begin();
 
-  freq = (*channel_i)->sample_frequency;
-  block = (*channel_i)->block_size;
-  mask = (*channel_i)->meta_mask;
-  red = (*channel_i)->meta_reduction;
-  format_index = (*channel_i)->format_index;
-  mdct_block_size = (*channel_i)->mdct_block_size;
-  accuracy = (*channel_i)->accuracy;
+    freq = (*channel_i)->sample_frequency;
+    block = (*channel_i)->block_size;
+    mask = (*channel_i)->meta_mask;
+    red = (*channel_i)->meta_reduction;
+    format_index = (*channel_i)->format_index;
+    mdct_block_size = (*channel_i)->mdct_block_size;
+    accuracy = (*channel_i)->accuracy;
 
-  channel_i++;
-
-  while (channel_i != _channels->end())
-  {
-    if ((*channel_i)->sample_frequency != freq) freq_equal = false;
-    if ((*channel_i)->block_size != block) block_equal = false;
-    if ((*channel_i)->meta_mask != mask) mask_equal = false;
-    if ((*channel_i)->meta_reduction != red) red_equal = false;
-    if ((*channel_i)->format_index != format_index) format_equal = false;
-    if ((*channel_i)->mdct_block_size != mdct_block_size) mdct_equal = false;
-    if ((*channel_i)->accuracy != accuracy) accuracy_equal = false;
     channel_i++;
-  }
 
-  if (freq_equal)
-  {
-    str.str("");
-    str.clear();
-    str << freq;
-    _input_freq->value(str.str().c_str());
-  }
-
-  if (block_equal)
-  {
-    str.str("");
-    str.clear();
-    str << block;
-    _input_block->value(str.str().c_str());
-  }
-
-  if (mask_equal)
-  {
-    str.str("");
-    str.clear();
-    str << mask;
-    _input_mask->value(str.str().c_str());
-  }
-
-  if (red_equal)
-  {
-    str.str("");
-    str.clear();
-    str << red;
-    _input_red->value(str.str().c_str());
-  }
-
-  // Wenn bei allen Kanälen das gleiche, gültige Format gewählt wurde
-  if (format_equal && format_index >= 0 && format_index < DLS_FORMAT_COUNT)
-  {
-    if (format_index == DLS_FORMAT_MDCT)
+    while (channel_i != _channels->end())
     {
-      _choice_mdct->activate();
-
-      if (mdct_equal) // MDCT gewählt und MDCT-Parameter gleich
-      {
-        exp2 = log10((double) mdct_block_size) / log10((double) 2);
-
-        // MDCT-Blockgröße gültig?
-        if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2 && exp2 <= MDCT_MAX_EXP2)
-        {
-          _choice_format->value(format_index);
-          _choice_format_selected = true;
-
-          _choice_mdct->value((int) exp2 - MDCT_MIN_EXP2);
-          _choice_mdct_selected = true;
-        }
-      }
+        if ((*channel_i)->sample_frequency != freq) freq_equal = false;
+        if ((*channel_i)->block_size != block) block_equal = false;
+        if ((*channel_i)->meta_mask != mask) mask_equal = false;
+        if ((*channel_i)->meta_reduction != red) red_equal = false;
+        if ((*channel_i)->format_index != format_index) format_equal = false;
+        if ((*channel_i)->mdct_block_size != mdct_block_size)
+            mdct_equal = false;
+        if ((*channel_i)->accuracy != accuracy) accuracy_equal = false;
+        channel_i++;
     }
 
-    if (format_index == DLS_FORMAT_MDCT || format_index == DLS_FORMAT_QUANT)
+    if (freq_equal)
     {
-      _input_accuracy->activate();
-
-      if (accuracy_equal)
-      {
         str.str("");
         str.clear();
-        str << accuracy;
-        _input_accuracy->value(str.str().c_str());
-      }
+        str << freq;
+        _input_freq->value(str.str().c_str());
     }
 
-    if (format_index != DLS_FORMAT_MDCT)
+    if (block_equal)
     {
-      _choice_format->value(format_index);
-      _choice_format_selected = true;
+        str.str("");
+        str.clear();
+        str << block;
+        _input_block->value(str.str().c_str());
     }
-  } // Format gueltig
 
-  _updated = false;
+    if (mask_equal)
+    {
+        str.str("");
+        str.clear();
+        str << mask;
+        _input_mask->value(str.str().c_str());
+    }
 
-  _wnd->show();
+    if (red_equal)
+    {
+        str.str("");
+        str.clear();
+        str << red;
+        _input_red->value(str.str().c_str());
+    }
 
-  while (_wnd->shown()) Fl::wait();
+    // Wenn bei allen Kanälen das gleiche, gültige Format gewählt wurde
+    if (format_equal && format_index >= 0 && format_index < DLS_FORMAT_COUNT)
+    {
+        if (format_index == DLS_FORMAT_MDCT)
+        {
+            _choice_mdct->activate();
+
+            if (mdct_equal) // MDCT gewählt und MDCT-Parameter gleich
+            {
+                exp2 = log10((double) mdct_block_size) / log10((double) 2);
+
+                // MDCT-Blockgröße gültig?
+                if (exp2 == (int) exp2 && exp2 >= MDCT_MIN_EXP2
+                    && exp2 <= MDCT_MAX_EXP2)
+                {
+                    _choice_format->value(format_index);
+                    _choice_format_selected = true;
+
+                    _choice_mdct->value((int) exp2 - MDCT_MIN_EXP2);
+                    _choice_mdct_selected = true;
+                }
+            }
+        }
+
+        if (format_index == DLS_FORMAT_MDCT
+            || format_index == DLS_FORMAT_QUANT)
+        {
+            _input_accuracy->activate();
+
+            if (accuracy_equal)
+            {
+                str.str("");
+                str.clear();
+                str << accuracy;
+                _input_accuracy->value(str.str().c_str());
+            }
+        }
+
+        if (format_index != DLS_FORMAT_MDCT)
+        {
+            _choice_format->value(format_index);
+            _choice_format_selected = true;
+        }
+    } // Format gueltig
+
+    _updated = false;
+
+    _wnd->show();
+
+    while (_wnd->shown()) Fl::wait();
 }
 
 /*****************************************************************************/
@@ -287,13 +292,13 @@ void CTLDialogChannel::show(CTLJobPreset *job,
 
 void CTLDialogChannel::_callback(Fl_Widget *sender, void *data)
 {
-  CTLDialogChannel *dialog = (CTLDialogChannel *) data;
+    CTLDialogChannel *dialog = (CTLDialogChannel *) data;
 
-  if (sender == dialog->_button_ok) dialog->_button_ok_clicked();
-  if (sender == dialog->_button_cancel) dialog->_button_cancel_clicked();
-  if (sender == dialog->_wnd) dialog->_button_cancel_clicked();
-  if (sender == dialog->_choice_format) dialog->_choice_format_changed();
-  if (sender == dialog->_choice_mdct) dialog->_choice_mdct_changed();
+    if (sender == dialog->_button_ok) dialog->_button_ok_clicked();
+    if (sender == dialog->_button_cancel) dialog->_button_cancel_clicked();
+    if (sender == dialog->_wnd) dialog->_button_cancel_clicked();
+    if (sender == dialog->_choice_format) dialog->_choice_format_changed();
+    if (sender == dialog->_choice_mdct) dialog->_choice_mdct_changed();
 }
 
 /*****************************************************************************/
@@ -304,9 +309,9 @@ void CTLDialogChannel::_callback(Fl_Widget *sender, void *data)
 
 void CTLDialogChannel::_button_ok_clicked()
 {
-  if (!_save_channels()) return;
+    if (!_save_channels()) return;
 
-  _wnd->hide();
+    _wnd->hide();
 }
 
 /*****************************************************************************/
@@ -317,8 +322,8 @@ void CTLDialogChannel::_button_ok_clicked()
 
 void CTLDialogChannel::_button_cancel_clicked()
 {
-  _updated = false;
-  _wnd->hide();
+    _updated = false;
+    _wnd->hide();
 }
 
 /*****************************************************************************/
@@ -329,28 +334,28 @@ void CTLDialogChannel::_button_cancel_clicked()
 
 void CTLDialogChannel::_choice_format_changed()
 {
-  _choice_format_selected = true;
+    _choice_format_selected = true;
 
-  if (_choice_format->value() == DLS_FORMAT_MDCT)
-  {
-    _choice_mdct->activate();
-    _input_accuracy->activate();
-  }
-  else if (_choice_format->value() == DLS_FORMAT_QUANT)
-  {
-    ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
-    _choice_mdct_selected = false;
-    _choice_mdct->deactivate();
-    _input_accuracy->activate();
-  }
-  else
-  {
-    ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
-    _choice_mdct_selected = false;
-    _choice_mdct->deactivate();
-    _input_accuracy->value("");
-    _input_accuracy->deactivate();
-  }
+    if (_choice_format->value() == DLS_FORMAT_MDCT)
+    {
+        _choice_mdct->activate();
+        _input_accuracy->activate();
+    }
+    else if (_choice_format->value() == DLS_FORMAT_QUANT)
+    {
+        ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
+        _choice_mdct_selected = false;
+        _choice_mdct->deactivate();
+        _input_accuracy->activate();
+    }
+    else
+    {
+        ((Fl_Menu_ *) _choice_mdct)->value((Fl_Menu_Item *) 0);
+        _choice_mdct_selected = false;
+        _choice_mdct->deactivate();
+        _input_accuracy->value("");
+        _input_accuracy->deactivate();
+    }
 }
 
 /*****************************************************************************/
@@ -361,7 +366,7 @@ void CTLDialogChannel::_choice_format_changed()
 
 void CTLDialogChannel::_choice_mdct_changed()
 {
-  _choice_mdct_selected = true;
+    _choice_mdct_selected = true;
 }
 
 /*****************************************************************************/
@@ -374,298 +379,304 @@ void CTLDialogChannel::_choice_mdct_changed()
 
 bool CTLDialogChannel::_save_channels()
 {
-  COMChannelPreset channel;
-  stringstream str;
-  list<const COMChannelPreset *>::const_iterator channel_i;
-  unsigned int freq, block, mask, red, mdct_block_size;
-  double accuracy;
-  bool write_freq, write_block, write_mask, write_red, write_acc;
-  bool channel_changed, channels_changed = false;
-  list<COMChannelPreset> channel_backups;
-  list<COMChannelPreset>::iterator backup_i;
+    COMChannelPreset channel;
+    stringstream str;
+    list<const COMChannelPreset *>::const_iterator channel_i;
+    unsigned int freq, block, mask, red, mdct_block_size;
+    double accuracy;
+    bool write_freq, write_block, write_mask, write_red, write_acc;
+    bool channel_changed, channels_changed = false;
+    list<COMChannelPreset> channel_backups;
+    list<COMChannelPreset>::iterator backup_i;
 
-  str.exceptions(ios::failbit | ios::badbit);
+    str.exceptions(ios::failbit | ios::badbit);
 
-  try
-  {
-    if ((write_freq = (string(_input_freq->value()) != "")))
+    try
     {
-      str.str("");
-      str.clear();
-      str << _input_freq->value();
-      str >> freq;
-    }
-
-    if ((write_block = (string(_input_block->value()) != "")))
-    {
-      str.str("");
-      str.clear();
-      str << _input_block->value();
-      str >> block;
-    }
-
-    if ((write_mask = (string(_input_mask->value()) != "")))
-    {
-      str.str("");
-      str.clear();
-      str << _input_mask->value();
-      str >> mask;
-    }
-
-    if ((write_red = (string(_input_red->value()) != "")))
-    {
-      str.str("");
-      str.clear();
-      str << _input_red->value();
-      str >> red;
-    }
-
-    if ((write_acc = (string(_input_accuracy->value()) != "")))
-    {
-      str.str("");
-      str.clear();
-      str << _input_accuracy->value();
-      str >> accuracy;
-    }
-
-    if (_choice_format_selected)
-    {
-      if (_choice_format->value() == DLS_FORMAT_MDCT)
-      {
-        // MDCT nur für Fließkommatypen
-        channel_i = _channels->begin();
-        while (channel_i != _channels->end())
+        if ((write_freq = (string(_input_freq->value()) != "")))
         {
-          if ((*channel_i)->type == TUNKNOWN)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" hat keine Typinformation!";
-            msg_win->error();
-            return false;
-          }
-
-          if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" hat keinen Gleitkommatyp!";
-            msg_win->error();
-            return false;
-          }
-
-          // Alle Kanäle müssen eine Genauigkeit haben
-          if (!write_acc && (*channel_i)->accuracy <= 0.0)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" benötigt noch eine Genauigkeit!";
-            msg_win->error();
-            return false;
-          }
-
-          channel_i++;
+            str.str("");
+            str.clear();
+            str << _input_freq->value();
+            str >> freq;
         }
 
-        if (!_choice_mdct_selected)
+        if ((write_block = (string(_input_block->value()) != "")))
         {
-          msg_win->str() << "Sie haben keine MDCT-Blockgröße angeben!";
-          msg_win->error();
-          return false;
+            str.str("");
+            str.clear();
+            str << _input_block->value();
+            str >> block;
         }
 
-        mdct_block_size = 1 << (_choice_mdct->value() + MDCT_MIN_EXP2);
-
-        // Blockgröße kein Vielfaches von MDCT-Dimension?
-        if (write_block)
+        if ((write_mask = (string(_input_mask->value()) != "")))
         {
-          if (block % mdct_block_size)
-          {
-            msg_win->str() << "Die Blockgröße muss ein Vielfaches"
-                           << " der MDCT-Blockgröße sein!";
-            msg_win->error();
-            return false;
-          }
+            str.str("");
+            str.clear();
+            str << _input_mask->value();
+            str >> mask;
         }
-        else
+
+        if ((write_red = (string(_input_red->value()) != "")))
         {
-          // Keine Blockgröße angegeben. Alle Kanäle mit ihren bisherigen
-          // Blockgrößen überprüfen
-          channel_i = _channels->begin();
-          while (channel_i != _channels->end())
-          {
-            if ((*channel_i)->block_size % mdct_block_size)
+            str.str("");
+            str.clear();
+            str << _input_red->value();
+            str >> red;
+        }
+
+        if ((write_acc = (string(_input_accuracy->value()) != "")))
+        {
+            str.str("");
+            str.clear();
+            str << _input_accuracy->value();
+            str >> accuracy;
+        }
+
+        if (_choice_format_selected)
+        {
+            if (_choice_format->value() == DLS_FORMAT_MDCT)
             {
-              msg_win->str() << "Die bisherigen Blockgröße des Kanals \"";
-              msg_win->str() << (*channel_i)->name;
-              msg_win->str() << "\" ist kein Vielfaches der MDCT-Blockgröße!";
-              msg_win->error();
-              return false;
-            }
+                // MDCT nur für Fließkommatypen
+                channel_i = _channels->begin();
+                while (channel_i != _channels->end())
+                {
+                    if ((*channel_i)->type == TUNKNOWN)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" hat keine Typinformation!";
+                        msg_win->error();
+                        return false;
+                    }
 
-            channel_i++;
-          }
-        }
-      } // MDCT
+                    if ((*channel_i)->type != TFLT
+                        && (*channel_i)->type != TDBL)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" hat keinen Gleitkommatyp!";
+                        msg_win->error();
+                        return false;
+                    }
 
-      else if (_choice_format->value() == DLS_FORMAT_QUANT)
-      {
-        channel_i = _channels->begin();
-        while (channel_i != _channels->end())
-        {
-          if ((*channel_i)->type == TUNKNOWN)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" hat keine Typinformation!";
-            msg_win->error();
-            return false;
-          }
+                    // Alle Kanäle müssen eine Genauigkeit haben
+                    if (!write_acc && (*channel_i)->accuracy <= 0.0)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" benötigt noch eine Genauigkeit!";
+                        msg_win->error();
+                        return false;
+                    }
 
-          // Quantisierung nur für Fließkommatypen
-          if ((*channel_i)->type != TFLT && (*channel_i)->type != TDBL)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" hat keinen Gleitkommatyp!";
-            msg_win->error();
-            return false;
-          }
+                    channel_i++;
+                }
 
-          // Alle Kanäle müssen eine Genauigkeit haben
-          if (!write_acc && (*channel_i)->accuracy <= 0.0)
-          {
-            msg_win->str() << "Kanal \"" << (*channel_i)->name
-                           << "\" benötigt noch eine Genauigkeit!";
-            msg_win->error();
-            return false;
-          }
+                if (!_choice_mdct_selected)
+                {
+                    msg_win->str() << "Sie haben keine MDCT-Blockgröße"
+                                   << " angegeben!";
+                    msg_win->error();
+                    return false;
+                }
 
-          channel_i++;
-        }
-      } // Quant
+                mdct_block_size = 1 << (_choice_mdct->value() + MDCT_MIN_EXP2);
 
-    } // Format ausgewaehlt
-  }
-  catch (...)
-  {
-    msg_win->str() << "Ungültige Eingabe!";
-    msg_win->error();
-    return false;
-  }
+                // Blockgröße kein Vielfaches von MDCT-Dimension?
+                if (write_block)
+                {
+                    if (block % mdct_block_size)
+                    {
+                        msg_win->str() << "Die Blockgröße muss ein Vielfaches"
+                                       << " der MDCT-Blockgröße sein!";
+                        msg_win->error();
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Keine Blockgröße angegeben.
+                    // Alle Kanäle mit ihren bisherigen
+                    // Blockgrößen überprüfen
+                    channel_i = _channels->begin();
+                    while (channel_i != _channels->end())
+                    {
+                        if ((*channel_i)->block_size % mdct_block_size)
+                        {
+                            msg_win->str() << "Die bisherigen Blockgröße"
+                                           << " des Kanals \"";
+                            msg_win->str() << (*channel_i)->name;
+                            msg_win->str() << "\" ist kein Vielfaches"
+                                           << " der MDCT-Blockgröße!";
+                            msg_win->error();
+                            return false;
+                        }
 
-  channel_i = _channels->begin();
-  while (channel_i != _channels->end())
-  {
-    // Daten von Original-Kanal kopieren
-    channel = **channel_i;
+                        channel_i++;
+                    }
+                }
+            } // MDCT
 
-    channel_changed = false;
+            else if (_choice_format->value() == DLS_FORMAT_QUANT)
+            {
+                channel_i = _channels->begin();
+                while (channel_i != _channels->end())
+                {
+                    if ((*channel_i)->type == TUNKNOWN)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" hat keine Typinformation!";
+                        msg_win->error();
+                        return false;
+                    }
 
-    // Soll sich für diesen Kanal etwas ändern?
-    if ((write_freq && channel.sample_frequency != freq) ||
-        (write_block && channel.block_size != block) ||
-        (write_mask && channel.meta_mask != mask) ||
-        (write_red && channel.meta_reduction != red) ||
-        (write_acc && channel.accuracy != accuracy))
-    {
-      channel_changed = true;
+                    // Quantisierung nur für Fließkommatypen
+                    if ((*channel_i)->type != TFLT
+                        && (*channel_i)->type != TDBL)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" hat keinen Gleitkommatyp!";
+                        msg_win->error();
+                        return false;
+                    }
+
+                    // Alle Kanäle müssen eine Genauigkeit haben
+                    if (!write_acc && (*channel_i)->accuracy <= 0.0)
+                    {
+                        msg_win->str() << "Kanal \"" << (*channel_i)->name
+                                       << "\" benötigt noch eine Genauigkeit!";
+                        msg_win->error();
+                        return false;
+                    }
+
+                    channel_i++;
+                }
+            } // Quant
+
+        } // Format ausgewaehlt
     }
-
-    if (_choice_format_selected)
+    catch (...)
     {
-      if (channel.format_index != _choice_format->value()
-          || (_choice_format->value() == DLS_FORMAT_MDCT
-              && (mdct_block_size != channel.mdct_block_size
-                  || accuracy != channel.accuracy))
-          || (_choice_format->value() == DLS_FORMAT_QUANT
-              && accuracy != channel.accuracy))
-      {
-        channel_changed = true;
-      }
-    }
-
-    if (channel_changed)
-    {
-      // Alte Vorgaben sichern, falls etwas schief geht
-      channel_backups.push_back(channel);
-
-      // Neue Daten übernehmen
-      if (write_freq) channel.sample_frequency = freq;
-      if (write_block) channel.block_size = block;
-      if (write_mask) channel.meta_mask = mask;
-      if (write_red) channel.meta_reduction = red;
-      if (write_acc) channel.accuracy = accuracy;
-      if (_choice_format_selected)
-      {
-        channel.format_index = _choice_format->value();
-
-        if (channel.format_index == DLS_FORMAT_MDCT)
-        {
-          channel.mdct_block_size = mdct_block_size;
-        }
-      }
-
-      try
-      {
-        _job->change_channel(&channel);
-      }
-      catch (ECOMJobPreset &e)
-      {
-        msg_win->str() << e.msg;
+        msg_win->str() << "Ungültige Eingabe!";
         msg_win->error();
         return false;
-      }
-
-      channels_changed = true;
     }
 
-    channel_i++;
-  }
-
-  if (channels_changed)
-  {
-    try
+    channel_i = _channels->begin();
+    while (channel_i != _channels->end())
     {
-      _job->write(_dls_dir);
-    }
-    catch (ECOMJobPreset &e)
-    {
-      msg_win->str() << e.msg;
-      msg_win->error();
+        // Daten von Original-Kanal kopieren
+        channel = **channel_i;
 
-      try
-      {
-        backup_i = channel_backups.begin();
-        while (backup_i != channel_backups.end())
+        channel_changed = false;
+
+        // Soll sich für diesen Kanal etwas ändern?
+        if ((write_freq && channel.sample_frequency != freq) ||
+            (write_block && channel.block_size != block) ||
+            (write_mask && channel.meta_mask != mask) ||
+            (write_red && channel.meta_reduction != red) ||
+            (write_acc && channel.accuracy != accuracy))
         {
-          _job->change_channel(&(*backup_i));
-          backup_i++;
+            channel_changed = true;
         }
-      }
-      catch (ECOMChannelPreset &e)
-      {
-        msg_win->str() << "FATAL: " << e.msg << "!";
-        msg_win->str() << " Bitte starten Sie die Anwendung neu!";
-        msg_win->error();
-      }
 
-      return false;
+        if (_choice_format_selected)
+        {
+            if (channel.format_index != _choice_format->value()
+                || (_choice_format->value() == DLS_FORMAT_MDCT
+                    && (mdct_block_size != channel.mdct_block_size
+                        || accuracy != channel.accuracy))
+                || (_choice_format->value() == DLS_FORMAT_QUANT
+                    && accuracy != channel.accuracy))
+            {
+                channel_changed = true;
+            }
+        }
+
+        if (channel_changed)
+        {
+            // Alte Vorgaben sichern, falls etwas schief geht
+            channel_backups.push_back(channel);
+
+            // Neue Daten übernehmen
+            if (write_freq) channel.sample_frequency = freq;
+            if (write_block) channel.block_size = block;
+            if (write_mask) channel.meta_mask = mask;
+            if (write_red) channel.meta_reduction = red;
+            if (write_acc) channel.accuracy = accuracy;
+            if (_choice_format_selected)
+            {
+                channel.format_index = _choice_format->value();
+
+                if (channel.format_index == DLS_FORMAT_MDCT)
+                {
+                    channel.mdct_block_size = mdct_block_size;
+                }
+            }
+
+            try
+            {
+                _job->change_channel(&channel);
+            }
+            catch (ECOMJobPreset &e)
+            {
+                msg_win->str() << e.msg;
+                msg_win->error();
+                return false;
+            }
+
+            channels_changed = true;
+        }
+
+        channel_i++;
     }
 
-    try
+    if (channels_changed)
     {
-      _job->spool(_dls_dir);
+        try
+        {
+            _job->write(_dls_dir);
+        }
+        catch (ECOMJobPreset &e)
+        {
+            msg_win->str() << e.msg;
+            msg_win->error();
+
+            try
+            {
+                backup_i = channel_backups.begin();
+                while (backup_i != channel_backups.end())
+                {
+                    _job->change_channel(&(*backup_i));
+                    backup_i++;
+                }
+            }
+            catch (ECOMChannelPreset &e)
+            {
+                msg_win->str() << "FATAL: " << e.msg << "!";
+                msg_win->str() << " Bitte starten Sie die Anwendung neu!";
+                msg_win->error();
+            }
+
+            return false;
+        }
+
+        try
+        {
+            _job->spool(_dls_dir);
+        }
+        catch (ECOMJobPreset &e)
+        {
+            msg_win->str() << "Konnte dlsd nicht benachrichtigen: " << e.msg;
+            msg_win->warning();
+        }
+
+        _updated = true;
     }
-    catch (ECOMJobPreset &e)
+    else
     {
-      msg_win->str() << "Konnte dlsd nicht benachrichtigen: " << e.msg;
-      msg_win->warning();
+        _updated = false;
     }
 
-    _updated = true;
-  }
-  else
-  {
-    _updated = false;
-  }
-
-  return true;
+    return true;
 }
 
 /*****************************************************************************/

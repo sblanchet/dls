@@ -30,7 +30,7 @@
 
 template <class T> class ViewChunkT : public ViewChunk
 {
-    public:
+public:
     ViewChunkT();
     ~ViewChunkT();
 
@@ -45,7 +45,7 @@ template <class T> class ViewChunkT : public ViewChunk
     unsigned int blocks_fetched() const;
     bool has_data() const;
 
-    private:
+private:
     ViewDataT<T> _gen_data;       /**< Datenliste für generische Daten */
     ViewDataT<T> _min_data;       /**< Datenliste für Minimum-Daten */
     ViewDataT<T> _max_data;       /**< Datenliste für Maximum-Daten */
@@ -582,7 +582,7 @@ template <class T> void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
 */
 
 template <class T>
-    void ViewChunkT<T>::clear()
+void ViewChunkT<T>::clear()
 {
     _gen_data.clear();
     _min_data.clear();
@@ -600,7 +600,7 @@ template <class T>
 */
 
 template <class T>
-    void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
+void ViewChunkT<T>::calc_min_max(double *p_min, double *p_max) const
 {
     T data_min, data_max, current_min, current_max;
     bool first = true;

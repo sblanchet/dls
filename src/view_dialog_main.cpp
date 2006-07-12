@@ -33,51 +33,51 @@ using namespace std;
 
 ViewDialogMain::ViewDialogMain(const string &dls_dir)
 {
-  int x = Fl::w() / 2 - WIDTH / 2;
-  int y = Fl::h() / 2 - HEIGHT / 2;
+    int x = Fl::w() / 2 - WIDTH / 2;
+    int y = Fl::h() / 2 - HEIGHT / 2;
 
-  _dls_dir = dls_dir;
+    _dls_dir = dls_dir;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLSView");
-  _wnd->callback(_callback, this);
-  _wnd->set_modal();
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "DLSView");
+    _wnd->callback(_callback, this);
+    _wnd->set_modal();
 
-  _choice_job = new Fl_Choice(10, 25, 240, 25, "Auftrag");
-  _choice_job->align(FL_ALIGN_TOP_LEFT);
-  _choice_job->callback(_callback, this);
+    _choice_job = new Fl_Choice(10, 25, 240, 25, "Auftrag");
+    _choice_job->align(FL_ALIGN_TOP_LEFT);
+    _choice_job->callback(_callback, this);
 
-  _button_full = new Fl_Button(260, 25, 100, 25, "Gesamt");
-  _button_full->callback(_callback, this);
+    _button_full = new Fl_Button(260, 25, 100, 25, "Gesamt");
+    _button_full->callback(_callback, this);
 
-  _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
-  _button_reload->callback(_callback, this);
+    _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
+    _button_reload->callback(_callback, this);
 
-  _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
-  _button_close->callback(_callback, this);
+    _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
+    _button_close->callback(_callback, this);
 
-  _tile_ver = new Fl_Tile(10, 60, WIDTH - 20, HEIGHT - 70);
+    _tile_ver = new Fl_Tile(10, 60, WIDTH - 20, HEIGHT - 70);
 
-  _tile_hor = new Fl_Tile(10, 60, WIDTH - 220, HEIGHT - 70);
+    _tile_hor = new Fl_Tile(10, 60, WIDTH - 220, HEIGHT - 70);
 
-  _view_data = new ViewViewData(10, 60, WIDTH - 220, HEIGHT - 120);
-  _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
+    _view_data = new ViewViewData(10, 60, WIDTH - 220, HEIGHT - 120);
+    _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
 
-  _tile_hor->end();
-  //_tile_hor->resizable(_view_data); // Setzt Datenansicht fest
+    _tile_hor->end();
+    //_tile_hor->resizable(_view_data); // Setzt Datenansicht fest
 
-  _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
-  _grid_channels->add_column("channel", "Kanal");
-  _grid_channels->select_mode(flgNoSelect);
-  _grid_channels->check_boxes(true);
-  _grid_channels->callback(_callback, this);
+    _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
+    _grid_channels->add_column("channel", "Kanal");
+    _grid_channels->select_mode(flgNoSelect);
+    _grid_channels->check_boxes(true);
+    _grid_channels->callback(_callback, this);
 
-  _tile_ver->end();
-  //_tile_ver->resizable(_tile_hor);
+    _tile_ver->end();
+    //_tile_ver->resizable(_tile_hor);
 
-  _view_data->range_callback(_data_range_callback, this);
+    _view_data->range_callback(_data_range_callback, this);
 
-  _wnd->resizable(_view_data);
-  _view_data->take_focus();
+    _wnd->resizable(_view_data);
+    _view_data->take_focus();
 }
 
 /*****************************************************************************/
@@ -88,7 +88,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
 
 ViewDialogMain::~ViewDialogMain()
 {
-  delete _wnd;
+    delete _wnd;
 }
 
 /*****************************************************************************/
@@ -99,12 +99,12 @@ ViewDialogMain::~ViewDialogMain()
 
 void ViewDialogMain::show()
 {
-  if (_load_jobs())
-  {
-    _wnd->show();
+    if (_load_jobs())
+    {
+        _wnd->show();
 
-    while (_wnd->shown()) Fl::wait();
-  }
+        while (_wnd->shown()) Fl::wait();
+    }
 }
 
 /*****************************************************************************/
@@ -118,14 +118,14 @@ void ViewDialogMain::show()
 
 void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
 {
-  ViewDialogMain *dialog = (ViewDialogMain *) data;
+    ViewDialogMain *dialog = (ViewDialogMain *) data;
 
-  if (sender == dialog->_button_close) dialog->_button_close_clicked();
-  if (sender == dialog->_wnd) dialog->_button_close_clicked();
-  if (sender == dialog->_choice_job) dialog->_choice_job_changed();
-  if (sender == dialog->_grid_channels) dialog->_grid_channels_changed();
-  if (sender == dialog->_button_reload) dialog->_button_reload_clicked();
-  if (sender == dialog->_button_full) dialog->_button_full_clicked();
+    if (sender == dialog->_button_close) dialog->_button_close_clicked();
+    if (sender == dialog->_wnd) dialog->_button_close_clicked();
+    if (sender == dialog->_choice_job) dialog->_choice_job_changed();
+    if (sender == dialog->_grid_channels) dialog->_grid_channels_changed();
+    if (sender == dialog->_button_reload) dialog->_button_reload_clicked();
+    if (sender == dialog->_button_full) dialog->_button_full_clicked();
 }
 
 /*****************************************************************************/
@@ -136,7 +136,7 @@ void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
 
 void ViewDialogMain::_button_close_clicked()
 {
-  _wnd->hide();
+    _wnd->hide();
 }
 
 /*****************************************************************************/
@@ -147,7 +147,7 @@ void ViewDialogMain::_button_close_clicked()
 
 void ViewDialogMain::_button_reload_clicked()
 {
-  _view_data->update();
+    _view_data->update();
 }
 
 /*****************************************************************************/
@@ -158,7 +158,7 @@ void ViewDialogMain::_button_reload_clicked()
 
 void ViewDialogMain::_button_full_clicked()
 {
-  _view_data->full_range();
+    _view_data->full_range();
 }
 
 /*****************************************************************************/
@@ -169,14 +169,14 @@ void ViewDialogMain::_button_full_clicked()
 
 void ViewDialogMain::_choice_job_changed()
 {
-  int index = _choice_job->value();
+    int index = _choice_job->value();
 
-  _job_id = _jobs[index].id();
+    _job_id = _jobs[index].id();
 
-  _view_data->set_job(_dls_dir, _job_id);
-  _view_msg->set_job(_dls_dir, _job_id);
+    _view_data->set_job(_dls_dir, _job_id);
+    _view_msg->set_job(_dls_dir, _job_id);
 
-  _load_channels();
+    _load_channels();
 }
 
 /*****************************************************************************/
@@ -187,35 +187,36 @@ void ViewDialogMain::_choice_job_changed()
 
 void ViewDialogMain::_grid_channels_changed()
 {
-  unsigned int i = _grid_channels->current_record();
+    unsigned int i = _grid_channels->current_record();
 
-  switch (_grid_channels->current_event())
-  {
-    case flgContent:
-      if (_grid_channels->current_col() == "channel")
-      {
-        _grid_channels->current_content(_channels[i].name());
-      }
-      break;
+    switch (_grid_channels->current_event())
+    {
+        case flgContent:
+            if (_grid_channels->current_col() == "channel")
+            {
+                _grid_channels->current_content(_channels[i].name());
+            }
+            break;
 
-    case flgChecked:
-      _grid_channels->current_checked(_view_data->has_channel(&_channels[i]));
-      break;
+        case flgChecked:
+            _grid_channels->current_checked(
+                _view_data->has_channel(&_channels[i]));
+            break;
 
-    case flgCheck:
-      if (_view_data->has_channel(&_channels[i]))
-      {
-        _view_data->rem_channel(&_channels[i]);
-      }
-      else
-      {
-        _view_data->add_channel(&_channels[i]);
-      }
-      break;
+        case flgCheck:
+            if (_view_data->has_channel(&_channels[i]))
+            {
+                _view_data->rem_channel(&_channels[i]);
+            }
+            else
+            {
+                _view_data->add_channel(&_channels[i]);
+            }
+            break;
 
-    default:
-      break;
-  }
+        default:
+            break;
+    }
 }
 
 /*****************************************************************************/
@@ -228,11 +229,13 @@ void ViewDialogMain::_grid_channels_changed()
    \param data Zeiger auf den Dialog
 */
 
-void ViewDialogMain::_data_range_callback(COMTime start, COMTime end, void *data)
+void ViewDialogMain::_data_range_callback(COMTime start,
+                                          COMTime end,
+                                          void *data)
 {
-  ViewDialogMain *dialog = (ViewDialogMain *) data;
+    ViewDialogMain *dialog = (ViewDialogMain *) data;
 
-  dialog->_view_msg->load_msg(start, end);
+    dialog->_view_msg->load_msg(start, end);
 }
 
 /*****************************************************************************/
@@ -245,72 +248,73 @@ void ViewDialogMain::_data_range_callback(COMTime start, COMTime end, void *data
 
 bool ViewDialogMain::_load_jobs()
 {
-  stringstream str;
-  DIR *dir;
-  struct dirent *dir_ent;
-  COMJobPreset job;
-  string dir_name;
-  unsigned int job_id;
-  list<unsigned int> job_ids;
-  list<unsigned int>::const_iterator job_id_i;
+    stringstream str;
+    DIR *dir;
+    struct dirent *dir_ent;
+    COMJobPreset job;
+    string dir_name;
+    unsigned int job_id;
+    list<unsigned int> job_ids;
+    list<unsigned int>::const_iterator job_id_i;
 
-  str.exceptions(ios::failbit | ios::badbit);
+    str.exceptions(ios::failbit | ios::badbit);
 
-  _choice_job->clear();
-  _jobs.clear();
+    _choice_job->clear();
+    _jobs.clear();
 
-  if ((dir = opendir(_dls_dir.c_str())) == NULL)
-  {
-    cout << "ERROR: could not open dls directory \"" << _dls_dir << "\"" << endl;
-    return false;
-  }
-
-  while ((dir_ent = readdir(dir)) != NULL)
-  {
-    dir_name = dir_ent->d_name;
-
-    if (dir_name.find("job") != 0) continue;
-
-    str.str("");
-    str.clear();
-    str << dir_name.substr(3);
-
-    try
+    if ((dir = opendir(_dls_dir.c_str())) == NULL)
     {
-      str >> job_id;
-    }
-    catch (...)
-    {
-      continue;
+        cout << "ERROR: could not open dls directory \"" << _dls_dir
+             << "\"" << endl;
+        return false;
     }
 
-    job_ids.push_back(job_id);
-  }
-
-  // Verzeichnis schliessen
-  closedir(dir);
-
-  // Nach Job-ID sortieren
-  job_ids.sort();
-
-  // Alle Jobs importieren
-  for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
-  {
-    try
+    while ((dir_ent = readdir(dir)) != NULL)
     {
-      job.import(_dls_dir, *job_id_i);
+        dir_name = dir_ent->d_name;
+
+        if (dir_name.find("job") != 0) continue;
+
+        str.str("");
+        str.clear();
+        str << dir_name.substr(3);
+
+        try
+        {
+            str >> job_id;
+        }
+        catch (...)
+        {
+            continue;
+        }
+
+        job_ids.push_back(job_id);
     }
-    catch (ECOMJobPreset &e)
+
+    // Verzeichnis schliessen
+    closedir(dir);
+
+    // Nach Job-ID sortieren
+    job_ids.sort();
+
+    // Alle Jobs importieren
+    for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
     {
-      cout << "WARNING: " << e.msg << endl;
-      continue;
+        try
+        {
+            job.import(_dls_dir, *job_id_i);
+        }
+        catch (ECOMJobPreset &e)
+        {
+            cout << "WARNING: " << e.msg << endl;
+            continue;
+        }
+
+        _jobs.push_back(job);
+        _choice_job->add(job.id_desc().c_str());
     }
 
-    _jobs.push_back(job);
-    _choice_job->add(job.id_desc().c_str());
-  }
-
-  return true;  
+    return true;
 }
 
 /*****************************************************************************/
@@ -321,63 +325,64 @@ bool ViewDialogMain::_load_jobs()
 
 bool ViewDialogMain::_load_channels()
 {
-  stringstream str, job_dir;
-  DIR *dir;
-  struct dirent *dir_ent;
-  string dir_name;
-  ViewChannel channel;
-  int index;
+    stringstream str, job_dir;
+    DIR *dir;
+    struct dirent *dir_ent;
+    string dir_name;
+    ViewChannel channel;
+    int index;
 
-  job_dir << _dls_dir << "/job" << _job_id;
+    job_dir << _dls_dir << "/job" << _job_id;
 
-  str.exceptions(ios::failbit | ios::badbit);
+    str.exceptions(ios::failbit | ios::badbit);
 
-  _grid_channels->clear();
-  _channels.clear();
+    _grid_channels->clear();
+    _channels.clear();
 
-  if ((dir = opendir(job_dir.str().c_str())) == NULL)
-  {
-    cout << "ERROR: could not open job directory \"" << job_dir.str() << "\"" << endl;
-    return false;
-  }
-
-  while ((dir_ent = readdir(dir)) != NULL)
-  {
-    dir_name = dir_ent->d_name;
-
-    if (dir_name.find("channel") != 0) continue;
-
-    str.str("");
-    str.clear();
-    str << dir_name.substr(7);
-
-    try
+    if ((dir = opendir(job_dir.str().c_str())) == NULL)
     {
-      str >> index;
-    }
-    catch (...)
-    {
-      continue;
+        cout << "ERROR: could not open job directory \"" << job_dir.str()
+             << "\"" << endl;
+        return false;
     }
 
-    try
+    while ((dir_ent = readdir(dir)) != NULL)
     {
-      channel.import(_dls_dir, _job_id, index);
+        dir_name = dir_ent->d_name;
+
+        if (dir_name.find("channel") != 0) continue;
+
+        str.str("");
+        str.clear();
+        str << dir_name.substr(7);
+
+        try
+        {
+            str >> index;
+        }
+        catch (...)
+        {
+            continue;
+        }
+
+        try
+        {
+            channel.import(_dls_dir, _job_id, index);
+        }
+        catch (EViewChannel &e)
+        {
+            cout << "WARNING: " << e.msg << endl;
+            continue;
+        }
+
+        _channels.push_back(channel);
     }
-    catch (EViewChannel &e)
-    {
-      cout << "WARNING: " << e.msg << endl;
-      continue;
-    }
 
-    _channels.push_back(channel);
-  }
+    closedir(dir);
 
-  closedir(dir);
+    _grid_channels->record_count(_channels.size());
 
-  _grid_channels->record_count(_channels.size());
-
-  return true;
+    return true;
 }
 
 /*****************************************************************************/

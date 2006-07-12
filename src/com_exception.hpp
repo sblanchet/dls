@@ -22,28 +22,25 @@ class COMException
 {
 public:
 
-  /**
-     Konstruktor
+    /**
+       Konstruktor
 
-     \param pmsg Nachricht der zu werfenden Exception
-  */
+       \param pmsg Nachricht der zu werfenden Exception
+    */
 
-  COMException(const string &pmsg)
-  {
-    msg = pmsg;
-  };
+    COMException(const string &pmsg) {msg = pmsg;};
 
-  string msg; /**< Nachricht der Exception */
+    string msg; /**< Nachricht der Exception */
 
 private:
 
-  /**
-     Standardkonstruktor
+    /**
+       Standardkonstruktor
 
-     Privat, da er nicht aufgerufen werden soll.
-  */
+       Privat, da er nicht aufgerufen werden soll.
+    */
 
-  COMException();
+    COMException();
 };
 
 /*****************************************************************************/

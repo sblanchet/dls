@@ -27,7 +27,7 @@ using namespace std;
 class ECOMChannelPreset : public COMException
 {
 public:
-  ECOMChannelPreset(const string &pmsg) : COMException(pmsg) {};
+    ECOMChannelPreset(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -42,30 +42,34 @@ public:
 class COMChannelPreset
 {
 public:
-  COMChannelPreset();
-  ~COMChannelPreset();
+    COMChannelPreset();
+    ~COMChannelPreset();
 
-  bool operator!=(const COMChannelPreset &) const;
+    bool operator!=(const COMChannelPreset &) const;
 
-  void read_from_tag(const COMXMLTag *);
-  void write_to_tag(COMXMLTag *) const;
+    void read_from_tag(const COMXMLTag *);
+    void write_to_tag(COMXMLTag *) const;
 
-  void clear();
+    void clear();
 
-  string name;                   /**< Kanalname */
-  unsigned int sample_frequency; /**< Abtastrate, mit der aufgezeichnet werden soll */
-  unsigned int block_size;       /**< Blockgröße, mit der aufgezeichnet werden soll */
-  unsigned int meta_mask;        /**< Bitmaske mit den aufzuzeichnenden Meta-Typen */
-  unsigned int meta_reduction;   /**< Meta-Untersetzung */
-  int format_index;              /**< Index des Formates zum Speichern der Daten */
-  unsigned int mdct_block_size;  /**< Blockgröße für MDCT */
-  double accuracy;               /**< Genauigkeit von verlustbehafteten Kompressionen */
+    string name;                   /**< Kanalname */
+    unsigned int sample_frequency; /**< Abtastrate, mit der aufgezeichnet
+                                      werden soll */
+    unsigned int block_size;       /**< Blockgröße, mit der aufgezeichnet
+                                      werden soll */
+    unsigned int meta_mask;        /**< Bitmaske mit den aufzuzeichnenden
+                                      Meta-Typen */
+    unsigned int meta_reduction;   /**< Meta-Untersetzung */
+    int format_index;              /**< Index des Formates zum Speichern
+                                      der Daten */
+    unsigned int mdct_block_size;  /**< Blockgröße für MDCT */
+    double accuracy;               /**< Genauigkeit von verlustbehafteten
+                                      Kompressionen */
 
-  COMChannelType type;          /**< Datentyp des Kanals (nur für MDCT-Prüfung) */
+    COMChannelType type;          /**< Datentyp des Kanals (nur für
+                                     MDCT-Prüfung) */
 };
 
 /*****************************************************************************/
 
 #endif
-
-

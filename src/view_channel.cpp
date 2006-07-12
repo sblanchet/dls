@@ -29,9 +29,9 @@ using namespace std;
 
 ViewChannel::ViewChannel()
 {
-  _index = 0;
-  _min_level = 0;
-  _max_level = 0;
+    _index = 0;
+    _min_level = 0;
+    _max_level = 0;
 }
 
 /*****************************************************************************/
@@ -42,7 +42,7 @@ ViewChannel::ViewChannel()
 
 ViewChannel::~ViewChannel()
 {
-  clear();
+    clear();
 }
 
 /*****************************************************************************/
@@ -54,71 +54,73 @@ ViewChannel::~ViewChannel()
    \param job_id Auftrags-ID
    \param channel_id Kanal-Index
    \throw EViewChannel Kanalinformationen konnten
-                       nicht importiert werden
+   nicht importiert werden
 */
 
 void ViewChannel::import(const string &dls_dir,
                          unsigned int job_id,
                          unsigned int channel_id)
 {
-  stringstream channel_dir_name, err;
-  string channel_file_name;
-  fstream file;
-  COMXMLParser xml;
+    stringstream channel_dir_name, err;
+    string channel_file_name;
+    fstream file;
+    COMXMLParser xml;
 
-  _index = channel_id;
+    _index = channel_id;
 
-  channel_dir_name << dls_dir;
-  channel_dir_name << "/job" << job_id;
-  channel_dir_name << "/channel" << _index;
+    channel_dir_name << dls_dir;
+    channel_dir_name << "/job" << job_id;
+    channel_dir_name << "/channel" << _index;
 
-  channel_file_name = channel_dir_name.str() + "/channel.xml";
+    channel_file_name = channel_dir_name.str() + "/channel.xml";
 
-  file.open(channel_file_name.c_str(), ios::in);
+    file.open(channel_file_name.c_str(), ios::in);
 
-  if (!file.is_open())
-  {
-    err << "Could not open channel file \"" << channel_file_name << "\"!";
-    throw EViewChannel(err.str());
-  }
-
-  try
-  {
-    xml.parse(&file, "dlschannel", dxttBegin);
-    xml.parse(&file, "channel", dxttSingle);
-    
-    _name = xml.tag()->att("name")->to_str();
-    _unit = xml.tag()->att("unit")->to_str();
-
-    if ((_type = dls_str_to_channel_type(xml.tag()->att("type")->to_str())) == TUNKNOWN)
+    if (!file.is_open())
     {
-      file.close();
-      err << "Unknown channel type \"" << xml.tag()->att("type")->to_str() << "\"!";
-      throw EViewChannel(err.str());
+        err << "Could not open channel file \"" << channel_file_name << "\"!";
+        throw EViewChannel(err.str());
     }
 
-    xml.parse(&file, "dlschannel", dxttEnd);
-  }
-  catch (ECOMXMLParser &e)
-  {
-    file.close();
-    err << "Channel " << _index << " parsing error: " << e.msg;
-    throw EViewChannel(err.str());
-  }
-  catch (ECOMXMLParserEOF &e)
-  {
-    file.close();
-    err << "Channel " << _index << " parsing error: " << e.msg;
-    throw EViewChannel(err.str());
-  }
-  catch (ECOMXMLTag &e)
-  {
-    file.close();
-    err << "Channel " << _index << " parsing (tag) error: " << e.msg;
-    throw EViewChannel(err.str());
-  }
+    try
+    {
+        xml.parse(&file, "dlschannel", dxttBegin);
+        xml.parse(&file, "channel", dxttSingle);
 
-  file.close();
+        _name = xml.tag()->att("name")->to_str();
+        _unit = xml.tag()->att("unit")->to_str();
+
+        if ((_type = dls_str_to_channel_type(
+                 xml.tag()->att("type")->to_str())) == TUNKNOWN)
+        {
+            file.close();
+            err << "Unknown channel type \""
+                << xml.tag()->att("type")->to_str() << "\"!";
+            throw EViewChannel(err.str());
+        }
+
+        xml.parse(&file, "dlschannel", dxttEnd);
+    }
+    catch (ECOMXMLParser &e)
+    {
+        file.close();
+        err << "Channel " << _index << " parsing error: " << e.msg;
+        throw EViewChannel(err.str());
+    }
+    catch (ECOMXMLParserEOF &e)
+    {
+        file.close();
+        err << "Channel " << _index << " parsing error: " << e.msg;
+        throw EViewChannel(err.str());
+    }
+    catch (ECOMXMLTag &e)
+    {
+        file.close();
+        err << "Channel " << _index << " parsing (tag) error: " << e.msg;
+        throw EViewChannel(err.str());
+    }
+
+    file.close();
 }
 
 /*****************************************************************************/
@@ -129,130 +131,133 @@ void ViewChannel::import(const string &dls_dir,
    \param dls_dir DLS-Datenverzeichnis
    \param job_id Auftrags-ID
 */
-   
+
 void ViewChannel::fetch_chunks(const string &dls_dir, unsigned int job_id)
 {
-  stringstream channel_dir_name;
-  DIR *dir;
-  struct dirent *dir_ent;
-  string dir_ent_name;
-  ViewChunk *chunk;
-  bool first = true;
+    stringstream channel_dir_name;
+    DIR *dir;
+    struct dirent *dir_ent;
+    string dir_ent_name;
+    ViewChunk *chunk;
+    bool first = true;
 
-  _range_start = (long long) 0;
-  _range_end = (long long) 0;
+    _range_start = (long long) 0;
+    _range_end = (long long) 0;
 
-  // Alle bisherigen Chunks entfernen
-  clear();
+    // Alle bisherigen Chunks entfernen
+    clear();
 
-  // Kanal-Verzeichnisnamen konstruieren
-  channel_dir_name << dls_dir << "/job" << job_id << "/channel" << _index;
+    // Kanal-Verzeichnisnamen konstruieren
+    channel_dir_name << dls_dir << "/job" << job_id << "/channel" << _index;
 
-  // Kanalverzeichnislisting öffnen
-  if ((dir = opendir(channel_dir_name.str().c_str())) == NULL)
-  {
-    cout << "ERROR: could not open \"" << channel_dir_name.str() << "\"." << endl;
-    return;
-  }
-
-  // Alle Einträge im Kanalverzeichnis durchforsten
-  while ((dir_ent = readdir(dir)) != NULL)
-  {
-    dir_ent_name = dir_ent->d_name;
-    
-    // Es interessieren nur die Einträge, die mit "chunk" beginnen
-    if (dir_ent_name.find("chunk") != 0) continue;
-
-    try
+    // Kanalverzeichnislisting öffnen
+    if ((dir = opendir(channel_dir_name.str().c_str())) == NULL)
     {
-      switch (_type)
-      {
-        case TCHAR:
-          chunk = new ViewChunkT<char>();
-          break;
-        case TUCHAR:
-          chunk = new ViewChunkT<unsigned char>();
-          break;
-        case TSHORT:
-          chunk = new ViewChunkT<short int>();
-          break;
-        case TUSHORT:
-          chunk = new ViewChunkT<unsigned short int>();
-          break;
-        case TINT:
-          chunk = new ViewChunkT<int>();
-          break;
-        case TUINT:
-          chunk = new ViewChunkT<unsigned int>();
-          break;
-        case TLINT:
-          chunk = new ViewChunkT<long>();
-          break;
-        case TULINT:
-          chunk = new ViewChunkT<unsigned long>();
-          break;
-        case TFLT:
-          chunk = new ViewChunkT<float>();
-          break;
-        case TDBL:
-          chunk = new ViewChunkT<double>();
-          break;
-
-        default:
-          closedir(dir);
-          cout << "ERROR: Unknown channel type " << _type << "!" << endl;
-          return;
-      }
-    }
-    catch (...)
-    {
-      closedir(dir);
-      cout << "ERROR: Could no allocate memory for chunk object!" << endl;
-      return;
+        cout << "ERROR: could not open \""
+             << channel_dir_name.str() << "\"." << endl;
+        return;
     }
 
-    // Chunk-Verzeichnis setzen
-    chunk->set_dir(channel_dir_name.str() + "/" + dir_ent_name);
-    
-    try
+    // Alle Einträge im Kanalverzeichnis durchforsten
+    while ((dir_ent = readdir(dir)) != NULL)
     {
-      chunk->import();
-    }
-    catch (EViewChunk &e)
-    {
-      cout << "WARNING: could not import chunk: " << e.msg << endl;
-      continue;
+        dir_ent_name = dir_ent->d_name;
+
+        // Es interessieren nur die Einträge, die mit "chunk" beginnen
+        if (dir_ent_name.find("chunk") != 0) continue;
+
+        try
+        {
+            switch (_type)
+            {
+                case TCHAR:
+                    chunk = new ViewChunkT<char>();
+                    break;
+                case TUCHAR:
+                    chunk = new ViewChunkT<unsigned char>();
+                    break;
+                case TSHORT:
+                    chunk = new ViewChunkT<short int>();
+                    break;
+                case TUSHORT:
+                    chunk = new ViewChunkT<unsigned short int>();
+                    break;
+                case TINT:
+                    chunk = new ViewChunkT<int>();
+                    break;
+                case TUINT:
+                    chunk = new ViewChunkT<unsigned int>();
+                    break;
+                case TLINT:
+                    chunk = new ViewChunkT<long>();
+                    break;
+                case TULINT:
+                    chunk = new ViewChunkT<unsigned long>();
+                    break;
+                case TFLT:
+                    chunk = new ViewChunkT<float>();
+                    break;
+                case TDBL:
+                    chunk = new ViewChunkT<double>();
+                    break;
+
+                default:
+                    closedir(dir);
+                    cout << "ERROR: Unknown channel type " << _type
+                         << "!" << endl;
+                    return;
+            }
+        }
+        catch (...)
+        {
+            closedir(dir);
+            cout << "ERROR: Could no allocate memory for chunk object!"
+                 << endl;
+            return;
+        }
+
+        // Chunk-Verzeichnis setzen
+        chunk->set_dir(channel_dir_name.str() + "/" + dir_ent_name);
+
+        try
+        {
+            chunk->import();
+        }
+        catch (EViewChunk &e)
+        {
+            cout << "WARNING: could not import chunk: " << e.msg << endl;
+            continue;
+        }
+
+        try
+        {
+            // Start- und Endzeiten holen
+            chunk->fetch_range();
+        }
+        catch (EViewChunk &e)
+        {
+            cout << "WARNING: could not fetch range: " << e.msg << endl;
+            continue;
+        }
+
+        // Minimal- und Maximalzeiten mitnehmen
+        if (first)
+        {
+            _range_start = chunk->start();
+            _range_end = chunk->end();
+            first = false;
+        }
+        else
+        {
+            if (chunk->start() < _range_start) _range_start = chunk->start();
+            if (chunk->end() > _range_end) _range_end = chunk->end();
+        }
+
+        // Chunk in die Liste einfügen
+        _chunks.push_back(chunk);
     }
 
-    try
-    {
-      // Start- und Endzeiten holen
-      chunk->fetch_range();
-    }
-    catch (EViewChunk &e)
-    {
-      cout << "WARNING: could not fetch range: " << e.msg << endl;
-      continue;
-    }
-
-    // Minimal- und Maximalzeiten mitnehmen
-    if (first)
-    {
-      _range_start = chunk->start();    
-      _range_end = chunk->end();
-      first = false;
-    }
-    else
-    {
-      if (chunk->start() < _range_start) _range_start = chunk->start();    
-      if (chunk->end() > _range_end) _range_end = chunk->end();
-    }
-
-    // Chunk in die Liste einfügen
-    _chunks.push_back(chunk);
-  }
-
-  closedir(dir);
+    closedir(dir);
 }
 
 /*****************************************************************************/
@@ -274,41 +279,41 @@ void ViewChannel::load_data(COMTime start,
                             COMTime end,
                             unsigned int values_wanted)
 {
-  list<ViewChunk *>::iterator chunk_i;
-  bool first = true;
-  unsigned int level;
+    list<ViewChunk *>::iterator chunk_i;
+    bool first = true;
+    unsigned int level;
 
-  _min_level = 0;
-  _max_level = 0;
+    _min_level = 0;
+    _max_level = 0;
 
-  if (start >= end) return;
+    if (start >= end) return;
 
-  chunk_i = _chunks.begin();
-  while (chunk_i != _chunks.end())
-  {
-    // Daten laden
-    (*chunk_i)->fetch_data(start, end, values_wanted);
-
-    // Geladenen Level ermitteln
-    level = (*chunk_i)->current_level();
-
-    if (first)
+    chunk_i = _chunks.begin();
+    while (chunk_i != _chunks.end())
     {
-      first = false;
-      _min_level = level;
-      _max_level = level;
-    }
-    else
-    {
-      if (level < _min_level) _min_level = level;
-      if (level > _max_level) _max_level = level;
+        // Daten laden
+        (*chunk_i)->fetch_data(start, end, values_wanted);
+
+        // Geladenen Level ermitteln
+        level = (*chunk_i)->current_level();
+
+        if (first)
+        {
+            first = false;
+            _min_level = level;
+            _max_level = level;
+        }
+        else
+        {
+            if (level < _min_level) _min_level = level;
+            if (level > _max_level) _max_level = level;
+        }
+
+        chunk_i++;
     }
 
-    chunk_i++;
-  }
-
-  // Wertespanne errechnen
-  _calc_min_max();
+    // Wertespanne errechnen
+    _calc_min_max();
 }
 
 /*****************************************************************************/
@@ -319,16 +324,16 @@ void ViewChannel::load_data(COMTime start,
 
 void ViewChannel::clear()
 {
-  list<ViewChunk *>::iterator chunk_i;
+    list<ViewChunk *>::iterator chunk_i;
 
-  chunk_i = _chunks.begin();
-  while (chunk_i != _chunks.end())
-  {
-    delete *chunk_i;
-    chunk_i++;
-  }
+    chunk_i = _chunks.begin();
+    while (chunk_i != _chunks.end())
+    {
+        delete *chunk_i;
+        chunk_i++;
+    }
 
-  _chunks.clear();
+    _chunks.clear();
 }
 
 /*****************************************************************************/
@@ -339,39 +344,39 @@ void ViewChannel::clear()
 
 void ViewChannel::_calc_min_max()
 {
-  list<ViewChunk *>::const_iterator chunk_i;
-  double min, max;
-  bool first = true;
-  
-  _min = 0;
-  _max = 0;
+    list<ViewChunk *>::const_iterator chunk_i;
+    double min, max;
+    bool first = true;
 
-  chunk_i = _chunks.begin();
-  while (chunk_i != _chunks.end())
-  {
-    if ((*chunk_i)->has_data())
+    _min = 0;
+    _max = 0;
+
+    chunk_i = _chunks.begin();
+    while (chunk_i != _chunks.end())
     {
-      (*chunk_i)->calc_min_max(&min, &max);
-      
-      if (first)
-      {
-        _min = min;
-        _max = max;
-        first = false;
-      }
-      else
-      {
-        if (min < _min) _min = min;
-        if (max > _max) _max = max;
-      }
-    }
+        if ((*chunk_i)->has_data())
+        {
+            (*chunk_i)->calc_min_max(&min, &max);
+
+            if (first)
+            {
+                _min = min;
+                _max = max;
+                first = false;
+            }
+            else
+            {
+                if (min < _min) _min = min;
+                if (max > _max) _max = max;
+            }
+        }
 
 #if DEBUG_VIEW_CHANNEL
-    cout << "min: " << _min << " max: " << _max << endl;
+        cout << "min: " << _min << " max: " << _max << endl;
 #endif
 
-    chunk_i++;
-  }
+        chunk_i++;
+    }
 }
 
 /*****************************************************************************/
@@ -384,20 +389,20 @@ void ViewChannel::_calc_min_max()
 
 unsigned int ViewChannel::blocks_fetched() const
 {
-  unsigned int blocks;
-  list<ViewChunk *>::const_iterator chunk_i;
+    unsigned int blocks;
+    list<ViewChunk *>::const_iterator chunk_i;
 
-  blocks = 0;
+    blocks = 0;
 
-  chunk_i = _chunks.begin();
-  while (chunk_i != _chunks.end())
-  {
-    blocks += (*chunk_i)->blocks_fetched();
+    chunk_i = _chunks.begin();
+    while (chunk_i != _chunks.end())
+    {
+        blocks += (*chunk_i)->blocks_fetched();
 
-    chunk_i++;
-  }
+        chunk_i++;
+    }
 
-  return blocks;
+    return blocks;
 }
 
 /*****************************************************************************/

@@ -27,83 +27,83 @@ void print_usage();
 
 int main(int argc, char **argv)
 {
-  ViewDialogMain *dialog;
+    ViewDialogMain *dialog;
 
-  cout << "dls_view " << DLS_VERSION_STR
-       << " revision " << STRINGIFY(SVNREV) << endl;
+    cout << "dls_view " << DLS_VERSION_STR
+         << " revision " << STRINGIFY(SVNREV) << endl;
 
-  // Kommandozeile verarbeiten
-  get_options(argc, argv);
+    // Kommandozeile verarbeiten
+    get_options(argc, argv);
 
-  Fl::visual(FL_DOUBLE | FL_INDEX);
+    Fl::visual(FL_DOUBLE | FL_INDEX);
 
-  dialog = new ViewDialogMain(dls_dir);
-  dialog->show();
-  delete dialog;
+    dialog = new ViewDialogMain(dls_dir);
+    dialog->show();
+    delete dialog;
 
-  // Reservierte Speicher der MDCT freigeben
-  mdct_cleanup();
+    // Reservierte Speicher der MDCT freigeben
+    mdct_cleanup();
 
-  return 0;
+    return 0;
 }
 
 /*****************************************************************************/
 
 void get_options(int argc, char **argv)
 {
-  int c;
-  bool dir_set = false;
-  char *env;
+    int c;
+    bool dir_set = false;
+    char *env;
 
-  do
-  {
-    c = getopt(argc, argv, "d:h");
-
-    switch (c)
+    do
     {
-      case 'd':
-        dir_set = true;
-        dls_dir = optarg;
-        break;
+        c = getopt(argc, argv, "d:h");
 
-      case 'h':
-      case '?':
-        print_usage();
-        break;
+        switch (c)
+        {
+            case 'd':
+                dir_set = true;
+                dls_dir = optarg;
+                break;
 
-      default:
-        break;
+            case 'h':
+            case '?':
+                print_usage();
+                break;
+
+            default:
+                break;
+        }
     }
-  }
-  while (c != -1);
+    while (c != -1);
 
-  // Weitere Parameter vorhanden?
-  if (optind < argc)
-  {
-    print_usage();
-  }
+    // Weitere Parameter vorhanden?
+    if (optind < argc)
+    {
+        print_usage();
+    }
 
-  if (!dir_set)
-  {
-    // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
-    if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
+    if (!dir_set)
+    {
+        // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
+        if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
-    // $DLS_DIR leer: Standardverzeichnis nutzen
-    else dls_dir = DEFAULT_DLS_DIR;
-  }
+        // $DLS_DIR leer: Standardverzeichnis nutzen
+        else dls_dir = DEFAULT_DLS_DIR;
+    }
 
-  // Benutztes Verzeichnis ausgeben
-  cout << "Using DLS directory \"" << dls_dir << "\"" << endl;
+    // Benutztes Verzeichnis ausgeben
+    cout << "Using DLS directory \"" << dls_dir << "\"" << endl;
 }
 
 /*****************************************************************************/
 
 void print_usage()
 {
-  cout << "Aufruf: dls_view [OPTIONEN]" << endl;
-  cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
-  cout << "        -h                 Diese Hilfe anzeigen" << endl;
-  exit(0);
+    cout << "Aufruf: dls_view [OPTIONEN]" << endl;
+    cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
+    cout << "        -h                 Diese Hilfe anzeigen" << endl;
+    exit(0);
 }
 
 /*****************************************************************************/

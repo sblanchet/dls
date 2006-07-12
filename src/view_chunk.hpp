@@ -30,7 +30,7 @@ class ViewBlock;
 class EViewChunk : public COMException
 {
 public:
-  EViewChunk(const string &pmsg) : COMException(pmsg) {};
+    EViewChunk(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -42,53 +42,53 @@ public:
 class ViewChunk
 {
 public:
-  ViewChunk();
-  virtual ~ViewChunk();
-  
-  void set_dir(const string &);
-  void import();
-  void fetch_range();
+    ViewChunk();
+    virtual ~ViewChunk();
 
-  virtual void fetch_data(COMTime, COMTime, unsigned int) = 0;
-  virtual void calc_min_max(double *, double *) const = 0;
-  virtual unsigned int blocks_fetched() const = 0;
-  virtual bool has_data() const = 0;
-  
-  virtual const ViewData *gen_data() const = 0;
-  virtual const ViewData *min_data() const = 0;
-  virtual const ViewData *max_data() const = 0;
+    void set_dir(const string &);
+    void import();
+    void fetch_range();
 
-  COMTime start() const;
-  COMTime end() const;
-  int format_index() const;
-  unsigned int mdct_block_size() const;
-  unsigned int current_level() const;
+    virtual void fetch_data(COMTime, COMTime, unsigned int) = 0;
+    virtual void calc_min_max(double *, double *) const = 0;
+    virtual unsigned int blocks_fetched() const = 0;
+    virtual bool has_data() const = 0;
+
+    virtual const ViewData *gen_data() const = 0;
+    virtual const ViewData *min_data() const = 0;
+    virtual const ViewData *max_data() const = 0;
+
+    COMTime start() const;
+    COMTime end() const;
+    int format_index() const;
+    unsigned int mdct_block_size() const;
+    unsigned int current_level() const;
 
 protected:
-  string _dir;                    /**< Chunk-Verzeichnis */
-  unsigned int _sample_frequency; /**< Abtastfrequenz */
-  unsigned int _meta_reduction;   /**< Meta-Untersetzung */
-  int _format_index;              /**< Kompressionsformat */
-  unsigned int _mdct_block_size;  /**< MDCT-Blockgröße */
-  COMTime _start;                 /**< Startzeit des Chunks */
-  COMTime _end;                   /**< Endzeit des Chunks */
-  unsigned int _level;            /**< Level, in dem Daten geladen wurden */
+    string _dir;                    /**< Chunk-Verzeichnis */
+    unsigned int _sample_frequency; /**< Abtastfrequenz */
+    unsigned int _meta_reduction;   /**< Meta-Untersetzung */
+    int _format_index;              /**< Kompressionsformat */
+    unsigned int _mdct_block_size;  /**< MDCT-Blockgröße */
+    COMTime _start;                 /**< Startzeit des Chunks */
+    COMTime _end;                   /**< Endzeit des Chunks */
+    unsigned int _level;            /**< Level, in dem Daten geladen wurden */
 
-  void _calc_optimal_level(COMTime, COMTime, unsigned int);
-  double _time_per_value() const;
+    void _calc_optimal_level(COMTime, COMTime, unsigned int);
+    double _time_per_value() const;
 };
 
 /*****************************************************************************/
 
 /**
    Liefert die Startzeit des Chunks
-   
+
    \return Startzeit
 */
 
 inline COMTime ViewChunk::start() const
 {
-  return _start;
+    return _start;
 }
 
 /*****************************************************************************/
@@ -101,7 +101,7 @@ inline COMTime ViewChunk::start() const
 
 inline COMTime ViewChunk::end() const
 {
-  return _end;
+    return _end;
 }
 
 /*****************************************************************************/
@@ -114,7 +114,7 @@ inline COMTime ViewChunk::end() const
 
 inline unsigned int ViewChunk::current_level() const
 {
-  return _level;
+    return _level;
 }
 
 /*****************************************************************************/
@@ -127,7 +127,7 @@ inline unsigned int ViewChunk::current_level() const
 
 inline int ViewChunk::format_index() const
 {
-  return _format_index;
+    return _format_index;
 }
 
 /*****************************************************************************/
@@ -143,7 +143,7 @@ inline int ViewChunk::format_index() const
 
 inline unsigned int ViewChunk::mdct_block_size() const
 {
-  return _mdct_block_size;
+    return _mdct_block_size;
 }
 
 /*****************************************************************************/

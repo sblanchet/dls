@@ -20,14 +20,14 @@
 class ECOMFile : public COMException
 {
 public:
-  ECOMFile(const string &pmsg) : COMException(pmsg) {};
+    ECOMFile(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
 
 enum COMFileOpenMode
 {
-  fomClosed, fomOpenRead, fomOpenReadWrite, fomOpenReadAppend
+    fomClosed, fomOpenRead, fomOpenReadWrite, fomOpenReadAppend
 };
 
 /*****************************************************************************/
@@ -39,35 +39,35 @@ enum COMFileOpenMode
 class COMFile
 {
 public:
-  COMFile();
-  ~COMFile();
+    COMFile();
+    ~COMFile();
 
-  //@{
-  void open_read(const char *);
-  void open_read_write(const char *);
-  void open_read_append(const char *);
-  void close();
-  //@}
+    //@{
+    void open_read(const char *);
+    void open_read_write(const char *);
+    void open_read_append(const char *);
+    void close();
+    //@}
 
-  //@{
-  bool open() const;
-  COMFileOpenMode open_mode() const;
-  string path() const;
-  //@}
+    //@{
+    bool open() const;
+    COMFileOpenMode open_mode() const;
+    string path() const;
+    //@}
 
-  //@{
-  void read(char *, unsigned int, unsigned int * = 0);
-  void write(const char *, unsigned int);
-  void append(const char *, unsigned int);
-  void seek(unsigned int);
-  //@}
+    //@{
+    void read(char *, unsigned int, unsigned int * = 0);
+    void write(const char *, unsigned int);
+    void append(const char *, unsigned int);
+    void seek(unsigned int);
+    //@}
 
-  long long calc_size();
+    long long calc_size();
 
 private:
-  int _fd;                /**< File-Descriptor */
-  COMFileOpenMode _mode;  /**< Öffnungsmodus */
-  string _path;           /**< Pfad der geöffneten Datei */
+    int _fd;                /**< File-Descriptor */
+    COMFileOpenMode _mode;  /**< Öffnungsmodus */
+    string _path;           /**< Pfad der geöffneten Datei */
 };
 
 /*****************************************************************************/
@@ -80,7 +80,7 @@ private:
 
 inline bool COMFile::open() const
 {
-  return _mode != fomClosed;
+    return _mode != fomClosed;
 }
 
 /*****************************************************************************/
@@ -93,7 +93,7 @@ inline bool COMFile::open() const
 
 inline COMFileOpenMode COMFile::open_mode() const
 {
-  return _mode;
+    return _mode;
 }
 
 /*****************************************************************************/
@@ -106,7 +106,7 @@ inline COMFileOpenMode COMFile::open_mode() const
 
 inline string COMFile::path() const
 {
-  return _path;
+    return _path;
 }
 
 /*****************************************************************************/

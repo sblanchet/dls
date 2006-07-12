@@ -24,8 +24,8 @@ using namespace std;
 
 COMZLib::COMZLib()
 {
-  _out_buf = 0;
-  _out_size = 0;
+    _out_buf = 0;
+    _out_size = 0;
 }
 
 /*****************************************************************************/
@@ -36,7 +36,7 @@ COMZLib::COMZLib()
 
 COMZLib::~COMZLib()
 {
-  free();
+    free();
 }
 
 /*****************************************************************************/
@@ -47,13 +47,13 @@ COMZLib::~COMZLib()
 
 void COMZLib::free()
 {
-  _out_size = 0;
+    _out_size = 0;
 
-  if (_out_buf)
-  {
-    delete [] _out_buf;
-    _out_buf = 0;
-  }
+    if (_out_buf)
+    {
+        delete [] _out_buf;
+        _out_buf = 0;
+    }
 }
 
 /*****************************************************************************/
@@ -71,51 +71,51 @@ void COMZLib::free()
 
 void COMZLib::compress(const char *src, unsigned int src_size)
 {
-  unsigned int out_size;
-  int comp_ret;
-  stringstream err;
+    unsigned int out_size;
+    int comp_ret;
+    stringstream err;
 
-  free();
+    free();
 
-  // Keine Daten - Nichts zu komprimieren
-  if (!src_size) return;
-  
-  // Die komprimierten Daten können in sehr ungünstigen Fällen
-  // größer sein, als die Quelldaten. Siehe ZLib-Doku:
-  // http://www.gzip.org/zlib/manual.html#compress
-  out_size = (unsigned int) (src_size * 1.01 + 12);
+    // Keine Daten - Nichts zu komprimieren
+    if (!src_size) return;
 
-  try
-  {
-    _out_buf = new char[out_size];
-  }
-  catch (...)
-  {
-    err << "Could not allocate " << out_size << " bytes!";
-    throw ECOMZLib(err.str());
-  }
+    // Die komprimierten Daten können in sehr ungünstigen Fällen
+    // größer sein, als die Quelldaten. Siehe ZLib-Doku:
+    // http://www.gzip.org/zlib/manual.html#compress
+    out_size = (unsigned int) (src_size * 1.01 + 12);
 
-  // Komprimieren
-  comp_ret = ::compress((Bytef *) _out_buf, (uLongf *) &out_size,
-                        (const Bytef *) src, src_size);
+    try
+    {
+        _out_buf = new char[out_size];
+    }
+    catch (...)
+    {
+        err << "Could not allocate " << out_size << " bytes!";
+        throw ECOMZLib(err.str());
+    }
 
-  if (comp_ret != Z_OK) // Fehler beim Komprimieren
-  {
-    err << "compress() returned " << comp_ret;
-    if (comp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
-    err << ", out_size=" << out_size;
-    err << ", src_size=" << src_size;
-    throw ECOMZLib(err.str());
-  }
+    // Komprimieren
+    comp_ret = ::compress((Bytef *) _out_buf, (uLongf *) &out_size,
+                          (const Bytef *) src, src_size);
+
+    if (comp_ret != Z_OK) // Fehler beim Komprimieren
+    {
+        err << "compress() returned " << comp_ret;
+        if (comp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
+        err << ", out_size=" << out_size;
+        err << ", src_size=" << src_size;
+        throw ECOMZLib(err.str());
+    }
 
 #ifdef DEBUG
-  msg() << "ZLib compression: input=" << src_size;
-  msg() << " output=" << out_size;
-  msg() << " quote=" << (float) out_size / src_size * 100 << "%";
-  log(DLSDebug);
+    msg() << "ZLib compression: input=" << src_size;
+    msg() << " output=" << out_size;
+    msg() << " quote=" << (float) out_size / src_size * 100 << "%";
+    log(DLSDebug);
 #endif
 
-  _out_size = out_size;
+    _out_size = out_size;
 }
 
 /*****************************************************************************/
@@ -132,38 +132,38 @@ void COMZLib::compress(const char *src, unsigned int src_size)
 void COMZLib::uncompress(const char *src, unsigned int src_size,
                          unsigned int out_size)
 {
-  int uncomp_ret;
-  stringstream err;
+    int uncomp_ret;
+    stringstream err;
 
-  _out_size = 0;
+    _out_size = 0;
 
-  // Keine Eingabedaten - keine Dekompression
-  if (!src_size) return;
+    // Keine Eingabedaten - keine Dekompression
+    if (!src_size) return;
 
-  try
-  {
-    _out_buf = new char[out_size];
-  }
-  catch (...)
-  {
-    err << "Could not allocate " << out_size << " bytes!";
-    throw ECOMZLib(err.str());
-  }
+    try
+    {
+        _out_buf = new char[out_size];
+    }
+    catch (...)
+    {
+        err << "Could not allocate " << out_size << " bytes!";
+        throw ECOMZLib(err.str());
+    }
 
-  // Dekomprimieren
-  uncomp_ret = ::uncompress((Bytef *) _out_buf, (uLongf *) &out_size,
-                            (const Bytef *) src, src_size);
+    // Dekomprimieren
+    uncomp_ret = ::uncompress((Bytef *) _out_buf, (uLongf *) &out_size,
+                              (const Bytef *) src, src_size);
 
-  if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
-  {
-    err << "uncompress() returned " << uncomp_ret;
-    if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
-    err << ", out_size=" << out_size;
-    err << ", src_size=" << src_size;
-    throw ECOMZLib(err.str());
-  }
+    if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
+    {
+        err << "uncompress() returned " << uncomp_ret;
+        if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
+        err << ", out_size=" << out_size;
+        err << ", src_size=" << src_size;
+        throw ECOMZLib(err.str());
+    }
 
-  _out_size = out_size;
+    _out_size = out_size;
 }
 
 /*****************************************************************************/

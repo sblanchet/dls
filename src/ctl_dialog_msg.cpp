@@ -23,24 +23,24 @@
 
 CTLDialogMsg::CTLDialogMsg()
 {
-  int x = Fl::w() / 2 - WIDTH / 2;
-  int y = Fl::h() / 2 - HEIGHT / 2;
+    int x = Fl::w() / 2 - WIDTH / 2;
+    int y = Fl::h() / 2 - HEIGHT / 2;
 
-  _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Meldungen");
-  _wnd->callback(_callback, this);
-  _wnd->set_modal();
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Meldungen");
+    _wnd->callback(_callback, this);
+    _wnd->set_modal();
 
-  _grid_msg = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
-  _grid_msg->add_column("text", "Meldung");
-  _grid_msg->select_mode(flgNoSelect);
-  _grid_msg->callback(_callback, this);
+    _grid_msg = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
+    _grid_msg->add_column("text", "Meldung");
+    _grid_msg->select_mode(flgNoSelect);
+    _grid_msg->callback(_callback, this);
 
-  _button_ok = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schließen");
-  _button_ok->callback(_callback, this);
+    _button_ok = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schließen");
+    _button_ok->callback(_callback, this);
 
-  _wnd->end();
+    _wnd->end();
 
-  _wnd->resizable(_grid_msg);
+    _wnd->resizable(_grid_msg);
 }
 
 /*****************************************************************************/
@@ -51,7 +51,7 @@ CTLDialogMsg::CTLDialogMsg()
 
 CTLDialogMsg::~CTLDialogMsg()
 {
-  delete _wnd;
+    delete _wnd;
 }
 
 /*****************************************************************************/
@@ -64,18 +64,18 @@ CTLDialogMsg::~CTLDialogMsg()
 
 void CTLDialogMsg::error()
 {
-  COMMsg msg;
+    COMMsg msg;
 
-  msg.type = 1; // Error
-  msg.text = _str.str();
+    msg.type = 1; // Error
+    msg.text = _str.str();
 
-  _messages.insert(_messages.begin(), msg);
-  _grid_msg->record_count(_messages.size());
+    _messages.insert(_messages.begin(), msg);
+    _grid_msg->record_count(_messages.size());
 
-  _str.str("");
-  _str.clear();
+    _str.str("");
+    _str.clear();
 
-  _wnd->show();
+    _wnd->show();
 }
 
 /*****************************************************************************/
@@ -88,18 +88,18 @@ void CTLDialogMsg::error()
 
 void CTLDialogMsg::warning()
 {
-  COMMsg msg;
+    COMMsg msg;
 
-  msg.type = 2; // Warning
-  msg.text = _str.str();
+    msg.type = 2; // Warning
+    msg.text = _str.str();
 
-  _messages.insert(_messages.begin(), msg);
-  _grid_msg->record_count(_messages.size());
+    _messages.insert(_messages.begin(), msg);
+    _grid_msg->record_count(_messages.size());
 
-  _str.str("");
-  _str.clear();
+    _str.str("");
+    _str.clear();
 
-  _wnd->show();
+    _wnd->show();
 }
 
 /*****************************************************************************/
@@ -113,11 +113,11 @@ void CTLDialogMsg::warning()
 
 void CTLDialogMsg::_callback(Fl_Widget *sender, void *data)
 {
-  CTLDialogMsg *dialog = (CTLDialogMsg *) data;
+    CTLDialogMsg *dialog = (CTLDialogMsg *) data;
 
-  if (sender == dialog->_button_ok) dialog->_button_ok_clicked();
-  if (sender == dialog->_grid_msg) dialog->_grid_msg_callback();
-  if (sender == dialog->_wnd) dialog->_button_ok_clicked();
+    if (sender == dialog->_button_ok) dialog->_button_ok_clicked();
+    if (sender == dialog->_grid_msg) dialog->_grid_msg_callback();
+    if (sender == dialog->_wnd) dialog->_button_ok_clicked();
 }
 
 /*****************************************************************************/
@@ -128,12 +128,12 @@ void CTLDialogMsg::_callback(Fl_Widget *sender, void *data)
 
 void CTLDialogMsg::_button_ok_clicked()
 {
-  // Fenster Schließen
-  _wnd->hide();
+    // Fenster Schließen
+    _wnd->hide();
 
-  // Meldungen entfernen
-  _grid_msg->record_count(0);
-  _messages.clear();
+    // Meldungen entfernen
+    _grid_msg->record_count(0);
+    _messages.clear();
 }
 
 /*****************************************************************************/
@@ -144,28 +144,28 @@ void CTLDialogMsg::_button_ok_clicked()
 
 void CTLDialogMsg::_grid_msg_callback()
 {
-  COMMsg msg;
+    COMMsg msg;
 
-  // Anforderung für Zelleninhalt?
-  if (_grid_msg->current_event() == flgContent)
-  {
-    msg = _messages[_grid_msg->current_record()];
-
-    // Spalte "text" angefragt?
-    if (_grid_msg->current_col() == "text")
+    // Anforderung für Zelleninhalt?
+    if (_grid_msg->current_event() == flgContent)
     {
-      if (msg.type == 1) // Error
-      {
-        _grid_msg->current_content_color(FL_RED);
-      }
-      else if (msg.type == 2) // Warning
-      {
-        _grid_msg->current_content_color(FL_DARK_YELLOW);
-      }
-      
-      _grid_msg->current_content(msg.text);
+        msg = _messages[_grid_msg->current_record()];
+
+        // Spalte "text" angefragt?
+        if (_grid_msg->current_col() == "text")
+        {
+            if (msg.type == 1) // Error
+            {
+                _grid_msg->current_content_color(FL_RED);
+            }
+            else if (msg.type == 2) // Warning
+            {
+                _grid_msg->current_content_color(FL_DARK_YELLOW);
+            }
+
+            _grid_msg->current_content(msg.text);
+        }
     }
-  }
 }
 
 /*****************************************************************************/

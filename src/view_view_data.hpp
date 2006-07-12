@@ -48,7 +48,7 @@ struct ViewViewDataChunkRange
 
 class ViewViewData : public Fl_Widget
 {
-    public:
+public:
     ViewViewData(int, int, int, int, const char * = "");
     ~ViewViewData();
 
@@ -66,7 +66,7 @@ class ViewViewData : public Fl_Widget
     COMTime end() const;
     const list<ViewChannel> *channels() const;
 
-    private:
+private:
     // Daten
     string _dls_dir;             /**< DLS-Datenverzeichnis */
     unsigned int _job_id;        /**< Auftrags-ID */

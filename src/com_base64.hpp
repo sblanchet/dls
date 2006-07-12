@@ -21,7 +21,7 @@
 class ECOMBase64 : public COMException
 {
 public:
-  ECOMBase64(const string &pmsg) : COMException(pmsg) {};
+    ECOMBase64(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -36,20 +36,20 @@ public:
 class COMBase64
 {
 public:
-  COMBase64();
-  ~COMBase64();
+    COMBase64();
+    ~COMBase64();
 
-  void encode(const char *, unsigned int);
-  void decode(const char *, unsigned int);
+    void encode(const char *, unsigned int);
+    void decode(const char *, unsigned int);
 
-  const char *output() const;
-  unsigned int output_size() const;
+    const char *output() const;
+    unsigned int output_size() const;
 
-  void free();
+    void free();
 
 private:
-  char *_out_buf;         /**< Zeiger auf den Ergebnispuffer */
-  unsigned int _out_size; /**< Länge des Ergebnispuffers */
+    char *_out_buf;         /**< Zeiger auf den Ergebnispuffer */
+    unsigned int _out_size; /**< Länge des Ergebnispuffers */
 };
 
 /*****************************************************************************/
@@ -62,7 +62,7 @@ private:
 
 inline const char *COMBase64::output() const
 {
-  return _out_buf;
+    return _out_buf;
 }
 
 /*****************************************************************************/
@@ -75,7 +75,7 @@ inline const char *COMBase64::output() const
 
 inline unsigned int COMBase64::output_size() const
 {
-  return _out_size;
+    return _out_size;
 }
 
 /*****************************************************************************/

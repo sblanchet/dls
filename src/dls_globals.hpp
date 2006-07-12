@@ -23,7 +23,7 @@
 #define TIME_TOLERANCE_RESTART 30       // in Sekunden
 #define BUFFER_LEVEL_WARNING   90       // in Prozent Füllstand
 #define QUOTA_PART_QUOTIENT    10       // Anzahl Chunks in Quota-Bereich
-#define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt werden soll
+#define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt wird
 #define WRITE_TIME_WARNING     1.0      // Sekunden
 
 #define MSR_VERSION(V, P, S) (((V) << 16) + ((P) << 8) + (S))
@@ -40,15 +40,15 @@
 
 enum DLSArchitecture
 {
-  LittleEndian,
-  BigEndian
+    LittleEndian,
+    BigEndian
 };
 
 enum DLSProcessType
 {
-  dlsMotherProcess,
-  dlsLoggingProcess,
-  dlsCleanupProcess
+    dlsMotherProcess,
+    dlsLoggingProcess,
+    dlsCleanupProcess
 };
 
 /*****************************************************************************/

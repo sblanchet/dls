@@ -28,8 +28,8 @@ using namespace std;
 
 struct COMMsg
 {
-  int type;
-  string text;
+    int type;
+    string text;
 };
 
 /*****************************************************************************/
@@ -41,31 +41,33 @@ struct COMMsg
 class CTLDialogMsg
 {
 public:
-  CTLDialogMsg();
-  ~CTLDialogMsg();
+    CTLDialogMsg();
+    ~CTLDialogMsg();
 
-  stringstream &str();
-  void error();
-  void warning();
+    stringstream &str();
+    void error();
+    void warning();
 
 private:
-  Fl_Double_Window *_wnd; /**< Dialogfenster */
-  Fl_Grid *_grid_msg;     /**< Grid zum Anzeigen der Meldungen */
-  Fl_Button *_button_ok;  /**< "OK"-Button */
+    Fl_Double_Window *_wnd; /**< Dialogfenster */
+    Fl_Grid *_grid_msg;     /**< Grid zum Anzeigen der Meldungen */
+    Fl_Button *_button_ok;  /**< "OK"-Button */
 
-  vector<COMMsg> _messages; /**< Vektor mit den aktuell angezeigten Meldungen */
-  stringstream _str;        /**< Stream zum einfachen Hinzufügen von Meldungen */
-  
-  static void _callback(Fl_Widget *, void *);
-  void _button_ok_clicked();
-  void _grid_msg_callback();
+    vector<COMMsg> _messages; /**< Vektor mit den aktuell
+                                 angezeigten Meldungen */
+    stringstream _str;        /**< Stream zum einfachen Hinzufügen
+                                 von Meldungen */
+
+    static void _callback(Fl_Widget *, void *);
+    void _button_ok_clicked();
+    void _grid_msg_callback();
 };
 
 /*****************************************************************************/
 
 inline stringstream &CTLDialogMsg::str()
 {
-  return _str;
+    return _str;
 }
 
 /*****************************************************************************/

@@ -28,7 +28,7 @@ using namespace std;
 class EViewChannel : public COMException
 {
 public:
-  EViewChannel(const string &pmsg) : COMException(pmsg) {};
+    EViewChannel(const string &pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -40,49 +40,50 @@ public:
 class ViewChannel
 {
 public:
-  ViewChannel();
-  ~ViewChannel();
-  
-  void import(const string &, unsigned int, unsigned int);
-  void fetch_chunks(const string &, unsigned int);
-  void load_data(COMTime, COMTime, unsigned int);
-  void clear();
+    ViewChannel();
+    ~ViewChannel();
 
-  unsigned int index() const;
-  const string &name() const;
-  const string &unit() const;
-  COMChannelType type() const;
+    void import(const string &, unsigned int, unsigned int);
+    void fetch_chunks(const string &, unsigned int);
+    void load_data(COMTime, COMTime, unsigned int);
+    void clear();
 
-  COMTime start() const;
-  COMTime end() const;
+    unsigned int index() const;
+    const string &name() const;
+    const string &unit() const;
+    COMChannelType type() const;
 
-  const list<ViewChunk *> *chunks() const;
-  double min() const;
-  double max() const;
-  unsigned int blocks_fetched() const;
-  unsigned int min_level_fetched() const;
-  unsigned int max_level_fetched() const;
+    COMTime start() const;
+    COMTime end() const;
+
+    const list<ViewChunk *> *chunks() const;
+    double min() const;
+    double max() const;
+    unsigned int blocks_fetched() const;
+    unsigned int min_level_fetched() const;
+    unsigned int max_level_fetched() const;
 
 private:
-  // Kanal
-  unsigned int _index;  /**< MSR-Kanal-Index */
-  string _name;         /**< Kanalname */
-  string _unit;         /**< Einheit */
-  COMChannelType _type; /**< Kanaltyp (TUINT, TDBL, usw...) */
+    // Kanal
+    unsigned int _index;  /**< MSR-Kanal-Index */
+    string _name;         /**< Kanalname */
+    string _unit;         /**< Einheit */
+    COMChannelType _type; /**< Kanaltyp (TUINT, TDBL, usw...) */
 
-  // Chunks
-  list<ViewChunk *> _chunks; /**< Liste der Chunks in diesem Kanal */
-  COMTime _range_start;      /**< Startzeit des gesamten Kanal-Zeitbereichs */
-  COMTime _range_end;        /**< Endzeit des gesamten Kanal-Zeitbereiches */
+    // Chunks
+    list<ViewChunk *> _chunks; /**< Liste der Chunks in diesem Kanal */
+    COMTime _range_start; /**< Startzeit des gesamten Kanal-Zeitbereichs */
+    COMTime _range_end; /**< Endzeit des gesamten Kanal-Zeitbereiches */
 
-  // Daten
-  double _min;             /**< Kleinster, geladener Datenwert */
-  double _max;             /**< Größter, geladener Datenwert */
-  unsigned int _min_level; /**< Niedrigste Meta-Ebene, aus der geladen wurde */
-  unsigned int _max_level; /**< Höchste Meta-Ebene, aus der geladen wurde */
+    // Daten
+    double _min; /**< Kleinster, geladener Datenwert */
+    double _max; /**< Größter, geladener Datenwert */
+    unsigned int _min_level; /**< Niedrigste Meta-Ebene,
+                                aus der geladen wurde */
+    unsigned int _max_level; /**< Höchste Meta-Ebene, aus der geladen wurde */
 
-  void _clear_data();
-  void _calc_min_max();
+    void _clear_data();
+    void _calc_min_max();
 };
 
 /*****************************************************************************/
@@ -95,7 +96,7 @@ private:
 
 inline unsigned int ViewChannel::index() const
 {
-  return _index;
+    return _index;
 }
 
 /*****************************************************************************/
@@ -108,7 +109,7 @@ inline unsigned int ViewChannel::index() const
 
 inline const string &ViewChannel::name() const
 {
-  return _name;
+    return _name;
 }
 
 /*****************************************************************************/
@@ -121,7 +122,7 @@ inline const string &ViewChannel::name() const
 
 inline const string &ViewChannel::unit() const
 {
-  return _unit;
+    return _unit;
 }
 
 /*****************************************************************************/
@@ -136,7 +137,7 @@ inline const string &ViewChannel::unit() const
 
 inline COMChannelType ViewChannel::type() const
 {
-  return _type;
+    return _type;
 }
 
 /*****************************************************************************/
@@ -153,7 +154,7 @@ inline COMChannelType ViewChannel::type() const
 
 inline COMTime ViewChannel::start() const
 {
-  return _range_start;
+    return _range_start;
 }
 
 /*****************************************************************************/
@@ -168,7 +169,7 @@ inline COMTime ViewChannel::start() const
 
 inline COMTime ViewChannel::end() const
 {
-  return _range_end;
+    return _range_end;
 }
 
 /*****************************************************************************/
@@ -181,7 +182,7 @@ inline COMTime ViewChannel::end() const
 
 inline const list<ViewChunk *> *ViewChannel::chunks() const
 {
-  return &_chunks;
+    return &_chunks;
 }
 
 /*****************************************************************************/
@@ -194,7 +195,7 @@ inline const list<ViewChunk *> *ViewChannel::chunks() const
 
 inline double ViewChannel::min() const
 {
-  return _min;
+    return _min;
 }
 
 /*****************************************************************************/
@@ -207,7 +208,7 @@ inline double ViewChannel::min() const
 
 inline double ViewChannel::max() const
 {
-  return _max;
+    return _max;
 }
 
 /*****************************************************************************/
@@ -220,7 +221,7 @@ inline double ViewChannel::max() const
 
 inline unsigned int ViewChannel::min_level_fetched() const
 {
-  return _min_level;
+    return _min_level;
 }
 
 /*****************************************************************************/
@@ -233,7 +234,7 @@ inline unsigned int ViewChannel::min_level_fetched() const
 
 inline unsigned int ViewChannel::max_level_fetched() const
 {
-  return _max_level;
+    return _max_level;
 }
 
 /*****************************************************************************/

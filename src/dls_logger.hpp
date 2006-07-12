@@ -31,7 +31,7 @@ class DLSSaverGen;
 class EDLSLogger : public COMException
 {
 public:
-  EDLSLogger(string pmsg) : COMException(pmsg) {};
+    EDLSLogger(string pmsg) : COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -44,82 +44,85 @@ public:
    ist das prozessseitige Äquivalent zu einem Chunk.
    Die Größe der erzeugten Daten wird hier ebenfalls gespeichert.
    Für das eigentliche Speichern der Daten wird ein
-   DLSSaverGen - Objekt vorgehalten. 
+   DLSSaverGen - Objekt vorgehalten.
 */
 
 class DLSLogger
 {
 public:
 
-  DLSLogger(const DLSJob *, const COMChannelPreset *, const string &);
-  ~DLSLogger();
+    DLSLogger(const DLSJob *, const COMChannelPreset *, const string &);
+    ~DLSLogger();
 
-  //@{
-  void get_real_channel(const list<COMRealChannel> *);
-  void check_presettings(const COMChannelPreset * = 0) const;
-  void check_channel_info();
-  void create_gen_saver();
-  void process_data(const string &, COMTime);
-  long long data_size() const;
-  void finish();
-  void discard_chunk();
-  //@}
+    //@{
+    void get_real_channel(const list<COMRealChannel> *);
+    void check_presettings(const COMChannelPreset * = 0) const;
+    void check_channel_info();
+    void create_gen_saver();
+    void process_data(const string &, COMTime);
+    long long data_size() const;
+    void finish();
+    void discard_chunk();
+    //@}
 
-  //@{
-  const COMChannelPreset *channel_preset() const;
-  const COMRealChannel *real_channel() const;
-  //@}
+    //@{
+    const COMChannelPreset *channel_preset() const;
+    const COMRealChannel *real_channel() const;
+    //@}
 
-  //@{
-  string start_tag(const COMChannelPreset *, const string & = "") const;
-  string stop_tag() const;
-  //@}
+    //@{
+    string start_tag(const COMChannelPreset *, const string & = "") const;
+    string stop_tag() const;
+    //@}
 
-  //@{
-  void set_change(const COMChannelPreset *, const string &);
-  bool change_is(const string &) const;
-  void do_change();
-  //@}
+    //@{
+    void set_change(const COMChannelPreset *, const string &);
+    bool change_is(const string &) const;
+    void do_change();
+    //@}
 
-  //@{
-  bool chunk_created() const;
-  void create_chunk(COMTime);
-  const string &chunk_dir() const;
-  //@}
+    //@{
+    bool chunk_created() const;
+    void create_chunk(COMTime);
+    const string &chunk_dir() const;
+    //@}
 
-  void bytes_written(unsigned int);
+    void bytes_written(unsigned int);
 
 private:
-  const DLSJob *_parent_job; /**< Zeiger auf das besitzende Auftragsobjekt */
-  string _dls_dir;           /**< DLS-Datenverzeichnis */
+    const DLSJob *_parent_job; /**< Zeiger auf das besitzende Auftragsobjekt */
+    string _dls_dir;           /**< DLS-Datenverzeichnis */
 
-  //@{
-  COMChannelPreset _channel_preset; /**< Aktuelle Kanalvorgaben */
-  COMRealChannel _real_channel;     /**< Informationen über den msrd-Kanal */
-  //@}
+    //@{
+    COMChannelPreset _channel_preset; /**< Aktuelle Kanalvorgaben */
+    COMRealChannel _real_channel;     /**< Informationen über den msrd-Kanal */
+    //@}
 
-  //@{
-  DLSSaverGen *_gen_saver; /**< Zeiger auf das Objekt zur Speicherung
+    //@{
+    DLSSaverGen *_gen_saver; /**< Zeiger auf das Objekt zur Speicherung
                                 der generischen Daten */
-  long long _data_size;    /**< Größe der bisher erzeugten Daten */
-  //@}
+    long long _data_size;    /**< Größe der bisher erzeugten Daten */
+    //@}
 
-  //@{
-  bool _channel_dir_exists;  /**< Das Kanalverzeichnis existiert bereits */
-  bool _channel_file_exists; /**< Die Kanal-Infodatei existiert bereits */
-  bool _chunk_created;       /**< Das aktuelle Chunk-Verzeichnis wurde bereits erstellt */
-  string _chunk_dir;         /**< Pfad des aktuellen Chunk-Verzeichnisses */
-  //@}
+    //@{
+    bool _channel_dir_exists; /**< Das Kanalverzeichnis existiert bereits */
+    bool _channel_file_exists; /**< Die Kanal-Infodatei existiert bereits */
+    bool _chunk_created; /**< Das aktuelle Chunk-Verzeichnis
+                            wurde bereits erstellt */
+    string _chunk_dir; /**< Pfad des aktuellen Chunk-Verzeichnisses */
+    //@}
 
-  //@{
-  bool _change_in_progress;         /**< Wartet eine Vorgabenänderung auf Bestätigung? */
-  string _change_id;                /**< ID des Änderungsbefehls, auf dessen
-                                         Bestätigung gewartet wird */
-  COMChannelPreset _change_channel; /**< Neue Kanalvorgaben, die nach der
+    //@{
+    bool _change_in_progress; /**< Wartet eine Vorgabenänderung
+                                 auf Bestätigung? */
+    string _change_id; /**< ID des Änderungsbefehls, auf dessen
+                          Bestätigung gewartet wird */
+    COMChannelPreset _change_channel; /**< Neue Kanalvorgaben, die nach der
                                          Bestätigung aktiv werden */
-  //@}
+    //@}
 
-  bool _finished; /**< Keine Daten mehr im Speicher - kein Datenverlust bei "delete"  */
+    bool _finished; /**< Keine Daten mehr im Speicher -
+                       kein Datenverlust bei "delete"  */
 };
 
 /*****************************************************************************/
@@ -132,7 +135,7 @@ private:
 
 inline const COMChannelPreset *DLSLogger::channel_preset() const
 {
-  return &_channel_preset;
+    return &_channel_preset;
 }
 
 /*****************************************************************************/
@@ -146,7 +149,7 @@ inline const COMChannelPreset *DLSLogger::channel_preset() const
 
 inline const COMRealChannel *DLSLogger::real_channel() const
 {
-  return &_real_channel;
+    return &_real_channel;
 }
 
 /*****************************************************************************/
@@ -161,7 +164,7 @@ inline const COMRealChannel *DLSLogger::real_channel() const
 
 inline bool DLSLogger::chunk_created() const
 {
-  return _chunk_created;
+    return _chunk_created;
 }
 
 /*****************************************************************************/
@@ -174,7 +177,7 @@ inline bool DLSLogger::chunk_created() const
 
 inline const string &DLSLogger::chunk_dir() const
 {
-  return _chunk_dir;
+    return _chunk_dir;
 }
 
 /*****************************************************************************/
@@ -189,7 +192,7 @@ inline const string &DLSLogger::chunk_dir() const
 
 inline void DLSLogger::bytes_written(unsigned int bytes)
 {
-  _data_size += bytes;
+    _data_size += bytes;
 }
 
 /*****************************************************************************/
@@ -200,7 +203,7 @@ inline void DLSLogger::bytes_written(unsigned int bytes)
 
 inline long long DLSLogger::data_size() const
 {
-  return _data_size;
+    return _data_size;
 }
 
 /*****************************************************************************/

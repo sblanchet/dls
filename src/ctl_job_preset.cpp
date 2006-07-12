@@ -26,8 +26,8 @@ using namespace std;
 
 CTLJobPreset::CTLJobPreset() : COMJobPreset()
 {
-  process_watchdog = 0;
-  logging_watchdog = 0;
+    process_watchdog = 0;
+    logging_watchdog = 0;
 };
 
 /*****************************************************************************/
@@ -46,107 +46,108 @@ CTLJobPreset::CTLJobPreset() : COMJobPreset()
 
 void CTLJobPreset::write(const string &dls_dir)
 {
-  stringstream dir_name, err;
-  string file_name;
-  fstream file;
-  COMXMLTag tag;
-  vector<COMChannelPreset>::iterator channel_i;
+    stringstream dir_name, err;
+    string file_name;
+    fstream file;
+    COMXMLTag tag;
+    vector<COMChannelPreset>::iterator channel_i;
 
-  // Verzeichnisnamen konstruieren
-  dir_name << dls_dir << "/job" << _id;
+    // Verzeichnisnamen konstruieren
+    dir_name << dls_dir << "/job" << _id;
 
-  if (mkdir(dir_name.str().c_str(), 0755) != 0)
-  {
-    if (errno != EEXIST)
+    if (mkdir(dir_name.str().c_str(), 0755) != 0)
     {
-      err << "Could not create \"" << dir_name.str() << "\" (errno " << errno << ")!";
-      throw ECOMJobPreset(err.str());     
-    }
-  }
-
-  // Dateinamen konstruieren
-  file_name = dir_name.str() + "/job.xml";
-
-  // Datei öffnen
-  file.open(file_name.c_str(), ios::out);
-
-  if (!file.is_open())
-  {
-    err << "Could not write file \"" << file_name << "\""; 
-    throw ECOMJobPreset(err.str());
-  }
-
-  try
-  {
-    tag.clear();
-    tag.type(dxttBegin);
-    tag.title("dlsjob");
-    file << tag.tag() << endl;
-
-    tag.clear();
-    tag.title("description");
-    tag.push_att("text", _description);
-    file << " " << tag.tag() << endl;
-
-    tag.clear();
-    tag.title("state");
-    tag.push_att("name", _running ? "running" : "paused");
-    file << " " << tag.tag() << endl;
-
-    tag.clear();
-    tag.title("source");
-    tag.push_att("address", _source);
-    file << " " << tag.tag() << endl;
-
-    tag.clear();
-    tag.title("quota");
-    tag.push_att("size", _quota_size);
-    tag.push_att("time", _quota_time);
-    file << " " << tag.tag() << endl;
-
-    tag.clear();
-    tag.title("trigger");
-    tag.push_att("parameter", _trigger);
-    file << " " << tag.tag() << endl;
-
-    file << endl;
-
-    tag.clear();
-    tag.title("channels");
-    tag.type(dxttBegin);
-    file << " " << tag.tag() << endl;
-
-    channel_i = _channels.begin();
-    while (channel_i != _channels.end())
-    {
-      channel_i->write_to_tag(&tag);
-      file << "  " << tag.tag() << endl;
-      channel_i++;
+        if (errno != EEXIST)
+        {
+            err << "Could not create \"" << dir_name.str()
+                << "\" (errno " << errno << ")!";
+            throw ECOMJobPreset(err.str());
+        }
     }
 
-    tag.clear();
-    tag.title("channels");
-    tag.type(dxttEnd);
-    file << " " << tag.tag() << endl;
+    // Dateinamen konstruieren
+    file_name = dir_name.str() + "/job.xml";
 
-    tag.clear();
-    tag.title("dlsjob");
-    tag.type(dxttEnd);
-    file << tag.tag() << endl;
-  }
-  catch (ECOMChannelPreset &e)
-  {
-    file.close();
-    err << "Could not write: " << e.msg;
-    throw ECOMJobPreset(err.str());
-  }
-  catch (...)
-  {
-    file.close();
-    throw ECOMJobPreset("Could not write!");
-  }
+    // Datei öffnen
+    file.open(file_name.c_str(), ios::out);
 
-  file.close();
+    if (!file.is_open())
+    {
+        err << "Could not write file \"" << file_name << "\"";
+        throw ECOMJobPreset(err.str());
+    }
+
+    try
+    {
+        tag.clear();
+        tag.type(dxttBegin);
+        tag.title("dlsjob");
+        file << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("description");
+        tag.push_att("text", _description);
+        file << " " << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("state");
+        tag.push_att("name", _running ? "running" : "paused");
+        file << " " << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("source");
+        tag.push_att("address", _source);
+        file << " " << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("quota");
+        tag.push_att("size", _quota_size);
+        tag.push_att("time", _quota_time);
+        file << " " << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("trigger");
+        tag.push_att("parameter", _trigger);
+        file << " " << tag.tag() << endl;
+
+        file << endl;
+
+        tag.clear();
+        tag.title("channels");
+        tag.type(dxttBegin);
+        file << " " << tag.tag() << endl;
+
+        channel_i = _channels.begin();
+        while (channel_i != _channels.end())
+        {
+            channel_i->write_to_tag(&tag);
+            file << "  " << tag.tag() << endl;
+            channel_i++;
+        }
+
+        tag.clear();
+        tag.title("channels");
+        tag.type(dxttEnd);
+        file << " " << tag.tag() << endl;
+
+        tag.clear();
+        tag.title("dlsjob");
+        tag.type(dxttEnd);
+        file << tag.tag() << endl;
+    }
+    catch (ECOMChannelPreset &e)
+    {
+        file.close();
+        err << "Could not write: " << e.msg;
+        throw ECOMJobPreset(err.str());
+    }
+    catch (...)
+    {
+        file.close();
+        throw ECOMJobPreset("Could not write!");
+    }
+
+    file.close();
 }
 
 /*****************************************************************************/
@@ -168,28 +169,28 @@ void CTLJobPreset::write(const string &dls_dir)
 
 void CTLJobPreset::spool(const string &dls_dir)
 {
-  fstream file;
-  stringstream filename, err;
-  struct timeval tv;
+    fstream file;
+    stringstream filename, err;
+    struct timeval tv;
 
-  gettimeofday(&tv, 0);
+    gettimeofday(&tv, 0);
 
-  // Eindeutigen Dateinamen erzeugen
-  filename << dls_dir << "/spool/";
-  filename << tv.tv_sec << "_" << tv.tv_usec;
-  filename << "_" << (unsigned int) this;
+    // Eindeutigen Dateinamen erzeugen
+    filename << dls_dir << "/spool/";
+    filename << tv.tv_sec << "_" << tv.tv_usec;
+    filename << "_" << (unsigned int) this;
 
-  file.open(filename.str().c_str(), ios::out);
+    file.open(filename.str().c_str(), ios::out);
 
-  if (!file.is_open())
-  {
-    err << "Could not write spooling file \"" << filename.str() << "\"!";
-    throw ECOMJobPreset(err.str());
-  }
+    if (!file.is_open())
+    {
+        err << "Could not write spooling file \"" << filename.str() << "\"!";
+        throw ECOMJobPreset(err.str());
+    }
 
-  file << _id << endl;
-  file.close();
-}     
+    file << _id << endl;
+    file.close();
+}
 
 /*****************************************************************************/
 
@@ -199,7 +200,7 @@ void CTLJobPreset::spool(const string &dls_dir)
 
 void CTLJobPreset::id(unsigned int id)
 {
-  _id = id;
+    _id = id;
 }
 
 /*****************************************************************************/
@@ -210,7 +211,7 @@ void CTLJobPreset::id(unsigned int id)
 
 void CTLJobPreset::description(const string &desc)
 {
-  _description = desc;
+    _description = desc;
 }
 
 /*****************************************************************************/
@@ -221,7 +222,7 @@ void CTLJobPreset::description(const string &desc)
 
 void CTLJobPreset::running(bool run)
 {
-  _running = run;
+    _running = run;
 }
 
 /*****************************************************************************/
@@ -232,7 +233,7 @@ void CTLJobPreset::running(bool run)
 
 void CTLJobPreset::toggle_running()
 {
-  _running = !_running;
+    _running = !_running;
 }
 
 /*****************************************************************************/
@@ -243,7 +244,7 @@ void CTLJobPreset::toggle_running()
 
 void CTLJobPreset::source(const string &src)
 {
-  _source = src;
+    _source = src;
 }
 
 /*****************************************************************************/
@@ -254,7 +255,7 @@ void CTLJobPreset::source(const string &src)
 
 void CTLJobPreset::trigger(const string &trigger_name)
 {
-  _trigger = trigger_name;
+    _trigger = trigger_name;
 }
 
 /*****************************************************************************/
@@ -267,7 +268,7 @@ void CTLJobPreset::trigger(const string &trigger_name)
 
 void CTLJobPreset::quota_time(long long seconds)
 {
-  _quota_time = seconds;
+    _quota_time = seconds;
 }
 
 /*****************************************************************************/
@@ -280,7 +281,7 @@ void CTLJobPreset::quota_time(long long seconds)
 
 void CTLJobPreset::quota_size(long long bytes)
 {
-  _quota_size = bytes;
+    _quota_size = bytes;
 }
 
 /*****************************************************************************/
@@ -295,15 +296,15 @@ void CTLJobPreset::quota_size(long long bytes)
 
 void CTLJobPreset::add_channel(const COMChannelPreset *channel)
 {
-  stringstream err;
+    stringstream err;
 
-  if (channel_exists(channel->name))
-  {
-    err << "Channel \"" << channel->name << "\" already exists!";
-    throw ECOMJobPreset(err.str());
-  }
+    if (channel_exists(channel->name))
+    {
+        err << "Channel \"" << channel->name << "\" already exists!";
+        throw ECOMJobPreset(err.str());
+    }
 
-  _channels.push_back(*channel);
+    _channels.push_back(*channel);
 }
 
 /*****************************************************************************/
@@ -321,23 +322,23 @@ void CTLJobPreset::add_channel(const COMChannelPreset *channel)
 
 void CTLJobPreset::change_channel(const COMChannelPreset *new_channel)
 {
-  vector<COMChannelPreset>::iterator channel_i;
-  stringstream err;
+    vector<COMChannelPreset>::iterator channel_i;
+    stringstream err;
 
-  channel_i = _channels.begin();
-  while (channel_i != _channels.end())
-  {
-    if (channel_i->name == new_channel->name)
+    channel_i = _channels.begin();
+    while (channel_i != _channels.end())
     {
-      *channel_i = *new_channel;
-      return;
+        if (channel_i->name == new_channel->name)
+        {
+            *channel_i = *new_channel;
+            return;
+        }
+
+        channel_i++;
     }
 
-    channel_i++;
-  }
-
-  err << "Preset for channel \"" << new_channel->name << "\" doesn't exist!";
-  throw ECOMJobPreset(err.str());
+    err << "Preset for channel \"" << new_channel->name << "\" doesn't exist!";
+    throw ECOMJobPreset(err.str());
 }
 
 /*****************************************************************************/
@@ -353,23 +354,23 @@ void CTLJobPreset::change_channel(const COMChannelPreset *new_channel)
 
 void CTLJobPreset::remove_channel(const string &channel_name)
 {
-  vector<COMChannelPreset>::iterator channel_i;
-  stringstream err;
+    vector<COMChannelPreset>::iterator channel_i;
+    stringstream err;
 
-  channel_i = _channels.begin();
-  while (channel_i != _channels.end())
-  {
-    if (channel_i->name == channel_name)
+    channel_i = _channels.begin();
+    while (channel_i != _channels.end())
     {
-      _channels.erase(channel_i);
-      return;
+        if (channel_i->name == channel_name)
+        {
+            _channels.erase(channel_i);
+            return;
+        }
+
+        channel_i++;
     }
 
-    channel_i++;
-  }
-
-  err << "Preset for channel \"" << channel_name << "\" doesn't exist!";
-  throw ECOMJobPreset(err.str());
+    err << "Preset for channel \"" << channel_name << "\" doesn't exist!";
+    throw ECOMJobPreset(err.str());
 }
 
 /*****************************************************************************/

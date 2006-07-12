@@ -41,11 +41,11 @@ extern const char *view_version_str;
 
 struct ViewMSRMessage
 {
-  COMTime time;
-  int type;
-  string text;
+    COMTime time;
+    int type;
+    string text;
 
-  int level;
+    int level;
 };
 
 /*****************************************************************************/

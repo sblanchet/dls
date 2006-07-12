@@ -37,9 +37,9 @@ extern const char *ctl_version_str;
 
 struct CTLMessage
 {
-  string time;
-  int type;
-  string text;
+    string time;
+    int type;
+    string text;
 };
 
 /*****************************************************************************/

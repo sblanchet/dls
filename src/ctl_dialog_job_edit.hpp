@@ -27,38 +27,40 @@
 class CTLDialogJobEdit
 {
 public:
-  CTLDialogJobEdit(const string &);
-  ~CTLDialogJobEdit();
+    CTLDialogJobEdit(const string &);
+    ~CTLDialogJobEdit();
 
-  void show(CTLJobPreset *);
-  bool updated();
+    void show(CTLJobPreset *);
+    bool updated();
 
 private:
-  Fl_Double_Window *_wnd;       /**< Dialogfenster */
-  Fl_Return_Button *_button_ok; /**< Bestätigungs-Button */
-  Fl_Button *_button_cancel;    /**< Button zum Abbrechen */
-  Fl_Input *_input_desc;        /**< Eingabefeld für die Beschreibung */
-  Fl_Input *_input_source;      /**< Eingabefeld für die Datenquelle */
-  Fl_Input *_input_trigger;     /**< Eingabefeld für den Trigger-Parameter */
-  Fl_Input *_input_quota_time;  /**< Eingabefeld für Zeit-Quota */
-  Fl_Choice *_choice_time_ext;  /**< Auswahlfenster für die Erweiterung der Zeit-Quota */
-  Fl_Input *_input_quota_size;  /**< Eingabefeld für Daten-Quota */
-  Fl_Choice *_choice_size_ext;  /**< Auswahlfenster für die Erweiterung der Daten-Quota */
+    Fl_Double_Window *_wnd; /**< Dialogfenster */
+    Fl_Return_Button *_button_ok; /**< Bestätigungs-Button */
+    Fl_Button *_button_cancel; /**< Button zum Abbrechen */
+    Fl_Input *_input_desc; /**< Eingabefeld für die Beschreibung */
+    Fl_Input *_input_source; /**< Eingabefeld für die Datenquelle */
+    Fl_Input *_input_trigger; /**< Eingabefeld für den Trigger-Parameter */
+    Fl_Input *_input_quota_time; /**< Eingabefeld für Zeit-Quota */
+    Fl_Choice *_choice_time_ext; /**< Auswahlfenster für die Erweiterung
+                                    der Zeit-Quota */
+    Fl_Input *_input_quota_size; /**< Eingabefeld für Daten-Quota */
+    Fl_Choice *_choice_size_ext; /**< Auswahlfenster für die Erweiterung
+                                    der Daten-Quota */
 
-  string _dls_dir;    /**< DLS-Datenverzeichnis */
-  CTLJobPreset *_job; /**< Zeiger auf den Messauftrag */
-  bool _updated;      /**< Wurde etwas geändert? */
+    string _dls_dir;    /**< DLS-Datenverzeichnis */
+    CTLJobPreset *_job; /**< Zeiger auf den Messauftrag */
+    bool _updated;      /**< Wurde etwas geändert? */
 
-  static void _callback(Fl_Widget *, void *);
-  void _button_ok_clicked();
-  void _button_cancel_clicked();
-  bool _save_job();
-  bool _create_job();
-  bool _get_new_id(int *);
-  void _display_time_quota();
-  void _display_size_quota();
-  bool _calc_time_quota(long long *);
-  bool _calc_size_quota(long long *);
+    static void _callback(Fl_Widget *, void *);
+    void _button_ok_clicked();
+    void _button_cancel_clicked();
+    bool _save_job();
+    bool _create_job();
+    bool _get_new_id(int *);
+    void _display_time_quota();
+    void _display_size_quota();
+    bool _calc_time_quota(long long *);
+    bool _calc_size_quota(long long *);
 };
 
 /*****************************************************************************/
@@ -71,7 +73,7 @@ private:
 
 inline bool CTLDialogJobEdit::updated()
 {
-  return _updated;
+    return _updated;
 }
 
 /*****************************************************************************/

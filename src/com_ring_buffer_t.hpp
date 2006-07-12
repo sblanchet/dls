@@ -28,44 +28,44 @@ template <class TYPE, class SIZE>
 class COMRingBufferT
 {
 public:
-  COMRingBufferT(SIZE);
-  ~COMRingBufferT();
+    COMRingBufferT(SIZE);
+    ~COMRingBufferT();
 
-  TYPE &operator[](SIZE);
-  const TYPE &operator[](SIZE) const;
+    TYPE &operator[](SIZE);
+    const TYPE &operator[](SIZE) const;
 
-  SIZE length() const;
-  void clear();
-  void erase_first(SIZE);
+    SIZE length() const;
+    void clear();
+    void erase_first(SIZE);
 
-  void write_info(TYPE **, SIZE *);
-  void written(SIZE);
+    void write_info(TYPE **, SIZE *);
+    void written(SIZE);
 
 private:
-  TYPE *_buffer;
-  SIZE _index;
-  SIZE _length;
-  SIZE _size;
+    TYPE *_buffer;
+    SIZE _index;
+    SIZE _length;
+    SIZE _size;
 };
 
 /*****************************************************************************/
 
 /**
    Konstruktor
-   
+
    \para size Größe des Rings
 */
 
 template <class TYPE, class SIZE>
 COMRingBufferT<TYPE, SIZE>::COMRingBufferT(SIZE size)
 {
-  _buffer = 0;
-  _index = 0;
-  _length = 0;
-  _size = 0;
+    _buffer = 0;
+    _index = 0;
+    _length = 0;
+    _size = 0;
 
-  _buffer = new TYPE[size];
-  _size = size;
+    _buffer = new TYPE[size];
+    _size = size;
 }
 
 /*****************************************************************************/
@@ -77,7 +77,7 @@ COMRingBufferT<TYPE, SIZE>::COMRingBufferT(SIZE size)
 template <class TYPE, class SIZE>
 COMRingBufferT<TYPE, SIZE>::~COMRingBufferT()
 {
-  if (_size) delete [] _buffer;
+    if (_size) delete [] _buffer;
 }
 
 /*****************************************************************************/
@@ -91,19 +91,19 @@ COMRingBufferT<TYPE, SIZE>::~COMRingBufferT()
 
    \param index Index des Puffer-Elementes
    \return Referenz auf das Puffer-Element
-*/ 
+*/
 
 template <class TYPE, class SIZE>
 TYPE &COMRingBufferT<TYPE, SIZE>::operator[](SIZE index)
 {
-  if ((_index + index) < _size)
-  {
-    return _buffer[_index + index];
-  }
-  else
-  {
-    return _buffer[(_index + index) % _size];
-  }
+    if ((_index + index) < _size)
+    {
+        return _buffer[_index + index];
+    }
+    else
+    {
+        return _buffer[(_index + index) % _size];
+    }
 }
 
 /*****************************************************************************/
@@ -115,19 +115,19 @@ TYPE &COMRingBufferT<TYPE, SIZE>::operator[](SIZE index)
 
    \param index Index des Puffer-Elementes
    \return Konstante Referenz auf das Puffer-Element
-*/ 
+*/
 
 template <class TYPE, class SIZE>
 const TYPE &COMRingBufferT<TYPE, SIZE>::operator[](SIZE index) const
 {
-  if (index < _size)
-  {
-    return _buffer[index];
-  }
-  else
-  {
-    return _buffer[index % _size];
-  }
+    if (index < _size)
+    {
+        return _buffer[index];
+    }
+    else
+    {
+        return _buffer[index % _size];
+    }
 }
 
 /*****************************************************************************/
@@ -141,7 +141,7 @@ const TYPE &COMRingBufferT<TYPE, SIZE>::operator[](SIZE index) const
 template <class TYPE, class SIZE>
 inline SIZE COMRingBufferT<TYPE, SIZE>::length() const
 {
-  return _length;
+    return _length;
 }
 
 /*****************************************************************************/
@@ -153,7 +153,7 @@ inline SIZE COMRingBufferT<TYPE, SIZE>::length() const
 template <class TYPE, class SIZE>
 inline void COMRingBufferT<TYPE, SIZE>::clear()
 {
-  _length = 0;
+    _length = 0;
 }
 
 /*****************************************************************************/
@@ -170,15 +170,15 @@ inline void COMRingBufferT<TYPE, SIZE>::clear()
 template <class TYPE, class SIZE>
 void COMRingBufferT<TYPE, SIZE>::erase_first(SIZE n)
 {
-  if (n < _length)
-  {
-    _index = (_index + n) % _size;
-    _length -= n;
-  }
-  else
-  {
-    clear();
-  }
+    if (n < _length)
+    {
+        _index = (_index + n) % _size;
+        _length -= n;
+    }
+    else
+    {
+        clear();
+    }
 }
 
 /*****************************************************************************/
@@ -203,17 +203,17 @@ void COMRingBufferT<TYPE, SIZE>::erase_first(SIZE n)
 template <class TYPE, class SIZE>
 void COMRingBufferT<TYPE, SIZE>::write_info(TYPE **addr, SIZE *size)
 {
-  SIZE write_index = (_index + _length) % _size;
-  SIZE remaining = _size - _length;
-  
-  // Bei Übertretung der Ringgrenze abschneiden
-  if (write_index + remaining > _size)
-  {
-    remaining = _size - write_index;
-  }
+    SIZE write_index = (_index + _length) % _size;
+    SIZE remaining = _size - _length;
 
-  *addr = _buffer + write_index;
-  *size = remaining;
+    // Bei Übertretung der Ringgrenze abschneiden
+    if (write_index + remaining > _size)
+    {
+        remaining = _size - write_index;
+    }
+
+    *addr = _buffer + write_index;
+    *size = remaining;
 }
 
 /*****************************************************************************/
@@ -228,11 +228,9 @@ void COMRingBufferT<TYPE, SIZE>::write_info(TYPE **addr, SIZE *size)
 template <class TYPE, class SIZE>
 void COMRingBufferT<TYPE, SIZE>::written(SIZE length)
 {
-  _length += length;
+    _length += length;
 }
 
 /*****************************************************************************/
 
 #endif
-
-

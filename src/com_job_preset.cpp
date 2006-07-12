@@ -26,10 +26,10 @@ using namespace std;
 
 COMJobPreset::COMJobPreset()
 {
-  _id = 0;
-  _running = false;
-  _quota_time = 0;
-  _quota_size = 0;
+    _id = 0;
+    _running = false;
+    _quota_time = 0;
+    _quota_size = 0;
 }
 
 /*****************************************************************************/
@@ -57,125 +57,131 @@ COMJobPreset::~COMJobPreset()
 
 void COMJobPreset::import(const string &dls_dir, unsigned int id)
 {
-  COMChannelPreset channel;
-  string value;
-  stringstream file_name;
-  fstream file;
-  COMXMLParser parser;
-  stringstream err;
+    COMChannelPreset channel;
+    string value;
+    stringstream file_name;
+    fstream file;
+    COMXMLParser parser;
+    stringstream err;
 
-  _id = id;
+    _id = id;
 
-  _channels.clear();
+    _channels.clear();
 
-  // Dateinamen konstruieren
-  file_name << dls_dir << "/job" << id << "/job.xml";
+    // Dateinamen konstruieren
+    file_name << dls_dir << "/job" << id << "/job.xml";
 
-  // Datei öffnen
-  file.open(file_name.str().c_str(), ios::in);
+    // Datei öffnen
+    file.open(file_name.str().c_str(), ios::in);
 
-  if (!file.is_open())
-  {
-    err << "Could not open file \"" << file_name.str() << "\""; 
-    throw ECOMJobPreset(err.str());
-  }
-
-  try
-  {
-    parser.parse(&file, "dlsjob", dxttBegin);
-
-    _description = parser.parse(&file, "description", dxttSingle)->att("text")->to_str();
-
-    value = parser.parse(&file, "state", dxttSingle)->att("name")->to_str();
-
-    if (value == "running") _running = true;
-    else if (value == "paused") _running = false;
-    else
+    if (!file.is_open())
     {
-      file.close();
-      throw ECOMJobPreset("Unknown state \"" + value + "\"!");
-    }
-
-    _source = parser.parse(&file, "source", dxttSingle)->att("address")->to_str();
-
-    parser.parse(&file, "quota", dxttSingle);
-
-    if (parser.tag()->has_att("time"))
-    {
-      _quota_time = parser.tag()->att("time")->to_ll();
-    }
-    else
-    {
-      _quota_time = 0;
-    }
-
-    if (parser.tag()->has_att("size"))
-    {
-      _quota_size = parser.tag()->att("size")->to_ll();
-    }
-    else
-    {
-      _quota_size = 0;
-    }
-
-    _trigger = parser.parse(&file, "trigger", dxttSingle)->att("parameter")->to_str();
-
-    parser.parse(&file, "channels", dxttBegin);
-
-    while (1)
-    {
-      parser.parse(&file);
-
-      if (parser.tag()->title() == "channels" && parser.tag()->type() == dxttEnd)
-      {
-        break;
-      }
-
-      if (parser.tag()->title() == "channel" && parser.tag()->type() == dxttSingle)
-      {
-        try
-        {
-          channel.read_from_tag(parser.tag());
-        }
-        catch (ECOMChannelPreset &e)
-        {
-          file.close();
-          err << "Error reading channel: " << e.msg;
-          throw ECOMJobPreset(err.str());
-        }
-
-        _channels.push_back(channel);
-      }
-      else
-      {
-        file.close();
-        err << "Expected channel/ or /channels!";
+        err << "Could not open file \"" << file_name.str() << "\"";
         throw ECOMJobPreset(err.str());
-      }
     }
 
-    parser.parse(&file, "dlsjob", dxttEnd);
-  }
-  catch (ECOMXMLParser &e)
-  {
-    file.close();
-    err << "Parsing: " << e.msg;
-    throw ECOMJobPreset(err.str());
-  }
-  catch (ECOMXMLParserEOF &e)
-  {
-    file.close();
-    err << "Parsing: " << e.msg;
-    throw ECOMJobPreset(err.str());
-  }
-  catch (ECOMXMLTag &e)
-  {
-    file.close();
-    err << "Tag: " << e.msg;
-    throw ECOMJobPreset(err.str());
-  }
+    try
+    {
+        parser.parse(&file, "dlsjob", dxttBegin);
 
-  file.close();
+        _description = parser.parse(&file, "description",
+                                    dxttSingle)->att("text")->to_str();
+
+        value = parser.parse(&file, "state",
+                             dxttSingle)->att("name")->to_str();
+
+        if (value == "running") _running = true;
+        else if (value == "paused") _running = false;
+        else
+        {
+            file.close();
+            throw ECOMJobPreset("Unknown state \"" + value + "\"!");
+        }
+
+        _source = parser.parse(&file, "source",
+                               dxttSingle)->att("address")->to_str();
+
+        parser.parse(&file, "quota", dxttSingle);
+
+        if (parser.tag()->has_att("time"))
+        {
+            _quota_time = parser.tag()->att("time")->to_ll();
+        }
+        else
+        {
+            _quota_time = 0;
+        }
+
+        if (parser.tag()->has_att("size"))
+        {
+            _quota_size = parser.tag()->att("size")->to_ll();
+        }
+        else
+        {
+            _quota_size = 0;
+        }
+
+        _trigger = parser.parse(&file, "trigger",
+                                dxttSingle)->att("parameter")->to_str();
+
+        parser.parse(&file, "channels", dxttBegin);
+
+        while (1)
+        {
+            parser.parse(&file);
+
+            if (parser.tag()->title() == "channels"
+                && parser.tag()->type() == dxttEnd)
+            {
+                break;
+            }
+
+            if (parser.tag()->title() == "channel"
+                && parser.tag()->type() == dxttSingle)
+            {
+                try
+                {
+                    channel.read_from_tag(parser.tag());
+                }
+                catch (ECOMChannelPreset &e)
+                {
+                    file.close();
+                    err << "Error reading channel: " << e.msg;
+                    throw ECOMJobPreset(err.str());
+                }
+
+                _channels.push_back(channel);
+            }
+            else
+            {
+                file.close();
+                err << "Expected channel/ or /channels!";
+                throw ECOMJobPreset(err.str());
+            }
+        }
+
+        parser.parse(&file, "dlsjob", dxttEnd);
+    }
+    catch (ECOMXMLParser &e)
+    {
+        file.close();
+        err << "Parsing: " << e.msg;
+        throw ECOMJobPreset(err.str());
+    }
+    catch (ECOMXMLParserEOF &e)
+    {
+        file.close();
+        err << "Parsing: " << e.msg;
+        throw ECOMJobPreset(err.str());
+    }
+    catch (ECOMXMLTag &e)
+    {
+        file.close();
+        err << "Tag: " << e.msg;
+        throw ECOMJobPreset(err.str());
+    }
+
+    file.close();
 }
 
 /*****************************************************************************/
@@ -189,14 +195,14 @@ void COMJobPreset::import(const string &dls_dir, unsigned int id)
 
 bool COMJobPreset::channel_exists(const string &name) const
 {
-  vector<COMChannelPreset>::const_iterator channel = _channels.begin();
-  while (channel != _channels.end())
-  {
-    if (channel->name == name) return true;
-    channel++;
-  }
+    vector<COMChannelPreset>::const_iterator channel = _channels.begin();
+    while (channel != _channels.end())
+    {
+        if (channel->name == name) return true;
+        channel++;
+    }
 
-  return false;
+    return false;
 }
 
 /*****************************************************************************/
@@ -213,11 +219,11 @@ bool COMJobPreset::channel_exists(const string &name) const
 
 string COMJobPreset::id_desc() const
 {
-  stringstream ret;
+    stringstream ret;
 
-  ret << "(" << _id << ") " << _description;
+    ret << "(" << _id << ") " << _description;
 
-  return ret.str();
+    return ret.str();
 }
 
 /*****************************************************************************/
