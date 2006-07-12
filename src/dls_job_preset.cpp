@@ -22,7 +22,6 @@ DLSJobPreset::DLSJobPreset() : COMJobPreset()
 {
     _pid = 0;
     _last_exit_code = 0;
-    _exit_time = (long long) 0;
 }
 
 /*****************************************************************************/
@@ -48,7 +47,7 @@ void DLSJobPreset::process_started(pid_t pid)
 {
     _pid = pid;
     _last_exit_code = 0;
-    _exit_time = (long long) 0;
+    _exit_time.set_null();
 }
 
 /*****************************************************************************/
