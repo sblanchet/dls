@@ -28,13 +28,15 @@
    Kann einen Datenbereich eines Chunks in den Speicher laden
 */
 
-template <class T> class ViewChunkT : public ViewChunk
+template <class T>
+class ViewChunkT : public ViewChunk
 {
 public:
     ViewChunkT();
     ~ViewChunkT();
 
     void fetch_data(COMTime, COMTime, unsigned int);
+    int export_data(COMTime, COMTime, ofstream &) const;
     void clear();
 
     const ViewData *gen_data() const;
@@ -58,6 +60,8 @@ private:
 
     void _load_data(ViewDataT<T> *, const string &, const string &,
                     COMTime, COMTime);
+    bool _export_tag(const char *, unsigned int, COMTime,
+                     COMCompressionT<T> *, ofstream &) const;
 };
 
 /*****************************************************************************/
@@ -573,6 +577,413 @@ template <class T> void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
             _blocks_fetched++;
         }
     }
+}
+
+/*****************************************************************************/
+
+/**
+   Exportiert Daten zu einem bestimmten Zeitbereich.
+*/
+
+template <class T>
+int ViewChunkT<T>::export_data(COMTime start,
+                               COMTime end,
+                               ofstream &file) const
+{
+    string global_index_file_name;
+    stringstream data_file_name;
+    COMIndexT<COMGlobalIndexRecord> global_index;
+    COMGlobalIndexRecord global_index_record;
+    COMIndexT<COMIndexRecord> index;
+    COMIndexRecord index_record;
+    COMFile data_file;
+    unsigned int i, write_len, blocks_read = 0;
+    char *write_ptr;
+    COMXMLParser xml;
+    bool must_read_again;
+    COMRingBufferT<char, unsigned int> *ring;
+    COMCompressionT<T> *compression;
+
+    global_index_file_name = _dir + "/level0/data_gen.idx";
+
+    try {
+        global_index.open_read(global_index_file_name);
+    }
+    catch (ECOMIndexT &e) {
+        cerr << "Error opening global index \"" << global_index_file_name
+             << "\"!" << endl;
+        return 1;
+    }
+
+    try {
+        ring = new COMRingBufferT<char, unsigned int>(READ_RING_SIZE);
+    }
+    catch (...) {
+        cout << "ERROR: Could not allocate memory for ring buffer!" << endl;
+        return 1;
+    }
+
+    // Ein neues Kompressionsobjekt erzeugen
+    if (_format_index == DLS_FORMAT_ZLIB) {
+        compression = new COMCompressionT_ZLib<T>();
+    }
+    else if (_format_index == DLS_FORMAT_MDCT) {
+        if (typeid(T) == typeid(float)) {
+            compression = (COMCompressionT<T> *)
+                new COMCompressionT_MDCT<float>(_mdct_block_size, 0);
+        }
+        else if (typeid(T) == typeid(double)) {
+            compression = (COMCompressionT<T> *)
+                new COMCompressionT_MDCT<double>(_mdct_block_size, 0);
+        }
+        else {
+            cout << "ERROR: MDCT only for floating point types!" << endl;
+            return 1;
+        }
+    }
+    else if (_format_index == DLS_FORMAT_QUANT) {
+        if (typeid(T) == typeid(float)) {
+            compression = (COMCompressionT<T> *)
+                new COMCompressionT_Quant<float>(0.0);
+        }
+        else if (typeid(T) == typeid(double)) {
+            compression = (COMCompressionT<T> *)
+                new COMCompressionT_Quant<double>(0.0);
+        }
+        else {
+            cout << "ERROR: Quant only for floating point types!" << endl;
+            return 1;
+        }
+    }
+    else {
+        cout << "ERROR: Unknown compression type index: "
+             << _format_index << endl;
+        return 1;
+    }
+
+    // Alle indizierten Datendateien durchlaufen
+    for (i = 0; i < global_index.record_count(); i++) {
+        try {
+            // Einen Index-Record aus dem globalen Index lesen
+            global_index_record = global_index[i];
+        }
+        catch (ECOMIndexT &e) {
+            cout << "ERROR: Could not read record " << i
+                 << " from global index \"";
+            cout << global_index_file_name << "\". Reason: " << e.msg << endl;
+            return 1;
+        }
+
+        if (COMTime(global_index_record.end_time) < start
+            && global_index_record.end_time != 0) {
+            // Die vom Index referenzierte Datendatei liegt noch vor dem
+            // gesuchten Zeitbereich. Die Nächste versuchen...
+            continue;
+        }
+
+        if (COMTime(global_index_record.start_time) > end) {
+            // Ab hier liegt alles nach dem gesuchten Zeitbereich.
+            // Suche beenden.
+            break;
+        }
+
+        // Den Namen der Datendatei generieren
+        data_file_name.str("");
+        data_file_name.clear();
+        data_file_name << _dir + "/level0/data"
+                       << global_index_record.start_time << "_gen";
+
+        try {
+            // Versuchen, den Index der Datendatei zu öffnen
+            index.open_read(data_file_name.str() + ".idx");
+
+            // ...und die Datendatei selber öffnen
+            data_file.open_read(data_file_name.str().c_str());
+        }
+        catch (ECOMIndexT &e) {
+            cout << "ERROR: Could not open index \"";
+            cout << data_file_name.str() << ".idx\": " << e.msg << endl;
+            return 1;
+        }
+        catch (ECOMFile &e) {
+            cout << "ERROR: Could not open data file \"";
+            cout << data_file_name.str() << "\": " << e.msg << endl;
+            return 1;
+        }
+
+        // Alle Records im Index durchlaufen
+        for (i = 0; i < index.record_count(); i++) {
+            try {
+                index_record = index[i];
+            }
+            catch (ECOMIndexT &e) {
+                cout << "ERROR: Could not read from index: " << e.msg << endl;
+                return 1;
+            }
+
+#ifdef DEBUG
+            cout << "Trying record " << i << endl;
+#endif
+
+            // Der Block liegt noch vor der gesuchten Zeit.
+            // Den Nächsten versuchen!
+            if (COMTime(index_record.end_time) < start) continue;
+
+            // Jetzt liegen alle Blöcke hinter der gesuchten Zeit. Abbrechen!
+            if (COMTime(index_record.start_time) >= end) break;
+
+#ifdef DEBUG
+            cout << "Record ok!" << endl;
+#endif
+
+            try {
+                // In der Datendatei zur indizierten Position springen
+                data_file.seek(index_record.position);
+            }
+            catch (ECOMFile &e) {
+                cout << "ERROR: Could not seek in data file!" << endl;
+                return 1;
+            }
+
+            ring->clear();
+
+            // Solange etwas in den Ring lesen, bis ein Tag vollständig ist.
+            while (1) {
+                // Schreibadresse des Ringes holen
+                ring->write_info(&write_ptr, &write_len);
+
+                // Leselänge begrenzen
+                if (write_len > 1024) write_len = 1024;
+
+#ifdef DEBUG
+                cout << "Trying to read " << write_len
+                     << " byte(s)..." << endl;
+#endif
+
+                try {
+                    data_file.read(write_ptr, write_len, &write_len);
+                }
+                catch (ECOMFile &e) {
+                    cout << "ERROR: Could not read from data file: "
+                         << e.msg << endl;
+                    return 1;
+                }
+
+#ifdef DEBUG
+                cout << write_len << " byte(s) read." << endl;
+#endif
+
+                if (write_len == 0) { // Datei zuende! (Darf nicht vorkommen)
+                    cout << "ERROR: EOF in file \"" << data_file_name.str()
+                         << "\" after searching position "
+                         << index_record.position << "!" << endl;
+                    return 1;
+                }
+
+                // Vermerken, dass Daten in den Ring geschrieben wurden
+                ring->written(write_len);
+
+                try {
+                    // Versuchen, aus dem Gelesenen ein Tag zu parsen
+                    xml.parse(ring);
+                }
+                catch (ECOMXMLParserEOF &e) {
+                    // Tag ist noch nicht vollständig. Weiterlesen!
+                    continue;
+                }
+                catch (ECOMXMLParser &e) {
+                    // Fehler beim Parsen! Abbrechen.
+                    cout << "parsing error: " << e.msg << endl;
+                    return 1;
+                }
+
+#ifdef DEBUG
+                cout << "Tag parsed: " << xml.tag()->title() << endl;
+#endif
+
+                if (xml.tag()->title() == "d") { // Ein Daten-Tag ist komplett
+
+                    try {
+                        // Daten aus Tag laden und dekomprimieren
+                        _export_tag(xml.tag()->att("d")->to_str().c_str(),
+                                    xml.tag()->att("s")->to_int(),
+                                    xml.tag()->att("t")->to_ll(),
+                                    compression, file);
+                    }
+                    catch (ECOMXMLTag &e) {
+                        cout << "ERROR: Could not read block: "
+                             << e.msg << endl;
+                        return 1;
+                    }
+                    blocks_read++;
+                }
+
+                break;
+            }
+
+            // Nächster Index-Record
+        }
+    }
+
+    // Blocks geladen, Dateien noch offen
+
+    if (blocks_read && _format_index == DLS_FORMAT_MDCT) {
+        // Jetzt noch einen Block zusätzlich lesen
+
+#ifdef DEBUG
+        cout << "Loading one more record... Ring size: "
+             << ring->length() << endl;
+        cout << "Ring content: " << endl;
+        for (i = 0; i < ring->length(); i++) cout << (*ring)[i];
+        cout << endl;
+#endif
+
+        try {
+            // Versuchen, aus dem Gelesenen ein Tag zu parsen
+            xml.parse(ring);
+            must_read_again = false;
+        }
+        catch (ECOMXMLParser &e) {
+            // Fehler beim Parsen! Abbrechen.
+            cout << "ERROR: While parsing: " << e.msg << endl;
+            return 1;
+        }
+        catch (ECOMXMLParserEOF &e) {
+            // Tag ist noch nicht vollständig. Weiterlesen!
+            must_read_again = true;
+        }
+
+        // Solange etwas in den Ring lesen, bis ein Tag vollständig ist.
+        while (must_read_again) {
+            // Schreibadresse des Ringes holen
+            ring->write_info(&write_ptr, &write_len);
+
+            // Leselänge begrenzen
+            if (write_len > 1024) write_len = 1024;
+
+#ifdef DEBUG
+            cout << "Trying to read " << write_len << " byte(s)..." << endl;
+#endif
+
+            try {
+                data_file.read(write_ptr, write_len, &write_len);
+            }
+            catch (ECOMFile &e) {
+                cout << "ERROR: Could not read data file: " << e.msg << endl;
+                return 1;
+            }
+
+#ifdef DEBUG
+            cout << write_len << " byte(s) read." << endl;
+#endif
+
+            if (write_len == 0) { // Datei zuende!
+                // Dies kommt vor, wenn z. B. während der Erfassung einer
+                // MDCT noch kein Folgeblock existiert. Wenn die Erfassung
+                // abgeschlossen ist, sollte dies allerdings nicht auftreten!
+
+                //cout << "WARNING: No succeding MDCT block available in \""
+                //     << data_file_name.str() << "\"" << endl;
+                return 1;
+            }
+
+            // Vermerken, dass Daten in den Ring geschrieben wurden
+            ring->written(write_len);
+
+            try {
+                // Versuchen, aus dem Gelesenen ein Tag zu parsen
+                xml.parse(ring);
+                must_read_again = false;
+            }
+            catch (ECOMXMLParser &e) {
+                // Fehler beim Parsen! Abbrechen.
+                cout << "ERROR: While parsing: " << e.msg << endl;
+                return 1;
+            }
+            catch (ECOMXMLParserEOF &e) {
+                // Tag ist noch nicht vollständig. Weiterlesen!
+            }
+        }
+
+#ifdef DEBUG
+        cout << "Tag parsed: " << xml.tag()->title() << endl;
+#endif
+
+        if (xml.tag()->title() == "d") { // Ein Daten-Tag ist komplett
+            try {
+                // Daten aus Tag laden und dekomprimieren
+                _export_tag(xml.tag()->att("d")->to_str().c_str(),
+                            xml.tag()->att("s")->to_int(),
+                            xml.tag()->att("t")->to_ll(),
+                            compression, file);
+            }
+            catch (ECOMXMLTag &e) {
+                cout << "ERROR: Could not read block!" << endl;
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/*****************************************************************************/
+
+/**
+   Exportiert Daten aus einem XML-Tag
+
+   \param chunk Konstanter Zeiger auf den besitzenden Chunk
+   \param block_data Zeiger auf die Daten im Tag
+   \param block_size Vermerkte Anzahl der Datenwerte
+   \param comp Zeiger auf das Kompressionsobjekt
+*/
+
+template <class T>
+bool ViewChunkT<T>::_export_tag(const char *block_data,
+                                unsigned int block_size,
+                                COMTime start,
+                                COMCompressionT<T> *comp,
+                                ofstream &file
+                                ) const
+{
+    unsigned int i;
+    double tpv = 1e6 / _sample_frequency;
+
+    if (block_size) {
+        try {
+            comp->uncompress(block_data, strlen(block_data), block_size);
+        }
+        catch (ECOMCompression &e) {
+            cerr << "ERROR while uncompressing: " << e.msg << endl;
+            return false;
+        }
+
+        for (i = 0; i < comp->decompressed_length(); i++) {
+            file << fixed << start + (i * tpv) << "\t"
+                 << fixed << comp->decompression_output()[i] << endl;
+        }
+
+        return true;
+    }
+
+    else if (_format_index == DLS_FORMAT_MDCT) {
+        try {
+            comp->flush_uncompress(block_data, strlen(block_data));
+        }
+        catch (ECOMCompression &e) {
+            cout << "ERROR while uncompressing: " << e.msg << endl;
+            return false;
+        }
+
+        for (i = 0; i < comp->decompressed_length(); i++) {
+            file << fixed << start + (i * tpv) << "\t"
+                 << fixed << comp->decompression_output()[i] << endl;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 /*****************************************************************************/

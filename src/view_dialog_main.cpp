@@ -16,6 +16,7 @@ using namespace std;
 
 #include "view_globals.hpp"
 #include "view_channel.hpp"
+#include "view_dialog_export.hpp"
 #include "view_dialog_main.hpp"
 
 /*****************************************************************************/
@@ -51,6 +52,9 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
 
     _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
     _button_reload->callback(_callback, this);
+
+    _button_export = new Fl_Button(500, 25, 100, 25, "Exportieren...");
+    _button_export->callback(_callback, this);
 
     _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
     _button_close->callback(_callback, this);
@@ -126,6 +130,7 @@ void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
     if (sender == dialog->_grid_channels) dialog->_grid_channels_changed();
     if (sender == dialog->_button_reload) dialog->_button_reload_clicked();
     if (sender == dialog->_button_full) dialog->_button_full_clicked();
+    if (sender == dialog->_button_export) dialog->_button_export_clicked();
 }
 
 /*****************************************************************************/
@@ -164,6 +169,20 @@ void ViewDialogMain::_button_full_clicked()
 /*****************************************************************************/
 
 /**
+   Callback: Der "Export"-Button wurde geklickt
+*/
+
+void ViewDialogMain::_button_export_clicked()
+{
+    ViewDialogExport *dialog = new ViewDialogExport(_dls_dir);
+    dialog->show(_view_data->channels(), _view_data->start(),
+                 _view_data->end());
+    delete dialog;
+}
+
+/*****************************************************************************/
+
+/**
    Callback: Es wurde ein Auftrag in der Auftragsauswahl gewählt
 */
 
@@ -189,11 +208,9 @@ void ViewDialogMain::_grid_channels_changed()
 {
     unsigned int i = _grid_channels->current_record();
 
-    switch (_grid_channels->current_event())
-    {
+    switch (_grid_channels->current_event()) {
         case flgContent:
-            if (_grid_channels->current_col() == "channel")
-            {
+            if (_grid_channels->current_col() == "channel") {
                 _grid_channels->current_content(_channels[i].name());
             }
             break;
@@ -204,12 +221,10 @@ void ViewDialogMain::_grid_channels_changed()
             break;
 
         case flgCheck:
-            if (_view_data->has_channel(&_channels[i]))
-            {
+            if (_view_data->has_channel(&_channels[i])) {
                 _view_data->rem_channel(&_channels[i]);
             }
-            else
-            {
+            else {
                 _view_data->add_channel(&_channels[i]);
             }
             break;
@@ -234,7 +249,6 @@ void ViewDialogMain::_data_range_callback(COMTime start,
                                           void *data)
 {
     ViewDialogMain *dialog = (ViewDialogMain *) data;
-
     dialog->_view_msg->load_msg(start, end);
 }
 
@@ -262,15 +276,13 @@ bool ViewDialogMain::_load_jobs()
     _choice_job->clear();
     _jobs.clear();
 
-    if ((dir = opendir(_dls_dir.c_str())) == NULL)
-    {
-        cout << "ERROR: could not open dls directory \"" << _dls_dir
-             << "\"" << endl;
+    if (!(dir = opendir(_dls_dir.c_str()))) {
+        cerr << "ERROR: could not open dls directory \""
+             << _dls_dir << "\"" << endl;
         return false;
     }
 
-    while ((dir_ent = readdir(dir)) != NULL)
-    {
+    while ((dir_ent = readdir(dir))) {
         dir_name = dir_ent->d_name;
 
         if (dir_name.find("job") != 0) continue;
@@ -279,12 +291,10 @@ bool ViewDialogMain::_load_jobs()
         str.clear();
         str << dir_name.substr(3);
 
-        try
-        {
+        try {
             str >> job_id;
         }
-        catch (...)
-        {
+        catch (...) {
             continue;
         }
 
@@ -298,14 +308,11 @@ bool ViewDialogMain::_load_jobs()
     job_ids.sort();
 
     // Alle Jobs importieren
-    for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
-    {
-        try
-        {
+    for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++) {
+        try {
             job.import(_dls_dir, *job_id_i);
         }
-        catch (ECOMJobPreset &e)
-        {
+        catch (ECOMJobPreset &e) {
             cout << "WARNING: " << e.msg << endl;
             continue;
         }
@@ -339,15 +346,13 @@ bool ViewDialogMain::_load_channels()
     _grid_channels->clear();
     _channels.clear();
 
-    if ((dir = opendir(job_dir.str().c_str())) == NULL)
-    {
-        cout << "ERROR: could not open job directory \"" << job_dir.str()
-             << "\"" << endl;
+    if (!(dir = opendir(job_dir.str().c_str()))) {
+        cout << "ERROR: could not open job directory \""
+             << job_dir.str() << "\"" << endl;
         return false;
     }
 
-    while ((dir_ent = readdir(dir)) != NULL)
-    {
+    while ((dir_ent = readdir(dir))) {
         dir_name = dir_ent->d_name;
 
         if (dir_name.find("channel") != 0) continue;
@@ -356,21 +361,17 @@ bool ViewDialogMain::_load_channels()
         str.clear();
         str << dir_name.substr(7);
 
-        try
-        {
+        try {
             str >> index;
         }
-        catch (...)
-        {
+        catch (...) {
             continue;
         }
 
-        try
-        {
+        try {
             channel.import(_dls_dir, _job_id, index);
         }
-        catch (EViewChannel &e)
-        {
+        catch (EViewChannel &e) {
             cout << "WARNING: " << e.msg << endl;
             continue;
         }

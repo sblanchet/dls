@@ -36,7 +36,7 @@ VIEW_OBJECTS := \
 	mdct.o \
 	view_data.o view_chunk.o view_channel.o \
 	view_view_data.o view_view_msg.o \
-	view_dialog_main.o \
+	view_dialog_main.o view_dialog_export.o \
 	view_main.o
 
 FLTK_INC := $(shell fltk-config --cxxflags)
@@ -68,7 +68,7 @@ LDFLAGS += -Wall
 
 #------------------------------------------------------------------------------
 
-all: depend $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
+all: .depend $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
 
 $(DLSD_EXE): $(DLSD_OBJECTS)
 	g++ $(LDFLAGS) $(DLSD_OBJECTS) $(DLSD_LIB) -o $(DLSD_EXE)
@@ -104,9 +104,9 @@ mdct.o: mdct.c
 
 # Abhängigkeiten --------------------------------------------------------------
 
-depend:
+.depend dep:
 	(for file in *.cpp mdct.c; \
-	   do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
+		do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
 	done) > .depend
 
 ifneq ($(wildcard .depend),)
@@ -116,6 +116,6 @@ endif
 # Clean -----------------------------------------------------------------------
 
 clean:
-	rm -f *.o *~ $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE) .depend
+	@rm -f *.o *~ $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE) .depend core
 
 #------------------------------------------------------------------------------

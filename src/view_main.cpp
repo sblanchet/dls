@@ -36,6 +36,7 @@ int main(int argc, char **argv)
     get_options(argc, argv);
 
     Fl::visual(FL_DOUBLE | FL_INDEX);
+    Fl::lock();
 
     dialog = new ViewDialogMain(dls_dir);
     dialog->show();

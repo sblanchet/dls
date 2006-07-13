@@ -50,6 +50,7 @@ public:
     void fetch_range();
 
     virtual void fetch_data(COMTime, COMTime, unsigned int) = 0;
+    virtual int export_data(COMTime, COMTime, ofstream &) const = 0;
     virtual void calc_min_max(double *, double *) const = 0;
     virtual unsigned int blocks_fetched() const = 0;
     virtual bool has_data() const = 0;

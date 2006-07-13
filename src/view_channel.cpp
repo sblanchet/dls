@@ -319,6 +319,48 @@ void ViewChannel::load_data(COMTime start,
 /*****************************************************************************/
 
 /**
+   Exportiert Daten einer Zeitspanne.
+*/
+
+int ViewChannel::export_data(COMTime start, /**< Anfang der Zeitspanne */
+                             COMTime end, /**< Ende der Zeitspanne */
+                             const string &path /**< Export-Pfad */
+                             ) const
+{
+    ofstream file;
+    stringstream filename;
+    list<ViewChunk *>::const_iterator chunk_i;
+
+    if (start >= end) return 1;
+
+    filename << path << "/channel" << _index << ".dat";
+    file.open(filename.str().c_str(), ios::trunc);
+
+    if (!file.is_open()) {
+        cerr << "Failed to open file \"" << filename.str() << "\"!" << endl;
+        return 1;
+    }
+
+    file << "% --- DLS exported data ---" << endl;
+    file << "%" << endl;
+    file << "% Channel: " << _name << endl;
+    file << "%    Unit: " << _unit << endl;
+    file << "%" << endl;
+
+    for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
+        if ((*chunk_i)->export_data(start, end, file)) {
+            file.close();
+            return 1;
+        }
+    }
+
+    file.close();
+    return 0;
+}
+
+/*****************************************************************************/
+
+/**
    Entfernt alle Chunks
 */
 

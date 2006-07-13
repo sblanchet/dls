@@ -46,6 +46,7 @@ public:
     void import(const string &, unsigned int, unsigned int);
     void fetch_chunks(const string &, unsigned int);
     void load_data(COMTime, COMTime, unsigned int);
+    int export_data(COMTime, COMTime, const string &) const;
     void clear();
 
     unsigned int index() const;

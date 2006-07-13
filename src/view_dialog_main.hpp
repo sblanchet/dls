@@ -39,14 +39,15 @@ public:
 private:
     string _dls_dir; /**< DLS-Datenverzeichnis */
     Fl_Double_Window *_wnd; /**< Dialogfenster */
-    Fl_Tile *_tile_ver; /**< Vertikaler Trenner zw. Anzeigen und Kanalliste */
-    Fl_Tile *_tile_hor; /**< Horizontaler Trenner zwischen
-                           Kanälen und Messages */
+    Fl_Tile *_tile_ver; /**< Vertikaler Trenner zwischen Anzeigen
+                           und Kanalliste */
+    Fl_Tile *_tile_hor; /**< Horizontaler Trenner zwischen Kanälen
+                           und Messages */
     Fl_Choice *_choice_job; /**< Auswahlfeld zum Wählen des Auftrags */
-    Fl_Button *_button_full; /**< Button zum Anzeigen der
-                                gesamten Zeitspanne */
-    Fl_Button *_button_reload; /**< Button zum erneuten laden der Daten */
-
+    Fl_Button *_button_full; /**< Button zum Anzeigen der gesamten
+                                Zeitspanne */
+    Fl_Button *_button_reload; /**< Button zum erneuten Laden der Daten */
+    Fl_Button *_button_export; /**< Button zum Exportieren der Daten */
     Fl_Button *_button_close; /**< "Schliessen"-Button */
     Fl_Grid *_grid_channels; /**< Grid zum Anzeigen der Kanalliste*/
     ViewViewData *_view_data; /**< Anzeige für die Kanaldaten */
@@ -61,6 +62,7 @@ private:
     void _button_close_clicked();
     void _button_reload_clicked();
     void _button_full_clicked();
+    void _button_export_clicked();
     void _choice_job_changed();
     void _grid_channels_changed();
 
