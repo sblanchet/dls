@@ -98,7 +98,7 @@ void ViewDialogExport::show(const list<ViewChannel> *channels,
 
 
     str << "Exportieren von " << _channel_count
-        << (_channel_count == 1 ? " Kanal" : " Kanäle") << endl
+        << (_channel_count == 1 ? " Kanal" : " Kanälen") << endl
         << " von " << _start.to_real_time() << " bis " << _end.to_real_time()
         << ".";
     _box_info->copy_label(str.str().c_str());
