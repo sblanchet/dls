@@ -260,8 +260,8 @@ bool DLSProcLogger::_connect_socket()
     address.sin_port = htons(MSRD_PORT);
 
     // Verbinden
-    if ((::connect(_socket, (struct sockaddr *) &address, sizeof(address))) == -1)
-    {
+    if ((::connect(_socket, (struct sockaddr *) &address,
+                   sizeof(address))) == -1) {
         close(_socket);
 
         msg() << "Could not connect to \"" << source << "\"!";
@@ -273,6 +273,8 @@ bool DLSProcLogger::_connect_socket()
     // Verbunden!
     msg() << "Connected to \"" << source << "\"!";
     log(DLSInfo);
+
+    send_command(""); // Einmal Newline senden
 
     return true;
 }
