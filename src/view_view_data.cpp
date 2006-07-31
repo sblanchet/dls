@@ -1520,6 +1520,9 @@ int ViewViewData::handle(int event)
             _end_x = xp;
             _end_y = yp;
 
+	    _start_x -= ABSTAND;
+	    _end_x -= ABSTAND;
+
             if (_start_x < _end_x)
             {
                 dx = _start_x;
