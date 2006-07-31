@@ -423,6 +423,40 @@ string COMTime::to_real_time() const
 
 /*****************************************************************************/
 
+string COMTime::diff_str_to(const COMTime &other) const
+{
+    stringstream str;
+    long long diff, part;
+
+    if (other._time > _time)
+	diff = other._time - _time;
+    else
+	diff = _time - other._time;
+
+    part = diff / ((long long) 1000000 * 60 * 60 * 24); // Tage
+    if (part) str << part << "d ";
+    diff -= part * ((long long) 1000000 * 60 * 60 * 24);
+
+    part = diff / ((long long) 1000000 * 60 * 60); // Stunden
+    if (part) str << part << "h ";
+    diff -= part * ((long long) 1000000 * 60 * 60);
+    
+    part = diff / ((long long) 1000000 * 60); // Minuten
+    if (part) str << part << "m ";
+    diff -= part * ((long long) 1000000 * 60);
+
+    part = diff / 1000000; // Sekunden
+    if (part) str << part << "s ";
+    diff -= part * 1000000;
+
+    str << diff << "us ";
+
+    // return string without last character
+    return str.str().substr(0, str.str().size() - 1);
+}
+
+/*****************************************************************************/
+
 /**
    Setzt die Zeit auf die aktuelle Zeit
 

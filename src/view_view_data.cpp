@@ -491,6 +491,7 @@ void ViewViewData::draw()
     str.clear();
     str << "Time range from " << _range_start.to_real_time()
         << " to " << _range_end.to_real_time();
+    str << " (" << _range_start.diff_str_to(_range_end) << ")";
     if (_range_end <= _range_start) str << "  - ILLEGAL RANGE!";
     fl_draw(str.str().c_str(), x() + ABSTAND, y() + h() - ABSTAND);
 
@@ -1314,7 +1315,7 @@ void ViewViewData::_draw_interactions()
 {
     stringstream str;
     int text_width, text_height, x_pos;
-    COMTime time;
+    COMTime start_time, end_time;
 
     // "Zooming-Linie"
     if (_zooming)
@@ -1326,11 +1327,11 @@ void ViewViewData::_draw_interactions()
         fl_line(x() + _end_x, y() + ABSTAND + SKALENHOEHE + 1,
                 x() + _end_x, y() + h() - ABSTAND - INFOHOEHE - 1);
 
-        time = _range_start.to_dbl() + _start_x / _scale_x;
+        start_time = _range_start.to_dbl() + _start_x / _scale_x;
 
         str.str("");
         str.clear();
-        str << time.to_real_time();
+        str << start_time.to_real_time();
 
         text_width = 0;
         fl_measure(str.str().c_str(), text_width, text_height);
@@ -1350,11 +1351,11 @@ void ViewViewData::_draw_interactions()
                 x() + x_pos + 2,
                 y() + ABSTAND + SKALENHOEHE + 10);
 
-        time = _range_start.to_dbl() + _end_x / _scale_x;
+        end_time = _range_start.to_dbl() + _end_x / _scale_x;
 
         str.str("");
         str.clear();
-        str << time.to_real_time();
+        str << end_time.to_real_time();
 
         text_width = 0;
         fl_measure(str.str().c_str(), text_width, text_height);
@@ -1373,6 +1374,28 @@ void ViewViewData::_draw_interactions()
         fl_draw(str.str().c_str(),
                 x() + x_pos + 2,
                 y() + ABSTAND + SKALENHOEHE + 20);
+
+        str.str("");
+        str.clear();
+        str << start_time.diff_str_to(end_time);
+
+        text_width = 0;
+        fl_measure(str.str().c_str(), text_width, text_height);
+        x_pos = _end_x;
+
+        if (x_pos + text_width >= w() - ABSTAND)
+            x_pos = w() - ABSTAND - text_width;
+        if (x_pos < 0) x_pos = 0;
+
+        fl_color(255, 255, 255);
+        fl_rectf(x() + x_pos + 1,
+                 y() + ABSTAND + SKALENHOEHE + 23,
+                 text_width,
+                 text_height);
+        fl_color(255, 0, 0);
+        fl_draw(str.str().c_str(),
+                x() + x_pos + 2,
+                y() + ABSTAND + SKALENHOEHE + 33);
     }
 
     // "Verschiebungs-Pfeil"
