@@ -12,6 +12,11 @@
 #DLS_DIR=/vol/dls_data
 
 #
+#  DLS export directory
+#
+#DLS_EXPORT=/vol/dls_data/export
+
+#
 #  DLS user
 #  Switch to this user after startup
 #

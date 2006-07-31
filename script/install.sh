@@ -9,6 +9,7 @@
 #------------------------------------------------------------------------------
 
 CONFIGFILE=/etc/sysconfig/dls
+PROFILESCRIPT=/etc/profile.d/dls.sh
 INITSCRIPT=/etc/init.d/dls
 RCLINK=/usr/sbin/rcdls
 DLSSCRIPT=/usr/local/bin/dls_status
@@ -20,6 +21,10 @@ else
     echo "  Creating $CONFIGFILE"
     cp script/sysconfig $CONFIGFILE || exit 1
 fi
+
+echo "  Installing profile script"
+cp script/dlsprofile.sh $PROFILESCRIPT || exit 1
+chmod +x $PROFILESCRIPT || exit 1
 
 echo "  Installing startup script"
 cp script/rcdls.sh $INITSCRIPT || exit 1
@@ -35,9 +40,9 @@ cp script/dls_quota.pl $QUOTASCRIPT || exit 1
 chmod +x $QUOTASCRIPT || exit 1
 
 echo "  Installing binaries"
-cp src/dlsd /usr/local/bin || exit 1
-cp src/dls_ctl /usr/local/bin || exit 1
-chmod +s /usr/local/bin/dls_ctl || exit 1
-cp src/dls_view /usr/local/bin || exit 1
+cp src/dlsd /usr/local/bin
+cp src/dls_ctl /usr/local/bin
+chmod +s /usr/local/bin/dls_ctl
+cp src/dls_view /usr/local/bin
 
 #------------------------------------------------------------------------------

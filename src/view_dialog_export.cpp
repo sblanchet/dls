@@ -5,6 +5,7 @@
  *****************************************************************************/
 
 #include <dirent.h>
+#include <errno.h>
 
 #include <iostream>
 #include <fstream>
@@ -154,6 +155,10 @@ void ViewDialogExport::_button_export_clicked()
 {
     Fl_File_Chooser *chooser;
     list<ViewChannel>::const_iterator channel_i;
+    stringstream str;
+    time_t time_epoch;
+    struct tm time;
+    string env_export;
 
     if (_export_finished) {
         _wnd->hide();
@@ -162,18 +167,55 @@ void ViewDialogExport::_button_export_clicked()
 
     chooser = new Fl_File_Chooser(".", NULL, Fl_File_Chooser::DIRECTORY,
                                   "Exportieren nach...");
+    chooser->preview(0); // disable preview window
+
+    env_export = getenv("DLS_EXPORT");
+    if (env_export.size()) chooser->value(env_export.c_str());
+
     chooser->show();
     while (chooser->shown()) Fl::wait();
 
-    if (chooser->value()) {
-        _export_dir = chooser->value();
-        if (pthread_create(&_thread, 0, _static_thread_function, this)) {
-            cerr << "Failed to create thread!" << endl;
-            return;
-        }
+    if (!chooser->value()) {
+        delete chooser;
+        return;
     }
 
+    _export_dir = chooser->value();
     delete chooser;
+
+    time_epoch = ::time(0);
+    time = *localtime(&time_epoch);
+
+    str << "/dls-export-" << time.tm_year + 1900 << "-";
+
+    if (time.tm_mon + 1 < 10) str << "0";
+    str << time.tm_mon + 1 << "-";
+
+    if (time.tm_mday < 10) str << "0";
+    str << time.tm_mday << "-";
+
+    if (time.tm_hour < 10) str << "0";
+    str << time.tm_hour << "-";
+
+    if (time.tm_min < 10) str << "0";
+    str << time.tm_min << "-";
+
+    if (time.tm_sec < 10) str << "0";
+    str << fixed << time.tm_sec;
+
+    _export_dir += str.str();
+
+    // create unique directory
+    if (mkdir(_export_dir.c_str(), 0755)) {
+        cerr << "ERROR: Could not create export directory: ";
+        cerr << strerror(errno) << endl;
+        return;
+    }
+
+    if (pthread_create(&_thread, 0, _static_thread_function, this)) {
+        cerr << "Failed to create thread!" << endl;
+        return;
+    }
 }
 
 /*****************************************************************************/
