@@ -11,9 +11,9 @@
 ### BEGIN INIT INFO
 # Provides:          dls
 # Required-Start:    $local_fs $syslog $network
-# Should-Start:      $time msr etherlab
+# Should-Start:      $time ntp msr etherlab
 # Required-Stop:     $local_fs $syslog $network
-# Should-Stop:       $time msr etherlab
+# Should-Stop:       $time ntp msr etherlab
 # Default-Start:     3 5
 # Default-Stop:      0 1 2 6
 # Short-Description: Data Logging Server
