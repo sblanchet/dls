@@ -701,13 +701,13 @@ int ViewChunkT<T>::export_data(COMTime start,
             data_file.open_read(data_file_name.str().c_str());
         }
         catch (ECOMIndexT &e) {
-            cout << "ERROR: Could not open index \"";
-            cout << data_file_name.str() << ".idx\": " << e.msg << endl;
+            cerr << "ERROR: Could not open index \"";
+            cerr << data_file_name.str() << ".idx\": " << e.msg << endl;
             return 1;
         }
         catch (ECOMFile &e) {
-            cout << "ERROR: Could not open data file \"";
-            cout << data_file_name.str() << "\": " << e.msg << endl;
+            cerr << "ERROR: Could not open data file \"";
+            cerr << data_file_name.str() << "\": " << e.msg << endl;
             return 1;
         }
 
@@ -741,7 +741,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                 data_file.seek(index_record.position);
             }
             catch (ECOMFile &e) {
-                cout << "ERROR: Could not seek in data file!" << endl;
+                cerr << "ERROR: Could not seek in data file!" << endl;
                 return 1;
             }
 
@@ -764,7 +764,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                     data_file.read(write_ptr, write_len, &write_len);
                 }
                 catch (ECOMFile &e) {
-                    cout << "ERROR: Could not read from data file: "
+                    cerr << "ERROR: Could not read from data file: "
                          << e.msg << endl;
                     return 1;
                 }
@@ -774,7 +774,7 @@ int ViewChunkT<T>::export_data(COMTime start,
 #endif
 
                 if (write_len == 0) { // Datei zuende! (Darf nicht vorkommen)
-                    cout << "ERROR: EOF in file \"" << data_file_name.str()
+                    cerr << "ERROR: EOF in file \"" << data_file_name.str()
                          << "\" after searching position "
                          << index_record.position << "!" << endl;
                     return 1;
@@ -793,7 +793,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                 }
                 catch (ECOMXMLParser &e) {
                     // Fehler beim Parsen! Abbrechen.
-                    cout << "parsing error: " << e.msg << endl;
+                    cerr << "parsing error: " << e.msg << endl;
                     return 1;
                 }
 
@@ -811,7 +811,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                                     compression, file);
                     }
                     catch (ECOMXMLTag &e) {
-                        cout << "ERROR: Could not read block: "
+                        cerr << "ERROR: Could not read block: "
                              << e.msg << endl;
                         return 1;
                     }
@@ -845,7 +845,7 @@ int ViewChunkT<T>::export_data(COMTime start,
         }
         catch (ECOMXMLParser &e) {
             // Fehler beim Parsen! Abbrechen.
-            cout << "ERROR: While parsing: " << e.msg << endl;
+            cerr << "ERROR: While parsing: " << e.msg << endl;
             return 1;
         }
         catch (ECOMXMLParserEOF &e) {
@@ -869,7 +869,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                 data_file.read(write_ptr, write_len, &write_len);
             }
             catch (ECOMFile &e) {
-                cout << "ERROR: Could not read data file: " << e.msg << endl;
+                cerr << "ERROR: Could not read data file: " << e.msg << endl;
                 return 1;
             }
 
@@ -882,8 +882,8 @@ int ViewChunkT<T>::export_data(COMTime start,
                 // MDCT noch kein Folgeblock existiert. Wenn die Erfassung
                 // abgeschlossen ist, sollte dies allerdings nicht auftreten!
 
-                //cout << "WARNING: No succeding MDCT block available in \""
-                //     << data_file_name.str() << "\"" << endl;
+                cerr << "WARNING: No final MDCT block available in \""
+                     << data_file_name.str() << "\"" << endl;
                 return 1;
             }
 
@@ -897,7 +897,7 @@ int ViewChunkT<T>::export_data(COMTime start,
             }
             catch (ECOMXMLParser &e) {
                 // Fehler beim Parsen! Abbrechen.
-                cout << "ERROR: While parsing: " << e.msg << endl;
+                cerr << "ERROR: While parsing: " << e.msg << endl;
                 return 1;
             }
             catch (ECOMXMLParserEOF &e) {
@@ -918,7 +918,7 @@ int ViewChunkT<T>::export_data(COMTime start,
                             compression, file);
             }
             catch (ECOMXMLTag &e) {
-                cout << "ERROR: Could not read block!" << endl;
+                cerr << "ERROR: Could not read block!" << endl;
                 return 1;
             }
         }
@@ -971,7 +971,7 @@ bool ViewChunkT<T>::_export_tag(const char *block_data,
             comp->flush_uncompress(block_data, strlen(block_data));
         }
         catch (ECOMCompression &e) {
-            cout << "ERROR while uncompressing: " << e.msg << endl;
+            cerr << "ERROR while uncompressing: " << e.msg << endl;
             return false;
         }
 

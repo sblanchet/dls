@@ -349,6 +349,7 @@ int ViewChannel::export_data(COMTime start, /**< Anfang der Zeitspanne */
 
     for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
         if ((*chunk_i)->export_data(start, end, file)) {
+            cerr << "Failed to export chunk for channel " << _name << endl;
             file.close();
             return 1;
         }
