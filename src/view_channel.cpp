@@ -258,6 +258,9 @@ void ViewChannel::fetch_chunks(const string &dls_dir, unsigned int job_id)
     }
 
     closedir(dir);
+
+    // Chunks aufsteigend nach Anfangszeit sortieren
+    _chunks.sort();
 }
 
 /*****************************************************************************/

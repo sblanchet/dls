@@ -49,6 +49,8 @@ public:
     void import();
     void fetch_range();
 
+    bool operator<(const ViewChunk &) const;
+
     virtual void fetch_data(COMTime, COMTime, unsigned int) = 0;
     virtual int export_data(COMTime, COMTime, ofstream &) const = 0;
     virtual void calc_min_max(double *, double *) const = 0;

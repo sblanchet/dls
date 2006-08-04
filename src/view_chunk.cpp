@@ -285,3 +285,16 @@ double ViewChunk::_time_per_value() const
 }
 
 /*****************************************************************************/
+
+/**
+   Kleiner-Operator.
+
+   \return true, wenn der linke Chunk eher beginnt, als der Rechte.
+*/
+
+bool ViewChunk::operator<(const ViewChunk &other) const
+{
+    return _start < other._start;
+}
+
+/*****************************************************************************/
