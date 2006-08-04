@@ -334,6 +334,10 @@ int ViewChannel::export_data(COMTime start, /**< Anfang der Zeitspanne */
     stringstream filename;
     list<ViewChunk *>::const_iterator chunk_i;
 
+    cout << "* Exporting channel" << _name << endl
+         << "  (" << _range_start.to_real_time()
+         << " to " << _range_end.to_real_time() << ")" << endl;
+
     if (start >= end) return 1;
 
     filename << path << "/channel" << _index << ".dat";

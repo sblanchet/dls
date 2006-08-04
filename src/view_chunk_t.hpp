@@ -597,12 +597,19 @@ int ViewChunkT<T>::export_data(COMTime start,
     COMIndexT<COMIndexRecord> index;
     COMIndexRecord index_record;
     COMFile data_file;
-    unsigned int i, write_len, blocks_read = 0;
+    unsigned int i, j, write_len, blocks_read = 0;
     char *write_ptr;
     COMXMLParser xml;
     bool must_read_again;
     COMRingBufferT<char, unsigned int> *ring;
     COMCompressionT<T> *compression;
+
+    // Chunk liegt ausserhalb des zu exportierenden Bereiches
+    if (_end < start || _start > end) return 0;
+
+    cout << "  * Exporting from chunk" << _start.to_ll() << endl
+         << "    (" << _start.to_real_time()
+         << " to " << _end.to_real_time() << ")" << endl;
 
     global_index_file_name = _dir + "/level0/data_gen.idx";
 
@@ -687,6 +694,16 @@ int ViewChunkT<T>::export_data(COMTime start,
             break;
         }
 
+	cout << "    * Exporting from data file "
+         << global_index_record.start_time << endl
+         << "      ("
+         << COMTime(global_index_record.start_time).to_real_time() << " to ";
+	if (global_index_record.end_time)
+	    cout << COMTime(global_index_record.end_time).to_real_time();
+	else
+	    cout << "now";
+	cout << ")" << endl;
+
         // Den Namen der Datendatei generieren
         data_file_name.str("");
         data_file_name.clear();
@@ -712,9 +729,9 @@ int ViewChunkT<T>::export_data(COMTime start,
         }
 
         // Alle Records im Index durchlaufen
-        for (i = 0; i < index.record_count(); i++) {
+        for (j = 0; j < index.record_count(); j++) {
             try {
-                index_record = index[i];
+                index_record = index[j];
             }
             catch (ECOMIndexT &e) {
                 cout << "ERROR: Could not read from index: " << e.msg << endl;
@@ -722,7 +739,7 @@ int ViewChunkT<T>::export_data(COMTime start,
             }
 
 #ifdef DEBUG
-            cout << "Trying record " << i << endl;
+            cout << "Trying record " << j << endl;
 #endif
 
             // Der Block liegt noch vor der gesuchten Zeit.
