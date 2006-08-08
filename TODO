@@ -1,17 +1,3 @@
 TODO-Liste DLS
 
-dlsd:
-
-1) MDCT verbessern
-1) Abstürze suchen
-
-dls_ctl:
-
-1) Export (ASCII/Diadem)
-2) Messages wieder anzeigen
-3) Jobs löschen?
-4) Binäre Suche über Indizes
-
-dls_view:
-
-dls_status:
+1) Export, Informations-Datei mit exportierten Zeiten
