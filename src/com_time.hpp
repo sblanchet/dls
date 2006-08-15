@@ -61,6 +61,7 @@ public:
     string to_str() const;
     struct timeval to_tv() const;
     string to_real_time() const;
+    string format_time(const char *) const;
     string to_rfc811_time() const;
     string diff_str_to(const COMTime &) const;
 

@@ -154,20 +154,18 @@ void ViewDialogExport::_button_close_clicked()
 void ViewDialogExport::_button_export_clicked()
 {
     list<ViewChannel>::const_iterator channel_i;
-    time_t time_epoch;
     string env_export, env_export_fmt;
-    char time_string[100], *env;
+    char *env;
     stringstream info_file_name;
     ofstream info_file;
-    struct tm local_time;
+    COMTime now;
 
     if (_export_finished) {
         _wnd->hide();
         return;
     }
 
-    time_epoch = ::time(0);
-    local_time = *localtime(&time_epoch);
+    now.set_now();
 
     if ((env = getenv("DLS_EXPORT"))) env_export = env;
     else env_export = ".";
@@ -175,10 +173,7 @@ void ViewDialogExport::_button_export_clicked()
     if ((env = getenv("DLS_EXPORT_FMT"))) env_export_fmt = env;
     else env_export_fmt = "dls-export-%Y-%m-%d-%H-%M-%S";
 
-    strftime(time_string, sizeof(time_string),
-             env_export_fmt.c_str(), &local_time);
-
-    _export_dir += env_export + "/" + time_string;
+    _export_dir += env_export + "/" + now.format_time(env_export_fmt.c_str());
 
     cout << "Exporting to \"" << _export_dir << "\"." << endl;
 
@@ -198,13 +193,14 @@ void ViewDialogExport::_button_export_clicked()
         return;
     }
 
-    strftime(time_string, sizeof(time_string),
-             "%a, %d %b %Y %H:%M:%S %z", &local_time);
-
-    info_file << "This is a DLS export directory." << endl << endl;
-    info_file << "Exported on: " << time_string << endl << endl;
-    info_file << "Exported range from: " << _start.to_rfc811_time() << endl;
-    info_file << "                 to: " << _end.to_rfc811_time() << endl;
+    info_file << endl
+              << "This is a DLS export directory." << endl << endl
+              << "Exported on: "
+              << now.to_rfc811_time() << endl << endl
+              << "Exported range from: "
+              << _start.to_rfc811_time() << endl
+              << "                 to: "
+              << _end.to_rfc811_time() << endl << endl;
 
     info_file.close();
 

@@ -406,16 +406,24 @@ string COMTime::to_real_time() const
 
 /*****************************************************************************/
 
-string COMTime::to_rfc811_time() const
+string COMTime::format_time(const char *fmt) const
 {
     struct timeval tv;
     struct tm local_time;
     char str[100];
+    string ret;
 
     tv = to_tv();
     local_time = *localtime(&tv.tv_sec);
-    strftime(str, sizeof(str), "%a, %d %b %Y %H:%M:%S %z", &local_time);
+    strftime(str, sizeof(str), fmt, &local_time);
     return str;
+}
+
+/*****************************************************************************/
+
+string COMTime::to_rfc811_time() const
+{
+    return format_time("%a, %d %b %Y %H:%M:%S %z");
 }
 
 /*****************************************************************************/
