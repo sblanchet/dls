@@ -14,14 +14,14 @@
 #
 #  DLS export directory
 #
-#DLS_EXPORT=/vol/dls_data/export
+#DLS_EXPORT=/vol/dls_data
 
 #
 #  DLS export format string
 #  This format string is passed to the strftime function (see man strftime)
 #  and therefore supports all of its format specifiers.
 #
-#DLS_EXPORT_FMT=dls-export-%Y-%m-%d-%H-%M-%S
+#DLS_EXPORT_FMT=export-%Y-%m-%d-%H-%M-%S
 
 #
 #  DLS user

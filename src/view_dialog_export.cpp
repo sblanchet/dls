@@ -153,11 +153,10 @@ void ViewDialogExport::_button_close_clicked()
 
 void ViewDialogExport::_button_export_clicked()
 {
-    Fl_File_Chooser *chooser;
     list<ViewChannel>::const_iterator channel_i;
     time_t time_epoch;
     string env_export, env_export_fmt;
-    char time_string[100];
+    char time_string[100], *env;
     stringstream info_file_name;
     ofstream info_file;
     struct tm local_time;
@@ -170,36 +169,22 @@ void ViewDialogExport::_button_export_clicked()
     time_epoch = ::time(0);
     local_time = *localtime(&time_epoch);
 
-    chooser = new Fl_File_Chooser(".", NULL, Fl_File_Chooser::DIRECTORY,
-                                  "Exportieren nach...");
-    chooser->preview(0); // disable preview window
+    if ((env = getenv("DLS_EXPORT"))) env_export = env;
+    else env_export = ".";
 
-    env_export = getenv("DLS_EXPORT");
-    if (env_export.size()) chooser->value(env_export.c_str());
+    if ((env = getenv("DLS_EXPORT_FMT"))) env_export_fmt = env;
+    else env_export_fmt = "dls-export-%Y-%m-%d-%H-%M-%S";
 
-    chooser->show();
-    while (chooser->shown()) Fl::wait();
-
-    if (!chooser->value()) {
-        delete chooser;
-        return;
-    }
-
-    _export_dir = chooser->value();
-    delete chooser;
-
-    env_export_fmt = getenv("DLS_EXPORT_FMT");
-    if (!env_export_fmt.size())
-        env_export_fmt = "dls-export-%Y-%m-%d-%H-%M-%S";
     strftime(time_string, sizeof(time_string),
              env_export_fmt.c_str(), &local_time);
 
-    _export_dir += "/";
-    _export_dir += time_string;
+    _export_dir += env_export + "/" + time_string;
+
+    cout << "Exporting to \"" << _export_dir << "\"." << endl;
 
     // create unique directory
     if (mkdir(_export_dir.c_str(), 0755)) {
-        cerr << "ERROR: Could not create export directory: ";
+        cerr << "ERROR: Failed to create export directory: ";
         cerr << strerror(errno) << endl;
         return;
     }
@@ -263,6 +248,8 @@ void *ViewDialogExport::_static_thread_function(void *data)
     dialog->_button_close->deactivate();
     Fl::unlock();
     Fl::awake();
+
+    cout << "Export finished." << endl;
 
     return (void *) NULL;
 }

@@ -363,8 +363,6 @@ int ViewChannel::export_data(COMTime start, /**< Anfang der Zeitspanne */
     }
 
     file.close();
-
-    cout << "  Exporting channel " << _name << " finished." << endl;
     return 0;
 }
 
