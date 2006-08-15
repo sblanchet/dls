@@ -391,34 +391,31 @@ string COMTime::to_str() const
 
 string COMTime::to_real_time() const
 {
-    stringstream str;
-    struct tm time;
-    time_t secs_since_epoch;
-    float secs;
+    struct timeval tv;
+    struct tm local_time;
+    char str[100];
+    string ret;
 
-    secs_since_epoch = to_tv().tv_sec;
-    time = *localtime(&secs_since_epoch);
-    secs = time.tm_sec + to_tv().tv_usec / 1000000.0;
+    tv = to_tv();
+    local_time = *localtime(&tv.tv_sec);
+    strftime(str, sizeof(str), "%d.%m.%Y %H:%M:%S", &local_time);
+    ret = str;
+    sprintf(str, ".%06u", (unsigned int) tv.tv_usec);
+    return ret + str;
+}
 
-    if (time.tm_mday < 10) str << "0";
-    str << time.tm_mday << ".";
+/*****************************************************************************/
 
-    if (time.tm_mon + 1 < 10) str << "0";
-    str << time.tm_mon + 1 << ".";
+string COMTime::to_rfc811_time() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    char str[100];
 
-    if (time.tm_year % 100 < 10) str << "0";
-    str << time.tm_year % 100 << " ";
-
-    if (time.tm_hour < 10) str << "0";
-    str << time.tm_hour << ":";
-
-    if (time.tm_min < 10) str << "0";
-    str << time.tm_min << ":";
-
-    if (secs < 10) str << "0";
-    str << fixed << secs;
-
-    return str.str();
+    tv = to_tv();
+    local_time = *localtime(&tv.tv_sec);
+    strftime(str, sizeof(str), "%a, %d %b %Y %H:%M:%S %z", &local_time);
+    return str;
 }
 
 /*****************************************************************************/
@@ -440,7 +437,7 @@ string COMTime::diff_str_to(const COMTime &other) const
     part = diff / ((long long) 1000000 * 60 * 60); // Stunden
     if (part) str << part << "h ";
     diff -= part * ((long long) 1000000 * 60 * 60);
-    
+
     part = diff / ((long long) 1000000 * 60); // Minuten
     if (part) str << part << "m ";
     diff -= part * ((long long) 1000000 * 60);
