@@ -39,15 +39,14 @@ VIEW_OBJECTS := \
 	view_dialog_main.o view_dialog_export.o \
 	view_main.o
 
-FLTK_INC := $(shell ../../soft/fltk-1.1-install/bin/fltk-config --cxxflags)
-FLTK_LIB := $(shell ../../soft/fltk-1.1-install/bin/fltk-config --ldflags)
+FLTK_INC := $(shell fltk-config --cxxflags)
+FLTK_LIB := $(shell fltk-config --ldflags)
 Z_INC := -I/usr/local/include
 Z_LIB := -L/usr/local/lib -lz
-FFTW_INC := -I../../soft/fftw-install/include
-FFTW_LIB := -L../../soft/fftw-install/lib -lfftw3 -lm
+FFTW_LIB := -lfftw3 -lm
 
 # DLSD
-DLSD_INC = $(Z_INC) $(FFTW_INC)
+DLSD_INC = $(Z_INC)
 DLSD_LIB = $(Z_LIB) $(FFTW_LIB)
 DLSD_EXE = dlsd
 
@@ -107,7 +106,7 @@ mdct.o: mdct.c
 
 .depend dep:
 	(for file in *.cpp mdct.c; \
-		do g++ -M $(FFTW_INC) $(FLTK_INC) $(Z_INC) $$file; \
+		do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
 	done) > .depend
 
 ifneq ($(wildcard .depend),)
