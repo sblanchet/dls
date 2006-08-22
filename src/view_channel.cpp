@@ -29,6 +29,8 @@ using namespace std;
 ViewChannel::ViewChannel()
 {
     _channel = NULL;
+    _min = 0.0;
+    _max = 0.0;
     _min_level = 0;
     _max_level = 0;
 }
@@ -94,7 +96,6 @@ void ViewChannel::fetch_data(COMTime start,
     _max_data.clear();
 
     _channel->fetch_data(start, end, min_values, data_callback, this);
-
     _calc_min_max();
 }
 

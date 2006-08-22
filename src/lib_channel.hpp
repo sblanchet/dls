@@ -66,6 +66,8 @@ namespace LibDLS {
 
         string path() const;
 
+	bool operator<(const Channel &) const;
+
     private:
         string _path; /**< channel directory path */
         unsigned int _index; /**< channel index */
@@ -173,6 +175,13 @@ inline COMTime LibDLS::Channel::end() const
 inline string LibDLS::Channel::path() const
 {
     return _path;
+}
+
+/*****************************************************************************/
+
+inline bool LibDLS::Channel::operator<(const Channel &right) const
+{
+    return _index < right._index;
 }
 
 /*****************************************************************************/

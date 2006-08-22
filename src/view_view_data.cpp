@@ -124,13 +124,14 @@ void ViewViewData::range_callback(void (*cb)(COMTime, COMTime, void *),
 
 void ViewViewData::add_channel(Channel *channel)
 {
-    ViewChannel viewchannel;
+    ViewChannel viewchannel, *p_viewchannel;
     COMTime old_start, old_end;
 
     if (has_channel(channel)) return;
 
     viewchannel.set_channel(channel);
     _channels.push_back(viewchannel);
+    p_viewchannel = &_channels.back();
     _channels.sort();
 
     fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
@@ -156,7 +157,7 @@ void ViewViewData::add_channel(Channel *channel)
         Fl::check();
         _do_not_draw = false;
 
-        viewchannel.fetch_data(_range_start, _range_end, h() - 2 * ABSTAND);
+        p_viewchannel->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
 
         fl_cursor(FL_CURSOR_DEFAULT);
         redraw();
@@ -274,9 +275,14 @@ void ViewViewData::update()
          channel_i != _channels.end();
          channel_i++) {
         channel_i->channel()->fetch_chunks();
+        channel_i->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
     }
 
-    _load_data();
+    redraw();
+
+    if (_range_cb) _range_cb(_range_start, _range_end, _range_cb_data);
+
+    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 /*****************************************************************************/
@@ -427,7 +433,7 @@ void ViewViewData::draw()
     str << "Time range from " << _range_start.to_real_time()
         << " to " << _range_end.to_real_time();
     str << " (" << _range_start.diff_str_to(_range_end) << ")";
-    if (_range_end <= _range_start) str << "  - ILLEGAL RANGE!";
+    if (_range_end <= _range_start) str << "  - INVALID TIME RANGE!";
     fl_draw(str.str().c_str(), x() + ABSTAND, y() + h() - ABSTAND);
 
     // Abbruch, wenn ungültige Skalenbereiche
@@ -746,7 +752,7 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
     str << channel->min() << channel->channel()->unit();
     str << " to ";
     str << channel->max() << channel->channel()->unit();
-    if (channel->max() < channel->min()) str << " (ILLEGAL RANGE)";
+    if (channel->max() < channel->min()) str << " (INVALID VALUE RANGE)";
 
     if (channel->min_level() == channel->max_level()) {
         str << " | level " << channel->min_level();

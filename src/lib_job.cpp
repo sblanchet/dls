@@ -116,6 +116,8 @@ void Job::fetch_channels()
         _channels.push_back(channel);
     }
 
+    _channels.sort();
+
     closedir(dir);
 }
 
@@ -127,11 +129,13 @@ void Job::fetch_channels()
 LibDLS::Channel &LibDLS::Job::channel(unsigned int index)
 {
     list<Channel>::iterator channel_i;
+
     for (channel_i = _channels.begin();
          channel_i != _channels.end();
-         channel_i++) {
-        return *channel_i;
+         channel_i++, index--) {
+	if (!index) return *channel_i;
     }
+
     throw JobException("Channel index out of range!");
 }
 
