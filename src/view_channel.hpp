@@ -16,174 +16,105 @@ using namespace std;
 #include "com_exception.hpp"
 #include "com_time.hpp"
 #include "com_ring_buffer_t.hpp"
+
+#include "lib_channel.hpp"
+using namespace LibDLS;
+
 #include "view_globals.hpp"
-#include "view_chunk.hpp"
 
 /*****************************************************************************/
 
 /**
-   Exception eines ViewChannel-Objektes
-*/
-
-class EViewChannel : public COMException
-{
-public:
-    EViewChannel(const string &pmsg) : COMException(pmsg) {};
-};
-
-/*****************************************************************************/
-
-/**
-   Darstellung eines Kanals in der Anzeige
+   Union of a channel and loaded data.
 */
 
 class ViewChannel
 {
+    friend int data_callback(Data *, void *);
+
 public:
     ViewChannel();
     ~ViewChannel();
 
-    void import(const string &, unsigned int, unsigned int);
-    void fetch_chunks(const string &, unsigned int);
-    void load_data(COMTime, COMTime, unsigned int);
-    int export_data(COMTime, COMTime, const string &) const;
-    void clear();
+    void set_channel(Channel *);
+    void fetch_data(COMTime, COMTime, unsigned int);
+    Channel *channel();
 
-    unsigned int index() const;
-    const string &name() const;
-    const string &unit() const;
-    COMChannelType type() const;
+    const Channel *channel() const;
+    const list<Data> &gen_data() const;
+    const list<Data> &min_data() const;
+    const list<Data> &max_data() const;
 
-    COMTime start() const;
-    COMTime end() const;
-
-    const list<ViewChunk *> *chunks() const;
     double min() const;
     double max() const;
-    unsigned int blocks_fetched() const;
-    unsigned int min_level_fetched() const;
-    unsigned int max_level_fetched() const;
+    unsigned int min_level() const;
+    unsigned int max_level() const;
+
+    bool operator<(const ViewChannel &) const;
 
 private:
-    // Kanal
-    unsigned int _index;  /**< MSR-Kanal-Index */
-    string _name;         /**< Kanalname */
-    string _unit;         /**< Einheit */
-    COMChannelType _type; /**< Kanaltyp (TUINT, TDBL, usw...) */
+    Channel *_channel;
+    list<Data> _gen_data;
+    list<Data> _min_data;
+    list<Data> _max_data;
 
-    // Chunks
-    list<ViewChunk *> _chunks; /**< Liste der Chunks in diesem Kanal */
-    COMTime _range_start; /**< Startzeit des gesamten Kanal-Zeitbereichs */
-    COMTime _range_end; /**< Endzeit des gesamten Kanal-Zeitbereiches */
+    double _min;
+    double _max;
+    unsigned int _min_level;
+    unsigned int _max_level;
 
-    // Daten
-    double _min; /**< Kleinster, geladener Datenwert */
-    double _max; /**< Größter, geladener Datenwert */
-    unsigned int _min_level; /**< Niedrigste Meta-Ebene,
-                                aus der geladen wurde */
-    unsigned int _max_level; /**< Höchste Meta-Ebene, aus der geladen wurde */
-
-    void _clear_data();
     void _calc_min_max();
+    void _calc_min_max_data(const list<Data> &, bool *);
 };
 
 /*****************************************************************************/
 
 /**
-   Liefert den MSR-Index des Kanals
-
-   \return Index
 */
 
-inline unsigned int ViewChannel::index() const
+inline Channel *ViewChannel::channel()
 {
-    return _index;
+    return _channel;
 }
 
 /*****************************************************************************/
 
 /**
-   Liefert den Namen des Kanals
-
-   \return Kanalname
 */
 
-inline const string &ViewChannel::name() const
+inline const Channel *ViewChannel::channel() const
 {
-    return _name;
+    return _channel;
 }
 
 /*****************************************************************************/
 
 /**
-   Liefert die Einheit des Kanals
-
-   \return Einheit
 */
 
-inline const string &ViewChannel::unit() const
+inline const list<Data> &ViewChannel::gen_data() const
 {
-    return _unit;
+    return _gen_data;
 }
 
 /*****************************************************************************/
 
 /**
-   Liefert den Typ des Kanals
-
-   Beispiel: TUINT, definiert in com_globals.hpp
-
-   \return Kanaltyp
 */
 
-inline COMChannelType ViewChannel::type() const
+inline const list<Data> &ViewChannel::min_data() const
 {
-    return _type;
+    return _min_data;
 }
 
 /*****************************************************************************/
 
 /**
-   Liefert die Zeit der ersten Erfassung in diesem Kanal
-
-   Diese wird allein duch die Informationen der existierenden
-   Chunks bestimmt. Wird der erste Chunk gelöscht, ändert sie sich.
-   Die Startzeit ist also mehr oder minder dynamisch.
-
-   \return Startzeit
 */
 
-inline COMTime ViewChannel::start() const
+inline const list<Data> &ViewChannel::max_data() const
 {
-    return _range_start;
-}
-
-/*****************************************************************************/
-
-/**
-   Liefert die Zeit der letzten Erfassung in diesem Kanal
-
-   Siehe start()
-
-   \return Endzeit
-*/
-
-inline COMTime ViewChannel::end() const
-{
-    return _range_end;
-}
-
-/*****************************************************************************/
-
-/**
-   Liefert einen Zeiger auf die Liste der geladenen Chunks
-
-   \return Konstanter Zeiger auf Chunkliste
-*/
-
-inline const list<ViewChunk *> *ViewChannel::chunks() const
-{
-    return &_chunks;
+    return _max_data;
 }
 
 /*****************************************************************************/
@@ -220,7 +151,7 @@ inline double ViewChannel::max() const
    \return Meta-Ebene
 */
 
-inline unsigned int ViewChannel::min_level_fetched() const
+inline unsigned int ViewChannel::min_level() const
 {
     return _min_level;
 }
@@ -233,7 +164,7 @@ inline unsigned int ViewChannel::min_level_fetched() const
    \return Meta-Ebene
 */
 
-inline unsigned int ViewChannel::max_level_fetched() const
+inline unsigned int ViewChannel::max_level() const
 {
     return _max_level;
 }

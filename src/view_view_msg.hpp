@@ -16,8 +16,12 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "fl_track_bar.hpp"
 #include "com_time.hpp"
+
+#include "lib_job.hpp"
+using namespace LibDLS;
+
+#include "fl_track_bar.hpp"
 
 /*****************************************************************************/
 
@@ -31,14 +35,10 @@ public:
     ViewViewMsg(int, int, int, int, const char * = "");
     ~ViewViewMsg();
 
-    void set_job(const string &, unsigned int);
-    void load_msg(COMTime, COMTime);
+    void load_msg(const Job *, COMTime, COMTime);
     void clear();
 
 private:
-    string _dls_dir;      /**< DLS-Datenverzeichnis */
-    unsigned int _job_id; /**< Auftrags-ID */
-
     Fl_Track_Bar *_track_bar; /**< Vertikale Scroll-Leiste */
 
     // Daten

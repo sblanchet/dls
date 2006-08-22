@@ -73,23 +73,6 @@ ViewViewMsg::~ViewViewMsg()
 /*****************************************************************************/
 
 /**
-   Gibt den Auftrag an, zu dem die Anzeige erfolgen soll
-
-   \param dls_dir DLS-Datenverzeichnis
-   \param job_id Auftrags-ID
-*/
-
-void ViewViewMsg::set_job(const string &dls_dir, unsigned int job_id)
-{
-    clear();
-
-    _dls_dir = dls_dir;
-    _job_id = job_id;
-}
-
-/*****************************************************************************/
-
-/**
    Löscht alle Nachrichten
 */
 
@@ -108,7 +91,7 @@ void ViewViewMsg::clear()
    \param end Endzeit des Bereiches
 */
 
-void ViewViewMsg::load_msg(COMTime start, COMTime end)
+void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
 {
     COMIndexT<COMMessageIndexRecord> index;
     COMMessageIndexRecord index_record;
@@ -131,23 +114,17 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
     _range_start = start;
     _range_end = end;
 
-#ifdef DEBUG
-    cout << "Loading messages from " << start << " to " << end << endl;
-#endif
-
-    msg_dir << _dls_dir << "/job" << _job_id << "/messages";
+    msg_dir << job->path() << "/messages";
 
     // Das Message-Verzeichnis öffnen
-    if ((dir = opendir(msg_dir.str().c_str())) == NULL)
-    {
-        cerr << "FEHLER: Konnte Message-Verzeichnis \"" << msg_dir.str()
-             << "\" nicht öffnen!";
+    if (!(dir = opendir(msg_dir.str().c_str()))) {
+        cerr << "ERROR: Failed to open message directory \""
+             << msg_dir.str() << "\"." << endl;
         return;
     }
 
     // Alle Message-Chunks durchlaufen
-    while ((dir_ent = readdir(dir)) != NULL)
-    {
+    while ((dir_ent = readdir(dir))) {
         entry_name = dir_ent->d_name;
 
         // Wenn das Verzeichnis nicht mit "chunk" beginnt,
@@ -159,13 +136,11 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
         str << entry_name.substr(5); // Alles nach "chunk" in den
                                      // Stringstream einfügen
 
-        try
-        {
+        try {
             // Den Zeitstempel auslesen
             str >> msg_chunk_time;
         }
-        catch (...)
-        {
+        catch (...) {
             // Der Rest des Verzeichnisnamens ist kein Zeitstempel
             continue;
         }
@@ -181,44 +156,29 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
     chunk_times.sort();
 
     // Alle Chunks aus der Liste nehmen, die hinter dem Ende liegen
-    while (!chunk_times.empty() && COMTime(chunk_times.back()) > _range_end)
-    {
-#ifdef DEBUG
-        cout << "Deleting chunk from back" << endl;
-#endif
+    while (!chunk_times.empty() && COMTime(chunk_times.back()) > _range_end) {
         chunk_times.pop_back();
     }
 
     // Alle Chunks entfernen, dessen Nachfolger noch vor dem Start sind
-    while (chunk_times.size() > 1)
-    {
+    while (chunk_times.size() > 1) {
         if (COMTime(*(chunk_times.begin()++)) > _range_start) break;
-#ifdef DEBUG
-        cout << "Deleting chunk from front" << endl;
-#endif
         chunk_times.pop_front();
     }
 
     // Alle übriggebliebenen Message-Chunks durchlaufen
     for (chunk_time_i = chunk_times.begin();
          chunk_time_i != chunk_times.end();
-         chunk_time_i++)
-    {
+         chunk_time_i++) {
         msg_chunk_dir.str("");
         msg_chunk_dir.clear();
         msg_chunk_dir << msg_dir.str() << "/chunk" << *chunk_time_i;
 
-#ifdef DEBUG
-        cout << msg_chunk_dir.str() << endl;
-#endif
-
-        try
-        {
+        try {
             file.open_read((msg_chunk_dir.str() + "/messages").c_str());
             index.open_read((msg_chunk_dir.str() + "/messages.idx").c_str());
 
-            for (i = 0; i < index.record_count(); i++)
-            {
+            for (i = 0; i < index.record_count(); i++) {
                 index_record = index[i];
 
                 if (COMTime(index_record.time) < _range_start) continue;
@@ -228,13 +188,11 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
                 ring.clear();
 
                 // Solange lesen, bis ein Tag komplett ist
-                while (1)
-                {
+                while (1) {
                     ring.write_info(&write_ptr, &write_len);
 
-                    if (!write_len)
-                    {
-                        cout << "FEHLER: Ringpuffer zum Lesen"
+                    if (!write_len) {
+                        cerr << "FEHLER: Ringpuffer zum Lesen"
                              << " der Messages voll!" << endl;
                         return;
                     }
@@ -243,20 +201,17 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
 
                     file.read(write_ptr, write_len, &write_len);
 
-                    if (!write_len)
-                    {
-                        cout << "FEHLER: Message-Datei zuende!" << endl;
+                    if (!write_len) {
+                        cerr << "FEHLER: Message-Datei zuende!" << endl;
                         return;
                     }
 
                     ring.written(write_len);
 
-                    try
-                    {
+                    try {
                         xml.parse(&ring);
                     }
-                    catch (ECOMXMLParserEOF &e)
-                    {
+                    catch (ECOMXMLParserEOF &e) {
                         // Noch nicht genug Daten. Mehr einlesen!
                         continue;
                     }
@@ -266,13 +221,11 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
 
                 msg.time = index_record.time;
 
-                try
-                {
+                try {
                     msg.text = xml.tag()->att("text")->to_str();
                 }
-                catch (ECOMXMLTag &e)
-                {
-                    cout << "WARUNG: Kein Text-Attribut im Message-Tag: "
+                catch (ECOMXMLTag &e) {
+                    cerr << "WARNUNG: Kein Text-Attribut im Message-Tag:"
                          << e.msg << " Tag: " << e.tag << endl;
                     msg.text = "??? Kein Text";
                 }
@@ -292,26 +245,19 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
                 _messages.push_back(msg);
             }
         }
-        catch (ECOMIndexT &e)
-        {
-            cout << "FEHLER im Message-Index: " << e.msg << endl;
+        catch (ECOMIndexT &e) {
+            cerr << "FEHLER im Message-Index: " << e.msg << endl;
             return;
         }
-        catch (ECOMFile &e)
-        {
-            cout << "FEHLER in der Message-Datei: " << e.msg << endl;
+        catch (ECOMFile &e) {
+            cerr << "FEHLER in der Message-Datei: " << e.msg << endl;
             return;
         }
-        catch (ECOMXMLParser &e)
-        {
-            cout << "FEHLER beim Parsen: " << e.msg << endl;
+        catch (ECOMXMLParser &e) {
+            cerr << "FEHLER beim Parsen: " << e.msg << endl;
             return;
         }
     }
-
-#ifdef DEBUG
-    cout << _messages.size() << " messages loaded." << endl;
-#endif
 
     redraw();
 }
@@ -355,26 +301,21 @@ void ViewViewMsg::draw()
     scroll_pos = _track_bar->position();
 
     // Clipping einrichten
-    if (_track_bar->visible())
-    {
+    if (_track_bar->visible()) {
         fl_push_clip(x() + FRAME_WIDTH, y() + FRAME_WIDTH,
                      w() - 2 * FRAME_WIDTH - TRACK_BAR_WIDTH - 1,
                      h() - 2 * FRAME_WIDTH);
     }
-    else
-    {
+    else {
         fl_push_clip(x() + FRAME_WIDTH, y() + FRAME_WIDTH,
                      w() - 2 * FRAME_WIDTH, h() - 2 * FRAME_WIDTH);
     }
 
     // Level von unten nach oben zeichnen
-    for (i = _level_count - 1; i >= 0; i--)
-    {
+    for (i = _level_count - 1; i >= 0; i--) {
         msg_i = _messages.begin();
-        while (msg_i != _messages.end())
-        {
-            if (msg_i->level == i)
-            {
+        while (msg_i != _messages.end()) {
+            if (msg_i->level == i) {
                 xp = (int) ((msg_i->time - _range_start).to_dbl() * scale_x);
 
                 // Text ausmessen
@@ -453,24 +394,20 @@ void ViewViewMsg::_calc_msg_levels()
     scale_x = (w() - 2 * FRAME_WIDTH) / (_range_end - _range_start).to_dbl();
 
     msg_i = _messages.begin();
-    while (msg_i != _messages.end())
-    {
+    while (msg_i != _messages.end()) {
         xp = (int) ((msg_i->time - _range_start).to_dbl() * scale_x);
 
         // Zeile finden, in der die Nachricht gezeichnet werden kann
         level = 0;
         found = false;
         level_i = levels.begin();
-        while (level_i != levels.end())
-        {
-            if (*level_i < xp) // Nachricht würde in diese Zeile passen
-            {
+        while (level_i != levels.end()) {
+            if (*level_i < xp) { // Nachricht würde in diese Zeile passen
                 found = true;
                 msg_i->level = level;
 
                 // Endposition in Zeile vermerken
                 *level_i = (int) (xp + fl_width(msg_i->text.c_str())) + 5;
-
                 break;
             }
 
@@ -478,8 +415,7 @@ void ViewViewMsg::_calc_msg_levels()
             level++;
         }
 
-        if (!found)
-        {
+        if (!found) {
             msg_i->level = level;
 
             // Alle Zeilen voll. Neue erstellen.
@@ -508,14 +444,12 @@ int ViewViewMsg::handle(int event)
     yp = Fl::event_y() - y();
 
     if (_track_bar->handle(event, xp - w() + TRACK_BAR_WIDTH,
-                           yp - FRAME_WIDTH))
-    {
+                           yp - FRAME_WIDTH)) {
         redraw();
         return 1;
     }
 
-    switch (event)
-    {
+    switch (event) {
         case FL_PUSH:
             take_focus();
             return 1;
@@ -538,6 +472,3 @@ int ViewViewMsg::handle(int event)
 }
 
 /*****************************************************************************/
-
-
-

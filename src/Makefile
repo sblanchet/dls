@@ -33,9 +33,9 @@ VIEW_OBJECTS := \
 	com_zlib.o com_base64.o \
 	com_xml_tag.o com_xml_parser.o \
 	com_channel_preset.o com_job_preset.o \
+	lib_dir.o lib_job.o lib_channel.o lib_chunk.o lib_data.o lib_export.o \
 	mdct.o \
-	view_data.o view_chunk.o view_channel.o \
-	view_view_data.o view_view_msg.o \
+	view_channel.o view_view_data.o view_view_msg.o \
 	view_dialog_main.o view_dialog_export.o \
 	view_main.o
 
@@ -93,6 +93,9 @@ dls_%.o: dls_%.cpp
 ctl_%.o: ctl_%.cpp
 	g++ -c $(CFLAGS) $(CTL_INC) $< -o $@
 
+lib_%.o: lib_%.cpp
+	g++ -c $(CFLAGS) $< -o $@
+
 view_%.o: view_%.cpp
 	g++ -c $(CFLAGS) $(VIEW_INC) $< -o $@
 
@@ -104,7 +107,7 @@ mdct.o: mdct.c
 
 # Abhängigkeiten --------------------------------------------------------------
 
-.depend dep:
+.depend depend dep:
 	(for file in *.cpp mdct.c; \
 		do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
 	done) > .depend

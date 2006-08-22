@@ -25,7 +25,6 @@ using namespace std;
 #include "com_index_t.hpp"
 #include "view_globals.hpp"
 #include "view_channel.hpp"
-#include "view_chunk.hpp"
 #include "view_view_data.hpp"
 
 /*****************************************************************************/
@@ -93,27 +92,6 @@ ViewViewData::~ViewViewData()
 /*****************************************************************************/
 
 /**
-   Setzt das DLS-Datenverzeichnis und die Auftrags-ID
-
-   Das Widget arbeitet immer in einem bestimmten
-   Auftragsverzeichnis, das durch diese beiden Angaben
-   eindeutig identifiziert wird.
-
-   \param dls_dir Datenverzeichnis
-   \param job_id Auftrags-ID
-*/
-
-void ViewViewData::set_job(const string &dls_dir, unsigned int job_id)
-{
-    clear();
-
-    _dls_dir = dls_dir;
-    _job_id = job_id;
-}
-
-/*****************************************************************************/
-
-/**
    Setzt die Callback-Funktion für den Zeitbereich
 
    Diese Callback-Funktion wird immer aufgerufen, wenn sich der
@@ -144,54 +122,45 @@ void ViewViewData::range_callback(void (*cb)(COMTime, COMTime, void *),
    \param channel Konstanter Zeiger auf den Kanal
 */
 
-void ViewViewData::add_channel(const ViewChannel *channel)
+void ViewViewData::add_channel(Channel *channel)
 {
-    ViewChannel *ch;
+    ViewChannel viewchannel;
     COMTime old_start, old_end;
+
+    if (has_channel(channel)) return;
+
+    viewchannel.set_channel(channel);
+    _channels.push_back(viewchannel);
+    _channels.sort();
 
     fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
     _do_not_draw = true;
     Fl::check();
     _do_not_draw = false;
 
-    // Abbrechen, wenn der Kanal bereits in der Liste ist
-    if (has_channel(channel)) return;
+    channel->fetch_chunks();
 
-    // Andernfalls kopieren und anfügen
-    // Achtung: Kopieren ohne Copy-Konstruktor. Geht nur, weil
-    // noch keine Chunks geladen wurden. Das passiert später.
-    _channels.push_back(*channel);
-    ch = &_channels.back();
+    fl_cursor(FL_CURSOR_DEFAULT);
 
-    // Chunk-Informationen laden
-    ch->fetch_chunks(_dls_dir, _job_id);
-
-    // Alten Zeitbereich merken
     old_start = _range_start;
     old_end = _range_end;
 
-    // Wenn "alles" angezeigt werden soll
-    if (_full_range)
-    {
-        // Zeitspanne neu berechnen
-        _calc_range();
-    }
+    if (_full_range) _calc_range();
 
-    // Wenn sich die zeitspanne geändert hat
-    if (_range_start != old_start || _range_end != old_end)
-    {
-        // Alle Daten neu laden und neu zeichnen
+    if (_range_start != old_start || _range_end != old_end) {
         _load_data();
     }
-    else
-    {
-        // Sonst nur die Daten des eingefügten Kanals laden und zeichnen
-        ch->load_data(_range_start, _range_end,
-                      h() - 2 * ABSTAND); // TODO: h() - xx richtig?
+    else {
+        fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
+        _do_not_draw = true;
+        Fl::check();
+        _do_not_draw = false;
+
+        viewchannel.fetch_data(_range_start, _range_end, h() - 2 * ABSTAND);
+
+        fl_cursor(FL_CURSOR_DEFAULT);
         redraw();
     }
-
-    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 /*****************************************************************************/
@@ -206,60 +175,39 @@ void ViewViewData::add_channel(const ViewChannel *channel)
    selben Namen trägt
 */
 
-void ViewViewData::rem_channel(const ViewChannel *channel)
+void ViewViewData::rem_channel(const Channel *channel)
 {
-    list<ViewChannel>::iterator channel_i = _channels.begin();
+    list<ViewChannel>::iterator channel_i;
     COMTime old_start, old_end;
+    bool found;
 
-    fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
-    _do_not_draw = true;
-    Fl::check();
-    _do_not_draw = false;
-
-    // Alle Kanäle durchlaufen
-    while (channel_i != _channels.end())
-    {
-        // Wenn der aktuelle Kanal der gesuchte ist
-        if (channel_i->name() == channel->name())
-        {
-            // Diesen aus der Liste löschen
-            _channels.erase(channel_i);
-
-            // Die "alte" Zeitspanne merken
-            old_start = _range_start;
-            old_end = _range_end;
-
-            // Wenn "alles" angezeigt werden soll
-            if (_full_range)
-            {
-                // Zeitspanne neu berechnen
-                _calc_range();
-            }
-
-            // Wenn sich die Zeitspanne geändert hat
-            if (_range_start != old_start || _range_end != old_end)
-            {
-                // Alle Daten neu laden und neu zeichnen
-                _load_data();
-            }
-            else
-            {
-                // Sonst nur neu zeichnen
-                redraw();
-            }
-
-            fl_cursor(FL_CURSOR_DEFAULT);
-
-            return;
+    found = false;
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+        if (channel_i->channel() == channel) {
+            found = true;
+            break;
         }
-
-        channel_i++;
     }
 
-    fl_cursor(FL_CURSOR_DEFAULT);
-    _do_not_draw = true;
-    Fl::check();
-    _do_not_draw = false;
+    if (!found) return;
+
+    _channels.erase(channel_i);
+
+    old_start = _range_start;
+    old_end = _range_end;
+
+    if (_full_range) {
+        _calc_range();
+    }
+
+    if (_range_start != old_start || _range_end != old_end) {
+        _load_data();
+    }
+    else {
+        redraw();
+    }
 }
 
 /*****************************************************************************/
@@ -286,33 +234,23 @@ void ViewViewData::clear()
 
 void ViewViewData::full_range()
 {
-    list<ViewChannel>::iterator channel_i = _channels.begin();
+    list<ViewChannel>::iterator channel_i;
+
+    _full_range = true;
 
     fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
     _do_not_draw = true;
     Fl::check();
     _do_not_draw = false;
 
-    _full_range = true;
-
-    while (channel_i != _channels.end())
-    {
-        // Bisherige Daten entfernen
-        channel_i->clear();
-
-        // Chunks holen
-        channel_i->fetch_chunks(_dls_dir, _job_id);
-
-        channel_i++;
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+        channel_i->channel()->fetch_chunks();
     }
 
-    // Zeitspanne errechnen
     _calc_range();
-
-    // Alle Daten holen und neu zeichnen
     _load_data();
-
-    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 /*****************************************************************************/
@@ -325,28 +263,20 @@ void ViewViewData::full_range()
 
 void ViewViewData::update()
 {
-    list<ViewChannel>::iterator channel_i = _channels.begin();
+    list<ViewChannel>::iterator channel_i;
 
     fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
     _do_not_draw = true;
     Fl::check();
     _do_not_draw = false;
 
-    while (channel_i != _channels.end())
-    {
-        // Bisherige Daten entfernen
-        channel_i->clear();
-
-        // Chunks holen
-        channel_i->fetch_chunks(_dls_dir, _job_id);
-
-        channel_i++;
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+        channel_i->channel()->fetch_chunks();
     }
 
-    // Daten holen und neu zeichnen
     _load_data();
-
-    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 /*****************************************************************************/
@@ -359,15 +289,14 @@ void ViewViewData::update()
    \return true, wenn der Kanal bereits angezeigt wird
 */
 
-bool ViewViewData::has_channel(const ViewChannel *channel) const
+bool ViewViewData::has_channel(const Channel *channel) const
 {
-    list<ViewChannel>::const_iterator channel_i = _channels.begin();
+    list<ViewChannel>::const_iterator channel_i;
 
-    while (channel_i != _channels.end())
-    {
-        if (channel_i->name() == channel->name()) return true;
-
-        channel_i++;
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+        if (channel_i->channel() == channel) return true;
     }
 
     return false;
@@ -382,29 +311,28 @@ bool ViewViewData::has_channel(const ViewChannel *channel) const
 void ViewViewData::_calc_range()
 {
     list<ViewChannel>::const_iterator channel_i;
+    COMTime start, end;
 
     // Kein Channel vorhanden?
-    if (_channels.size() == 0)
-    {
-        _range_start = (long long) 0;
-        _range_end = (long long) 0;
+    if (!_channels.size()) {
+        _range_start.set_null();
+        _range_end.set_null();
         return;
     }
 
     // Hier mindestens ein Channel vorhanden!
     channel_i = _channels.begin();
 
-    _range_start = channel_i->start();
-    _range_end = channel_i->end();
+    _range_start = channel_i->channel()->start();
+    _range_end = channel_i->channel()->end();
 
     // Weitere Channels vorhanden?
-    while (++channel_i != _channels.end())
-    {
-        if (channel_i->chunks()->size() == 0) continue;
-
-        if (channel_i->start() < _range_start)
-            _range_start = channel_i->start();
-        if (channel_i->end() > _range_end) _range_end = channel_i->end();
+    while (++channel_i != _channels.end()) {
+        start = channel_i->channel()->start();
+        end = channel_i->channel()->end();
+        if (start.is_null() || end.is_null()) continue;
+        if (start < _range_start) _range_start = start;
+        if (end > _range_end) _range_end = end;
     }
 }
 
@@ -418,16 +346,22 @@ void ViewViewData::_load_data()
 {
     list<ViewChannel>::iterator channel_i;
 
-    channel_i = _channels.begin();
-    while (channel_i != _channels.end())
-    {
-        channel_i->load_data(_range_start, _range_end, w() - 2 * ABSTAND);
-        channel_i++;
+    fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
+    _do_not_draw = true;
+    Fl::check();
+    _do_not_draw = false;
+
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+        channel_i->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
     }
 
     redraw();
 
     if (_range_cb) _range_cb(_range_start, _range_end, _range_cb_data);
+
+    fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 /*****************************************************************************/
@@ -439,9 +373,10 @@ void ViewViewData::_load_data()
 void ViewViewData::draw()
 {
     stringstream str;
-    list<ViewChannel>::iterator channel_i;
+    list<ViewChannel>::const_iterator channel_i;
     int channel_pos;
     int clip_start, clip_height;
+    double x_scale;
 
     if (_do_not_draw) return;
 
@@ -499,7 +434,7 @@ void ViewViewData::draw()
     if (_range_end <= _range_start) return;
 
     // Skalierungsfaktor bestimmen
-    _scale_x = _channel_area_width / (_range_end - _range_start).to_dbl();
+    x_scale = _channel_area_width / (_range_end - _range_start).to_dbl();
 
     // Clipping für das Zeichnen der Erfassungslücken einrichten
     fl_push_clip(x() + ABSTAND,                   // X-Position
@@ -508,23 +443,19 @@ void ViewViewData::draw()
                  _channel_area_height);           // Höhe
 
     // Erfassungslücken farblich hinterlegen
-    channel_pos = 0;
-    channel_i = _channels.begin();
-    while (channel_i != _channels.end())
-    {
-        if (channel_pos * _channel_height <= _scroll_pos + _channel_area_height
-            && (channel_pos + 1) * _channel_height >= _scroll_pos)
-        {
-            _draw_gaps(&(*channel_i),                            // Kanal
-                       x() + ABSTAND,                            // X-Position
-                       y() + ABSTAND + SKALENHOEHE - _scroll_pos
-                       + channel_pos * _channel_height + 2,  // Y-Position
-                       _channel_area_width,                      // Breite
-                       _channel_height);                         // Höhe
-        }
+    for (channel_i = _channels.begin(), channel_pos = 0;
+         channel_i != _channels.end();
+         channel_i++, channel_pos++) {
+        if (channel_pos * _channel_height > _scroll_pos + _channel_area_height
+            || (channel_pos + 1) * _channel_height < _scroll_pos) continue;
 
-        channel_i++;
-        channel_pos++;
+        _draw_gaps(&(*channel_i),                            // Kanal
+                   x() + ABSTAND,                            // X-Position
+                   y() + ABSTAND + SKALENHOEHE - _scroll_pos
+                   + channel_pos * _channel_height + 2,  // Y-Position
+                   _channel_area_width,                      // Breite
+                   _channel_height,                         // Höhe
+                   x_scale);
     }
 
     // Clipping für Erfassungslücken wieder entfernen
@@ -532,7 +463,7 @@ void ViewViewData::draw()
 
     // Zeitskala zeichnen
     _draw_time_scale(x(), y(), _channel_area_width,
-                     h() - INFOHOEHE - 2 * ABSTAND);
+                     h() - INFOHOEHE - 2 * ABSTAND, x_scale);
 
     // Clipping für den gesamten Kanal-Bereich einrichten
     fl_push_clip(x() + ABSTAND,                   // X-Position
@@ -541,52 +472,48 @@ void ViewViewData::draw()
                  _channel_area_height - 1);       // Höhe
 
     // Alle Kanäle zeichnen, die sichtbar sind
-    channel_pos = 0;
-    channel_i = _channels.begin();
-    while (channel_i != _channels.end())
-    {
-        if (channel_pos * _channel_height <= _scroll_pos + _channel_area_height
-            && (channel_pos + 1) * _channel_height >= _scroll_pos)
-        {
-            clip_start = channel_pos * _channel_height - _scroll_pos;
-            if (clip_start < 0) clip_start = 0;
+    for (channel_i = _channels.begin(), channel_pos = 0;
+         channel_i != _channels.end();
+         channel_i++, channel_pos++) {
 
-            clip_height = _channel_height;
-            if ((channel_pos + 1) * _channel_height - 1 - _scroll_pos
-                >= _channel_area_height)
-            {
-                clip_height = _channel_area_height
-                    - channel_pos * _channel_height + _scroll_pos;
-            }
+        if (channel_pos * _channel_height > _scroll_pos + _channel_area_height
+            || (channel_pos + 1) * _channel_height < _scroll_pos) continue;
 
-            // Kanal-Clipping einrichten
-            fl_push_clip(x() + ABSTAND, // X-Position
-                         (y() + ABSTAND + SKALENHOEHE
-                          + 2 + clip_start), // Y-Position
-                         _channel_area_width, // Breite
-                         clip_height - 1); // Höhe
+        clip_start = channel_pos * _channel_height - _scroll_pos;
+        if (clip_start < 0) clip_start = 0;
 
-            // Kanal zeichnen
-            _draw_channel(&(*channel_i), // Kanal
-                          x() + ABSTAND, // X-Position
-                          (y() + ABSTAND + SKALENHOEHE - _scroll_pos
-                           + channel_pos * _channel_height + 2), // Y-Position
-                          _channel_area_width, // Breite
-                          _channel_height); // Höhe
-
-            // Kanal-Clipping wieder entfernen
-            fl_pop_clip();
+        clip_height = _channel_height;
+        if ((channel_pos + 1) * _channel_height - 1 - _scroll_pos
+            >= _channel_area_height) {
+            clip_height = _channel_area_height
+                - channel_pos * _channel_height + _scroll_pos;
         }
 
-        channel_i++;
-        channel_pos++;
+        // Kanal-Clipping einrichten
+        fl_push_clip(x() + ABSTAND, // X-Position
+                     (y() + ABSTAND + SKALENHOEHE
+                      + 2 + clip_start), // Y-Position
+                     _channel_area_width, // Breite
+                     clip_height - 1); // Höhe
+
+        // Kanal zeichnen
+        _draw_channel(&(*channel_i), // Kanal
+                      x() + ABSTAND, // X-Position
+                      (y() + ABSTAND + SKALENHOEHE - _scroll_pos
+                       + channel_pos * _channel_height + 2), // Y-Position
+                      _channel_area_width, // Breite
+                      _channel_height, // Höhe
+                      x_scale);
+
+        // Kanal-Clipping wieder entfernen
+        fl_pop_clip();
     }
 
     // Gesamt-Clipping wieder entfernen
     fl_pop_clip();
 
     // Interaktionsobjekte (Zoom-Linien etc.) zeichnen
-    _draw_interactions();
+    _draw_interactions(x_scale);
 }
 
 /*****************************************************************************/
@@ -603,11 +530,12 @@ void ViewViewData::draw()
 
 void ViewViewData::_draw_gaps(const ViewChannel *channel,
                               int left, int top,
-                              int width, int height)
+                              int width, int height,
+                              double x_scale) const
 {
     double xp, old_xp;
     int offset_drawing, height_drawing;
-    list<ViewChunk *>::const_iterator chunk_i;
+    list<Chunk>::const_iterator chunk_i;
     ViewViewDataChunkRange chunk_range;
     vector<ViewViewDataChunkRange> chunk_ranges, relevant_chunk_ranges;
     vector<ViewViewDataChunkRange>::iterator chunk_range_i;
@@ -617,73 +545,58 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
     height_drawing = height - KANAL_HEADER_HOEHE - 4;
 
     // Chunk-Zeitbereiche merken
-    chunk_i = channel->chunks()->begin();
-    while (chunk_i != channel->chunks()->end())
-    {
-        chunk_range.start = (*chunk_i)->start();
-        chunk_range.end = (*chunk_i)->end();
+    for (chunk_i = channel->channel()->chunks().begin();
+         chunk_i != channel->channel()->chunks().end();
+         chunk_i++) {
+        chunk_range.start = chunk_i->start();
+        chunk_range.end = chunk_i->end();
         chunk_ranges.push_back(chunk_range);
-
-        chunk_i++;
     }
 
     // Chunk-Zeitbereiche nach Anfangszeit sortieren
     sort(chunk_ranges.begin(), chunk_ranges.end(), range_before);
 
     // Prüfen, ob Chunks überlappen
-    last_end = (long long) 0;
-    chunk_range_i = chunk_ranges.begin();
-    while (chunk_range_i != chunk_ranges.end())
-    {
-        if (chunk_range_i->start <= last_end)
-        {
-            cout << "WARNING: chunks overlapping in channel \""
-                 << channel->name() << "\"!" << endl;
-            cout << "cannot draw gaps!" << endl;
+    last_end.set_null();
+    for (chunk_range_i = chunk_ranges.begin();
+         chunk_range_i != chunk_ranges.end();
+         chunk_range_i++) {
+        if (chunk_range_i->start <= last_end) {
+            cerr << "WARNING: Chunks overlapping in channel \""
+                 << channel->channel()->name() << "\"!" << endl;
             return;
         }
-
         last_end = chunk_range_i->end;
-        chunk_range_i++;
     }
 
     // Alle Chunks kopieren, die Anteil am Zeitfenster haben
-    chunk_range_i = chunk_ranges.begin();
-    while (chunk_range_i != chunk_ranges.end())
-    {
-        if (chunk_range_i->end >= _range_start)
-        {
-            if (chunk_range_i->start > _range_end) break;
-            relevant_chunk_ranges.push_back(*chunk_range_i);
-        }
-        chunk_range_i++;
+    for (chunk_range_i = chunk_ranges.begin();
+         chunk_range_i != chunk_ranges.end();
+         chunk_range_i++) {
+        if (chunk_range_i->end < _range_start) continue;
+        if (chunk_range_i->start > _range_end) break;
+        relevant_chunk_ranges.push_back(*chunk_range_i);
     }
 
     old_xp = -1;
     fl_color(SPACE_COLOR);
 
-    chunk_range_i = relevant_chunk_ranges.begin();
-    while (chunk_range_i != relevant_chunk_ranges.end())
-    {
-        xp = (chunk_range_i->start.to_dbl() - _range_start.to_dbl())
-            * _scale_x;
+    for (chunk_range_i = relevant_chunk_ranges.begin();
+         chunk_range_i != relevant_chunk_ranges.end();
+         chunk_range_i++) {
+        xp = (chunk_range_i->start - _range_start).to_dbl() * x_scale;
 
-        if (xp > old_xp + 1) // Lücke vorhanden?
-        {
+        if (xp > old_xp + 1) { // Lücke vorhanden?
             fl_rectf(left + (int) (old_xp + 1.5),
                      offset_drawing - height_drawing,
                      (int) (xp - old_xp - 1),
                      height_drawing);
         }
 
-        old_xp = (chunk_range_i->end.to_dbl() - _range_start.to_dbl())
-            * _scale_x;
-
-        chunk_range_i++;
+        old_xp = (chunk_range_i->end - _range_start).to_dbl() * x_scale;
     }
 
-    if (width > old_xp + 1)
-    {
+    if (width > old_xp + 1) {
         fl_rectf(left + (int) (old_xp + 1.5),
                  offset_drawing - height_drawing,
                  (int) (width - old_xp - 1),
@@ -723,7 +636,9 @@ bool ViewViewData::range_before(const ViewViewDataChunkRange &range1,
 */
 
 void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
-                                    unsigned int width, unsigned int height)
+                                    unsigned int width, unsigned int height,
+                                    double x_scale
+                                    ) const
 {
     int pot, step_factor_index, last_pixel, xp, text_width, text_height;
     double time_step, step;
@@ -748,12 +663,10 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
         scale_fits = true;
 
         // Zeichnen simulieren
-        for (COMTime t = time_start; t <= time_end; t += step)
-        {
-            xp = (int) ((t - _range_start).to_dbl() * _scale_x);
+        for (COMTime t = time_start; t <= time_end; t += step) {
+            xp = (int) ((t - _range_start).to_dbl() * x_scale);
 
-            if (xp <= last_pixel)
-            {
+            if (xp <= last_pixel) {
                 // Zeichnen unmöglich. Nächsten Schritt versuchen!
                 step_factor_index++;
                 scale_fits = false;
@@ -775,9 +688,8 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
     if (!scale_fits) return; // Nur zeichnen, wenn eine
                              // sinnvolle Skala gefunden wurde
 
-    for (COMTime t = time_start; t <= time_end; t += step)
-    {
-        xp = (int) ((t - _range_start).to_dbl() * _scale_x);
+    for (COMTime t = time_start; t <= time_end; t += step) {
+        xp = (int) ((t - _range_start).to_dbl() * x_scale);
 
         // Skalenlinie zeichnen
         fl_color(150, 150, 150);
@@ -814,11 +726,13 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
 
 void ViewViewData::_draw_channel(const ViewChannel *channel,
                                  int left, int top,
-                                 int width, int height)
+                                 int width, int height, double x_scale) const
 {
     stringstream str;
-    list<ViewChunk *>::const_iterator chunk_i;
     int drawing_top, drawing_height;
+    ScanInfo scan;
+    double channel_min, channel_max;
+    double y_scale;
 
     // Box für Beschriftung zeichnen
     fl_color(FL_WHITE);
@@ -827,70 +741,57 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
     fl_rect(left, top, width, KANAL_HEADER_HOEHE);
 
     // Beschriftungstext zeichnen
-    str << channel->name();
+    str << channel->channel()->name();
     str << " | ";
-    str << channel->min() << channel->unit();
-    str << " - ";
-    str << channel->max() << channel->unit();
+    str << channel->min() << channel->channel()->unit();
+    str << " to ";
+    str << channel->max() << channel->channel()->unit();
     if (channel->max() < channel->min()) str << " (ILLEGAL RANGE)";
-    str << " | ";
-    str << channel->blocks_fetched() << " block(s)";
 
-    if (channel->min_level_fetched() == channel->max_level_fetched())
-    {
-        str << " | level " << channel->min_level_fetched();
+    if (channel->min_level() == channel->max_level()) {
+        str << " | level " << channel->min_level();
     }
-    else
-    {
-        str << " | levels " << channel->min_level_fetched();
-        str << " - " << channel->max_level_fetched();
+    else {
+        str << " | levels " << channel->min_level();
+        str << " - " << channel->max_level();
     }
 
     fl_draw(str.str().c_str(), left + 5, top + 10);
 
     // Annehmen, dass es keinen Schnittpunkt der Daten mit einer
     // eventuellen Scanlinie gibt
-    _scan_found = false;
+    scan.found = false;
 
     drawing_top = top + KANAL_HEADER_HOEHE + 2;
     drawing_height = height - KANAL_HEADER_HOEHE - 4;
 
-    // Kanaldaten zeichnen, wenn sinnvolle Werteskala
-    if (channel->max() >= channel->min())
-    {
-        _channel_min = channel->min();
-        _channel_max = channel->max();
+    channel_min = channel->min();
+    channel_max = channel->max();
 
-        // Wenn die Werteskala nur einen Wert umfasst,
-        // Bereich zur Anzeige erweitern
-        if (_channel_min == _channel_max)
-        {
-            _channel_min--;
-            _channel_max++;
+    // Kanaldaten nur zeichnen, wenn sinnvolle Werteskala
+    if (channel_max >= channel_min) {
+        if (channel_min == channel_max) {
+            y_scale = 0.0;
+        }
+        else {
+            y_scale = drawing_height / (channel_max - channel_min);
         }
 
-        _scale_y = drawing_height / (_channel_max - _channel_min);
-
-        // Daten zeichnen
-        chunk_i = channel->chunks()->begin();
-        while (chunk_i != channel->chunks()->end())
-        {
-            if ((*chunk_i)->current_level() == 0)
-            {
-                _draw_gen(*chunk_i, left, drawing_top, width, drawing_height);
-            }
-            else
-            {
-                _draw_min_max(*chunk_i, left, drawing_top,
-                              width, drawing_height);
-            }
-
-            chunk_i++;
+        if (channel->gen_data().size()) {
+            _draw_gen(channel, &scan, left, drawing_top,
+                      width, drawing_height, x_scale, y_scale,
+                      channel_min);
+        }
+        if (channel->min_data().size() && channel->max_data().size()) {
+            _draw_min_max(channel, &scan, left, drawing_top,
+                          width, drawing_height, x_scale, y_scale,
+                          channel_min);
         }
     }
 
     // Bei Bedarf Scan-Linie mit Datenwerten zeichnen
-    _draw_scan(channel, left, drawing_top, width, drawing_height);
+    _draw_scan(channel, &scan, left, drawing_top, width, drawing_height,
+               x_scale, y_scale, channel_min);
 }
 
 /*****************************************************************************/
@@ -906,104 +807,105 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
    \param height Höhe des Zeichenbereiches
 */
 
-void ViewViewData::_draw_gen(const ViewChunk *chunk,
+void ViewViewData::_draw_gen(const ViewChannel *channel,
+                             ScanInfo *scan,
                              int left, int top,
-                             int width, int height)
+                             int width, int height,
+                             double x_scale, double y_scale,
+                             double channel_min) const
 {
-    double xv, yv, time, value, old_value;
+    list<Data>::const_iterator data_i;
+    double xv, yv, value, old_value;
     int xp, yp, old_xp, old_yp, dx, dy;
     bool first_in_chunk = true, first_drawn = true;
     unsigned int i;
 
     fl_color(GEN_COLOR);
 
-    for (i = 0; i < chunk->gen_data()->size(); i++)
-    {
-        time = chunk->gen_data()->time(i);
-        value = chunk->gen_data()->value(i);
-        xv = (time - _range_start.to_dbl()) * _scale_x;
-        yv = (value - _channel_min) * _scale_y;
+    for (data_i = channel->gen_data().begin();
+         data_i != channel->gen_data().end();
+         data_i++) {
 
-        // Runden
-        if (xv >= 0) xp = (int) (xv + 0.5);
-        else xp = (int) (xv - 0.5);
-        if (yv >= 0) yp = (int) (yv + 0.5);
-        else yp = (int) (yv - 0.5);
+        for (i = 0; i < data_i->size(); i++) {
+            value = data_i->value(i);
+            xv = (data_i->time(i) - _range_start).to_dbl() * x_scale;
+            yv = (value - channel_min) * y_scale;
 
-        // Nur zeichnen, wenn aktueller Punkt auch
-        // innerhalb des Zeitfensters liegt
-        if (xp >= 0)
-        {
-            if (first_in_chunk)
-            {
-                fl_point(left + xp, top + height - yp);
-            }
-            else
-            {
-                dx = xp - old_xp;
-                dy = yp - old_yp;
+            // Runden
+            if (xv >= 0.0) xp = (int) (xv + 0.5);
+            else xp = (int) (xv - 0.5);
+            if (yv >= 0.0) yp = (int) (yv + 0.5);
+            else yp = (int) (yv - 0.5);
 
-                // Wenn der aktuelle Pixel mehr als einen Pixel
-                // vom Letzten entfernt liegt
-                if ((float) dx * (float) dx + (float) dy * (float) dy > 0)
-                {
-                    // Linie zeichnen
-                    fl_line(left + old_xp, top + height - old_yp,
-                            left + xp, top + height - yp);
+            // Nur zeichnen, wenn aktueller Punkt auch
+            // innerhalb des Zeitfensters liegt
+            if (xp >= 0) {
+                if (first_in_chunk) {
+                    fl_point(left + xp, top + height - yp);
                 }
+                else {
+                    dx = xp - old_xp;
+                    dy = yp - old_yp;
+
+                    // Wenn der aktuelle Pixel mehr als einen Pixel
+                    // vom Letzten entfernt liegt
+                    if ((float) dx * (float) dx
+                        + (float) dy * (float) dy > 0) {
+                        // Linie zeichnen
+                        fl_line(left + old_xp, top + height - old_yp,
+                                left + xp, top + height - yp);
+                    }
+                }
+
+                if (xp >= width) break;
+
+                if (_scanning) {
+                    if (xp == _scan_x) {
+                        // Punkt fällt genau auf die Scan-Linie
+                        if (scan->found) {
+                            if (value < scan->min_value)
+                                scan->min_value = value;
+                            if (value > scan->max_value)
+                                scan->max_value = value;
+                        }
+                        else {
+                            scan->min_value = value;
+                            scan->max_value = value;
+                            scan->snapped_x = _scan_x;
+                            scan->found = true;
+                        }
+                    }
+
+                    // Die Scan-Linie ist zwischen zwei Punkten
+                    else if (xp > _scan_x && old_xp
+                             < _scan_x && !first_drawn) {
+                        if (_scan_x - old_xp < xp - _scan_x) {
+                            scan->min_value = old_value;
+                            scan->max_value = old_value;
+                            scan->snapped_x = old_xp;
+                        }
+                        else {
+                            scan->min_value = value;
+                            scan->max_value = value;
+                            scan->snapped_x = xp;
+                        }
+
+                        scan->found = true;
+                    }
+                }
+
+                first_drawn = false;
             }
 
+            // Alle folgenden Werte des Blockes gehen über das
+            // Zeichenfenster hinaus. Abbrechen.
             if (xp >= width) break;
 
-            if (_scanning)
-            {
-                if (xp == _scan_x) // Punkt fällt genau auf die Scan-Linie
-                {
-                    if (_scan_found)
-                    {
-                        if (value < _scan_min) _scan_min = value;
-                        if (value > _scan_max) _scan_max = value;
-                    }
-                    else
-                    {
-                        _scan_min = value;
-                        _scan_max = value;
-                        _scan_ch_x = _scan_x;
-                        _scan_found = true;
-                    }
-                }
-
-                // Die Scan-Linie ist zwischen zwei Punkten
-                else if (xp > _scan_x && old_xp < _scan_x && !first_drawn)
-                {
-                    if (_scan_x - old_xp < xp - _scan_x)
-                    {
-                        _scan_min = old_value;
-                        _scan_max = old_value;
-                        _scan_ch_x = old_xp;
-                    }
-                    else
-                    {
-                        _scan_min = value;
-                        _scan_max = value;
-                        _scan_ch_x = xp;
-                    }
-
-                    _scan_found = true;
-                }
-            }
-
-            first_drawn = false;
+            old_xp = xp;
+            old_yp = yp;
+            old_value = value;
+            first_in_chunk = false;
         }
-
-        // Alle folgenden Werte des Blockes gehen über das
-        // Zeichenfenster hinaus. Abbrechen.
-        if (xp >= width) break;
-
-        old_xp = xp;
-        old_yp = yp;
-        old_value = value;
-        first_in_chunk = false;
     }
 }
 
@@ -1016,161 +918,149 @@ void ViewViewData::_draw_gen(const ViewChunk *chunk,
    gezeichnet werden soll
    \param left X-Position des linken Randes des Zeichenbereiches
    \param top Y-Position des oberen Randes des Zeichenbereiches
-   \param width Breite des Zeichenbereiches
+   \param width Breite des Zeichenereiches
    \param height Höhe des Zeichenbereiches
 */
 
-void ViewViewData::_draw_min_max(const ViewChunk *chunk,
+void ViewViewData::_draw_min_max(const ViewChannel *channel,
+                                 ScanInfo *scan,
                                  int left, int top,
-                                 int width, int height)
+                                 int width, int height,
+                                 double x_scale, double y_scale,
+                                 double channel_min) const
 {
-    double xv, yv, time, value;
+    list<Data>::const_iterator data_i;
+    double xv, yv, value;
     int xp, yp, i;
     unsigned int j;
-    list<ViewBlock *>::const_iterator block_i;
     int *min_px, *max_px;
 
-    try
-    {
+    try {
         min_px = new int[width];
     }
-    catch (...)
-    {
-        cout << "ERROR: could not allocate drawing memory!" << endl;
+    catch (...) {
+        cerr << "ERROR: Failed to allocate drawing memory!" << endl;
         return;
     }
 
-    try
-    {
+    try {
         max_px = new int[width];
     }
-    catch (...)
-    {
-        cout << "ERROR: could not allocate drawing memory!" << endl;
+    catch (...) {
+        cerr << "ERROR: Failed to allocate drawing memory!" << endl;
         delete [] min_px;
         return;
     }
 
-    for (i = 0; i < width; i++)
-    {
+    for (i = 0; i < width; i++) {
         min_px[i] = -1;
         max_px[i] = -1;
     }
 
     fl_color(MIN_MAX_COLOR);
 
-#ifdef DEBUG
-    //cout << "min: " << chunk->min_data()->size() << " values." << endl;
-#endif
+    for (data_i = channel->min_data().begin();
+         data_i != channel->min_data().end();
+         data_i++) {
 
-    for (j = 0; j < chunk->min_data()->size(); j++)
-    {
-        time = chunk->min_data()->time(j);
-        value = chunk->min_data()->value(j);
-        xv = (time - _range_start.to_dbl()) * _scale_x;
-        yv = (value - _channel_min) * _scale_y;
+        for (j = 0; j < data_i->size(); j++) {
+            value = data_i->value(j);
+            xv = (data_i->time(j) - _range_start).to_dbl() * x_scale;
+            yv = (value - channel_min) * y_scale;
 
-        // Runden
-        if (xv >= 0) xp = (int) (xv + 0.5);
-        else xp = (int) (xv - 0.5);
-        if (yv >= 0) yp = (int) (yv + 0.5);
-        else yp = (int) (yv - 0.5);
+            // Runden
+            if (xv >= 0.0) xp = (int) (xv + 0.5);
+            else xp = (int) (xv - 0.5);
+            if (yv >= 0.0) yp = (int) (yv + 0.5);
+            else yp = (int) (yv - 0.5);
 
-        if (xp >= 0 && xp < width)
-        {
-            if (min_px[xp] == -1 || (min_px[xp] != -1 && yp < min_px[xp]))
-            {
-                min_px[xp] = yp;
-            }
+            if (xp >= 0 && xp < width) {
+                if (min_px[xp] == -1
+                    || (min_px[xp] != -1 && yp < min_px[xp]))
+                    min_px[xp] = yp;
 
-            if (_scanning)
-            {
-                if (xp == _scan_x)
-                {
-                    if (_scan_found)
-                    {
-                        if (value < _scan_min) _scan_min = value;
-                        if (value > _scan_max) _scan_max = value;
-                    }
-                    else
-                    {
-                        _scan_min = value;
-                        _scan_max = value;
-                        _scan_ch_x = _scan_x;
-                        _scan_found = true;
+                if (_scanning) {
+                    if (xp == _scan_x) {
+                        if (scan->found) {
+                            if (value < scan->min_value)
+                                scan->min_value = value;
+                            if (value > scan->max_value)
+                                scan->max_value = value;
+                        }
+                        else {
+                            scan->min_value = value;
+                            scan->max_value = value;
+                            scan->snapped_x = _scan_x;
+                            scan->found = true;
+                        }
                     }
                 }
             }
-        }
 
-        // Alle folgenden Werte des Blockes gehen über das
-        // Zeichenfenster hinaus. Abbrechen.
-        else if (xp >= width) break;
+            // Alle folgenden Werte des Blockes gehen über das
+            // Zeichenfenster hinaus. Abbrechen.
+            else if (xp >= width) break;
+        }
     }
 
-    for (j = 0; j < chunk->max_data()->size(); j++)
-    {
-        time = chunk->max_data()->time(j);
-        value = chunk->max_data()->value(j);
-        xv = (time - _range_start.to_dbl()) * _scale_x;
-        yv = (value - _channel_min) * _scale_y;
+    for (data_i = channel->max_data().begin();
+         data_i != channel->max_data().end();
+         data_i++) {
 
-        // Runden
-        if (xv >= 0) xp = (int) (xv + 0.5);
-        else xp = (int) (xv - 0.5);
-        if (yv >= 0) yp = (int) (yv + 0.5);
-        else yp = (int) (yv - 0.5);
+        for (j = 0; j < data_i->size(); j++) {
+            value = data_i->value(j);
+            xv = (data_i->time(j) - _range_start).to_dbl() * x_scale;
+            yv = (value - channel_min) * y_scale;
 
-        if (xp >= 0 && xp < width)
-        {
-            if (max_px[xp] == -1 || (max_px[xp] != -1 && yp > max_px[xp]))
-            {
-                max_px[xp] = yp;
-            }
+            // Runden
+            if (xv >= 0.0) xp = (int) (xv + 0.5);
+            else xp = (int) (xv - 0.5);
+            if (yv >= 0.0) yp = (int) (yv + 0.5);
+            else yp = (int) (yv - 0.5);
 
-            if (_scanning)
-            {
-                if (xp == _scan_x)
-                {
-                    if (_scan_found)
-                    {
-                        if (value < _scan_min) _scan_min = value;
-                        if (value > _scan_max) _scan_max = value;
-                    }
-                    else
-                    {
-                        _scan_min = value;
-                        _scan_max = value;
-                        _scan_ch_x = _scan_x;
-                        _scan_found = true;
+            if (xp >= 0 && xp < width) {
+                if (max_px[xp] == -1
+                    || (max_px[xp] != -1 && yp > max_px[xp])) {
+                    max_px[xp] = yp;
+                }
+
+                if (_scanning) {
+                    if (xp == _scan_x) {
+                        if (scan->found) {
+                            if (value < scan->min_value)
+                                scan->min_value = value;
+                            if (value > scan->max_value)
+                                scan->max_value = value;
+                        }
+                        else {
+                            scan->min_value = value;
+                            scan->max_value = value;
+                            scan->snapped_x = _scan_x;
+                            scan->found = true;
+                        }
                     }
                 }
             }
-        }
 
-        // Alle folgenden Werte des Blockes gehen über das
-        // Zeichenfenster hinaus. Abbrechen.
-        else if (xp >= width) break;
+            // Alle folgenden Werte des Blockes gehen über das
+            // Zeichenfenster hinaus. Abbrechen.
+            else if (xp >= width) break;
+        }
     }
 
     // Werte zeichnen
-    for (i = 0; i < width; i++)
-    {
-        if (min_px[i] != -1 && max_px[i] != -1)
-        {
+    for (i = 0; i < width; i++) {
+        if (min_px[i] != -1 && max_px[i] != -1) {
             fl_line(left + i,
                     top + height - min_px[i],
                     left + i,
                     top + height - max_px[i]);
         }
-        else
-        {
-            if (min_px[i] != -1)
-            {
+        else {
+            if (min_px[i] != -1) {
                 fl_point(left + i, top + height - min_px[i]);
             }
-            if (max_px[i] != -1)
-            {
+            if (max_px[i] != -1) {
                 fl_point(left + i, top + height - max_px[i]);
             }
         }
@@ -1192,8 +1082,10 @@ void ViewViewData::_draw_min_max(const ViewChunk *chunk,
    \param height Höhe des Zeichenbereiches
 */
 
-void ViewViewData::_draw_scan(const ViewChannel *channel,
-                              int left, int top, int width, int height)
+void ViewViewData::_draw_scan(const ViewChannel *channel, ScanInfo *scan,
+                              int left, int top, int width, int height,
+                              double x_scale, double y_scale,
+                              double channel_min) const
 {
     stringstream text_time, text_value;
     int text_time_width, text_value_width;
@@ -1205,13 +1097,11 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
     // Scan-Linie nicht im gültigen Bereich liegt, abbrechen.
     if (!_scanning || _scan_x < 0 || _scan_x >= width) return;
 
-    if (_scan_found)
-    {
-        scan_x = _scan_ch_x;
+    if (scan->found) {
+        scan_x = scan->snapped_x;
         fl_color(SCAN_COLOR);
     }
-    else
-    {
+    else {
         scan_x = _scan_x;
         fl_color(fl_darker(SCAN_COLOR));
     }
@@ -1220,7 +1110,7 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
     fl_line(left + scan_x, top, left + scan_x, top + height);
 
     // Zeit der Scanlinie berechnen
-    scan_time = _range_start.to_dbl() + (scan_x - ABSTAND) / _scale_x;
+    scan_time = _range_start + COMTime((scan_x - ABSTAND) / x_scale);
 
     // Textbreiten auf 0 setzen
     // Auch wichtig, da fl_measure den Text sonst
@@ -1231,13 +1121,12 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
     text_time << scan_time.to_real_time();
     fl_measure(text_time.str().c_str(), text_time_width, text_height);
 
-    if (_scan_found)
-    {
-        text_value << _scan_min << channel->unit();
+    if (scan->found) {
+        text_value << scan->min_value << channel->channel()->unit();
 
-        if (_scan_min != _scan_max)
-        {
-            text_value << " - " << _scan_max << channel->unit();
+        if (scan->min_value != scan->max_value) {
+            text_value << " to " << scan->max_value
+                       << channel->channel()->unit();
         }
 
         fl_measure(text_value.str().c_str(), text_value_width, text_height);
@@ -1245,50 +1134,41 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
 
     // Wenn einer der Texte nicht mehr rechts neben die Scanlinie passt
     if (scan_x + 10 + text_time_width >= left + width
-        || scan_x + 10 + text_value_width >= left + width)
-    {
+        || scan_x + 10 + text_value_width >= left + width) {
         // Alle Texte auf die linke Seite der Scanlinie zeichnen
         text_time_x = scan_x - 10 - text_time_width;
         text_value_x = scan_x - 10 - text_value_width;
     }
-    else
-    {
+    else {
         // Alle Texte auf die rechte Seite der Scanlinie zeichnen
         text_time_x = scan_x + 10;
         text_value_x = scan_x + 10;
     }
 
-    if (_scan_found)
-    {
+    if (scan->found) {
         // Schnittpunkte anzeigen
-        yp1 = (int) ((_scan_max - _channel_min) * _scale_y + 0.5);
+        yp1 = (int) ((scan->min_value - channel_min) * y_scale + 0.5);
+        yp2 = (int) ((scan->max_value - channel_min) * y_scale + 0.5);
 
         fl_color(SCAN_COLOR);
-        fl_line(left, top + height - yp1, left + width, top + height - yp1);
+        fl_line(left, top + height - yp1,
+                left + width, top + height - yp1);
 
-        if (_scan_min != _scan_max)
-        {
-            yp2 = (int) ((_scan_min - _channel_min) * _scale_y + 0.5);
-
-            if (yp2 != yp1)
-            {
-                fl_line(left, top + height - yp2, left + width,
-                        top + height - yp2);
-            }
-        }
+        if (yp2 != yp1)
+            fl_line(left, top + height - yp2,
+                    left + width, top + height - yp2);
     }
 
     // Zeit-Text zeichnen
     fl_color(FL_WHITE);
     fl_rectf(left + text_time_x - 2, top, text_time_width + 4, text_height);
-    if (_scan_found) fl_color(SCAN_COLOR);
+    if (scan->found) fl_color(SCAN_COLOR);
     else fl_color(fl_darker(SCAN_COLOR));
     fl_draw(text_time.str().c_str(), left + text_time_x,
             top + text_height / 2 + fl_descent());
     y_pos = text_height;
 
-    if (_scan_found)
-    {
+    if (scan->found) {
         if (height - yp1 - 5 - text_height < y_pos)
             yp1 = height - y_pos - text_height - 5;
 
@@ -1311,15 +1191,14 @@ void ViewViewData::_draw_scan(const ViewChannel *channel,
    Zeichnet die Zoom-Linien oder den Verschiebungs-Pfeil
 */
 
-void ViewViewData::_draw_interactions()
+void ViewViewData::_draw_interactions(double x_scale) const
 {
     stringstream str;
     int text_width, text_height, x_pos;
     COMTime start_time, end_time;
 
     // "Zooming-Linie"
-    if (_zooming)
-    {
+    if (_zooming) {
         fl_color(FL_RED);
 
         fl_line(x() + _start_x, y() + ABSTAND + SKALENHOEHE + 1,
@@ -1327,7 +1206,7 @@ void ViewViewData::_draw_interactions()
         fl_line(x() + _end_x, y() + ABSTAND + SKALENHOEHE + 1,
                 x() + _end_x, y() + h() - ABSTAND - INFOHOEHE - 1);
 
-        start_time = _range_start.to_dbl() + _start_x / _scale_x;
+        start_time = _range_start.to_dbl() + _start_x / x_scale;
 
         str.str("");
         str.clear();
@@ -1351,7 +1230,7 @@ void ViewViewData::_draw_interactions()
                 x() + x_pos + 2,
                 y() + ABSTAND + SKALENHOEHE + 10);
 
-        end_time = _range_start.to_dbl() + _end_x / _scale_x;
+        end_time = _range_start + COMTime(_end_x / x_scale);
 
         str.str("");
         str.clear();
@@ -1399,8 +1278,7 @@ void ViewViewData::_draw_interactions()
     }
 
     // "Verschiebungs-Pfeil"
-    else if (_moving)
-    {
+    else if (_moving) {
         fl_color(150, 150, 0);
         fl_line(x() + _start_x, y() + _start_y, x() + _end_x, y() + _start_y);
 
@@ -1445,8 +1323,7 @@ int ViewViewData::handle(int event)
     // Ist das Ereignis für die Track-Bar?
     if (_track_bar->handle(event,
                            xp - w() + TRACK_BAR_WIDTH + ABSTAND,
-                           yp - ABSTAND))
-    {
+                           yp - ABSTAND)) {
         redraw();
         return 1;
     }
@@ -1456,21 +1333,18 @@ int ViewViewData::handle(int event)
     if (_track_bar->visible()) channel_area_width -= TRACK_BAR_WIDTH + 1;
     scale_x = (_range_end - _range_start).to_dbl() / channel_area_width;
 
-    switch (event)
-    {
+    switch (event) {
         case FL_PUSH:
-
             take_focus();
 
             _start_x = xp;
             _start_y = yp;
 
-            if (Fl::event_clicks() == 1) // Doubleclick
-            {
+            if (Fl::event_clicks() == 1) { // Doubleclick
                 Fl::event_clicks(0);
 
-                if (xp > ABSTAND && xp < (int) (channel_area_width + ABSTAND))
-                {
+                if (xp > ABSTAND
+                    && xp < (int) (channel_area_width + ABSTAND)) {
                     if (Fl::event_state(FL_SHIFT)) zoom_out_factor = 10;
                     else zoom_out_factor = 2;
 
@@ -1483,28 +1357,17 @@ int ViewViewData::handle(int event)
                     _range_end = new_start.to_dbl()
                         + time_range.to_dbl() * 0.5;
                     _full_range = false;
-
-                    fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
-                    _do_not_draw = true;
-                    Fl::check();
-                    _do_not_draw = false;
-
                     _load_data();
-
-                    fl_cursor(FL_CURSOR_DEFAULT, FL_BLACK, FL_WHITE);
                 }
             }
 
             return 1;
 
         case FL_DRAG:
-
-            if (Fl::event_state(FL_BUTTON1)) // Linke Maustaste
-            {
+            if (Fl::event_state(FL_BUTTON1)) { // Linke Maustaste
                 _zooming = true;
             }
-            else if (Fl::event_state(FL_BUTTON3)) // Rechte Maustaste
-            {
+            else if (Fl::event_state(FL_BUTTON3)) { // Rechte Maustaste
                 _moving = true;
             }
 
@@ -1516,65 +1379,48 @@ int ViewViewData::handle(int event)
             return 1;
 
         case FL_RELEASE:
-
             _end_x = xp;
             _end_y = yp;
 
-	    _start_x -= ABSTAND;
-	    _end_x -= ABSTAND;
+            _start_x -= ABSTAND;
+            _end_x -= ABSTAND;
 
-            if (_start_x < _end_x)
-            {
+            if (_start_x < _end_x) {
                 dx = _start_x;
                 dw = _end_x - _start_x;
             }
-            else
-            {
+            else {
                 dx = _end_x;
                 dw = _start_x - _end_x;
             }
 
-            if (_start_y < _end_y)
-            {
+            if (_start_y < _end_y) {
                 dy = _start_y;
                 dh = _end_y - _start_y;
             }
-            else
-            {
+            else {
                 dy = _end_y;
                 dh = _start_y - _end_y;
             }
 
-            if (_zooming)
-            {
+            if (_zooming) {
                 _zooming = false;
 
                 new_start = _range_start + (long long) (dx * scale_x);
                 new_end = _range_start + (long long) ((dx + dw) * scale_x);
 
-                if (new_start < new_end)
-                {
+                if (new_start < new_end) {
                     _range_start = new_start;
                     _range_end = new_end;
                     _full_range = false;
-
-                    fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
-                    _do_not_draw = true;
-                    Fl::check();
-                    _do_not_draw = false;
-
                     _load_data();
-
-                    fl_cursor(FL_CURSOR_DEFAULT, FL_BLACK, FL_WHITE);
                 }
-                else
-                {
+                else {
                     redraw();
                 }
             }
 
-            if (_moving)
-            {
+            if (_moving) {
                 _moving = false;
 
                 time_diff = (long long) ((_end_x - _start_x) * scale_x);
@@ -1582,23 +1428,13 @@ int ViewViewData::handle(int event)
                 new_start = _range_start + time_diff;
                 new_end = _range_end + time_diff;
 
-                if (new_start < new_end)
-                {
+                if (new_start < new_end) {
                     _range_start = new_start;
                     _range_end = new_end;
                     _full_range = false;
-
-                    fl_cursor(FL_CURSOR_WAIT, FL_BLACK, FL_WHITE);
-                    _do_not_draw = true;
-                    Fl::check();
-                    _do_not_draw = false;
-
                     _load_data();
-
-                    fl_cursor(FL_CURSOR_DEFAULT, FL_BLACK, FL_WHITE);
                 }
-                else
-                {
+                else {
                     redraw();
                 }
             }
@@ -1606,11 +1442,9 @@ int ViewViewData::handle(int event)
             return 1;
 
         case FL_ENTER:
-
             _mouse_in = true;
 
-            if (Fl::event_state(FL_CTRL))
-            {
+            if (Fl::event_state(FL_CTRL)) {
                 _scan_x = xp - ABSTAND;
                 _scanning = true;
                 redraw();
@@ -1619,9 +1453,7 @@ int ViewViewData::handle(int event)
             return 1;
 
         case FL_MOVE:
-
-            if (_scanning)
-            {
+            if (_scanning) {
                 _scan_x = xp - ABSTAND;
                 redraw();
             }
@@ -1629,11 +1461,9 @@ int ViewViewData::handle(int event)
             return 1;
 
         case FL_LEAVE:
-
             _mouse_in = false;
 
-            if (_scanning)
-            {
+            if (_scanning) {
                 _scanning = false;
                 redraw();
             }
@@ -1641,24 +1471,18 @@ int ViewViewData::handle(int event)
             return 1;
 
         case FL_KEYDOWN:
-
-            if (_mouse_in && Fl::event_key() == FL_Control_L)
-            {
+            if (_mouse_in && Fl::event_key() == FL_Control_L) {
                 _scan_x = xp - ABSTAND;
                 _scanning = true;
                 redraw();
-
                 return 1;
             }
 
             return 0;
 
         case FL_KEYUP:
-
-            if (Fl::event_key() == FL_Control_L)
-            {
-                if (_scanning)
-                {
+            if (Fl::event_key() == FL_Control_L) {
+                if (_scanning) {
                     _scanning = false;
                     redraw();
                 }

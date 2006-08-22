@@ -18,6 +18,8 @@
 #include <FL/Fl_Output.h>
 #include <FL/Fl_Box.h>
 
+#include "lib_export.hpp"
+
 #include "view_channel.hpp"
 
 /*****************************************************************************/
@@ -32,23 +34,28 @@ public:
     ViewDialogExport(const string &);
     ~ViewDialogExport();
 
-    void show(const list<ViewChannel> *, COMTime, COMTime);
+    void show(const list<Channel> *, COMTime, COMTime);
 
 private:
     string _dls_dir;           /**< DLS-Datenverzeichnis */
     Fl_Double_Window *_wnd;    /**< Dialogfenster */
     Fl_Box *_box_info; /**< Info-Zeile */
-    Fl_Progress *_progress; /**< Fortschrittsanzeige */
 #if 0
     Fl_Output *_output_time; /**< Verbleibende Zeit */
     Fl_Output *_output_size; /**< Geschätzte Größe */
 #endif
+    Fl_Check_Button *_check_ascii; /**< export to ASCII */
+    Fl_Check_Button *_check_mat4; /**< export to MATLAB level 4 file */
+    Fl_Progress *_progress; /**< Fortschrittsanzeige */
     Fl_Button *_button_export; /**< Export-Button */
     Fl_Button *_button_close;  /**< "Schliessen"-Button */
 
-    const list<ViewChannel> *_channels;
+    const list<Channel> *_channels;
     unsigned int _channel_count;
     COMTime _start, _end;
+
+    list<Export *> _exporters;
+    static int _export_data_callback(Data *, void *);
 
     pthread_t _thread; /**< Export-Thread */
     bool _thread_running; /**< true, wenn der Thread läuft */
@@ -65,6 +72,8 @@ private:
     static void _callback(Fl_Widget *, void *);
     void _button_close_clicked();
     void _button_export_clicked();
+
+    void _clear_exporters();
 };
 
 /*****************************************************************************/

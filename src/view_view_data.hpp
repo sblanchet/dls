@@ -16,8 +16,14 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "fl_track_bar.hpp"
+
 #include "com_time.hpp"
+
+#include "lib_job.hpp"
+using namespace LibDLS;
+
+#include "fl_track_bar.hpp"
+
 #include "view_channel.hpp"
 
 /*****************************************************************************/
@@ -30,6 +36,19 @@ struct ViewViewDataChunkRange
 {
     COMTime start;
     COMTime end;
+};
+
+/*****************************************************************************/
+
+/**
+ */
+
+struct ScanInfo
+{
+    bool found;
+    double min_value;
+    double max_value;
+    int snapped_x;
 };
 
 /*****************************************************************************/
@@ -52,11 +71,9 @@ public:
     ViewViewData(int, int, int, int, const char * = "");
     ~ViewViewData();
 
-    // Öffentliche Methoden
-    void set_job(const string &, unsigned int);
-    void add_channel(const ViewChannel *);
-    void rem_channel(const ViewChannel *);
-    bool has_channel(const ViewChannel *) const;
+    void add_channel(Channel *);
+    void rem_channel(const Channel *);
+    bool has_channel(const Channel *) const;
     void clear();
     void full_range();
     void update();
@@ -64,12 +81,8 @@ public:
 
     COMTime start() const;
     COMTime end() const;
-    const list<ViewChannel> *channels() const;
 
 private:
-    // Daten
-    string _dls_dir;             /**< DLS-Datenverzeichnis */
-    unsigned int _job_id;        /**< Auftrags-ID */
     Fl_Track_Bar *_track_bar;    /**< Vertikale Track-Bar */
     list<ViewChannel> _channels; /**< Liste der zu Zeigenden Kanäle */
     COMTime _range_start;        /**< Startzeit der anzuzeigenden Zeitspanne */
@@ -104,35 +117,24 @@ private:
                                  für die Kanäle */
     int _channel_area_height; /**< Höhe des zeichenbereiches für die Kanäle */
     int _channel_height;      /**< Höhe einer Kanalzeile, incl. Textbox */
-    double _channel_min;      /**< Kleinster Wert des aktuellen Kanals */
-    double _channel_max;      /**< Größter Wert des aktuellen Kanals */
-    int _scroll_pos;          /**< Anzeige-Offset (abhängig von track-Bar) */
-    double _scale_x;          /**< Faktor für horizontale Skalierung
-                                 (in px/µs) */
-    double _scale_y;          /**< Faktor für vertikale Skalierung
-                                 (in px/µs) */
-    bool _scan_found;         /**< Es gibt einen Schnittpunkt der Daten mit
-                                 der Scan-Linie */
-    double _scan_min;         /**< Minimaler Datenwert an der Scanlinie des
-                                 aktuellen Kanals */
-    double _scan_max;         /**< Maximaler Datenwert an der Scanlinie des
-                                 aktuellen Kanals */
-    int _scan_ch_x;           /**< X-Position der eingeschnappten Scanlinie
-                                 eines Kanals */
+    int _scroll_pos;          /**< Anzeige-Offset (abhängig von Track-Bar) */
 
     // Private Methoden
     void _load_data();
     void _calc_range();
-    void _draw_gaps(const ViewChannel *, int, int, int, int);
+    void _draw_gaps(const ViewChannel *, int, int, int, int, double) const;
     void _draw_time_scale(unsigned int, unsigned int,
-                          unsigned int, unsigned int);
+                          unsigned int, unsigned int, double) const;
     void _draw_scroll_bar(unsigned int, unsigned int,
-                          unsigned int, unsigned int);
-    void _draw_channel(const ViewChannel *, int, int, int, int);
-    void _draw_gen(const ViewChunk *, int, int, int, int);
-    void _draw_min_max(const ViewChunk *, int, int, int, int);
-    void _draw_interactions();
-    void _draw_scan(const ViewChannel *, int, int, int, int);
+                          unsigned int, unsigned int) const;
+    void _draw_channel(const ViewChannel *, int, int, int, int, double) const;
+    void _draw_gen(const ViewChannel *, ScanInfo *, int, int, int, int,
+                   double, double, double) const;
+    void _draw_min_max(const ViewChannel *, ScanInfo *,
+                       int, int, int, int, double, double, double) const;
+    void _draw_interactions(double) const;
+    void _draw_scan(const ViewChannel *, ScanInfo *, int, int, int, int,
+                    double, double, double) const;
 
     // Prädikatsfunktion zum Sortieren
     static bool range_before(const ViewViewDataChunkRange &,
@@ -155,13 +157,6 @@ inline COMTime ViewViewData::start() const
 inline COMTime ViewViewData::end() const
 {
     return _range_end;
-}
-
-/*****************************************************************************/
-
-inline const list<ViewChannel> *ViewViewData::channels() const
-{
-    return &_channels;
 }
 
 /*****************************************************************************/

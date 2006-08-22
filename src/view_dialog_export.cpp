@@ -4,6 +4,8 @@
  *
  *****************************************************************************/
 
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
 
@@ -46,8 +48,6 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
 
     _box_info = new Fl_Box(10, 10, WIDTH - 20, 25);
 
-    _progress = new Fl_Progress(10, 50, WIDTH - 20, 25, "Fortschritt");
-    _progress->deactivate();
 
 #if 0
     _output_time = new Fl_Output(WIDTH - 60, 85, 50, 25, "Verbleibende Zeit");
@@ -55,6 +55,15 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
     _output_size = new Fl_Output(WIDTH - 60, 120, 50, 25, "Geschätzte Größe");
     _output_size->deactivate();
 #endif
+
+    _check_ascii = new Fl_Check_Button(10, HEIGHT - 130, 240, 25,
+                                       "Matlab ASCII (.dat)");
+    _check_mat4 = new Fl_Check_Button(10, HEIGHT - 105, 240, 25,
+                                      "Matlab binary, level 4 (.mat)");
+
+    _progress = new Fl_Progress(10, HEIGHT - 70, WIDTH - 20, 25,
+                                "Fortschritt");
+    _progress->deactivate();
 
     _button_export = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25,
                                    "Exportieren");
@@ -76,7 +85,24 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
 
 ViewDialogExport::~ViewDialogExport()
 {
+    _clear_exporters();
     delete _wnd;
+}
+
+/*****************************************************************************/
+
+/**
+ */
+
+void ViewDialogExport::_clear_exporters()
+{
+    list<Export *>::iterator exp_i;
+
+    for (exp_i = _exporters.begin(); exp_i != _exporters.end(); exp_i++) {
+        delete *exp_i;
+    }
+
+    _exporters.clear();
 }
 
 /*****************************************************************************/
@@ -85,12 +111,12 @@ ViewDialogExport::~ViewDialogExport()
    Anzeigen des Dialoges
 */
 
-void ViewDialogExport::show(const list<ViewChannel> *channels,
+void ViewDialogExport::show(const list<Channel> *channels,
                             COMTime start, COMTime end)
 {
     stringstream str;
     list<ViewChannel>::const_iterator channel_i;
-    list<ViewChunk *>::const_iterator chunk_i;
+    list<Chunk>::const_iterator chunk_i;
 
     _channels = channels;
     _start = start;
@@ -159,6 +185,7 @@ void ViewDialogExport::_button_export_clicked()
     stringstream info_file_name;
     ofstream info_file;
     COMTime now;
+    Export *exporter;
 
     if (_export_finished) {
         _wnd->hide();
@@ -204,6 +231,30 @@ void ViewDialogExport::_button_export_clicked()
 
     info_file.close();
 
+    _clear_exporters();
+
+    if (_check_ascii->value()) {
+        try {
+            exporter = new ExportAscii();
+        }
+        catch (...) {
+            cerr << "Failed to allocate Ascii-Exporter." << endl;
+            return;
+        }
+        _exporters.push_back(exporter);
+    }
+
+    if (_check_mat4->value()) {
+        try {
+            exporter = new ExportMat4();
+        }
+        catch (...) {
+            cerr << "Failed to allocate Mat4-Exporter." << endl;
+            return;
+        }
+        _exporters.push_back(exporter);
+    }
+
     if (pthread_create(&_thread, 0, _static_thread_function, this)) {
         cerr << "Failed to create thread!" << endl;
         return;
@@ -222,6 +273,8 @@ void *ViewDialogExport::_static_thread_function(void *data)
     dialog->_progress->maximum(dialog->_channel_count);
     dialog->_progress->value(0);
     dialog->_progress->activate();
+    dialog->_check_ascii->deactivate();
+    dialog->_check_mat4->deactivate();
 #if 0
     dialog->_output_time->activate();
     dialog->_output_size->activate();
@@ -238,6 +291,8 @@ void *ViewDialogExport::_static_thread_function(void *data)
     dialog->_output_time->deactivate();
     dialog->_output_size->deactivate();
 #endif
+    dialog->_check_ascii->activate();
+    dialog->_check_mat4->activate();
     dialog->_button_export->activate();
     dialog->_button_export->label("Schliessen");
     dialog->_progress->label("Export abgeschlossen.");
@@ -252,15 +307,40 @@ void *ViewDialogExport::_static_thread_function(void *data)
 
 /*****************************************************************************/
 
+/**
+ */
+
+int ViewDialogExport::_export_data_callback(Data *data, void *cb_data)
+{
+    ViewDialogExport *dialog = (ViewDialogExport *) cb_data;
+    list<Export *>::iterator exp_i;
+
+    for (exp_i = dialog->_exporters.begin();
+         exp_i != dialog->_exporters.end();
+         exp_i++)
+        (*exp_i)->data(data);
+
+    return 0; // not adopted
+}
+
+/*****************************************************************************/
+
 void ViewDialogExport::_thread_function()
 {
-    list<ViewChannel>::const_iterator channel_i;
+    list<Channel>::const_iterator channel_i;
+    list<Export *>::iterator exp_i;
 
     for (channel_i = _channels->begin();
          channel_i != _channels->end();
          channel_i++) {
 
-        channel_i->export_data(_start, _end, _export_dir);
+        for (exp_i = _exporters.begin(); exp_i != _exporters.end(); exp_i++)
+            (*exp_i)->begin(*channel_i, _export_dir);
+
+        channel_i->fetch_data(_start, _end, 0, _export_data_callback, this);
+
+        for (exp_i = _exporters.begin(); exp_i != _exporters.end(); exp_i++)
+            (*exp_i)->end();
 
         Fl::lock();
         _progress->value(_progress->value() + 1);
@@ -270,6 +350,8 @@ void ViewDialogExport::_thread_function()
 
         if (!_thread_running) break;
     }
+
+    _clear_exporters();
 }
 
 /*****************************************************************************/
