@@ -497,10 +497,8 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     // Pfad des Ebenenverzeichnisses konstruieren
     dir_name << _parent_logger->chunk_dir() << "/level" << _meta_level();
 
-    if (mkdir(dir_name.str().c_str(), 0755) != 0)
-    {
-        if (errno != EEXIST)
-        {
+    if (mkdir(dir_name.str().c_str(), 0755)) {
+        if (errno != EEXIST) {
             err << "Could not create \"" << dir_name.str()
                 << "\" (errno " << errno << ")!";
             throw EDLSSaver(err.str());
@@ -514,26 +512,22 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     file_name << "/data" << time_of_first;
     file_name << "_" << _meta_type();
 
-    try
-    {
+    try {
         _data_file.open_read_append(file_name.str().c_str());
     }
-    catch (ECOMFile &e)
-    {
-        err << "Could not open file \"" << file_name.str();
+    catch (ECOMFile &e) {
+        err << "Failed to open file \"" << file_name.str();
         err << "\": " << e.msg;
         throw EDLSSaver(err.str());
     }
 
     file_name << ".idx";
 
-    try
-    {
+    try {
         _index_file.open_read_append(file_name.str().c_str());
     }
-    catch (ECOMFile &e)
-    {
-        err << "Could not open index file \"" << file_name.str();
+    catch (ECOMFile &e) {
+        err << "Failed to open index file \"" << file_name.str();
         err << "\": " << e.msg;
         throw EDLSSaver(err.str());
     }
