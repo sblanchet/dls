@@ -55,7 +55,7 @@ private:
     unsigned int _job_id;
     DLSJob *_job;
     int _socket;
-    COMRingBufferT<char, unsigned int> *_ring_buf;
+    COMRingBuffer *_ring_buf;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
     string _to_send;

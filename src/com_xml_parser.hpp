@@ -84,7 +84,7 @@ public:
     const COMXMLTag *parse(istream *,
                            const string & = "",
                            COMXMLTagType = dxttSingle);
-    const COMXMLTag *parse(COMRingBufferT<char, unsigned int> *,
+    const COMXMLTag *parse(COMRingBuffer *,
                            const string & = "",
                            COMXMLTagType = dxttSingle);
 
@@ -94,8 +94,8 @@ private:
     COMXMLTag _tag; /**< Zuletzt geparstes XML-Tag */
     string _current_tag;
 
-    COMRingBufferT<char, unsigned int> *_data_ring; /**< Zeiger auf zu
-                                                       parsenden Ring */
+    COMRingBuffer *_data_ring; /**< Zeiger auf zu
+                                  parsenden Ring */
 
     istream *_data_stream; /**< Zeiger auf zu parsenden Stream */
     unsigned int _data_stream_start; /**< Ürsprüngliche Startposition

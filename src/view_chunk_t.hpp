@@ -53,8 +53,7 @@ private:
     ViewDataT<T> _max_data;       /**< Datenliste für Maximum-Daten */
     unsigned int _blocks_fetched; /**< Anzahl der Blocks, die geladen wurden */
 
-    COMRingBufferT<char, unsigned int> *_ring; /**< Ringpuffer zum Laden
-                                                  der Daten */
+    COMRingBuffer *_ring; /**< Ringpuffer zum Laden der Daten */
     COMCompressionT<T> *_compression;          /**< Zeiger auf ein
                                                   Kompressionsobjekt */
 
@@ -235,8 +234,7 @@ template <class T> void ViewChunkT<T>::_load_data(ViewDataT<T> *data_list,
 
     try {
         // Wenn noch kein Ring-Lesespeicher reserviert wurde, dies jetzt tun
-        if (!_ring)
-            _ring = new COMRingBufferT<char, unsigned int>(READ_RING_SIZE);
+        if (!_ring) _ring = new COMRingBuffer(READ_RING_SIZE);
     }
     catch (...) {
         cout << "ERROR: Could not allocate memory for ring buffer!" << endl;
@@ -601,7 +599,7 @@ int ViewChunkT<T>::export_data(COMTime start,
     char *write_ptr;
     COMXMLParser xml;
     bool must_read_again;
-    COMRingBufferT<char, unsigned int> *ring;
+    COMRingBuffer *ring;
     COMCompressionT<T> *compression;
 
     // Chunk liegt ausserhalb des zu exportierenden Bereiches
@@ -623,7 +621,7 @@ int ViewChunkT<T>::export_data(COMTime start,
     }
 
     try {
-        ring = new COMRingBufferT<char, unsigned int>(READ_RING_SIZE);
+        ring = new COMRingBuffer(READ_RING_SIZE);
     }
     catch (...) {
         cout << "ERROR: Could not allocate memory for ring buffer!" << endl;

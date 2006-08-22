@@ -64,7 +64,7 @@ const COMXMLTag *COMXMLParser::parse(istream *in,
    Holt das nächste XML-Tag aus Ringpuffer
 */
 
-const COMXMLTag *COMXMLParser::parse(COMRingBufferT<char, unsigned int> *ring,
+const COMXMLTag *COMXMLParser::parse(COMRingBuffer *ring,
                                      const string &force_tag,
                                      COMXMLTagType force_type)
 {

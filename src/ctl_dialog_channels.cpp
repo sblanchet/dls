@@ -261,7 +261,7 @@ void CTLDialogChannels::_thread_function()
     const COMXMLTag *tag;
     COMRealChannel channel;
     string to_send;
-    COMRingBufferT<char, unsigned int> ring(10000);
+    COMRingBuffer ring(10000);
     char *write_pointer;
     unsigned int write_size;
     bool exit_thread = false;

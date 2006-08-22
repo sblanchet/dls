@@ -66,13 +66,10 @@ DLSProcLogger::DLSProcLogger(const string &dls_dir, unsigned int job_id)
         log(DLSError);
     }
 
-    try
-    {
-        _ring_buf =
-            new COMRingBufferT<char, unsigned int>(RECEIVE_RING_BUF_SIZE);
+    try {
+        _ring_buf = new COMRingBuffer(RECEIVE_RING_BUF_SIZE);
     }
-    catch (...)
-    {
+    catch (...) {
         _ring_buf = 0;
         msg() << "Could not allocate memory for ring buffer.";
         log(DLSError);

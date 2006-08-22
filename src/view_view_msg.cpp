@@ -113,7 +113,7 @@ void ViewViewMsg::load_msg(COMTime start, COMTime end)
     COMIndexT<COMMessageIndexRecord> index;
     COMMessageIndexRecord index_record;
     COMFile file;
-    COMRingBufferT<char, unsigned int> ring(10000);
+    COMRingBuffer ring(10000);
     COMXMLParser xml;
     ViewMSRMessage msg;
     stringstream msg_dir, str, msg_chunk_dir;
