@@ -42,12 +42,10 @@ COMFile::COMFile()
 
 COMFile::~COMFile()
 {
-    try
-    {
+    try {
         COMFile::close();
     }
-    catch (ECOMFile &e)
-    {
+    catch (ECOMFile &e) {
         // Exception schlucken
     }
 }
@@ -208,26 +206,20 @@ void COMFile::close()
     stringstream err;
     bool error = false;
 
-    if (_mode != fomClosed)
-    {
-        if (fsync(_fd) == -1)
-        {
+    if (_mode != fomClosed) {
+        if (fsync(_fd) == -1) {
             error = true;
             err << "Could not sync pending data (" << strerror(errno) << ").";
         }
 
-        do
-        {
+        do {
             if (::close(_fd) == 0) break;
 
-            if (errno != EINTR)
-            {
-                if (error)
-                {
+            if (errno != EINTR) {
+                if (error) {
                     err << " ";
                 }
-                else
-                {
+                else {
                     error = true;
                 }
 
@@ -238,10 +230,7 @@ void COMFile::close()
 
         _mode = fomClosed;
 
-        if (error)
-        {
-            throw ECOMFile(err.str());
-        }
+        if (error) throw ECOMFile(err.str());
     }
 }
 
