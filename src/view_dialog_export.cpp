@@ -34,7 +34,6 @@ typedef struct
     ViewDialogExport *dialog;
     double channel_percentage;
     double channel_factor;
-    int last_percentage;
 }
 ExportInfo;
 
@@ -313,58 +312,17 @@ void *ViewDialogExport::_static_thread_function(void *data)
 
 /*****************************************************************************/
 
-/**
- */
-
-int ViewDialogExport::_export_data_callback(Data *data, void *cb_data)
-{
-    ExportInfo *info = (ExportInfo *) cb_data;
-    list<Export *>::iterator exp_i;
-    double percentage;
-    int int_perc;
-    double diff_time;
-    stringstream progress;
-
-    for (exp_i = info->dialog->_exporters.begin();
-         exp_i != info->dialog->_exporters.end();
-         exp_i++)
-        (*exp_i)->data(data);
-
-    diff_time = (data->end_time() - info->dialog->_start).to_dbl();
-    percentage = info->channel_percentage + diff_time * info->channel_factor;
-    int_perc = (int) (percentage + 0.5);
-
-    if (int_perc != info->last_percentage) {
-        info->last_percentage = int_perc;
-
-        progress << int_perc << "%";
-
-        Fl::lock();
-        info->dialog->_progress->copy_label(progress.str().c_str());
-        info->dialog->_progress->value(int_perc);
-        info->dialog->_progress->redraw();
-        Fl::unlock();
-        Fl::awake();
-    }
-
-    return 0; // not adopted
-}
-
-/*****************************************************************************/
-
 void ViewDialogExport::_thread_function()
 {
     list<Channel>::const_iterator channel_i;
     list<Export *>::iterator exp_i;
     ExportInfo info;
     unsigned int current_channel, total_channels;
-    stringstream progress;
-    int int_perc;
 
     current_channel = 0;
     total_channels = _channels->size();
 
-    if (!total_channels) {
+    if (!total_channels || _end <= _start) {
         _clear_exporters();
         return;
     }
@@ -372,7 +330,6 @@ void ViewDialogExport::_thread_function()
     info.dialog = this;
     info.channel_percentage = 0.0;
     info.channel_factor = 100.0 / total_channels / (_end - _start).to_dbl();
-    info.last_percentage = 0;
 
     for (channel_i = _channels->begin();
          channel_i != _channels->end();
@@ -387,28 +344,58 @@ void ViewDialogExport::_thread_function()
             (*exp_i)->end();
 
         current_channel++;
+
+        // display progress
         info.channel_percentage = 100.0 * current_channel / total_channels;
-        int_perc = (int) (info.channel_percentage + 0.5);
-
-        if (int_perc != info.last_percentage) {
-            info.last_percentage = int_perc;
-
-            progress.clear();
-            progress.str("");
-            progress << int_perc << "%";
-
-            Fl::lock();
-            _progress->copy_label(progress.str().c_str());
-            _progress->value(int_perc);
-            _progress->redraw();
-            Fl::unlock();
-            Fl::awake();
-        }
+        _set_progress_value((int) (info.channel_percentage + 0.5));
 
         if (!_thread_running) break;
     }
 
     _clear_exporters();
+}
+
+/*****************************************************************************/
+
+/**
+ */
+
+int ViewDialogExport::_export_data_callback(Data *data, void *cb_data)
+{
+    ExportInfo *info = (ExportInfo *) cb_data;
+    list<Export *>::iterator exp_i;
+    double diff_time;
+    double percentage;
+
+    for (exp_i = info->dialog->_exporters.begin();
+         exp_i != info->dialog->_exporters.end();
+         exp_i++)
+        (*exp_i)->data(data);
+
+    // display progress
+    diff_time = (data->end_time() - info->dialog->_start).to_dbl();
+    percentage = info->channel_percentage + diff_time * info->channel_factor;
+    info->dialog->_set_progress_value((int) (percentage + 0.5));
+
+    return 0; // not adopted
+}
+
+/*****************************************************************************/
+
+void ViewDialogExport::_set_progress_value(int percentage)
+{
+    stringstream label;
+
+    if (_progress->value() == percentage) return;
+
+    label << percentage << "%";
+
+    Fl::lock();
+    _progress->copy_label(label.str().c_str());
+    _progress->value(percentage);
+    _progress->redraw();
+    Fl::unlock();
+    Fl::awake();
 }
 
 /*****************************************************************************/

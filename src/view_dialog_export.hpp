@@ -53,26 +53,21 @@ private:
     const list<Channel> *_channels;
     unsigned int _channel_count;
     COMTime _start, _end;
-
     list<Export *> _exporters;
-    static int _export_data_callback(Data *, void *);
-
+    string _export_dir;
+    bool _export_finished;
     pthread_t _thread; /**< Export-Thread */
     bool _thread_running; /**< true, wenn der Thread läuft */
-
-    string _export_dir;
-
-    bool _export_finished;
-
-    static void *_static_thread_function(void *);
-    void _thread_function();
-
-    int _export_channel(const ViewChannel *);
 
     static void _callback(Fl_Widget *, void *);
     void _button_close_clicked();
     void _button_export_clicked();
+    void _set_progress_value(int);
 
+    static void *_static_thread_function(void *);
+    void _thread_function();
+
+    static int _export_data_callback(Data *, void *);
     void _clear_exporters();
 };
 
