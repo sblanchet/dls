@@ -76,11 +76,11 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
     _progress->value(0);
     _progress->deactivate();
 
-    _button_export = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25,
+    _button_export = new Fl_Button(WIDTH - 130, HEIGHT - 35, 120, 25,
                                    "Exportieren");
     _button_export->callback(_callback, this);
 
-    _button_close = new Fl_Button(WIDTH - 190, HEIGHT - 35, 80, 25,
+    _button_close = new Fl_Button(WIDTH - 220, HEIGHT - 35, 80, 25,
                                   "Abbrechen");
     _button_close->callback(_callback, this);
 
@@ -137,8 +137,8 @@ void ViewDialogExport::show(const list<Channel> *channels,
 
     str << "Exportieren von " << _channel_count
         << (_channel_count == 1 ? " Kanal" : " Kanälen") << endl
-        << " von " << _start.to_real_time() << " bis " << _end.to_real_time()
-        << ".";
+        << _start.to_real_time() << " bis " << _end.to_real_time() << endl
+        << "(" << _start.diff_str_to(_end) << ")";
     _box_info->copy_label(str.str().c_str());
 
     _wnd->show();
