@@ -9,15 +9,9 @@
 
 /*****************************************************************************/
 
+#include "com_globals.hpp"
 #include "com_time.hpp"
 #include "dls_saver_t.hpp"
-
-/*****************************************************************************/
-
-// Beim Erweitern bitte auch die Behandlungszweige
-// in "_meta_value()" und "_ending()" anpassen!
-
-enum DLSMetaType {DLSMetaMean = 1, DLSMetaMin = 2, DLSMetaMax = 4};
 
 /*****************************************************************************/
 

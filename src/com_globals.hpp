@@ -85,6 +85,21 @@ enum COMChannelType
 
 /*****************************************************************************/
 
+// Beim Erweitern bitte auch die Behandlungszweige
+// in "_meta_value()" und "_ending()" anpassen!
+
+enum DLSMetaType
+{
+    DLSMetaGen = 0,
+    DLSMetaMean = 1,
+    DLSMetaMin = 2,
+    DLSMetaMax = 4
+};
+
+string dls_meta_type_str(DLSMetaType);
+
+/*****************************************************************************/
+
 /**
    Index-Record für einen Datendatei-Index innerhalb eines Chunks
 */

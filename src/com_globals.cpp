@@ -46,8 +46,7 @@ COMChannelType dls_str_to_channel_type(const string &str)
 
 char *dls_channel_type_to_str(COMChannelType type)
 {
-    switch (type)
-    {
+    switch (type) {
         case TCHAR:  return "TCHAR";
         case TUCHAR: return "TUCHAR";
         case TSHORT: return "TSHORT";
@@ -59,6 +58,19 @@ char *dls_channel_type_to_str(COMChannelType type)
         case TFLT:   return "TFLT";
         case TDBL:   return "TDBL";
         default: return "-";
+    }
+}
+
+/*****************************************************************************/
+
+string dls_meta_type_str(DLSMetaType meta_type)
+{
+    switch (meta_type) {
+        case DLSMetaGen: return "gen";
+        case DLSMetaMean: return "mean";
+        case DLSMetaMin: return "min";
+        case DLSMetaMax: return "max";
+        default: return "???";
     }
 }
 
