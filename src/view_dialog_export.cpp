@@ -72,6 +72,8 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
                                       "Matlab binary, level 4 (.mat)");
 
     _progress = new Fl_Progress(10, HEIGHT - 70, WIDTH - 20, 25, "0%");
+    _progress->maximum(100);
+    _progress->value(0);
     _progress->deactivate();
 
     _button_export = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25,
@@ -279,8 +281,6 @@ void *ViewDialogExport::_static_thread_function(void *data)
     Fl::lock();
     dialog->_thread_running = true;
     dialog->_button_export->deactivate();
-    dialog->_progress->maximum(100);
-    dialog->_progress->value(0);
     dialog->_progress->activate();
     dialog->_check_ascii->deactivate();
     dialog->_check_mat4->deactivate();
@@ -300,11 +300,9 @@ void *ViewDialogExport::_static_thread_function(void *data)
     dialog->_output_time->deactivate();
     dialog->_output_size->deactivate();
 #endif
-    dialog->_check_ascii->activate();
-    dialog->_check_mat4->activate();
-    dialog->_button_export->activate();
-    dialog->_button_export->label("Schliessen");
     dialog->_button_close->deactivate();
+    dialog->_button_export->label("Schliessen");
+    dialog->_button_export->activate();
     Fl::unlock();
     Fl::awake();
 
