@@ -24,7 +24,7 @@ using namespace std;
 
 /*****************************************************************************/
 
-#define WIDTH 600
+#define WIDTH 400
 #define HEIGHT 230
 
 /*****************************************************************************/
@@ -56,8 +56,8 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
-    _box_info = new Fl_Box(10, 10, WIDTH - 20, 25);
-
+    _box_info = new Fl_Box(10, 10, WIDTH - 20, 40);
+    _box_info->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_TOP);
 
 #if 0
     _output_time = new Fl_Output(WIDTH - 60, 85, 50, 25, "Verbleibende Zeit");
@@ -80,7 +80,7 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
                                    "Exportieren");
     _button_export->callback(_callback, this);
 
-    _button_close = new Fl_Button(WIDTH - 220, HEIGHT - 35, 80, 25,
+    _button_close = new Fl_Button(WIDTH - 240, HEIGHT - 35, 100, 25,
                                   "Abbrechen");
     _button_close->callback(_callback, this);
 
@@ -134,11 +134,10 @@ void ViewDialogExport::show(const list<Channel> *channels,
     _end = end;
     _channel_count = _channels->size();
 
-
-    str << "Exportieren von " << _channel_count
-        << (_channel_count == 1 ? " Kanal" : " Kanälen") << endl
-        << _start.to_real_time() << " bis " << _end.to_real_time() << endl
-        << "(" << _start.diff_str_to(_end) << ")";
+    str << "Anzahl Kanäle: " << _channel_count << endl
+        << "Beginn: " << _start.to_real_time() << endl
+        << "Ende: " << _end.to_real_time() << endl
+        << "Zeitspanne: " << _start.diff_str_to(_end);
     _box_info->copy_label(str.str().c_str());
 
     _wnd->show();
