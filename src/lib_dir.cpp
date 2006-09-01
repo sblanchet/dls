@@ -58,8 +58,6 @@ void Directory::import(const string &path)
             str >> job_id;
         }
         catch (...) {
-            cerr << "WARNING: Invalid job directory \""
-                 << dir_name << "\"." << endl;
             continue;
         }
 

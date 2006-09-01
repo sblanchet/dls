@@ -11,6 +11,7 @@
 using namespace std;
 
 #include <FL/Fl.h>
+#include <FL/fl_ask.H>
 
 /*****************************************************************************/
 
@@ -118,6 +119,14 @@ void ViewDialogMain::show()
          job_i != _dls_dir.jobs().end();
          job_i++) {
         _choice_job->add(job_i->preset().id_desc().c_str());
+    }
+
+    if (_dls_dir.jobs().empty()) {
+        stringstream str;
+        str << "Im DLS-Datenverzeichnis" << endl
+            << "\"" << _dls_dir_path << "\"" << endl
+            << "wurden keine Aufträge gefunden!";
+        fl_alert(str.str().c_str());
     }
 
     _wnd->show();
