@@ -137,13 +137,13 @@ Erfasste Daten werden zusammen mit den Erfassungsvorgaben, Zeit- und
 Kanalinformationen nach Messaufträgen sortiert im \glqq
 \textsl{DLS}-Datenverzeichnis\grqq
 \index{DLS-Datenverzeichnis@\textsl{DLS}-Datenverzeichnis}
-gespeichert. Dieses ist standardmäßig \texttt{/vol/dls\_data}. Wenn
+gespeichert. Dieses ist standardmäßig das aktuelle Verzeichnis. Wenn
 ein anderer Ablageort gewünscht ist, kann dies den Programmen des
 \textsl{DLS}-Packetes entweder über Kommandozeilenparameter (Option
 \texttt{-d}) mitgeteilt, oder in der Umgebungsvariable
 \texttt{\$DLS\_DIR}\index{\$DLS\_DIR@\texttt{\$DLS\_DIR}} abgelegt
 werden. Die Suchreihenfolge ist immer: Parameter - Umgebungsvariable -
-Standardpfad.
+aktuelles Verzeichnis.
 
 Es können durchaus mehrere \textsl{DLS}-Datenverzeichnisse existieren,
 die aber von unterschiedlichen Instanzen des \textsl{DLS}-Daemons
