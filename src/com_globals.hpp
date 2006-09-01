@@ -37,7 +37,6 @@ using namespace std;
 #define REC_BUFFER_SIZE         4096 // Bytes
 #define COMPRESSION_BUFFER_SIZE 8192 // Bytes. Wird nach Belieben verdoppelt.
 
-#define DEFAULT_DLS_DIR "/vol/dls_data"
 #define DLS_PID_FILE "dlsd.pid"
 #define ENV_DLS_DIR "DLS_DIR" // Name der Umgebungsvariablen
 #define ENV_DLS_USER "DLS_USER" // Name der Umgebungsvariablen

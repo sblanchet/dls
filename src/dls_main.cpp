@@ -195,12 +195,10 @@ void get_options(int argc, char **argv)
     bool dir_set = false;
     char *env;
 
-    do
-    {
+    do {
         c = getopt(argc, argv, "d:u:n:kh");
 
-        switch (c)
-        {
+        switch (c) {
             case 'd':
                 dir_set = true;
                 dls_dir = optarg;
@@ -217,8 +215,7 @@ void get_options(int argc, char **argv)
             case 'n':
                 num_files = strtoul(optarg, (char **) NULL, 10);
 
-                if (num_files == 0)
-                {
+                if (num_files == 0) {
                     cerr << "Invalid number of open files!" << endl;
                     print_usage();
                 }
@@ -237,25 +234,22 @@ void get_options(int argc, char **argv)
     while (c != -1);
 
     // Weitere Parameter vorhanden?
-    if (optind < argc)
-    {
+    if (optind < argc) {
         print_usage();
     }
 
-    if (!dir_set)
-    {
+    if (!dir_set) {
         // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
-        // $DLS_DIR leer: Standardverzeichnis nutzen
-        else dls_dir = DEFAULT_DLS_DIR;
+        // $DLS_DIR leer: Aktuelles Verzeichnis nutzen
+        else dls_dir = ".";
     }
 
     // Benutztes Verzeichnis ausgeben
-    cout << "using dls directory \"" << dls_dir << "\"" << endl;
+    cout << "Using dls directory \"" << dls_dir << "\"" << endl;
 
-    if (!is_daemon)
-    {
+    if (!is_daemon) {
         cout << "NOT detaching from tty!" << endl;
     }
 }

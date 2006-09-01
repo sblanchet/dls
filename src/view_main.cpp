@@ -79,18 +79,16 @@ void get_options(int argc, char **argv)
     while (c != -1);
 
     // Weitere Parameter vorhanden?
-    if (optind < argc)
-    {
+    if (optind < argc) {
         print_usage();
     }
 
-    if (!dir_set)
-    {
+    if (!dir_set) {
         // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
-        // $DLS_DIR leer: Standardverzeichnis nutzen
-        else dls_dir = DEFAULT_DLS_DIR;
+        // $DLS_DIR leer: Aktuelles Verzeichnis nutzen
+        else dls_dir = ".";
     }
 
     // Benutztes Verzeichnis ausgeben
