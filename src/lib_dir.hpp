@@ -44,7 +44,8 @@ namespace LibDLS
 
         void import(const string &);
         list<Job> &jobs();
-        Job &job(unsigned int);
+        Job *job(unsigned int);
+        Job *find_job(unsigned int);
 
         const string &path() const;
 

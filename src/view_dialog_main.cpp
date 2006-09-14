@@ -226,9 +226,13 @@ void ViewDialogMain::_choice_job_changed()
     _view_data->clear();
     _view_msg->clear();
 
-    _current_job = &_dls_dir.job(_choice_job->value());
-    _current_job->fetch_channels();
+    if (!(_current_job = _dls_dir.job(_choice_job->value()))) {
+        _grid_channels->record_count(0);
+        cerr << "Invalid job!" << endl;
+        return;
+    }
 
+    _current_job->fetch_channels();
     _grid_channels->record_count(_current_job->channels().size());
 }
 

@@ -52,14 +52,12 @@ namespace LibDLS
         Channel &channel(unsigned int);
 
         const string &path() const;
-        unsigned int index() const;
         const COMJobPreset &preset() const;
 
         bool operator<(const Job &) const;
 
     private:
         string _path; /**< DLS job directory path */
-        unsigned int _index; /**< job index */
         COMJobPreset _preset; /**< job preset */
         list<Channel> _channels; /**< list of recorded channels */
     };
@@ -75,18 +73,6 @@ namespace LibDLS
 inline const string &LibDLS::Job::path() const
 {
     return _path;
-}
-
-/*************************************************************************/
-
-/**
-   Returns the job's index.
-   \return job index
-*/
-
-inline unsigned int LibDLS::Job::index() const
-{
-    return _index;
 }
 
 /*************************************************************************/

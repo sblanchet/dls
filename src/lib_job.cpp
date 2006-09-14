@@ -45,19 +45,18 @@ Job::~Job()
 */
 
 void Job::import(const string &dls_path, /**< DLS directory path */
-                 unsigned int index /**< job index */
+                 unsigned int job_id /**< job ID */
                  )
 {
     stringstream job_dir;
 
-    job_dir << dls_path << "/job" << index;
+    job_dir << dls_path << "/job" << job_id;
 
     _path = job_dir.str();
-    _index = index;
     _channels.clear();
 
     try {
-        _preset.import(dls_path, _index);
+        _preset.import(dls_path, job_id);
     }
     catch (ECOMJobPreset &e) {
         cout << "WARNING: " << e.msg << endl;
@@ -148,7 +147,7 @@ LibDLS::Channel &LibDLS::Job::channel(unsigned int index)
 
 bool LibDLS::Job::operator<(const Job &right) const
 {
-    return _index < right._index;
+    return preset().id() < right.preset().id();
 }
 
 /*****************************************************************************/
