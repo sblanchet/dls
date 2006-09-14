@@ -226,6 +226,11 @@ int export_data_callback(Data *data, void *cb_data)
     percentage = info->channel_percentage + diff_time * info->channel_factor;
     draw_progress(percentage + 0.5);
 
+    if (sig_int_term) {
+        cout << endl << "Interrupt detected. Exiting." << endl;
+        exit(1);
+    }
+
     return 0; // not adopted
 }
 
