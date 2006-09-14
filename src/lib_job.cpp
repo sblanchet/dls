@@ -125,17 +125,35 @@ void Job::fetch_channels()
 /**
 */
 
-LibDLS::Channel &LibDLS::Job::channel(unsigned int index)
+LibDLS::Channel *LibDLS::Job::channel(unsigned int index)
 {
     list<Channel>::iterator channel_i;
 
     for (channel_i = _channels.begin();
          channel_i != _channels.end();
          channel_i++, index--) {
-	if (!index) return *channel_i;
+	if (!index) return &(*channel_i);
     }
 
-    throw JobException("Channel index out of range!");
+    return NULL;
+}
+
+/*************************************************************************/
+
+/**
+*/
+
+LibDLS::Channel *LibDLS::Job::find_channel(unsigned int index)
+{
+    list<Channel>::iterator channel_i;
+
+    for (channel_i = _channels.begin();
+         channel_i != _channels.end();
+         channel_i++) {
+	if (channel_i->index() == index) return &(*channel_i);
+    }
+
+    return NULL;
 }
 
 /*************************************************************************/

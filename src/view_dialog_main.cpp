@@ -250,18 +250,18 @@ void ViewDialogMain::_grid_channels_changed()
     switch (_grid_channels->current_event()) {
         case flgContent:
             if (_grid_channels->current_col() == "channel") {
-                channel = &_current_job->channel(i);
+                channel = _current_job->channel(i);
                 _grid_channels->current_content(channel->name());
             }
             break;
 
         case flgChecked:
-            channel = &_current_job->channel(i);
+            channel = _current_job->channel(i);
             _grid_channels->current_checked(_view_data->has_channel(channel));
             break;
 
         case flgCheck:
-            channel = &_current_job->channel(i);
+            channel = _current_job->channel(i);
             if (_view_data->has_channel(channel)) {
                 _view_data->rem_channel(channel);
             }

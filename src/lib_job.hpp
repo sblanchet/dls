@@ -49,7 +49,8 @@ namespace LibDLS
         void fetch_channels();
 
         list<Channel> &channels();
-        Channel &channel(unsigned int);
+        Channel *channel(unsigned int);
+        Channel *find_channel(unsigned int);
 
         const string &path() const;
         const COMJobPreset &preset() const;
