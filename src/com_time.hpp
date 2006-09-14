@@ -31,7 +31,8 @@ public:
     COMTime();
     COMTime(long long);
     COMTime(double);
-    COMTime(struct timeval);
+    COMTime(struct timeval *);
+    COMTime(struct tm *, unsigned int);
 
     void from_dbl_time(double);
     void set_null();

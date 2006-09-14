@@ -57,8 +57,21 @@ COMTime::COMTime(double t)
    \param tv Initialzeit
 */
 
-COMTime::COMTime(struct timeval tv)
+COMTime::COMTime(struct timeval *tv)
 {
+    *this = *tv;
+}
+
+/*****************************************************************************/
+
+/**
+ */
+
+COMTime::COMTime(struct tm *t, unsigned int usec)
+{
+    struct timeval tv;
+    tv.tv_sec = mktime(t);
+    tv.tv_usec = usec;
     *this = tv;
 }
 
@@ -433,10 +446,13 @@ string COMTime::diff_str_to(const COMTime &other) const
     stringstream str;
     long long diff, part;
 
-    if (other._time > _time)
+    if (other._time > _time) {
 	diff = other._time - _time;
-    else
+    }
+    else {
 	diff = _time - other._time;
+        str << "-";
+    }
 
     part = diff / ((long long) 1000000 * 60 * 60 * 24); // Tage
     if (part) str << part << "d ";
@@ -485,7 +501,7 @@ COMTime COMTime::now()
 {
     struct timeval tv;
     gettimeofday(&tv, 0);
-    return tv; // Nutzt Konstruktor mit Parameter "struct timeval"
+    return &tv; // Nutzt Konstruktor mit Parameter "struct timeval *"
 }
 
 /*****************************************************************************/
