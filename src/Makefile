@@ -39,26 +39,35 @@ VIEW_OBJECTS := \
 	view_dialog_main.o view_dialog_export.o \
 	view_main.o
 
-FLTK_INC := $(shell fltk-config --cxxflags)
-FLTK_LIB := $(shell fltk-config --ldflags)
+CMD_OBJECTS := \
+	cmd_main.o cmd_list.o cmd_export.o
+
+FLTK_INC := $(shell ../../soft/fltk-1.1-install/bin/fltk-config --cxxflags)
+FLTK_LIB := $(shell ../../soft/fltk-1.1-install/bin/fltk-config --ldflags)
 Z_INC := -I/usr/local/include
 Z_LIB := -L/usr/local/lib -lz
-FFTW_LIB := -lfftw3 -lm
+FFTW_INC := -I../../soft/fftw-install/include
+FFTW_LIB := -L../../soft/fftw-install/lib -lfftw3 -lm
 
 # DLSD
-DLSD_INC = $(Z_INC)
-DLSD_LIB = $(Z_LIB) $(FFTW_LIB)
-DLSD_EXE = dlsd
+DLSD_INC := $(Z_INC) $(FFTW_INC)
+DLSD_LIB := $(Z_LIB) $(FFTW_LIB)
+DLSD_EXE := dlsd
 
 # CTL
-CTL_INC = $(FLTK_INC)
-CTL_LIB = $(FLTK_LIB) -pthread
-CTL_EXE = dls_ctl
+CTL_INC := $(FLTK_INC)
+CTL_LIB := $(FLTK_LIB) -pthread
+CTL_EXE := dls_ctl
 
 # VIEW
-VIEW_INC = $(FLTK_INC)
-VIEW_LIB = $(FLTK_LIB) $(Z_LIB) $(FFTW_LIB)
-VIEW_EXE = dls_view
+VIEW_INC := $(FLTK_INC)
+VIEW_LIB := $(FLTK_LIB) $(Z_LIB) $(FFTW_LIB)
+VIEW_EXE := dls_view
+
+# CMD
+CMD_INC :=
+CMD_LIB :=
+CMD_EXE := dls
 
 # FLAGS
 SVNREV := $(shell svnversion . || echo "unknown")
@@ -68,7 +77,7 @@ LDFLAGS += -Wall
 
 #------------------------------------------------------------------------------
 
-all: .depend $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE)
+all: .depend $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE) $(CMD_EXE)
 
 $(DLSD_EXE): $(DLSD_OBJECTS)
 	g++ $(LDFLAGS) $(DLSD_OBJECTS) $(DLSD_LIB) -o $(DLSD_EXE)
@@ -78,6 +87,9 @@ $(CTL_EXE): $(CTL_OBJECTS)
 
 $(VIEW_EXE): $(VIEW_OBJECTS)
 	g++ $(LDFLAGS) $(VIEW_OBJECTS) $(VIEW_LIB) -o $(VIEW_EXE)
+
+$(CMD_EXE): $(CMD_OBJECTS)
+	g++ $(LDFLAGS) $(CMD_OBJECTS) $(CMD_LIB) -o $(CMD_EXE)
 
 doc:
 	doxygen Doxyfile
@@ -99,6 +111,9 @@ lib_%.o: lib_%.cpp
 view_%.o: view_%.cpp
 	g++ -c $(CFLAGS) $(VIEW_INC) $< -o $@
 
+cmd_%.o: cmd_%.cpp
+	g++ -c $(CFLAGS) $(CMD_INC) $< -o $@
+
 fl_%.o: fl_%.cpp
 	g++ -c $(CFLAGS) $(FLTK_INC) $< -o $@
 
@@ -109,7 +124,7 @@ mdct.o: mdct.c
 
 .depend depend dep:
 	(for file in *.cpp mdct.c; \
-		do g++ -M $(FLTK_INC) $(Z_INC) $$file; \
+		do g++ -M $(FFTW_INC) $(FLTK_INC) $(Z_INC) $$file; \
 	done) > .depend
 
 ifneq ($(wildcard .depend),)
@@ -119,6 +134,7 @@ endif
 # Clean -----------------------------------------------------------------------
 
 clean:
-	@rm -f *.o *~ $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE) .depend core
+	@rm -f *.o *~ $(DLSD_EXE) $(CTL_EXE) $(VIEW_EXE) $(CMD_EXE) \
+	.depend core
 
 #------------------------------------------------------------------------------
