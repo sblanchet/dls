@@ -707,7 +707,7 @@ void DLSProcMother::_check_processes()
             {
                 // Globale Forking-Flags setzen
                 process_type = dlsLoggingProcess;
-                job_id = job_i->id();
+                dlsd_job_id = job_i->id();
 
                 break;
             }

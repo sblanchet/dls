@@ -31,7 +31,7 @@ unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
 DLSProcessType process_type = dlsMotherProcess;
-unsigned int job_id = 0;
+unsigned int dlsd_job_id = 0;
 string dls_dir = "";
 DLSArchitecture arch;
 DLSArchitecture source_arch;
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
         if (process_type == dlsLoggingProcess)
         {
             // Erfassungsprozess starten
-            logger_process = new DLSProcLogger(dls_dir, job_id);
+            logger_process = new DLSProcLogger(dls_dir, dlsd_job_id);
             exit_code = logger_process->start();
             delete logger_process;
         }

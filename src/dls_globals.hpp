@@ -66,7 +66,7 @@ extern DLSArchitecture source_arch;
 
 // Forking
 extern enum DLSProcessType process_type;
-extern unsigned int job_id;
+extern unsigned int dlsd_job_id;
 
 // Versions-String mit Build-Nummer aus dls_build.cpp
 extern const char *dls_version_str;

@@ -111,7 +111,7 @@ DLSProcLogger::~DLSProcLogger()
 
 int DLSProcLogger::start()
 {
-    msg() << "Process started for job " << job_id << "!";
+    msg() << "Process started for job " << dlsd_job_id << "!";
     log(DLSInfo);
 
     _create_pid_file();
@@ -1010,7 +1010,7 @@ void DLSProcLogger::_create_pid_file()
     pid_t pid;
     struct stat stat_buf;
 
-    pid_file_name << _dls_dir << "/job" << job_id << "/" << DLS_PID_FILE;
+    pid_file_name << _dls_dir << "/job" << dlsd_job_id << "/" << DLS_PID_FILE;
 
     if (stat(pid_file_name.str().c_str(), &stat_buf) == -1)
     {
@@ -1083,7 +1083,7 @@ void DLSProcLogger::_create_pid_file()
             _exit_code = E_DLS_ERROR;
 
             msg() << "Another logging process ist running on job "
-                  << job_id << "!";
+                  << dlsd_job_id << "!";
             log(DLSError);
 
             return;
@@ -1123,7 +1123,7 @@ void DLSProcLogger::_remove_pid_file()
 {
     stringstream pid_file_name;
 
-    pid_file_name << _dls_dir << "/job" << job_id << "/" << DLS_PID_FILE;
+    pid_file_name << _dls_dir << "/job" << dlsd_job_id << "/" << DLS_PID_FILE;
 
     if (unlink(pid_file_name.str().c_str()) == -1)
     {
