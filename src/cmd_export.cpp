@@ -4,6 +4,8 @@
  *
  *****************************************************************************/
 
+#include <sys/ioctl.h>
+
 #include <iostream>
 using namespace std;
 
@@ -24,21 +26,28 @@ static string end_time_str;
 static bool export_ascii = false;
 static bool export_matlab = false;
 
+static unsigned int term_width;
+
 /*****************************************************************************/
 
 typedef struct
 {
     list<Export *> *exporters;
+    COMTime start;
+    double channel_percentage;
+    double channel_factor;
 }
 ExportInfo;
 
 /*****************************************************************************/
 
 int export_data_callback(Data *, void *);
+void draw_progress(double percentage);
 void export_get_environment();
 void export_get_options(int, char **);
 list<unsigned int> parse_intlist(const char *);
 COMTime parse_time(const char *);
+int terminal_width();
 void export_print_usage();
 
 /*****************************************************************************/
@@ -57,9 +66,11 @@ int export_main(int argc, char *argv[])
     list<Export *> exporters;
     list<Export *>::iterator exp_i;
     ExportInfo info;
+    unsigned int current_channel, total_channels;
 
     export_get_environment();
     export_get_options(argc, argv);
+    term_width = terminal_width();
 
     if (dls_export_dir == "") dls_export_dir = ".";
 
@@ -152,9 +163,15 @@ int export_main(int argc, char *argv[])
         exit(1);
     }
 
-    cout << "Exporting to \"" << dls_export_dir << "\"." << endl;
+    cout << "Exporting to \"" << dls_export_dir << "\"..." << endl;
+
+    current_channel = 0;
+    total_channels = channels.size();
 
     info.exporters = &exporters;
+    info.start = start;
+    info.channel_percentage = 0.0;
+    info.channel_factor = 100.0 / total_channels / (end - start).to_dbl();
 
     // actual exporting
     for (channel_i = channels.begin();
@@ -170,21 +187,19 @@ int export_main(int argc, char *argv[])
         for (exp_i = exporters.begin(); exp_i != exporters.end(); exp_i++)
             (*exp_i)->end();
 
-#if 0
         current_channel++;
 
         // display progress
         info.channel_percentage = 100.0 * current_channel / total_channels;
-        _set_progress_value((int) (info.channel_percentage + 0.5));
-#endif
+        draw_progress(info.channel_percentage);
 
         if (sig_int_term) {
-            cerr << "Interrupt detected." << endl;
+            cerr << endl << "Interrupt detected." << endl;
             break;
         }
     }
 
-    cout << "Export finished." << endl;
+    cout << endl << "Export finished." << endl;
     return 0;
 }
 
@@ -198,22 +213,43 @@ int export_data_callback(Data *data, void *cb_data)
     ExportInfo *info = (ExportInfo *) cb_data;
 
     list<Export *>::iterator exp_i;
-    //double diff_time;
-    //double percentage;
+    double diff_time;
+    double percentage;
 
     for (exp_i = info->exporters->begin();
          exp_i != info->exporters->end();
          exp_i++)
         (*exp_i)->data(data);
 
-#if 0
     // display progress
-    diff_time = (data->end_time() - info->dialog->_start).to_dbl();
+    diff_time = (data->end_time() - info->start).to_dbl();
     percentage = info->channel_percentage + diff_time * info->channel_factor;
-    info->dialog->_set_progress_value((int) (percentage + 0.5));
-#endif
+    draw_progress(percentage + 0.5);
 
     return 0; // not adopted
+}
+
+/*****************************************************************************/
+
+void draw_progress(double percentage)
+{
+    static unsigned int number = 0;
+    static unsigned int blocks = 0;
+    unsigned int new_number, new_blocks, i;
+
+    new_number = (int) (percentage + 0.5);
+    new_blocks = (int) (percentage * (term_width - 9) / 100.0);
+
+    if (new_number != number || new_blocks != blocks) {
+        number = new_number;
+        blocks = new_blocks;
+
+        cout << "\r " << setw(3) << number << "% [";
+        for (i = 0; i < blocks; i++) cout << "=";
+        for (i = blocks; i < (term_width - 9); i++) cout << " ";
+        cout << "]";
+        cout.flush();
+    }
 }
 
 /*****************************************************************************/
@@ -409,6 +445,25 @@ COMTime parse_time(const char *time_str)
     cerr << "Parse error in time \"" << time_str << "\"." << endl;
     export_print_usage();
     exit(1);
+}
+
+/*****************************************************************************/
+
+int terminal_width()
+{
+#ifdef TIOCGWINSZ
+    struct winsize w;
+
+    w.ws_col = 0;
+    ioctl(1, TIOCGWINSZ, &w);
+
+    if (w.ws_col)
+        return w.ws_col;
+    else
+        return 50;
+#else
+    return 50
+#endif
 }
 
 /*****************************************************************************/
