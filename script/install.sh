@@ -44,5 +44,6 @@ cp src/dlsd /usr/local/bin
 cp src/dls_ctl /usr/local/bin
 chmod +s /usr/local/bin/dls_ctl
 cp src/dls_view /usr/local/bin
+cp src/dls /usr/local/bin
 
 #------------------------------------------------------------------------------
