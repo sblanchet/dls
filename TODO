@@ -1,9 +1,15 @@
-TODO-Liste DLS
 
-* Tool zum Teilen von Datendateien, loeschen vor/ab einem Zeitpunkt.
+$Id$
+
+* dls command-line tool:
+	- split
+	- delete
+	- check
+	- repair
+
+* lib:
+	- fetch_chunks(): Only Update!
 
 * Autotools
 
-* HELO-Kommando
-
-
+* HELO command
