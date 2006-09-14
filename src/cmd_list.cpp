@@ -127,8 +127,8 @@ int list_chunks(Job *job)
         for (chunk_i = channel->chunks().begin();
              chunk_i != channel->chunks().end();
              chunk_i++) {
-            cout << "  Chunk from " << chunk_i->start().to_rfc811_time()
-                 << " to " << chunk_i->end().to_rfc811_time()
+            cout << "  Chunk from " << chunk_i->start().to_real_time()
+                 << " to " << chunk_i->end().to_real_time()
                  << " (" << chunk_i->start().diff_str_to(chunk_i->end())
                  << ")" << endl;
         }
