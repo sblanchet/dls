@@ -59,6 +59,7 @@ namespace LibDLS
                         DataCallback, void *) const;
 
         bool operator<(const Chunk &) const;
+        bool operator==(const Chunk &) const;
 
     protected:
         string _dir;                    /**< Chunk-Verzeichnis */

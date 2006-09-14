@@ -739,3 +739,15 @@ bool Chunk::operator<(const Chunk &other) const
 }
 
 /*****************************************************************************/
+
+/**
+   == operator.
+   \return true, if the chunks have exactly the same times.
+*/
+
+bool Chunk::operator==(const Chunk &other) const
+{
+    return _start == other._start && _end == other._end;
+}
+
+/*****************************************************************************/

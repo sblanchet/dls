@@ -60,6 +60,7 @@ namespace LibDLS {
         COMChannelType type() const;
 
         const list<LibDLS::Chunk> &chunks() const;
+        bool has_same_chunks_as(const Channel &) const;
 
         COMTime start() const;
         COMTime end() const;

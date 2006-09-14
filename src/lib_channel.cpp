@@ -211,3 +211,16 @@ void Channel::fetch_data(COMTime start, /**< start of requested time range */
 }
 
 /*****************************************************************************/
+
+/**
+   Returns true, if this channel has exactly the same chunk times
+   as the other channel.
+   \return true, if channels have the same chunks.
+*/
+
+bool Channel::has_same_chunks_as(const Channel &other) const
+{
+    return _chunks == other._chunks;
+}
+
+/*****************************************************************************/
