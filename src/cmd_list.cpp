@@ -43,7 +43,7 @@ int list_main(int argc, char *argv[])
     else {
         if (!(job = dls_dir.find_job(job_id))) {
             cerr << "No such job - " << job_id << "." << endl;
-            cerr << "Use \"dls list\" to show available jobs." << endl;
+            cerr << "Call \"dls list\" to list available jobs." << endl;
             return 1;
         }
         return list_chunks(job);
@@ -163,7 +163,7 @@ void list_get_options(int argc, char *argv[])
                 break;
 
             case 'j':
-                job_id = strtoul(optarg, NULL, 0);
+                job_id = strtoul(optarg, NULL, 10);
                 break;
 
             case 'h':
