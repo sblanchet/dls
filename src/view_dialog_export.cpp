@@ -235,9 +235,11 @@ void ViewDialogExport::_button_export_clicked()
               << "Exported on: "
               << now.to_rfc811_time() << endl << endl
               << "Exported range from: "
-              << _start.to_rfc811_time() << endl
+              << _start.to_real_time() << endl
               << "                 to: "
-              << _end.to_rfc811_time() << endl << endl;
+              << _end.to_real_time() << endl
+              << "           duration: "
+              << _start.diff_str_to(_end) << endl << endl;
 
     info_file.close();
 
