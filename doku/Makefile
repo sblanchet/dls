@@ -101,6 +101,7 @@ clean:
 			$(FILE).ilg $(FILE).ind $(FILE).log \
 			$(FILE).out $(FILE).pdf $(FILE).ps \
 			$(FILE).toc $(FILE).lot $(FILE).lof \
-			$(FILE).lol $(FILE).glo
+			$(FILE).lol $(FILE).glo \
+	*.bak bilder/*.bak
 
 #------------------------------------------------------------------------------
