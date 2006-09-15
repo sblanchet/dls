@@ -470,7 +470,7 @@ string COMTime::diff_str_to(const COMTime &other) const
     if (part) str << part << "s ";
     diff -= part * 1000000;
 
-    str << diff << "us ";
+    if (diff) str << diff << "us ";
 
     // return string without last character
     return str.str().substr(0, str.str().size() - 1);
