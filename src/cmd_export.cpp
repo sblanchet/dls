@@ -605,29 +605,38 @@ void export_get_options(int argc, char *argv[])
 
 void export_print_usage()
 {
-    cout << "Usage: dls export -j ID [OPTIONS]" << endl
+    cout << "Usage: dls export [OPTIONS]" << endl
          << "Options:" << endl
-         << "        -d DIR         DLS data directory."
+         << "   -d DIR         DLS data directory."
          << " Default: $DLS_DIR" << endl
-         << "        -o DIR         Output directory."
+         << "   -o DIR         Output directory."
          << " Default: $DLS_EXPORT_DIR or \".\"" << endl
-         << "        -f NAMEFMT     Format of the export directory name."
+         << "   -f NAMEFMT     Naming format for export directory."
          << " See strftime(3)." << endl
-         << "                       Default: dls-export-%Y-%m-%d-%H-%M-%S"
+         << "                  Default: $DLS_EXPORT_FMT"
+         << " or \"dls-export-%Y-%m-%d-%H-%M-%S\"" << endl
+         << "   -a             Enable ASCII exporter" << endl
+         << "   -m             Enable MATLAB4 exporter" << endl
+         << "   -j ID          Job to export (MANDATORY)" << endl
+         << "   -c CHANNELS    Indices of channels to export"
+         << " (see below)." << endl
+         << "                  Default: All channels" << endl
+         << "   -s TIMESTAMP   Start time (see below)."
+         << " Default: Start of recording"
          << endl
-         << "        -a             Enable ASCII-Exporter" << endl
-         << "        -m             Enable MATLAB-Exporter" << endl
-         << "        -j ID          Job to export (mandatory)" << endl
-         << "        -c I,J-K       Channel indices to export. Default: all"
+         << "   -e TIMESTAMP   End time (see below)."
+         << " Default: End of recording"
          << endl
-         << "        -s TIMESTAMP   Start time. Default: Start of recording"
+         << "   -q             Be quiet (no progress bar)" << endl
+         << "   -h             Print this help" << endl
+         << "CHANNELS is a comma-separated list of channel indices." << endl
+         << "   Use the minus sign to specify ranges." << endl
+         << "   Examples: \"2,4,9\", \"1-20\", \"2,4,13-15,42\"." << endl
+         << "TIMESTAMP is a broken-down time with microsecond resolution:"
          << endl
-         << "        -e TIMESTAMP   End time. Default: End of recording"
-         << endl
-         << "        -q             Be quiet (no progress bar)" << endl
-         << "        -h             Print this help" << endl
-         << "TIMESTAMP can be YYYY[-MM[-DD[-HH[-MM[-SS[-UUUUUU]]]]]]" << endl
-         << "              or YYYY[.MM[.SS[ HH[:MM[:SS[,UUUUUU]]]]]]."
+         << "   YYYY[-MM[-DD[-HH[-MM[-SS[-UUUUUU]]]]]] or" << endl
+         << "   YYYY[-MM[-SS[ HH[:MM[:SS[.UUUUUU]]]]]]." << endl
+         << "   Examples: \"2006-08\", \"2005-08-15 13:14:58.896366\""
          << endl;
 }
 
