@@ -618,7 +618,7 @@ void export_print_usage()
          << "        -a             Enable ASCII-Exporter" << endl
          << "        -m             Enable MATLAB-Exporter" << endl
          << "        -j ID          Job to export (mandatory)" << endl
-         << "        -c I,J,K       Channel indices to export. Default: all"
+         << "        -c I,J-K       Channel indices to export. Default: all"
          << endl
          << "        -s TIMESTAMP   Start time. Default: Start of recording"
          << endl
