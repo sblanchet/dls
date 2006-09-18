@@ -19,7 +19,7 @@
 \usepackage{makeidx}
 \usepackage{listings}
 \usepackage{svn}
-\usepackage{hyperref}
+\usepackage[pdfpagelabels,plainpages=false]{hyperref}
 
 \setlength{\parskip}{1.5ex plus 0.8ex minus 0.5ex}
 \setlength{\parindent}{0mm}
@@ -360,9 +360,9 @@ Folgende Signale werden vom dlsd-Mutterprozess verarbeitet:
   warten bis diese ihre Daten gespeichert haben und sich daraufhin
   selbst mit dem Rückgabewert 0 (kein Fehler) beenden.
 \item[SIGSEGV u. A.] Diese Signale werden zur Sicherheit überwacht und
-  vom dlsd-Mutterprozess und -Erfassungsprozess gleichartig behandelt.
-  Der Prozess wird beim Auftreten eines solchen Zustandes eine Datei
-  mit Namen \textit{error\_\textless PID\textgreater} im
+  vom dlsd-Mutter\-prozess und -Erfassungsprozess gleichartig
+  behandelt.  Der Prozess wird beim Auftreten eines solchen Zustandes
+  eine Datei mit Namen \textit{error\_\textless PID\textgreater} im
   DLS-Datenverzeichnis hinterlassen, die Informationen über das
   empfangene Signal enthält, und sich kurz darauf mit dem Rückgabewert
   $-3$ beenden.
@@ -1568,8 +1568,8 @@ Dialogen (siehe Abbildungen \ref{fig:dls_view_main} und
 \item Das betätigen der Schalfläche \glqq Aktualisieren\grqq\ liest
   alle Kanaldaten der eingestellten Zeitspanne neu ein und zeigt diese
   an.
-\item Bei Betätigung der Schaltfläche \glqq Exportieren...\grqq\
-  öffnet sich der Dialog \glqq Exportieren...\glqq\ (siehe Abschnitt
+\item Bei Betätigung der Schaltfläche \glqq Exportieren...\grqq\ 
+  öffnet sich der Export-Dialog (siehe Abschnitt
   \ref{sec:view_export}).
 \item Durch Drücken und Halten der linken Maustaste im Datenbereich
   der Anzeige kann der Benutzer eine neue Zeitspanne anwählen, die
