@@ -1,0 +1,102 @@
+#------------------------------------------------------------------------------
+# $Id$
+#------------------------------------------------------------------------------
+
+bin_PROGRAMS = dlsd dls_ctl dls_view dls
+lib_LIBRARIES = libcomdls.a libdls.a
+
+#------------------------------------------------------------------------------
+
+libcomdls_a_CPPFLAGS = -I@FFTW_DIR@/include
+
+libcomdls_a_SOURCES = \
+	com_globals.cpp com_globals.hpp \
+	com_exception.hpp \
+	com_compression_t.hpp \
+	com_index_t.hpp \
+	com_mdct_t.hpp \
+	com_quant_t.hpp \
+	com_ring_buffer_t.hpp \
+	com_time.cpp com_time.hpp \
+	com_file.cpp com_file.hpp \
+	com_zlib.cpp com_zlib.hpp \
+	com_base64.cpp com_base64.hpp \
+	com_xml_tag.cpp com_xml_tag.hpp \
+	com_xml_parser.cpp com_xml_parser.hpp \
+	com_channel_preset.cpp com_channel_preset.hpp \
+	com_job_preset.cpp com_job_preset.hpp \
+	mdct.cpp mdct.hpp
+
+#------------------------------------------------------------------------------
+
+libdls_a_SOURCES = \
+        lib_dir.cpp lib_dir.hpp \
+	lib_job.cpp lib_job.hpp \
+	lib_channel.cpp lib_channel.hpp \
+	lib_chunk.cpp lib_chunk.hpp \
+	lib_data.cpp lib_data.hpp \
+	lib_export.cpp lib_export.hpp
+
+#------------------------------------------------------------------------------
+
+dlsd_CPPFLAGS =
+dlsd_LDFLAGS = -L. -L@FFTW_DIR@/lib
+dlsd_LDADD = -lcomdls -lfftw3 -lm -lz
+
+dlsd_SOURCES = \
+	dls_globals.hpp \
+	dls_job_preset.cpp dls_job_preset.hpp \
+	dls_logger.cpp dls_logger.hpp \
+	dls_job.cpp dls_job.hpp \
+	dls_saver_t.hpp \
+	dls_saver_gen_t.hpp \
+	dls_saver_meta_t.hpp \
+	dls_proc_logger.cpp dls_proc_logger.hpp \
+	dls_proc_mother.cpp dls_proc_mother.hpp \
+	dls_main.cpp
+
+#------------------------------------------------------------------------------
+
+dls_ctl_CPPFLAGS = @FLTK_CPPFLAGS@
+dls_ctl_LDFLAGS = -L.
+dls_ctl_LDADD = @FLTK_LDFLAGS@ -lcomdls
+
+dls_ctl_SOURCES = \
+        fl_grid.cpp fl_grid.hpp \
+	ctl_globals.hpp \
+        ctl_dialog_msg.cpp ctl_dialog_msg.hpp \
+	ctl_job_preset.cpp ctl_job_preset.hpp \
+        ctl_dialog_job_edit.cpp ctl_dialog_job_edit.hpp \
+	ctl_dialog_job.cpp ctl_dialog_job.hpp \
+        ctl_dialog_channels.cpp ctl_dialog_channels.hpp \
+	ctl_dialog_channel.cpp ctl_dialog_channel.hpp \
+        ctl_dialog_main.cpp ctl_dialog_main.hpp \
+        ctl_main.cpp
+
+#------------------------------------------------------------------------------
+
+dls_view_CPPFLAGS = @FLTK_CPPFLAGS@
+dls_view_LDFLAGS = -L. -L@FFTW_DIR@/lib
+dls_view_LDADD = @FLTK_LDFLAGS@ -ldls -lcomdls -lfftw3 -lm -lz
+
+dls_view_SOURCES = \
+        fl_grid.cpp fl_grid.hpp \
+	fl_track_bar.cpp fl_track_bar.hpp \
+	view_globals.hpp \
+        view_channel.cpp view_channel.hpp \
+	view_view_data.cpp view_view_data.hpp \
+	view_view_msg.cpp view_view_msg.hpp \
+        view_dialog_main.cpp view_dialog_main.hpp \
+	view_dialog_export.cpp view_dialog_export.hpp \
+        view_main.cpp
+
+#------------------------------------------------------------------------------
+
+dls_CPPFLAGS =
+dls_LDFLAGS = -L. -L@FFTW_DIR@/lib
+dls_LDADD = -ldls -lcomdls -lfftw3 -lm -lz
+
+dls_SOURCES = \
+        cmd_list.cpp cmd_export.cpp cmd_main.cpp
+
+#------------------------------------------------------------------------------

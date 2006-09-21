@@ -9,7 +9,7 @@
 
 #include <fftw3.h>
 
-#include "mdct.h"
+#include "mdct.hpp"
 
 //#define DEBUG
 

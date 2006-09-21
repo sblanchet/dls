@@ -24,7 +24,7 @@ using namespace std;
 
 #include "com_globals.hpp"
 #include "com_exception.hpp"
-#include "mdct.h"
+#include "mdct.hpp"
 
 /*****************************************************************************/
 

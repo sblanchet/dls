@@ -19,7 +19,7 @@ using namespace std;
 #include "ctl_job_preset.hpp"
 #include "ctl_dialog_channel.hpp"
 #include "ctl_dialog_msg.hpp"
-#include "mdct.h"
+#include "mdct.hpp"
 
 /*****************************************************************************/
 

@@ -23,7 +23,7 @@ using namespace std;
 #include "dls_globals.hpp"
 #include "dls_proc_mother.hpp"
 #include "dls_proc_logger.hpp"
-#include "mdct.h"
+#include "mdct.hpp"
 
 /*****************************************************************************/
 

@@ -14,7 +14,7 @@ using namespace std;
 
 #include "view_globals.hpp"
 #include "view_dialog_main.hpp"
-#include "mdct.h"
+#include "mdct.hpp"
 
 /*****************************************************************************/
 
