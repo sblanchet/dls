@@ -15,7 +15,7 @@ noinst_LTLIBRARIES = libcomdls.la libdls.la
 
 #------------------------------------------------------------------------------
 
-libcomdls_la_CPPFLAGS = -I@FFTW_DIR@/include
+libcomdls_la_CPPFLAGS = -I@FFTW3_DIR@/include
 
 libcomdls_la_SOURCES = \
 	com_globals.cpp com_globals.hpp \
@@ -48,7 +48,7 @@ libdls_la_SOURCES = \
 #------------------------------------------------------------------------------
 
 dlsd_CPPFLAGS = -DSVNREV=$(SVNREV)
-dlsd_LDFLAGS = -L@FFTW_DIR@/lib
+dlsd_LDFLAGS = -L@FFTW3_DIR@/lib
 dlsd_LDADD = libcomdls.la -lfftw3 -lm -lz
 
 dlsd_SOURCES = \
@@ -87,7 +87,7 @@ dls_ctl_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_view_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
-dls_view_LDFLAGS = -L@FFTW_DIR@/lib
+dls_view_LDFLAGS = -L@FFTW3_DIR@/lib
 dls_view_LDADD = libdls.la libcomdls.la @FLTK_LDFLAGS@ -lfftw3 -lm -lz
 
 dls_view_SOURCES = \
@@ -104,7 +104,7 @@ dls_view_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_CPPFLAGS = -DSVNREV=$(SVNREV)
-dls_LDFLAGS = -L@FFTW_DIR@/lib
+dls_LDFLAGS = -L@FFTW3_DIR@/lib
 dls_LDADD = libdls.la libcomdls.la -lfftw3 -lm -lz
 
 dls_SOURCES = \

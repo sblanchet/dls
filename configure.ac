@@ -17,7 +17,7 @@ AC_CONFIG_FILES([Makefile src/Makefile script/Makefile])
 AM_CONDITIONAL(SVNVERSION, which svnversion >/dev/null 2>&1)
 
 #------------------------------------------------------------------------------
-# EtherCAT
+# FLTK
 #------------------------------------------------------------------------------
 
 AC_ARG_WITH([fltk-dir],
@@ -39,22 +39,20 @@ FLTK_LDFLAGS=$($FLTK_DIR/bin/fltk-config --ldflags)
 AC_SUBST(FLTK_LDFLAGS)
 
 #------------------------------------------------------------------------------
-# FFTW
+# FFTW3
 #------------------------------------------------------------------------------
 
-AC_ARG_WITH([fftw-dir],
+AC_ARG_WITH([fftw3-dir],
     AC_HELP_STRING(
-        [--with-fftw-dir=<fftw-dir>],
-        [FFTW3 directory [[/usr/local]]]),
+        [--with-fftw3-dir=<fftw3-dir>],
+        [FFTW3 directory [[/usr]]]),
     [ ],
-    [
-        withval=/usr/local
-    ])
-AC_MSG_CHECKING(FFTW path)
+    [withval=/usr])
+AC_MSG_CHECKING(FFTW3 path)
 test -r "$withval"/include/fftw3.h ||\
     AC_MSG_ERROR([FFTW3 not installed in $withval])
-AC_SUBST(FFTW_DIR,[$withval])
-AC_MSG_RESULT($FFTW_DIR)
+AC_SUBST(FFTW3_DIR,[$withval])
+AC_MSG_RESULT($FFTW3_DIR)
 
 #------------------------------------------------------------------------------
 
