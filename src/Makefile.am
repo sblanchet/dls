@@ -3,13 +3,15 @@
 #------------------------------------------------------------------------------
 
 bin_PROGRAMS = dlsd dls_ctl dls_view dls
-lib_LIBRARIES = libcomdls.a libdls.a
+noinst_LTLIBRARIES = libcomdls.la libdls.la
 
 #------------------------------------------------------------------------------
 
-libcomdls_a_CPPFLAGS = -I@FFTW_DIR@/include
+libcomdls_la_CPPFLAGS = -I@FFTW_DIR@/include
+libcomdls_la_LDFLAGS = -L@FFTW_DIR@/lib
+libcomdls_la_LIBADD =
 
-libcomdls_a_SOURCES = \
+libcomdls_la_SOURCES = \
 	com_globals.cpp com_globals.hpp \
 	com_exception.hpp \
 	com_compression_t.hpp \
@@ -29,7 +31,7 @@ libcomdls_a_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-libdls_a_SOURCES = \
+libdls_la_SOURCES = \
         lib_dir.cpp lib_dir.hpp \
 	lib_job.cpp lib_job.hpp \
 	lib_channel.cpp lib_channel.hpp \
@@ -40,8 +42,8 @@ libdls_a_SOURCES = \
 #------------------------------------------------------------------------------
 
 dlsd_CPPFLAGS =
-dlsd_LDFLAGS = -L. -L@FFTW_DIR@/lib
-dlsd_LDADD = -lcomdls -lfftw3 -lm -lz
+dlsd_LDFLAGS =
+dlsd_LDADD = libcomdls.la -lfftw3 -lm -lz
 
 dlsd_SOURCES = \
 	dls_globals.hpp \
@@ -58,8 +60,8 @@ dlsd_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_ctl_CPPFLAGS = @FLTK_CPPFLAGS@
-dls_ctl_LDFLAGS = -L.
-dls_ctl_LDADD = @FLTK_LDFLAGS@ -lcomdls
+dls_ctl_LDFLAGS =
+dls_ctl_LDADD = libcomdls.la @FLTK_LDFLAGS@
 
 dls_ctl_SOURCES = \
         fl_grid.cpp fl_grid.hpp \
@@ -76,8 +78,8 @@ dls_ctl_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_view_CPPFLAGS = @FLTK_CPPFLAGS@
-dls_view_LDFLAGS = -L. -L@FFTW_DIR@/lib
-dls_view_LDADD = @FLTK_LDFLAGS@ -ldls -lcomdls -lfftw3 -lm -lz
+dls_view_LDFLAGS =
+dls_view_LDADD = libdls.la libcomdls.la @FLTK_LDFLAGS@ -lfftw3 -lm -lz
 
 dls_view_SOURCES = \
         fl_grid.cpp fl_grid.hpp \
@@ -93,8 +95,8 @@ dls_view_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_CPPFLAGS =
-dls_LDFLAGS = -L. -L@FFTW_DIR@/lib
-dls_LDADD = -ldls -lcomdls -lfftw3 -lm -lz
+dls_LDFLAGS =
+dls_LDADD = libdls.la libcomdls.la -lfftw3 -lm -lz
 
 dls_SOURCES = \
         cmd_list.cpp cmd_export.cpp cmd_main.cpp

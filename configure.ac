@@ -5,7 +5,7 @@
 AC_INIT([dls],[1.0],[fp@igh-essen.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign dist-bzip2])
 AC_PROG_CXX
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 AC_CONFIG_HEADERS([config.h])
 AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_FILES([Makefile src/Makefile])
