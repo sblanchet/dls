@@ -8,7 +8,7 @@ AC_PROG_CXX
 AC_PROG_LIBTOOL
 AC_CONFIG_HEADERS([config.h])
 AC_PREFIX_DEFAULT([/opt/etherlab])
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile script/Makefile])
 
 #------------------------------------------------------------------------------
 # Subversion
