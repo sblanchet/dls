@@ -9,14 +9,9 @@ $Id$
 Kompilieren und Installieren
 ============================
 
-Hinweise zur Kompilierung und zur Installation des DLS finden sich im
-Anhang A der Dokumentation.
+Hinweise zur Kompilierung und Installation des DLS finden sich im
+Anhang A der Dokumentation. Siehe:
 
-Wenn diese nicht beiliegt, kann sie auch aus den Quellen erzeugt werden.
-Hierzu wird eine LaTeX-Installation benötigt. Der Aufruf von:
-
-$ make -C doku pdf
-
-erzeugt die Datei doku/dls_doku.pdf.
+-> doku/dls_doku.pdf
 
 -------------------------------------------------------------------------------

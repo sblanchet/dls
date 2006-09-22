@@ -8,6 +8,8 @@ sysdir = $(sysconfdir)/sysconfig
 
 noinst_SCRIPTS = dls_quota.pl dls_status.pl init.sh profile.sh sysconfig
 
+EXTRA_DIST = $(noinst_SCRIPTS)
+
 install-data-local:
 	$(mkinstalldirs) $(bindir)
 	$(mkinstalldirs) $(initdir)
