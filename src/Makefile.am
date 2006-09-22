@@ -69,6 +69,9 @@ dls_ctl_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
 dls_ctl_LDFLAGS =
 dls_ctl_LDADD = libcomdls.la @FLTK_LDFLAGS@
 
+install-exec-hook:
+	chmod +s $(bindir)/dls_ctl
+
 dls_ctl_SOURCES = \
         fl_grid.cpp fl_grid.hpp \
 	ctl_globals.hpp \
