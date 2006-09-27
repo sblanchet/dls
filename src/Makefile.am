@@ -2,11 +2,7 @@
 # $Id$
 #------------------------------------------------------------------------------
 
-if SVNVERSION
-SVNREV = `svnversion $(srcdir)`
-else
-SVNREV = exported
-endif
+SVNREV = `$(top_srcdir)/svnrevision.sh $(top_srcdir)`
 
 #------------------------------------------------------------------------------
 
