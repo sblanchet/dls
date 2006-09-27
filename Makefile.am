@@ -4,7 +4,7 @@
 
 SUBDIRS = src script
 
-EXTRA_DIST = doku/dls_doku.pdf
+EXTRA_DIST = doku/dls_doku.pdf svnrevision.sh
 
 mydist:
 	@SVNREV=`svnversion $(srcdir)` && \
