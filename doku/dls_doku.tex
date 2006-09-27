@@ -160,9 +160,9 @@ DLS-Datenverzeichnis\index{DLS-Datenverzeichnis} gespeichert. Dieses
 ist standardmäßig das aktuelle Verzeichnis. Wenn ein anderer Ablageort
 gewünscht ist, kann dies den Programmen des DLS-Paketes entweder über
 Kommandozeilenparameter (Option \texttt{-d}) mitgeteilt, oder in der
-Umgebungsvariable \textit{\$DLS\_DIR}\index{\$DLS\_DIR} abgelegt
-werden. Die Suchreihenfolge ist immer: Parameter - Umgebungsvariable -
-aktuelles Verzeichnis.
+Umgebungsvariable \$DLS\_DIR\index{\$DLS\_DIR} abgelegt werden. Die
+Suchreihenfolge ist immer: Parameter - Umgebungsvariable - aktuelles
+Verzeichnis.
 
 Es können durchaus mehrere DLS-Datenverzeichnisse existieren, die aber
 von unterschiedlichen Instanzen des DLS-Daemons bedient werden müssen
@@ -195,21 +195,16 @@ der darin enthaltene Daten befindet sich in Kapitel \ref{sec:data}.
   exportieren. Siehe Abschnitt~\ref{sec:apx_cmd_dls} für eine
   Auflistung.
 \item[Init-Script]\index{Init-Script} Zum Starten und Stoppen des dlsd
-  und aller damit zusammenhängenden Dienste gibt es ein Init-Script,
-  das standardmäßig nach \textit{/etc/init.d/dls} installiert wird.
-  Zusätzlich wird ein Soft-Link \textit{/usr/local/bin/rcdls}
-  angelegt, der auf das Init-Script zeigt. Dieses kennt die Parameter
-  \textit{start}, \textit{stop}, \textit{restart} und \textit{status}.
-  Die Konfiguration des Dienstes erfolg über eine
-  Sysconfig-Datei\index{Sysconfig-Datei} mit Namen
-  \textit{/etc/sysconfig/dls}, die alle nötigen Variablen enthält. Es
-  wird empfohlen, die enthaltenen Variablen
-  \$DLS\_DIR\index{\$DLS\_DIR}, \$DLS\_EXPORT\index{\$DLS\_EXPORT},
-  \$DLS\_EXPORT\_FMT\index{\$DLS\_EXPORT\_FMT} und
-  \$DLS\_USER\index{\$DLS\_USER} für alle Benutzer zu exportieren und
-  so allen Werkzeugen des DLS-Paketes zugänglich zu machen.
-\item[dls\_status] Zur allgemeinen Überwachung der Datenerfassung gibt
-  es das Script \textit{dls\_status}\index{dls\_status}. Es ist ein
+  und aller damit zusammenhängenden Dienste wird ein Init-Script
+  mitgeliefert. Dieses kennt die Parameter \texttt{start},
+  \texttt{stop}, \texttt{restart} und \texttt{status}. Die
+  Konfiguration des Dienstes erfolgt über eine
+  Sysconfig-Datei\index{Sysconfig-Datei}, die alle nötigen Variablen
+  enthält. Es wird empfohlen, die enthaltenen Variablen über das
+  ebenfalls mitgelieferte Profile-Script zu exportieren und so für
+  alle Benutzer zugänglich zu machen.
+\item[dls\_status] Zur allgemeinen Überwachung der Datenerfassung
+  dient das Script \textit{dls\_status}\index{dls\_status}. Es ist ein
   Kommandozeilentool, das die grundsätzliche Bereitschaft zur
   Messdatenerfassung für ein bestimmtes DLS-Datenverzeichnis anzeigen
   kann. Es gibt aus, ob der DLS-Mutterprozess läuft, welche
@@ -247,8 +242,8 @@ bietet Abbildung \ref{fig:arch}.
 
 Ein mit dem Befehl \texttt{dls start} gestarteter dlsd-Prozess
 übernimmt die Überwachung der Messaufträge\index{Messauftrag}. Er
-heisst dann \textit{dlsd-Mutterprozess}. Er hält im Speicher eine
-Liste von eigenen Kopien der im DLS-Datenverzeichnis vorhandenen
+heißt dann \textit{dlsd-Mutterprozess}. Er hält im Speicher eine Liste
+von eigenen Kopien der im DLS-Datenverzeichnis vorhandenen
 Auftragsvorgaben vor, die zusätzlich Informationen über die
 dazugehörigen Erfassungsprozesse enthalten.
 
@@ -364,8 +359,8 @@ Folgende Signale werden vom dlsd-Mutterprozess verarbeitet:
   behandelt.  Der Prozess wird beim Auftreten eines solchen Zustandes
   eine Datei mit Namen \textit{error\_\textless PID\textgreater} im
   DLS-Datenverzeichnis hinterlassen, die Informationen über das
-  empfangene Signal enthält, und sich kurz darauf mit dem Rückgabewert
-  $-3$ beenden.
+  empfangene Signal ent\-hält, und sich kurz darauf mit dem
+  Rückgabewert $-3$ beenden.
 \end{description}
 
 %------------------------------------------------------------------------------
@@ -396,12 +391,12 @@ Messauftrags\index{Messauftrag} aus der zentralen Vorgabendatei
 Kommunikationsprotokolles, siehe Kapitel \ref{sec:dlsd_logger_comm}).
 
 Die erfassten Messdaten laufen für jeden Kanal in einen sog.
-\textit{Block-Buffer}. Ist dieser voll, werden die Daten blockweise
+\textit{Block-Puffer}. Ist dieser voll, werden die Daten blockweise
 komprimiert, gespeichert und und mit dem Zeitstempel des ersten
 Datenwertes im Block indiziert. Dies hat den Vorteil, dass zur
 Komprimierung kein Streaming-Verfahren nötig ist und die einzelnen
 Datenwerte später gezielt auffindbar sind. Die Größe dieses
-Datenblockes\index{Datenblock} (und somit des \textit{Block-Buffers}
+Datenblockes\index{Datenblock} (und somit des \textit{Block-Puffers}
 kann vom Benutzer in den Kanalvorgaben angegeben werden.
 
 Eine zeitlich kontinuierliche Folge von Datenblöcken wird in diesem
@@ -439,18 +434,17 @@ Datenwerte ist. Der Algorithmus hat also in Hinblick auf Zeit- und
 Speicherbedarf die Ordnung $O(1)$.
 
 Zur Erzeugung der (redundanten) Meta-Daten existiert im
-dlsd-Erfassungsprozess parallel zum \textit{Block-Buffer} ein sog.
-\textit{Meta-Buffer}. Dieser Speicher fasst $u$ Datenwerte, wobei $u$
+dlsd-Erfassungsprozess parallel zum Block-Puffer ein sog.
+\textit{Meta-Puffer}. Dieser Speicher fasst $u$ Datenwerte, wobei $u$
 die sog. Meta-Untersetzung\index{Meta-Untersetzung} ist, die der
 Benutzer in den Kanalvorgaben festlegen kann. Die Meta-Untersetzung
-gilt für alle Ebenen. Ist der \textit{Meta-Buffer} voll, so wird aus
-den $u$ generischen Datenwerten ein \glqq Meta-Datenwert\grqq\ der
-Meta-Ebene 1 generiert und dort wiederum in einem \textit{Block-} und
-einem \textit{Meta-Buffer} abgelegt. Für diese gelten wieder die
-selben Regeln wie für die Ebene der generischen Daten, d. h. die
-Meta-Ebenen werden \glqq kaskadiert\grqq\ erzeugt. So wird auch erst
-Speicher für eine neue Ebene reserviert, wenn der erste Meta-Wert
-dieser Ebene anfällt.
+gilt für alle Ebenen. Ist der Meta-Puffer voll, so wird aus den $u$
+generischen Datenwerten ein \glqq Meta-Datenwert\grqq\ der Meta-Ebene
+1 generiert und dort wiederum in einem Block- und einem Meta-Puffer
+abgelegt. Für diese gelten wieder die selben Regeln wie für die Ebene
+der generischen Daten, d. h. die Meta-Ebenen werden \glqq
+kaskadiert\grqq\ erzeugt. So wird auch erst Speicher für eine neue
+Ebene reserviert, wenn der erste Meta-Wert dieser Ebene anfällt.
 
 Es gibt verschiedene Typen von Meta-Daten\index{Meta-Typen}, die auch
 gleichzeitig erzeugt werden kön\-nen. Momentan werden Folgende
@@ -479,7 +473,7 @@ Chunks\index{Chunk} in einer Ebene weniger als $u$ Werte übrig
 bleiben. Aus diesen Werten wird \textbf{kein} weiterer Meta-Wert mehr
 erzeugt, da man davon ausgehen kann, dass dieser Datenwert in der
 Anzeige immer schmaler als ein Pixel sein würde. Die überschüssigen
-Werte in den \textit{Meta-Buffern} werden also verworfen.
+Werte in den Meta-Puffern werden also verworfen.
 
 %------------------------------------------------------------------------------
 
@@ -631,7 +625,7 @@ Erfassungsprozess endgültig auf die neuen Kanalvorgaben umgestellt.
 
 Der dlsd kennt Mechanismen zum Begrenzen des erforderlichen
 Speicherplatzes für die erfassten Daten eines Messauftrages. Es werden
-verschiedene Kriterien für die Überschreitung dieser Grenzen
+verschiedene Kriterien für die Über\-schrei\-tung dieser Grenzen
 unterstützt:
 
 \begin{description}
@@ -649,10 +643,15 @@ wird allerdings nie entfernt, da hier gerade eine Erfassung
 stattfinden könnte.
 
 Die Aufgabe des Löschens übernimmt der DLS-Quota-Daemon. Dieser muss
-immer parallel zum dlsd laufen, sobald in mindestens einem
-Auftrag Quotas konfiguriert sind. Der Start erfolgt manuell mit
-\textit{dls\_quota}\index{dls\_quota}. Kommandozeilenparameter sind in
-Anhang \ref{sec:apx_cmd_quota} einsehbar.
+immer parallel zum dlsd laufen, sobald in mindestens einem Auftrag
+Quotas konfiguriert sind. Der Start erfolgt manuell mit:
+
+\begin{lstlisting}
+  `\$` `\textbf{dls\_quota}\index{dls\_quota}`
+\end{lstlisting}
+
+Die Kommandozeilenparameter sind in Anhang \ref{sec:apx_cmd_quota}
+einsehbar.
 
 \begin{figure}[htb]
   \begin{center}
@@ -724,9 +723,9 @@ Der dlsd-Erfassungsprozess speichert die Nachrichten im
 Unterverzeichnis \textit{messages} des Auftragsverzeichnisses (siehe
 Kapitel \ref{sec:data_msg}). Nachrichten sind -wie Messdaten- in
 Chunks organisiert. Allerdings wurde dieses Konzept hier etwas
-abgewandelt: Nachrichten-Chunks sind nicht zeitlich kontinuierlich und
-wurden nur deshalb in Chunks angeordnet, um später bestimmte
-Zeitspannen mit Nachrichten einfacher löschen zu können.
+abgewandelt: Chunks, die Nachrichten enthalten, sind nicht zeitlich
+kontinuierlich und werden nur deshalb engelegt, um später bestimmte
+Zeitspannen von Nachrichten einfacher löschen zu können.
 
 %------------------------------------------------------------------------------
 
@@ -783,24 +782,24 @@ organisiert. Die grund\-sätzliche Struktur zeigt Abbildung
 
 Das Wurzelverzeichnis ist die oberste Verzeichnisebene innerhalb des
 DLS-Daten\-ver\-zeich\-nis\-ses. Hier liegen hauptsächlich Dateien für
-den dlsd-Mutterprozess. Darüberhinaus liegen im Wurzelverzeichnis auch
-alle Auftragsverzeichnisse (siehe Kapitel \ref{sec:data_jobs}).
+den dlsd-Mutterprozess. Darüber hinaus liegen im Wurzelverzeichnis
+auch alle Auftragsverzeichnisse (siehe Kapitel \ref{sec:data_jobs}).
 
 Dateien und Unterverzeichnisse im Wurzelverzeichnis:
 
 \begin{description}
 \item[id\_sequence] Diese Datei enthält die nächste, freie Auftrags-ID
-  als \textit{ASCII}-kodierte Ziffernfolge. Sie wird vom DLS Manager
-  benötigt, wenn ein neuer Auftrag angelegt werden soll. Dieser liest
-  die ID, verwendet diese für den neuen Auftrag, erhöht sie um 1 und
-  schreibt die neue ID in die Datei zurück.
+  als ASCII-kodierte Ziffernfolge. Sie wird vom DLS Manager benötigt,
+  wenn ein neuer Auftrag angelegt werden soll. Dieser liest die ID,
+  verwendet diese für den neuen Auftrag, erhöht sie um 1 und schreibt
+  die neue ID in die Datei zurück.
 \item[dlsd.pid] Dies ist die \textit{PID}-Datei\index{PID-Dateien} des
   dlsd-Mutterprozesses (siehe Anhang \ref{sec:apx_pid}).  Sie wird zur
   Laufzeit automatisch angelegt und zeigt an, dass gerade ein
   dlsd-Mutterprozess läuft.
-\item[job\textless ID\textgreater] Jedes Auftragsverzeichnis liegt im
-  DLS-Wurzelverzeichnis. Der Name ist immer \textit{job},
-  gefolgt von der Auftrags-ID. Siehe Kapitel \ref{sec:data_jobs}.
+\item[jobXXX] Jedes Auftragsverzeichnis liegt im
+  DLS-Wurzelverzeichnis. Der Name ist immer \textit{job}, gefolgt von
+  der Auftrags-ID. Siehe Kapitel \ref{sec:data_jobs}.
 \item[spool] Dies ist das Spooling-Verzeichnis des
   dlsd-Mutterprozesses. Eine Beschreibung steht in Kapitel
   \ref{sec:dlsd_mother_spooling}.
@@ -874,13 +873,13 @@ Dateien und Unterverzeichnisse in einem Auftragsverzeichnis:
   dlsd-Erfassungsprozesses (siehe Anhang \ref{sec:apx_pid}). Sie wird
   zur Laufzeit automatisch angelegt und zeigt an, dass der
   Erfassungsprozess gerade läuft.
-\item[channel\textless INDEX\textgreater] Die erfassten Daten sind
-  weiterhin in Kanälen organisiert, die jeweils ihr eigenes
-  Kanal-Verzeichnis besitzen (siehe Kapitel \ref{sec:data_channels}).
-  Der Index im Namen des Kanalverzeichnisses entspricht dem
-  Kanalindex, den der Befehl \textit{\textless rk\textgreater} beim
-  Auslesen aller Kanäle der Datenquelle während des Startvorganges des
-  dlsd-Mutterprozesses zurückgeliefert hat (siehe Kapitel
+\item[channelXXX] Die erfassten Daten sind weiterhin in Kanälen
+  organisiert, die jeweils ihr eigenes Kanal-Verzeichnis besitzen
+  (siehe Kapitel \ref{sec:data_channels}). Der Index im Namen des
+  Kanalverzeichnisses entspricht dem Kanalindex, den der Befehl
+  \textit{\textless rk\textgreater} beim Auslesen aller Kanäle der
+  Datenquelle während des Startvorganges des
+  dlsd-Mutter\-pro\-zes\-ses zurückgeliefert hat (siehe Kapitel
   \ref{sec:dlsd_logger_comm}).
 \item[messages] Jeder Erfassungsprozess legt die Nachrichten, die er währen der
   Erfassung von der Datenquelle empfangen hat in diesem Verzeichnis
@@ -1081,9 +1080,9 @@ entsprechen (siehe Kapitel \ref{sec:dlsd_logger_msg}).
 
 \paragraph{Nachrichten-Index-Dateien}
 Die Index-Datei \textit{messages.idx} gehört zu der eigentlichen
-Nachrichtendatei und wird benötigt, um Nachrichten einer bestimmten Zeitspanne
-schnell laden zu können, ohne gleich die die gesamte Nachrichten-Datei
-einlesen zu müssen.
+Nachrichtendatei und wird benötigt, um Nachrichten einer bestimmten
+Zeitspanne in kurzer Zeit laden zu können, ohne gleich die die gesamte
+Nachrichten-Datei einlesen zu müssen.
 
 Ein Eintrag in einer Nachrinten-Index-Datei entspricht immer einer
 Nachricht in der Nachrichten-Datei. Die Struktur eines Eintrags zeigt
@@ -1111,7 +1110,7 @@ dient weiterhin zur Steuerung und Kontrolle der laufenden
 Erfassungsprozesse.
 
 Wie auch der dlsd kann diesem Tool in der Kommandozeile mit dem
-Parameter \textit{-d} das DLS-Daten\-verzeich\-nis mitgeteilt werden,
+Parameter \texttt{-d} das DLS-Daten\-verzeich\-nis mitgeteilt werden,
 auf dem es arbeiten soll (siehe Anhang \ref{sec:apx_cmd_dlsctl}).
 
 Beim Programmstart führt der DLS Manager selbstständig einige
@@ -1158,15 +1157,14 @@ in den Spalten bereit:
   DLS-Datenverzeichnis im Unterverzeichnis
   \textit{job\textless ID\textgreater} gespeichert.
 \item[Quelle] Der Name oder die IP-Adresse des Servers, der als
-  Datenquelle dienen soll. Auf diesem muss ein \textit{MSR}-Server
-  über den TCP-Port 2345 zu erreichen sein. Die Quelle kann nur beim
-  Erstellen des Auftrags gewählt werden und ist später nicht mehr
-  veränderbar.
+  Datenquelle dienen soll. Auf diesem muss ein MSR-Server über den
+  TCP-Port 2345 zu erreichen sein. Die Quelle kann nur beim Erstellen
+  des Auftrags gewählt werden und ist später nicht mehr veränderbar.
 \item[Status] Der vom Benutzer gewählte Status des Auftrags: \glqq
   gestartet\grqq, wenn die Erfassung laufen soll, sonst \glqq
   angehalten\grqq.
 \item[Trigger] Der Parameter der Datenquelle, der dem
-  Erfassungsprozess als Trigger-Parameter dienen soll. Ist ein
+  Erfassungsprozess als Trig\-ger-Para\-meter dienen soll. Ist ein
   Trigger-Parameter gewählt, wird nur erfasst, wenn dieser den Wert 1
   hat.
 \item[Prozess] Gibt an, ob derzeit ein Erfassungsprozess für diesen
@@ -1258,8 +1256,8 @@ zum Messauftrag zu machen:
   angezeigt. Andernfalls werden die Daten übernommen und der Dialog
   geschlossen. Läuft ein dlsd -Erfassungsprozess, wird dieser zur
   Übernahme der neuen Vorgaben aufgefordert.
-\item Betätigen der Schaltfläche \glqq Abbrechen\grqq\ verwirft die
-  angegebenen Daten und schliesst den Dialog.
+\item Bei Betätigung der Schaltfläche \glqq Abbrechen\grqq\ werden die
+  angegebenen Daten verworfen und der Dialog geschlossen.
 \end{itemize}
 
 %------------------------------------------------------------------------------
@@ -1307,7 +1305,7 @@ mit den wichtigsten Parametern. Diese sind:
   Schaltfläche \glqq Ändern\grqq\ aufgerufen werden.
 \item Die Kanalzeilen der Tabelle können mit dem Mauscursor markiert
   werden. Dann sind auch die Schaltflächen \glqq Kanäle
-  editieren...\grqq\ und \glqq Kanäle entfernen\grqq\ anwählbar.
+  editieren...\grqq\ und \glqq Kanäle entfernen\grqq\ an\-wähl\-bar.
 \item Durch Drücken der \textit{Shift}-, bzw. \textit{Strg}-Tasten
   können in der Tabelle auch mehrere Kanäle gleichzeitig angewählt
   werden, die dann auch gleichzeitig editiert oder entfernt werden
@@ -1319,8 +1317,8 @@ mit den wichtigsten Parametern. Diese sind:
   \ref{sec:manager_kanaele_edit_parallel}).
 \item Ein Doppelklick auf eine Kanalzeile öffnet ebenfalls den Dialog
   zum Editieren der Vorgaben des entsprechenden Kanals.
-\item Durch Betätigen der Schaltfläche \glqq Kanäle entfernen\grqq\
-  werden alle markierten Kanäle aus den Vorgaben gelöscht. Erfasste
+\item Durch Betätigen der Schaltfläche \glqq Kanäle entfernen\grqq\ 
+  werden alle markierten Kanä\-le aus den Vorgaben gelöscht. Erfasste
   Daten bleiben aber weiterhin verfügbar.
 \item Beim Betätigen der Schaltfläche \glqq Kanäle hinzufügen\grqq\
   öffnet sich der Dialog zum Hinzufügen von Kanalvorgaben (siehe
@@ -1451,8 +1449,8 @@ Kanalvorgabe(n) bereit:
   Kanalvorgaben angewendet, der evtl. laufende dlsd-Erfassungsprozess
   zur Übernahme der neuen Parameter aufgefordert und der Dialog
   geschlossen.
-\item Betätigen der Schaltfläche \glqq Abbrechen\grqq\ führt keine
-  Änderungen durch und schliesst den Dialog.
+\item Bei Betätigung der Schaltfläche \glqq Abbrechen\grqq\ werden
+  keine Änderungen durchgeführt und der Dialog geschlossen.
 \end{itemize}
 
 %------------------------------------------------------------------------------
@@ -1582,10 +1580,10 @@ Dialogen (siehe Abbildungen \ref{fig:dls_view_main} und
   Übrigens kann die Position beim Loslassen der Maustaste
   durchaus auch ausserhalb des Anzeigebereiches liegen, womit eine
   leichte Vergrößerung der angezeigten Zeitspanne möglich ist.
-\item In ähnlicher Weise kann durch Drücken und Halten der
-  \textit{rechten} Maustaste auf dem Anzeigebereich die angezeigte
-  Zeitspanne verschoben werden. Loslassen der Maustaste bewirkt die
-  Übernahme der neuen Zeitspanne.
+\item In ähnlicher Weise kann durch Drücken und Halten der rechten
+  Maustaste auf dem Anzeigebereich die angezeigte Zeitspanne
+  verschoben werden. Loslassen der Maustaste bewirkt die Übernahme der
+  neuen Zeitspanne.
 \item Ein Doppelklick in den Datenbereich bewirkt, dass die angezeigte
   Zeitspanne um den Faktor 2 erweitert wird. Vorher wird sie um den
   angeklickten Zeitpunkt zentriert. Ist während des Doppelklicks die
@@ -1650,15 +1648,15 @@ Dialogen (siehe Abbildungen \ref{fig:dls_view_main} und
   durchaus mehrere Formate gleichzeitig exportiert werden.
 \item Bei Betätigen der Schaltfläche \glqq Exportieren\grqq\ beginnt
   der Datenexport. Falls die Umgebungsvariable
-  \textit{\$DLS\_EXPORT}\index{\$DLS\_EXPORT} gesetzt ist, werden die
-  Daten in das entsprechende Verzeichnis geschrieben. Andernfalls wird
-  das aktuelle Verzeichnis genutzt. Damit beim Export keine Daten
+  \$DLS\_EXPORT\index{\$DLS\_EXPORT} gesetzt ist, werden die Daten in
+  das entsprechende Verzeichnis geschrieben. Andernfalls wird das
+  aktuelle Verzeichnis genutzt. Damit beim Export keine Daten
   überschrieben werden, wird immer ein Unterverzeichnis erstellt, dass
   alle Datendateien enthält. Der Name dieses Unterverzeichnisses wird
   durch die Umgebungsvariable
   \$DLS\_EXPORT\_FMT\index{\$DLS\_EXPORT\_FMT} bestimmt, die
   Platzhalter nach den Konventionen der C-Funktion strftime() erlaubt.
-  Siehe \textit{man 3 strftime} für eine Auflistung. Ist die
+  Siehe \texttt{man 3 strftime} für eine Auflistung. Ist die
   Umgebungsvariable nicht gesetzt, wird ein Standardverzeichnisname
   \textit{dls-export-\%Y-\%m-\%d-\%H-\%M-\%S} angenommen.
 \item Die Schaltfläche \glqq Abbrechen \grqq\ bricht den Export ab und
@@ -1679,12 +1677,13 @@ einstellen kann. Man unterscheidet grundsätzlich zwischen verlustfreier und
 verlustbehafteter Kompression.
 
 Das DLS-System unterstützt verschiedene Kompressionsalgorithmen. Da
-die meisten Algorithmen binäre Daten als Ausgabe haben, werden diese vor der
-Speicherung in die Datendateien in \textit{Base64} kodiert. Das hat zwar zur
-Folge, dass der benötigte Speicherplatz um ein Drittel vergrößert wird, hat
-aber zum Vorteil, dass die komprimierten Daten in \glqq druckbaren\grqq\
-Zeichen vorliegen, und somit in XML kodiert werden können. Deswegen haben alle
-Kompressionsmethoden des DLS das Suffix \textit{/Base64}.
+die meisten Algorithmen binäre Daten als Ausgabe haben, werden diese
+vor der Speicherung in die Datendateien in Base64 kodiert. Das hat
+zwar zur Folge, dass der benötigte Speicherplatz um ein Drittel
+vergrößert wird, hat aber zum Vorteil, dass die komprimierten Daten in
+\glqq druckbaren\grqq\ Zeichen vorliegen, und somit in XML kodiert
+werden können. Deswegen haben alle Kompressionsmethoden des DLS das
+Suffix \textit{/Base64}.
 
 Folgende Kompressionsmethoden werden vom DLS unterstützt:
 
@@ -1714,7 +1713,7 @@ zur Unterstützung in den weiteren Verfahren genutzt, um die bereits
 aufbereiteten Daten weiter zu komprimieren.
 
 Da die ZLib Binärdaten liefert, werden diese danach in allen Verfahren
-in \textit{Base64} kodiert gespeichert.
+in Base64 kodiert gespeichert.
 
 %------------------------------------------------------------------------------
 
@@ -1725,13 +1724,13 @@ in \textit{Base64} kodiert gespeichert.
 Kompressionsverfahren: MDCT/ZLib/Base64\\
 Komprimierbare Datentypen: \textit{TFLT}, \textit{TDBL}
 
-Das Kompressionverfahren der \glqq modifizierten, diskreten
-Cosinus-Transformation\grqq\ (MDCT) des DLS ist eigentlich ein
-hybrides Verfahren in dem die Daten zuerst mit der MDCT transformiert, dann
-quantisiert und schliesslich bitweise transponiert werden, um die darauf
-folgende Kompression mit der ZLib effektiver zu machen. Dabei wird das Ziel
-verfolgt, die Messdaten zwar verlustbehaftet, aber mit begrenztem Fehler zu
-komprimieren.
+Das Kompressionverfahren MDCT (\glqq modifizierte, diskrete
+Cosinus-Transformation\grqq) des DLS ist eigentlich ein hybrides
+Verfahren in dem die Daten zuerst mit der MDCT transformiert, dann
+quantisiert und schliesslich bitweise transponiert werden, um die
+darauf folgende Kompression mit der ZLib effektiver zu machen. Dabei
+wird das Ziel verfolgt, die Messdaten zwar verlustbehaftet, aber mit
+begrenztem Fehler zu komprimieren.
 
 \subsection{MDCT}
 
@@ -1819,7 +1818,7 @@ Marios Athineos\footnote{marios@ee.columbia.edu,
 ein Verfahren entwickelt, um eine MDCT über $n$ Werte auf eine
 Fourier-Trans\-formation über $\frac{n}{4}$ Werte zu reduzieren. Der
 DLS benutzt dieses Verfahren in Kombination mit der
-\textit{FFTW}-Bibliothek (siehe Anhang \ref{sec:apx_install}) um den
+\textit{FFTW3}-Bibliothek (siehe Anhang \ref{sec:apx_install}) um den
 Rechenaufwand erheblich zu mindern. Diese Bibliothek vereint
 effiziente Algorithmen zur Berechnung der Fourier-Transformation mit
 der Benutzung von Prozessor-Erweiterungen wie MMX oder DDE.
@@ -1874,7 +1873,7 @@ Die Transponierung erfolgt aus den selben Gründen wie im Verfahren
 \section{Systemvoraussetzungen}
 
 Der DLS ist zu weiten Teilen in der Programmiersprache C++\index{C++}
-implementiert. Er benötigt zum Kompilieren und Laufen ein
+implementiert. Er benö\-tigt zum Kompilieren und Laufen ein
 Linux-Betriebssystem\index{Linux}.
 
 Folgende Software muss für die Kompilierung und zur Laufzeit
@@ -1884,78 +1883,90 @@ installiert sein:
 \item Für das Aufzeichnen der während der Laufzeit anfallenden
   Nachrichten wird der \textit{syslogd}\index{syslogd} verwendet, der
   standardmäßig jeder Linux-Distribution beiliegt.
-\item Für das Kompilieren der grafischen Benutzeroberflächen
-  \textit{DLS Manager}\index{DLS Manager} und \textit{DLS
-    View}\index{DLS View} ist zusätzlich die GUI-Bibliothek
-  \textit{FLTK}\index{FLTK} in der Version 1.1.\textit{X} nötig, die
-  auf der FLTK-Homepage \url{http://www.fltk.org} heruntergeladen
-  werden kann. Die Bibliothek muss Multithreading-fähig sein (Schalter
-  \texttt{--enable-threads}). Zum Kompilieren des DLS müssen die
-  entsprechenden Entwicklungspakete installiert sein und das
-  Executable \textit{fltk-config} muss mittels der
-  \textit{\$PATH}-Variable auffindbar sein.
+\item Für das Kompilieren der grafischen Benutzeroberflächen DLS
+  Manager\index{DLS Manager} und DLS View\index{DLS View} ist
+  zusätzlich die GUI-Bibliothek \textit{FLTK}\index{FLTK} in der
+  Version 1.1 nötig, die von der FLTK-Homepage
+  \url{http://www.fltk.org} heruntergeladen werden kann. Die
+  Bibliothek muss mit Unterstützung für Multithreading\footnote{Leider
+    liegt manchen Linux-Distributionen nur ein Packet ohne
+    Multithreading vor, so dass die FLTK-Bibliothek selber kompiliert
+    werden muss.} kompiliert worden sein (\texttt{configure}-Schalter
+  \texttt{--enable-threads}).
 \item Für die Kompression wird die \textit{ZLib} benötigt. Diese ist
-  in nahezu jeder Linux-Distribution enthalten. Ansonsten kann sie von
-  der \textit{ZLib}-Homepage \url{http://www.gzip.org/zlib}
-  heruntergeladen werden. Zur Kompilierung des DLS muss das
-  Entwicklungspaket installiert sein.
+  in nahezu jeder Linux-Distribution enthalten. Notfalls kann sie von
+  \url{http://www.gzip.org/zlib} heruntergeladen und installiert
+  werden.
 \item Ebenfalls für die Kompression wird die \textit{FFTW3}-Bibliothek
   benötigt. Mit dieser ist der DLS in der Lage die für die
-  MDCT-Kompression nötigen Fourier-Transformationen noch schneller zu
-  berechnen. Die Bibliothek kann von der offiziellen Homepage
-  \url{http://www.fftw.org/download.html} heruntergeladen werden. Zur
-  Kompilierung des DLS muss das Entwicklungspaket
-  installiert sein.
+  MDCT-Kompression nötigen Fourier-Transformationen effizient zu
+  berechnen. Die Bezugsquelle für die Bibliothek ist
+  \url{http://www.fftw.org/download.html}.
 \item Für den DLS Manager und für FLTK wird die
-  \textit{pthreads}-Bibliothek mit Einwicklungspaketen benötigt.
+  \textit{pthreads}-Bibliothek benötigt.
 \end{itemize}
 
 \section{Installation}
 
-Sind alle Voraussetzungen erfüllt, so kann der DLS mit einem
-Aufruf von
+Nach dem Kopieren von der EtherLab\textsuperscript{\textregistered}-CD
+oder Herunterladen von der
+EtherLab\textsuperscript{\textregistered}-Homepage
+\url{http://etherlab.org} kann das DLS-Archiv entpackt werden:
 
 \begin{lstlisting}
-  host> `\textbf{make}`
+  `\$` `\textbf{tar xjf dls-1.0-rXXX.tar.bz2}`
+  `\$` `\textbf{cd dls-1.0-rXXX.tar.bz2}`
 \end{lstlisting}
 
-kompiliert werden. Ein anschließender Aufruf von
+Nun kann der Quellcode mit den unten angegebenen Befehlen konfiguriert
+und kompiliert werden. Der \texttt{configure}-Befehl kennt zwei
+zusätzliche Parameter \texttt{--with-fltk-dir} und
+\texttt{--with-fftw3-dir} um die (abweichenden)
+Installationsverzeichnisse der jeweiligen Bibliotheken anzugeben. Das
+Standard-Installationsverzeichnis des DLS is \textit{/opt/etherlab}.
+Ein anderes Verzeichnis kann mit dem Parameter \texttt{--prefix}
+angegeben werden.
 
 \begin{lstlisting}
-  host# `\textbf{make install}`
+  `\$` `\textbf{./configure}`
+  `\$` `\textbf{make}`
 \end{lstlisting}
 
-installiert alle nötigen Executables, Scripts und die
-Konfigurationen. Dies sind im Einzelnen:
+Ein anschließender Aufruf (als \textit{root}) von
 
-\begin{description}
-\item[/etc/sysconfig/dls] Sysconfig-Datei, enthält alle
-  Konfigurationen, um den dlsd als Dienst zu starten. Benötigt vom
-  Init-Script.
-\item[/etc/profile.d/dls.sh] Profile-Datei, zum automatischen
-  Exportieren der DLS-Umgebungs\-variablen für alle Benutzer.
-\item[/etc/init.d/dls] Init-Script.
-\item[/usr/sbin/rcdls] Softlink auf das Init-Script.
-\item[/usr/local/bin/dls\_status] Script zum Abfragen der Zustände
-  aller Messaufträge\index{Messauftrag} via Kommandozeile.
-\item[/usr/local/bin/dls\_quota] DLS-Quota-Dämon.
-\item[/usr/local/bin/dlsd] DLS-Dämon.
-\item[/usr/local/bin/dls\_ctl] DLS Manager.
-\item[/usr/local/bin/dls\_view] DLS View.
-\item[/usr/local/bin/dls] DLS-Kommandozeilentool.
-\end{description}
+\begin{lstlisting}
+  # `\textbf{make install}`
+\end{lstlisting}
 
-\section{Konfiguration}
+installiert alle nötigen Executables, Scripts und
+Template-Konfigurationsdateien.
 
-Die Konfiguration geschieht durch Anpassen der Variablen in der
-Sysconfig-Datei \textit{/etc/sysconfig/dls}. Diese werden später durch
-ein Profile-Script als Umgebungsvariablen exportiert und stehen so
-allen Benutzern zur Verfügung.
+\section{DLS als Dienst einrichten}
+
+Soll der DLS als Dienst eingerichtet werden, müssen das Init-Script,
+die Sysconfig-Datei und das Profile-Script in die für die Distribution
+passenden Verzeichnisse kopiert werden. Die folgenden Befehle passen
+für eine SUSE Linux Distribution, können für andere Distributionen
+allerdings leicht abweichen:
+
+\begin{lstlisting}
+  # `\textbf{cd /opt/etherlab}`
+  # `\textbf{cp etc/init.d/dls /etc/init.d/dls}`
+  # `\textbf{cp etc/sysconfig/dls /etc/sysconfig/dls}`
+  # `\textbf{cp etc/profile.d/dls /etc/profile.d/dls}`
+  # `\textbf{insserv dls}`
+\end{lstlisting}
+
+Die Konfiguration geschieht durch Anpassen der Sysconfig-Datei
+\textit{/etc/sysconfig/dls}. Die entsprechnden Konfigurationsvariablen
+sind in der Datei dokumentiert und werden später durch ein
+Profile-Script als Umgebungsvariablen exportiert und stehen so allen
+Benutzern zur Verfügung.
 
 Das Anlegen eines DLS-Datenverzeichnisses geschieht automatisch beim
 Start des DLS Managers. Dafür muss entweder die Umgebungsvariable
 \$DLS\_DIR\index{\$DLS\_DIR} gesetzt sein, oder das zu
-initialisierende Verzeichnis muss mittels Parameter \textit{-d}
+initialisierende Verzeichnis muss mittels Parameter \texttt{-d}
 übergeben werden. Ist das angebene Verzeichnis noch kein
 DLS-Datenverzeichnis, wird der Benutzer gefragt, ob es als solches
 initialisiert werden soll.
@@ -2025,7 +2036,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \section{dlsd}
 \index{dlsd!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   dlsd 1.0.0 revision 26
   Usage: dlsd [OPTIONS]
          -d <dir>       Set DLS data directory.
@@ -2040,8 +2051,10 @@ nicht mehr) kann zuvor gelöscht werden.
 \section{Init-Script}
 \index{Init-Script!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
-  USAGE: /usr/sbin/rcdls \{start|stop|restart|status\}
+(Der Pfad kann je nach Linux-Distribution abweichen.)
+
+\begin{lstlisting}
+  USAGE: /etc/init.d/dls {start|stop|restart|status}
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
@@ -2049,7 +2062,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \section{dls\_status}
 \index{dls\_status!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   Aufruf: dls_status [OPTIONEN]
   Optionen:
           -d [Verzeichnis]   DLS-Datenverzeichnis
@@ -2062,7 +2075,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \label{sec:apx_cmd_dlsctl}
 \index{DLS Manager!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   dls_ctl 1.0.0 revision 26
   Aufruf: dls_ctl [OPTIONEN]
           -d [Verzeichnis]   DLS-Datenverzeichnis angeben
@@ -2075,7 +2088,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \section{dls\_view}
 \index{DLS View!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   dls_view 1.0.0 revision 26
   Aufruf: dls_view [OPTIONEN]
           -d [Verzeichnis]   DLS-Datenverzeichnis angeben
@@ -2088,7 +2101,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \label{sec:apx_cmd_dls}
 \index{dls (Tool)!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   Usage: dls COMMAND [OPTIONS]
   Commands:
       list - List available chunks.
@@ -2101,7 +2114,7 @@ nicht mehr) kann zuvor gelöscht werden.
 
 \subsection{dls list}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   Usage: 1. dls list [OPTIONS]
          2. dls list -j JOB [OPTIONS]
 
@@ -2119,20 +2132,25 @@ nicht mehr) kann zuvor gelöscht werden.
 
 \subsection{dls export}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   Usage: dls export [OPTIONS]
   Options:
      -d DIR         DLS data directory. Default: `\$`DLS_DIR
-     -o DIR         Output directory. Default: `\$`DLS_EXPORT_DIR or "."
-     -f NAMEFMT     Naming format for export directory. See strftime(3).
-                    Default: `\$`DLS_EXPORT_FMT or "dls-export-%Y-%m-%d-%H-%M-%S"
+     -o DIR         Output directory.
+                    Default: `\$`DLS_EXPORT_DIR or "."
+     -f NAMEFMT     Naming format for export directory. See
+                    strftime(3).
+                    Default: `\$`DLS_EXPORT_FMT or
+                    "dls-export-%Y-%m-%d-%H-%M-%S"
      -a             Enable ASCII exporter
      -m             Enable MATLAB4 exporter
      -j ID          Job to export (MANDATORY)
      -c CHANNELS    Indices of channels to export (see below).
                     Default: All channels
-     -s TIMESTAMP   Start time (see below). Default: Start of recording
-     -e TIMESTAMP   End time (see below). Default: End of recording
+     -s TIMESTAMP   Start time (see below).
+                    Default: Start of recording
+     -e TIMESTAMP   End time (see below). Default:
+                    End of recording
      -q             Be quiet (no progress bar)
      -h             Print this help
   CHANNELS is a comma-separated list of channel indices.
@@ -2150,7 +2168,7 @@ nicht mehr) kann zuvor gelöscht werden.
 \label{sec:apx_cmd_quota}
 \index{dls\_quota!Kommandozeilenparameter}
 
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}
   Aufruf: dls_quota [OPTIONEN]
           -d [Verzeichnis]   DLS-Datenverzeichnis
           -i [Sekunden]      Überprüfungs-Intervall
