@@ -10,7 +10,7 @@
 %
 %------------------------------------------------------------------------------
 
-\documentclass[a4paper,12pt,bibtotoc,idxtotoc]{scrbook}
+\documentclass[a4paper,12pt,BCOR6mm,bibtotoc,idxtotoc]{scrbook}
 
 \usepackage[german]{babel}
 \usepackage[latin1]{inputenc}
@@ -204,8 +204,8 @@ der darin enthaltene Daten befindet sich in Kapitel \ref{sec:data}.
   ebenfalls mitgelieferte Profile-Script zu exportieren und so für
   alle Benutzer zugänglich zu machen.
 \item[dls\_status] Zur allgemeinen Überwachung der Datenerfassung
-  dient das Script \textit{dls\_status}\index{dls\_status}. Es ist ein
-  Kommandozeilentool, das die grundsätzliche Bereitschaft zur
+  dient das Script \textit{dls\_\-status}\index{dls\_status}. Es ist
+  ein Kommandozeilentool, das die grundsätzliche Bereitschaft zur
   Messdatenerfassung für ein bestimmtes DLS-Datenverzeichnis anzeigen
   kann. Es gibt aus, ob der DLS-Mutterprozess läuft, welche
   Messaufträge es gibt, und ob für diese die jeweiligen
@@ -218,10 +218,11 @@ der darin enthaltene Daten befindet sich in Kapitel \ref{sec:data}.
 \label{sec:dlsd}
 
 Für die gesamte Datenerfassung und -ablage ist der \textit{DLS-Daemon}
-(kurz: \textit{dlsd})\index{dlsd} zuständig. Er ist ein Prozess, der
-im Hintergrund (ohne Verbindung zu einer Konsole) arbeitet und an ein
-bestimmtes DLS-Datenverzeichnis\index{DLS-Datenverzeichnis} gebunden
-ist. Dieser muss immer laufen, wenn Daten erfasst werden sollen.
+(kurz: \textit{dlsd})\index{dlsd} zu\-stän\-dig. Er ist ein Prozess,
+der im Hintergrund (ohne Verbindung zu einer Konsole) arbeitet und an
+ein bestimmtes DLS-Datenverzeichnis\index{DLS-Datenverzeichnis}
+gebunden ist. Dieser muss immer laufen, wenn Daten erfasst werden
+sollen.
 
 Eine Ansicht der Architektur\index{Architektur} des Gesamtsystems
 bietet Abbildung \ref{fig:arch}.
@@ -249,8 +250,8 @@ dazugehörigen Erfassungsprozesse enthalten.
 
 Jeder gestartete Mutterprozess muss in einem anderen
 DLS-Datenverzeichnis\index{DLS-Datenverzeichnis} arbeiten.  Es sind
-Schutzmechanismen implementiert, die dieses gewährleisten
-(\textit{PID}-Dateien\index{PID-Dateien}, siehe Anhang
+Schutzmechanismen implementiert, die dieses ge\-währ\-lei\-sten
+(\textit{PID}-Da\-teien\index{PID-Dateien}, siehe Anhang
 \ref{sec:apx_pid}).
 
 %------------------------------------------------------------------------------
@@ -271,9 +272,9 @@ Zeitintervall die folgenden Aufgaben aus:
   beispielsweise passieren, wenn der dlsd beendet werden soll, oder
   wenn einer der Erfassungsprozesse beendet wurde (siehe Kapitel
   \ref{sec:dlsd_mother_signals}).
-\item Prüfen des Spooling-Verzeichnisses auf neue Einträge. Wird
-  im Spooling-Ver\-zeich\-nis eine oder mehrere Dateien gefunden,
-  werden diese als Spooling-Informationen bewertet und, wie im Kapitel
+\item Prüfen des Spooling-Verzeichnisses auf neue Einträge. Wird im
+  Spooling-Ver\-zeich\-nis eine oder mehrere Dateien gefunden, werden
+  diese als Spooling-In\-forma\-tion\-en bewertet und, wie im Kapitel
   \ref{sec:dlsd_mother_spooling} beschrieben, abgearbeitet.
 \item Prüfen der Erfassungsprozesse. Der Mutterprozess ist dafür
   verantwortlich, dass für jeden aktiven Messauftrag immer ein
@@ -355,7 +356,7 @@ Folgende Signale werden vom dlsd-Mutterprozess verarbeitet:
   warten bis diese ihre Daten gespeichert haben und sich daraufhin
   selbst mit dem Rückgabewert 0 (kein Fehler) beenden.
 \item[SIGSEGV u. A.] Diese Signale werden zur Sicherheit überwacht und
-  vom dlsd-Mutter\-prozess und -Erfassungsprozess gleichartig
+  vom dlsd-Mut\-ter\-pro\-zess und -Erfassungsprozess gleichartig
   behandelt.  Der Prozess wird beim Auftreten eines solchen Zustandes
   eine Datei mit Namen \textit{error\_\textless PID\textgreater} im
   DLS-Datenverzeichnis hinterlassen, die Informationen über das
@@ -502,12 +503,13 @@ Quellenarchitektur \glqq little-endian\grqq\ angenommen und eine
 Warnung ausgegeben.
 
 \paragraph{Bestimmung der maximalen Abtastfrequenz}
-Nachdem das \textit{\textless connected\textgreater}-Tag empfangen und
-überprüft wurde, fragt der Erfassungsprozess zunächst den
-MSR-Parameter \textit{/Taskinfo/Abtastfrequenz} ab und wartet auf die
-Antwort. Dieser Wert (die maximale Abtastfrequenz der Datenquelle)
-wird später benötigt, um die Plausibilität von Kanalvorgaben zu prüfen
-und die Untersetzung der Abtastfrequenzen zu berechnen.
+Nachdem das von der Datenquelle gesendete \textit{\textless
+  connected\textgreater}-Tag emp\-fan\-gen und überprüft wurde, fragt
+der Erfassungsprozess zunächst den MSR-Parameter
+\textit{/Taskinfo/Abtastfrequenz} ab und wartet auf die Antwort.
+Dieser Wert (die maximale Abtastfrequenz der Datenquelle) wird später
+benötigt, um die Plausibilität von Kanalvorgaben zu prüfen und die
+Untersetzung der Abtastfrequenzen zu berechnen.
 
 \paragraph{Auslesen aller Kanäle}
 Danach wird mit einem \textit{\textless rk\textgreater}-Befehl die
@@ -679,11 +681,11 @@ Da das Abschliessen eines Chunks\index{Chunk} sehr zeitaufwändig sein
 kann und dies nicht mit den Echtzeit-Anfor\-derun\-gen des
 dlsd-Erfassungsprozesses vereinbar ist, wird zum Speichern der
 restlichen, erfassten Daten ein eigener Prozess erzeugt. Dieser \glqq
-Aufräumprozess\grqq\index{Aufräumprozess} speichert nun alle Daten des
-aktuellen Chunks ab, während der Erfassungsprozess diese einfach
-verwirft und sich der Erfassung der Daten des neu begonnenen Chunks
-widmet. Nach dem Abschliessen des \glqq alten\grqq\ Chunks beendet
-sich der Aufräumprozess selbstständig.
+Auf\-räum\-pro\-zess\grqq\index{Aufräumprozess} speichert nun alle
+Daten des aktuellen Chunks ab, während der Erfassungsprozess diese
+einfach verwirft und sich der Erfassung der Daten des neu begonnenen
+Chunks widmet. Nach dem Abschliessen des \glqq alten\grqq\ Chunks
+beendet sich der Aufräumprozess selbstständig.
 
 %------------------------------------------------------------------------------
 
@@ -796,7 +798,7 @@ Dateien und Unterverzeichnisse im Wurzelverzeichnis:
 \item[dlsd.pid] Dies ist die \textit{PID}-Datei\index{PID-Dateien} des
   dlsd-Mutterprozesses (siehe Anhang \ref{sec:apx_pid}).  Sie wird zur
   Laufzeit automatisch angelegt und zeigt an, dass gerade ein
-  dlsd-Mutterprozess läuft.
+  dlsd-Mut\-ter\-pro\-zess läuft.
 \item[jobXXX] Jedes Auftragsverzeichnis liegt im
   DLS-Wurzelverzeichnis. Der Name ist immer \textit{job}, gefolgt von
   der Auftrags-ID. Siehe Kapitel \ref{sec:data_jobs}.
@@ -920,12 +922,12 @@ haben.
 \label{sec:data_chunks}
 
 Die erfassten Daten eines Kanals sind in \textit{Chunks} organisiert
-(\textit{chunk\textless ZEITSTEMPEL\textgreater}). Ein
-Chunk\index{Chunk} ist eine lückenlos erfasste Serie von Daten, die ab
-einem bestimmten Zeitpunkt mit der selben Kanalvorgabe erfasst wurden.
-Der Zeitstempel im Verzeichnisnamen ist der Zeitstempel des ersten
-Datenwertes im Chunk. Zur Beschreibung der Chunk-Eigenschaften
-existiert die Datei \textit{chunk.xml} mit folgendem Inhalt:
+(\textit{chunk\textless ZEIT\textgreater}). Ein Chunk\index{Chunk} ist
+eine lückenlos erfasste Serie von Daten, die ab einem bestimmten
+Zeitpunkt mit der selben Kanalvorgabe erfasst wurden.  Der Zeitstempel
+im Verzeichnisnamen ist der Zeitstempel des ersten Datenwertes im
+Chunk. Zur Beschreibung der Chunk-Eigenschaften existiert die Datei
+\textit{chunk.xml} mit folgendem Inhalt:
 
 \begin{lstlisting}
   <dlschunk>
@@ -1311,15 +1313,15 @@ mit den wichtigsten Parametern. Diese sind:
   werden, die dann auch gleichzeitig editiert oder entfernt werden
   können.
 \item Die Vorgaben zu einem oder mehrerer, markierter Kanäle können
-  durch Betätigen der Schaltfläche \glqq Kanäle editieren...\grqq\ im
-  darauf folgenden Dialog bearbeitet werden. Beim Editieren mehrerer
-  Kanäle gelten allerdings besondere Bedingungen (siehe Kapitel
-  \ref{sec:manager_kanaele_edit_parallel}).
+  durch Be\-tä\-ti\-gen der Schaltfläche \glqq Kanäle
+  editieren...\grqq\ im darauf folgenden Dialog bearbeitet werden.
+  Beim Editieren mehrerer Kanäle gelten allerdings besondere
+  Bedingungen (siehe Kapitel \ref{sec:manager_kanaele_edit_parallel}).
 \item Ein Doppelklick auf eine Kanalzeile öffnet ebenfalls den Dialog
   zum Editieren der Vorgaben des entsprechenden Kanals.
 \item Durch Betätigen der Schaltfläche \glqq Kanäle entfernen\grqq\ 
   werden alle markierten Kanä\-le aus den Vorgaben gelöscht. Erfasste
-  Daten bleiben aber weiterhin verfügbar.
+  Daten bleiben aber weiterhin ver\-füg\-bar.
 \item Beim Betätigen der Schaltfläche \glqq Kanäle hinzufügen\grqq\
   öffnet sich der Dialog zum Hinzufügen von Kanalvorgaben (siehe
   Kapitel \ref{sec:manager_kanaele_hinzu}).
@@ -1367,9 +1369,9 @@ Kanäle abzurufen.
 \subsection{Interaktionen}
 
 \begin{itemize}
-\item Der Benutzer kann einzelne Kanäle mit dem Cursor selektieren. Durch
-  Drücken der \textit{Strg}- bzw. \textit{Shift}-Tasten lassen sich auch
-  mehrere Kanäle gleichzeitig anwählen.
+\item Der Benutzer kann einzelne Kanäle mit dem Cursor selektieren.
+  Durch Drücken der \textit{Strg}- bzw. \textit{Shift}-Tasten lassen
+  sich auch mehrere Kanäle gleichzeitig an\-wäh\-len.
 \item Bei Betätigen der Schaltfläche \glqq OK\grqq\ werden alle
   angewählten Kanäle in die Liste der Kanalvorgaben des Auftrags
   eingefügt. Ist ein Kanal schon vorhanden, so wird dies in einem
@@ -1446,9 +1448,9 @@ Kanalvorgabe(n) bereit:
   Parameter zuerst auf Plausibilität. Schlägt dies fehl, wird ein
   Fenster mit den entsprechenden Fehlermeldungen angezeigt. Ansonsten
   werden alle angegebenen Parameter bei den zuvor selektierten
-  Kanalvorgaben angewendet, der evtl. laufende dlsd-Erfassungsprozess
-  zur Übernahme der neuen Parameter aufgefordert und der Dialog
-  geschlossen.
+  Kanalvorgaben angewendet, der evtl. laufende
+  dlsd-Er\-fas\-sungs\-pro\-zess zur Übernahme der neuen Parameter
+  aufgefordert und der Dialog geschlossen.
 \item Bei Betätigung der Schaltfläche \glqq Abbrechen\grqq\ werden
   keine Änderungen durchgeführt und der Dialog geschlossen.
 \end{itemize}
@@ -1709,8 +1711,8 @@ Die Bibliothek \glqq ZLib\grqq\index{ZLib}
 (\url{http://www.gzip.org/zlib}) stellt Funktionen zur verlustfreien
 Kompression von Daten bereit. Der dlsd-Erfassungprozess nutzt diese im
 Kompressionsverfahren ZLib/Base64. Ausserdem wird der ZLib-Algorithmus
-zur Unterstützung in den weiteren Verfahren genutzt, um die bereits
-aufbereiteten Daten weiter zu komprimieren.
+zur Unter\-stütz\-ung in den weiteren Verfahren genutzt, um die
+bereits aufbereiteten Daten weiter zu komprimieren.
 
 Da die ZLib Binärdaten liefert, werden diese danach in allen Verfahren
 in Base64 kodiert gespeichert.
@@ -1919,13 +1921,12 @@ EtherLab\textsuperscript{\textregistered}-Homepage
 \end{lstlisting}
 
 Nun kann der Quellcode mit den unten angegebenen Befehlen konfiguriert
-und kompiliert werden. Der \texttt{configure}-Befehl kennt zwei
-zusätzliche Parameter \texttt{--with-fltk-dir} und
-\texttt{--with-fftw3-dir} um die (abweichenden)
-Installationsverzeichnisse der jeweiligen Bibliotheken anzugeben. Das
-Standard-Installationsverzeichnis des DLS is \textit{/opt/etherlab}.
-Ein anderes Verzeichnis kann mit dem Parameter \texttt{--prefix}
-angegeben werden.
+und kompiliert werden. Der \texttt{configure}-Befehl kennt die
+Parameter \texttt{--with-fltk-dir} und \texttt{--with-fftw3-dir} um
+die (abweichenden) Installationsverzeichnisse der jeweiligen
+Bibliotheken anzugeben. Das Standard-Installationsverzeichnis des DLS
+is \textit{/opt/etherlab}.  Ein anderes Verzeichnis kann mit dem
+Parameter \texttt{--prefix} angegeben werden.
 
 \begin{lstlisting}
   `\$` `\textbf{./configure}`
@@ -1977,7 +1978,7 @@ initialisiert werden soll.
 \label{sec:apx_types}
 
 Tabelle \ref{tab:typen} zeigt alle bisher unterstützten
-Kanal-Datentypen\index{Kanal!Datentypen} und die jeweils möglichen
+Kanal-Datentypen\index{Kanal!Datentypen} und die jeweils mög\-lichen
 Kompressionsmethoden.
 
 \begin{table}[htb]
