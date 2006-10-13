@@ -11,6 +11,7 @@
 set -x
 mkdir -p autoconf
 aclocal -I autoconf
+libtoolize
 #autoheader
 automake --add-missing
 autoconf
