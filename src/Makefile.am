@@ -4,16 +4,18 @@
 
 SVNREV = `$(top_srcdir)/svnrevision.sh $(top_srcdir)`
 
+AM_CPPFLAGS = -Wall
+
 #------------------------------------------------------------------------------
 
 bin_PROGRAMS = dlsd dls_ctl dls_view dls
-noinst_LTLIBRARIES = libcomdls.la libdls.la
+noinst_LIBRARIES = libcomdls.a libdls.a
 
 #------------------------------------------------------------------------------
 
-libcomdls_la_CPPFLAGS = -I@FFTW3_DIR@/include -I@ZLIB_DIR@/include
+libcomdls_a_CPPFLAGS = -I@FFTW3_DIR@/include -I@ZLIB_DIR@/include
 
-libcomdls_la_SOURCES = \
+libcomdls_a_SOURCES = \
 	com_globals.cpp com_globals.hpp \
 	com_exception.hpp \
 	com_compression_t.hpp \
@@ -33,7 +35,10 @@ libcomdls_la_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-libdls_la_SOURCES = \
+# define this to make the objects be stored under libdls_a-*.o
+libdls_a_CPPFLAGS = 
+
+libdls_a_SOURCES = \
 	lib_dir.cpp lib_dir.hpp \
 	lib_job.cpp lib_job.hpp \
 	lib_channel.cpp lib_channel.hpp \
@@ -45,7 +50,7 @@ libdls_la_SOURCES = \
 
 dlsd_CPPFLAGS = -DSVNREV=$(SVNREV)
 dlsd_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dlsd_LDADD = libcomdls.la -lfftw3 -lm -lz
+dlsd_LDADD = libcomdls.a -lfftw3 -lm -lz
 
 dlsd_SOURCES = \
 	dls_globals.hpp \
@@ -62,7 +67,7 @@ dlsd_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_ctl_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
-dls_ctl_LDADD = libcomdls.la @FLTK_LDFLAGS@
+dls_ctl_LDADD = libcomdls.a @FLTK_LDFLAGS@
 
 install-exec-hook:
 	chmod +s $(bindir)/dls_ctl
@@ -83,7 +88,7 @@ dls_ctl_SOURCES = \
 
 dls_view_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
 dls_view_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dls_view_LDADD = libdls.la libcomdls.la @FLTK_LDFLAGS@ -lfftw3 -lm -lz
+dls_view_LDADD = libdls.a libcomdls.a @FLTK_LDFLAGS@ -lfftw3 -lm -lz
 
 dls_view_SOURCES = \
 	fl_grid.cpp fl_grid.hpp \
@@ -100,7 +105,7 @@ dls_view_SOURCES = \
 
 dls_CPPFLAGS = -DSVNREV=$(SVNREV)
 dls_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dls_LDADD = libdls.la libcomdls.la -lfftw3 -lm -lz
+dls_LDADD = libdls.a libcomdls.a -lfftw3 -lm -lz
 
 dls_SOURCES = \
 	cmd_list.cpp cmd_export.cpp cmd_main.cpp
