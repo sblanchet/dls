@@ -90,7 +90,7 @@ int DLSProcMother::start(const string &dls_dir)
     msg() << "----- DLS Mother process started -----";
     log(DLSInfo);
 
-    msg() << "dlsd " << DLS_VERSION_STR << " revision " << STRINGIFY(SVNREV);
+    msg() << "dlsd " << PACKAGE_VERSION << " revision " << REVISION;
     log(DLSInfo);
 
     msg() << "Using dir \"" << _dls_dir << "\"";

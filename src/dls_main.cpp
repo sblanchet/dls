@@ -75,8 +75,7 @@ int main(int argc, char **argv)
     struct rlimit rlim;
     struct passwd *pwd;
 
-    cout << "dlsd " << DLS_VERSION_STR
-         << " revision " << STRINGIFY(SVNREV) << endl;
+    cout << "dlsd " << PACKAGE_VERSION << " revision " << REVISION << endl;
 
     is_daemon = true;
     strcpy(user_name, "");

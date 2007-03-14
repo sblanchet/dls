@@ -35,8 +35,7 @@ int main(int argc, char **argv)
     CTLDialogMain *dialog_main;
     struct passwd *pwd;
 
-    cout << "dls_ctl " << DLS_VERSION_STR
-         << " revision " << STRINGIFY(SVNREV) << endl;
+    cout << "dls_ctl " << PACKAGE_VERSION << " revision " << REVISION << endl;
 
     // Kommandozeile verarbeiten
     get_options(argc, argv);

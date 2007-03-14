@@ -48,7 +48,7 @@ libdls_a_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dlsd_CPPFLAGS = -DSVNREV=$(SVNREV)
+dlsd_CPPFLAGS = -DREVISION=\"$(SVNREV)\"
 dlsd_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dlsd_LDADD = libcomdls.a -lfftw3 -lm -lz
 
@@ -66,7 +66,7 @@ dlsd_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_ctl_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
+dls_ctl_CPPFLAGS = -DREVISION=\"$(SVNREV)\" @FLTK_CPPFLAGS@
 dls_ctl_LDADD = libcomdls.a @FLTK_LDFLAGS@
 
 install-exec-hook:
@@ -86,7 +86,7 @@ dls_ctl_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_view_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
+dls_view_CPPFLAGS = -DREVISION=\"$(SVNREV)\" @FLTK_CPPFLAGS@
 dls_view_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dls_view_LDADD = libdls.a libcomdls.a @FLTK_LDFLAGS@ -lfftw3 -lm -lz
 
@@ -103,7 +103,7 @@ dls_view_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_CPPFLAGS = -DSVNREV=$(SVNREV)
+dls_CPPFLAGS = -DREVISION=\"$(SVNREV)\"
 dls_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dls_LDADD = libdls.a libcomdls.a -lfftw3 -lm -lz
 

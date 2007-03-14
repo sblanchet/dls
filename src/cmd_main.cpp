@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
 {
     string command;
 
+    cout << "dls " << PACKAGE_VERSION << " revision " << REVISION << endl;
+
     set_signal_handlers();
 
     if (argc <= 1) {

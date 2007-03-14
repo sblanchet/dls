@@ -15,23 +15,6 @@ using namespace std;
 
 /*****************************************************************************/
 
-#define DLS_MASTER_VERSION  1
-#define DLS_SUB_VERSION     0
-#define DLS_SUB_SUB_VERSION 0
-
-#define LITERAL(X) #X
-#define STRINGIFY(X) LITERAL(X)
-
-#define DLS_VERSION_STR STRINGIFY(DLS_MASTER_VERSION) \
-                        "." STRINGIFY(DLS_SUB_VERSION) \
-                        "." STRINGIFY(DLS_SUB_SUB_VERSION)
-
-#define DLS_VERSION_CODE(M, S, U) (((M) << 16) | ((S) << 8) | (U))
-
-#define DLS_VERSION (DLS_VERSION_CODE(DLS_MASTER_VERSION, \
-                                      DLS_SUB_VERSION, \
-                                      DLS_SUB_SUB_VERSION))
-
 #define MSRD_PORT 2345
 
 #define REC_BUFFER_SIZE         4096 // Bytes

@@ -29,8 +29,8 @@ int main(int argc, char **argv)
 {
     ViewDialogMain *dialog;
 
-    cout << "dls_view " << DLS_VERSION_STR
-         << " revision " << STRINGIFY(SVNREV) << endl;
+    cout << "dls_view " << PACKAGE_VERSION
+        << " revision " << REVISION << endl;
 
     // Kommandozeile verarbeiten
     get_options(argc, argv);
