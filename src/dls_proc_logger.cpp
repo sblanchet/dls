@@ -4,6 +4,7 @@
  *
  *****************************************************************************/
 
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/time.h>
@@ -20,6 +21,8 @@ using namespace std;
 #include "dls_globals.hpp"
 #include "dls_proc_logger.hpp"
 #include "dls_saver_t.hpp"
+
+#define MAX_HOST_NAME_LEN 50
 
 //#define DEBUG
 //#define DEBUG_SIZES
@@ -230,6 +233,8 @@ bool DLSProcLogger::_connect_socket()
     struct sockaddr_in address;
     struct hostent *hp;
     const char *source = _job->preset()->source().c_str();
+    stringstream ident;
+    char host_name[MAX_HOST_NAME_LEN + 1];
 
     // Socket öffnen
     if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -272,6 +277,23 @@ bool DLSProcLogger::_connect_socket()
     log(DLSInfo);
 
     send_command(""); // Einmal Newline senden
+
+    // get current hostname
+    if (gethostname(host_name, MAX_HOST_NAME_LEN)) {
+        // failed to get host name
+        strcpy(host_name, "unknown");
+        msg() << "Failed to gethostname(): " << strerror(errno) << "!";
+        log(DLSWarning);
+    }
+    else {
+        host_name[MAX_HOST_NAME_LEN] = 0x00;
+    }
+
+    // send identification
+    ident << "<remote_host name=\"" << host_name
+        << "\" applicationname=\"dlsd-" << PACKAGE_VERSION << "-r" << REVISION
+        << "\"/>";
+    send_command(ident.str());
 
     return true;
 }

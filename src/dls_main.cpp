@@ -180,7 +180,7 @@ int main(int argc, char **argv)
         syslog(LOG_INFO, "CRITICAL: UNCATCHED UNKNOWN EXCEPTION!");
     }
 
-    // Evtl. allokierte Speicher der MDCT freigeben
+    // Evtl. allozierte Speicher der MDCT freigeben
     mdct_cleanup();
 
     exit(exit_code);
