@@ -195,52 +195,45 @@ void DLSLogger::create_gen_saver()
 
 void DLSLogger::check_presettings(const COMChannelPreset *channel) const
 {
-    double reduction;
-    unsigned int block_size;
+    unsigned int reduction, block_size;
     stringstream err;
 
     // Wenn keine Kanalvorgaben übergeben, eigene überprüfen
     if (!channel) channel = &_channel_preset;
 
-    if (channel->sample_frequency <= 0)
-    {
-        err << "Channel \"" << channel->name << "\": ";
-        err << "Illegal frequency! (" << channel->sample_frequency << " Hz)";
+    if (!channel->sample_frequency) {
+        err << "Channel \"" << channel->name << "\": "
+            << "Invalid sample frequency!";
         throw EDLSLogger(err.str());
     }
 
-    if (channel->sample_frequency > _real_channel.frequency)
-    {
-        err << "Channel \"" << channel->name << "\": ";
-        err << "Frequency exceeds channel maximum!";
-        err << " (" << channel->sample_frequency << " / ";
-        err << _real_channel.frequency << " Hz)";
+    if (channel->sample_frequency > _real_channel.frequency) {
+        err << "Channel \"" << channel->name << "\": "
+            << "Sample frequency exceeds channel maximum"
+            << " (" << channel->sample_frequency << " / "
+            << _real_channel.frequency << " Hz)!";
         throw EDLSLogger(err.str());
     }
 
-    reduction = _real_channel.frequency / (double) channel->sample_frequency;
-
-    if (reduction != (unsigned int) reduction)
-    {
-        err << "Channel \""<< channel->name << "\": ";
-        err << "Frequency leads to non-integer reduction!";
+    if (_real_channel.frequency % channel->sample_frequency) {
+        err << "Channel \""<< channel->name << "\": "
+            << "Sample frequency leads to non-integer reduction!";
         throw EDLSLogger(err.str());
     }
 
+    reduction = _real_channel.frequency / channel->sample_frequency;
     block_size = channel->sample_frequency;
 
-    if (block_size * reduction > _real_channel.bufsize / 2)
-    {
-        err << "Channel \""<< channel->name << "\": ";
-        err << "Buffer limit exceeded! ";
-        err << block_size * reduction << " > " << _real_channel.bufsize / 2;
+    if (block_size * reduction > _real_channel.bufsize / 2) {
+        err << "Channel \""<< channel->name << "\": "
+            << "Buffer limit exceeded! "
+            << block_size * reduction << " > " << _real_channel.bufsize / 2;
         throw EDLSLogger(err.str());
     }
 
     if (channel->format_index == DLS_FORMAT_MDCT
-        && _real_channel.type != TFLT
-        && _real_channel.type != TDBL)
-    {
+            && _real_channel.type != TFLT
+            && _real_channel.type != TDBL) {
         err << "MDCT compression only for floating point channels!";
         throw EDLSLogger(err.str());
     }
