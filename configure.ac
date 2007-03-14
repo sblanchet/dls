@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 AC_INIT([dls],[1.0],[fp@igh-essen.com])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign dist-bzip2])
+AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 AC_PREFIX_DEFAULT([/opt/etherlab])

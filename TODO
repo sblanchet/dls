@@ -10,6 +10,4 @@ $Id$
 * lib:
 	- fetch_chunks(): Only Update!
 
-* Autotools
-
 * HELO command

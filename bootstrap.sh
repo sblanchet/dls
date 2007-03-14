@@ -10,6 +10,7 @@
 
 set -x
 mkdir -p autoconf
+touch ChangeLog
 aclocal -I autoconf
 libtoolize
 #autoheader
