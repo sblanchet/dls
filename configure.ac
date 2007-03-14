@@ -2,7 +2,7 @@
 # $Id$
 #------------------------------------------------------------------------------
 
-AC_INIT([dls],[1.0],[fp@igh-essen.com])
+AC_INIT([dls],[1.1],[fp@igh-essen.com])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_PROG_CXX
 AC_PROG_RANLIB
