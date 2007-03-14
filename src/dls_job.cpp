@@ -144,94 +144,79 @@ void DLSJob::_sync_loggers(SyncLoggerMode mode)
 
     if (!_logging_started) return;
 
-    // Neue Kanäle hinzufügen / existierende Kanäle ändern
-    channel_i = _preset.channels()->begin();
-    while (channel_i != _preset.channels()->end())
-    {
-        if ((found_logger = _logger_exists_for_channel(channel_i->name)) == 0)
-        {
-            if (mode == slVerbose)
-            {
+    // add new loggers / delete existing loggers
+    for (channel_i = _preset.channels()->begin();
+            channel_i != _preset.channels()->end();
+            channel_i++) {
+        if (!(found_logger = _logger_exists_for_channel(channel_i->name))) {
+            if (mode == slVerbose) {
                 msg() << "ADD \"" << channel_i->name << "\"";
                 log(DLSInfo);
             }
 
             if (_add_logger(&(*channel_i)))
-            {
                 add_count++;
-            }
         }
-        else if (*channel_i != *found_logger->channel_preset())
-        {
-            if (mode == slVerbose)
-            {
+        else if (*channel_i != *found_logger->channel_preset()) {
+            if (mode == slVerbose) {
                 msg() << "CHANGE \"" << channel_i->name << "\"";
                 log(DLSInfo);
             }
 
             if (_change_logger(found_logger, &(*channel_i)))
-            {
                 chg_count++;
-            }
         }
-
-        channel_i++;
     }
 
-    // Wegfallende Kanäle löschen
+    // search for logger to remove
     logger_i = _loggers.begin();
-    while (logger_i != _loggers.end())
-    {
-        if (!_preset.channel_exists((*logger_i)->channel_preset()->name))
-        {
-            if (mode == slVerbose)
-            {
-                msg() << "REM \"" << (*logger_i)->channel_preset()->name
-                      << "\"";
-                log(DLSInfo);
-            }
-
-            _remove_logger(*logger_i);
-            rem_count++;
-
-#ifdef DEBUG
-            msg() << "_remove_logger() finished.";
-            log(DLSDebug);
-#endif
-
-            delete *logger_i;
-            del_i = logger_i;
+    while (logger_i != _loggers.end()) {
+        if (_preset.channel_exists((*logger_i)->channel_preset()->name)) {
             logger_i++;
-            _loggers.erase(del_i);
+            continue;
+        }
+
+        if (mode == slVerbose) {
+            msg() << "REM \"" << (*logger_i)->channel_preset()->name
+                << "\"";
+            log(DLSInfo);
+        }
+
+        _remove_logger(*logger_i);
+        rem_count++;
 
 #ifdef DEBUG
-            msg() << "logger_i deleted.";
-            log(DLSDebug);
+        msg() << "_remove_logger() finished.";
+        log(DLSDebug);
 #endif
-        }
-        else logger_i++;
+
+        delete *logger_i;
+        del_i = logger_i;
+        logger_i++;
+        _loggers.erase(del_i);
+
+#ifdef DEBUG
+        msg() << "logger_i deleted.";
+        log(DLSDebug);
+#endif
     }
 
-    if (add_count)
-    {
+    if (add_count) {
         msg() << "ADDED " << add_count << " channels";
         log(DLSInfo);
     }
 
-    if (chg_count)
-    {
+    if (chg_count) {
         msg() << "CHANGED " << chg_count << " channels";
         log(DLSInfo);
     }
 
-    if (rem_count)
-    {
+    if (rem_count) {
         msg() << "REMOVED " << rem_count << " channels";
         log(DLSInfo);
     }
 
-    if (!add_count && !chg_count && !rem_count)
-    {
+    if (!add_count && !chg_count && !rem_count) {
         msg() << "SYNC: It was nothing to do!";
         log(DLSInfo);
     }

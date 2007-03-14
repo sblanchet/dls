@@ -721,7 +721,7 @@ void DLSProcLogger::_process_tag()
                         break;
                     }
 
-                    // Eendianess bestimmen
+                    // Endianess bestimmen
                     if (_xml.tag()->has_att("arch"))
                     {
                         if (_xml.tag()->att("arch")->to_str() == "little")
