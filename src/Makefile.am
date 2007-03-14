@@ -11,7 +11,7 @@ noinst_LTLIBRARIES = libcomdls.la libdls.la
 
 #------------------------------------------------------------------------------
 
-libcomdls_la_CPPFLAGS = -I@FFTW3_DIR@/include
+libcomdls_la_CPPFLAGS = -I@FFTW3_DIR@/include -I@ZLIB_DIR@/include
 
 libcomdls_la_SOURCES = \
 	com_globals.cpp com_globals.hpp \
@@ -34,7 +34,7 @@ libcomdls_la_SOURCES = \
 #------------------------------------------------------------------------------
 
 libdls_la_SOURCES = \
-        lib_dir.cpp lib_dir.hpp \
+	lib_dir.cpp lib_dir.hpp \
 	lib_job.cpp lib_job.hpp \
 	lib_channel.cpp lib_channel.hpp \
 	lib_chunk.cpp lib_chunk.hpp \
@@ -44,7 +44,7 @@ libdls_la_SOURCES = \
 #------------------------------------------------------------------------------
 
 dlsd_CPPFLAGS = -DSVNREV=$(SVNREV)
-dlsd_LDFLAGS = -L@FFTW3_DIR@/lib
+dlsd_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dlsd_LDADD = libcomdls.la -lfftw3 -lm -lz
 
 dlsd_SOURCES = \
@@ -62,48 +62,47 @@ dlsd_SOURCES = \
 #------------------------------------------------------------------------------
 
 dls_ctl_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
-dls_ctl_LDFLAGS =
 dls_ctl_LDADD = libcomdls.la @FLTK_LDFLAGS@
 
 install-exec-hook:
 	chmod +s $(bindir)/dls_ctl
 
 dls_ctl_SOURCES = \
-        fl_grid.cpp fl_grid.hpp \
+	fl_grid.cpp fl_grid.hpp \
 	ctl_globals.hpp \
-        ctl_dialog_msg.cpp ctl_dialog_msg.hpp \
+	ctl_dialog_msg.cpp ctl_dialog_msg.hpp \
 	ctl_job_preset.cpp ctl_job_preset.hpp \
-        ctl_dialog_job_edit.cpp ctl_dialog_job_edit.hpp \
+	ctl_dialog_job_edit.cpp ctl_dialog_job_edit.hpp \
 	ctl_dialog_job.cpp ctl_dialog_job.hpp \
-        ctl_dialog_channels.cpp ctl_dialog_channels.hpp \
+	ctl_dialog_channels.cpp ctl_dialog_channels.hpp \
 	ctl_dialog_channel.cpp ctl_dialog_channel.hpp \
-        ctl_dialog_main.cpp ctl_dialog_main.hpp \
-        ctl_main.cpp
+	ctl_dialog_main.cpp ctl_dialog_main.hpp \
+	ctl_main.cpp
 
 #------------------------------------------------------------------------------
 
 dls_view_CPPFLAGS = -DSVNREV=$(SVNREV) @FLTK_CPPFLAGS@
-dls_view_LDFLAGS = -L@FFTW3_DIR@/lib
+dls_view_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dls_view_LDADD = libdls.la libcomdls.la @FLTK_LDFLAGS@ -lfftw3 -lm -lz
 
 dls_view_SOURCES = \
-        fl_grid.cpp fl_grid.hpp \
+	fl_grid.cpp fl_grid.hpp \
 	fl_track_bar.cpp fl_track_bar.hpp \
 	view_globals.hpp \
-        view_channel.cpp view_channel.hpp \
+	view_channel.cpp view_channel.hpp \
 	view_view_data.cpp view_view_data.hpp \
 	view_view_msg.cpp view_view_msg.hpp \
-        view_dialog_main.cpp view_dialog_main.hpp \
+	view_dialog_main.cpp view_dialog_main.hpp \
 	view_dialog_export.cpp view_dialog_export.hpp \
-        view_main.cpp
+	view_main.cpp
 
 #------------------------------------------------------------------------------
 
 dls_CPPFLAGS = -DSVNREV=$(SVNREV)
-dls_LDFLAGS = -L@FFTW3_DIR@/lib
+dls_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
 dls_LDADD = libdls.la libcomdls.la -lfftw3 -lm -lz
 
 dls_SOURCES = \
-        cmd_list.cpp cmd_export.cpp cmd_main.cpp
+	cmd_list.cpp cmd_export.cpp cmd_main.cpp
 
 #------------------------------------------------------------------------------

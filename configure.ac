@@ -70,6 +70,28 @@ AC_SUBST(FFTW3_DIR,[$withval])
 AC_MSG_RESULT($FFTW3_DIR)
 
 #------------------------------------------------------------------------------
+# ZLib
+#------------------------------------------------------------------------------
+
+AC_ARG_WITH([zlib-dir],
+    AC_HELP_STRING(
+        [--with-zlib-dir=<zlib-dir>],
+        [ZLib directory [[/usr]]]),
+    [
+	    ZLIB_DIR=$withval
+    ],
+    [
+        ZLIB_DIR="/usr"
+    ])
+
+AC_MSG_CHECKING(for ZLib)
+test -r "${ZLIB_DIR}/include/zlib.h" ||
+    AC_MSG_ERROR([ZLib header not found in ${ZLIB_DIR}])
+
+AC_SUBST(ZLIB_DIR)
+AC_MSG_RESULT(${ZLIB_DIR})
+
+#------------------------------------------------------------------------------
 
 AC_CONFIG_FILES([
 	Makefile
