@@ -385,15 +385,13 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
                             const string &id) const
 {
     stringstream tag;
-    double reduction;
+    unsigned int reduction;
     unsigned int block_size;
 
-    reduction = _real_channel.frequency / channel->sample_frequency;
-
-    if (reduction != (unsigned int) reduction)
-    {
+    if (_real_channel.frequency % channel->sample_frequency) {
         throw EDLSLogger("Frequency leads to no integer reduction!");
     }
+    reduction = _real_channel.frequency / channel->sample_frequency;
 
     block_size = channel->sample_frequency;
 
@@ -401,8 +399,7 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
     if (block_size > 1000) block_size = 1000;
 
     // Blocksize muss ein Teiler von Sample-Frequency sein!
-    if (channel->sample_frequency % block_size != 0)
-    {
+    if (channel->sample_frequency % block_size) {
         stringstream err;
         err << "Block size (" << block_size << ")";
         err << " doesn't match frequency (" << channel->sample_frequency
@@ -410,10 +407,10 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
         throw EDLSLogger(err.str());
     }
 
-    tag << "<xsad channels=\"" << _real_channel.index << "\"";
-    tag << " reduction=\"" << (unsigned int) reduction << "\"";
-    tag << " blocksize=\"" << block_size << "\"";
-    tag << " coding=\"Base64\"";
+    tag << "<xsad channels=\"" << _real_channel.index << "\""
+        << " reduction=\"" << reduction << "\""
+        << " blocksize=\"" << block_size << "\""
+        << " coding=\"Base64\"";
     if (id != "") tag << " id=\"" << id << "\"";
     tag << ">";
 
