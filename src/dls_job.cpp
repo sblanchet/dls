@@ -229,7 +229,7 @@ void DLSJob::_sync_loggers(SyncLoggerMode mode)
 
    Ein Logger wird für den angegebenen Kanal erstellt. Dann werden
    Informationen über den msrd-Kanal geholt, um damit die Vorgaben
-   zu verifizieren. Wenn diese in orgnung sind, wird das
+   zu verifizieren. Wenn diese in Ordnung sind, wird das
    Start-Kommando gesendet und der Logger der Liste angehängt.
 
    \param channel Kanalvorgaben für den neuen Logger
@@ -246,9 +246,6 @@ bool DLSJob::_add_logger(const COMChannelPreset *channel)
 
         // Kanalvorgaben auf Gültigkeit prüfen
         new_logger->check_presettings();
-
-        // Prüfen, ob evtl. existierende "channel.xml" gültig ist
-        new_logger->check_channel_info();
 
         // Saver-Objekt erstellen
         new_logger->create_gen_saver();

@@ -44,8 +44,7 @@ DLSLogger::DLSLogger(const DLSJob *job,
     _change_in_progress = false;
     _finished = true;
 
-    _channel_dir_exists = false;
-    _channel_file_exists = false;
+    _channel_dir_acquired = false;
     _chunk_created = false;
 
     _data_size = 0;
@@ -242,132 +241,67 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
 /*****************************************************************************/
 
 /**
-   Prüft, ob eine bereits existierende "channel.xml" gültig ist
+ * Checks the given channel directory can be used for the current job.
+ * \return non-zero, if the directory matches
+ * \throw EDLSLogger Failed to check.
+ */
 
-   Wenn im MSR-Modul Kanäle geändert werden (Typänderung,
-   Verschiebung, ...), kann es sein, dass bei einer erneuten
-   Erfassung die Angaben in einer existierenden "channel.xml"
-   nicht mehr stimmen. Dies ist fatal. Dann muss erst ein neuer
-   Job erstellt werden.
-
-   \throw EDLSLogger Kanalinfodatei stimmt nicht mehr!
-*/
-
-void DLSLogger::check_channel_info()
+int DLSLogger::_channel_dir_matches(const string &dir_name) const
 {
-    stringstream channel_dir_name, err;
+    stringstream err;
     string channel_file_name;
     fstream channel_file;
     struct stat stat_buf;
     COMXMLParser xml;
     COMXMLTag channel_tag;
 
-    _channel_dir_exists = false;
-    _channel_file_exists = false;
-
-    channel_dir_name << _dls_dir;
-    channel_dir_name << "/job" << _parent_job->preset()->id();
-    channel_dir_name << "/channel" << _real_channel.index;
-    channel_file_name = channel_dir_name.str() + "/channel.xml";
-
-    // Prüfen, ob Kanalverzeichnis bereits existiert
-    if (stat(channel_dir_name.str().c_str(), &stat_buf) == -1)
-    {
-        if (errno == ENOENT)
-        {
-            // Existiert noch nicht. Alles ok!
-            return;
-        }
-        else
-        {
-            err << "Could not stat() \"" << channel_dir_name.str() << "\"!";
-            throw EDLSLogger(err.str());
-        }
-    }
-
-    if (!S_ISDIR(stat_buf.st_mode))
-    {
-        err << "\"" << channel_dir_name.str() << "\" is not a directory!";
+    if (stat(dir_name.c_str(), &stat_buf) == -1) {
+        err << "Failed to stat() \"" << dir_name << "\": "
+            << strerror(errno);
         throw EDLSLogger(err.str());
     }
 
-    _channel_dir_exists = true;
-
-    // Prüfen, ob "channel.xml" existiert
-    if (lstat(channel_file_name.c_str(), &stat_buf) == -1)
-    {
-        if (errno == ENOENT)
-        {
-            // Datei existiert noch nicht. Alles ok.
-            return;
-        }
-        else
-        {
-            err << "Could not stat() \"" << channel_file_name << "\"!";
-            throw EDLSLogger(err.str());
-        }
+    if (!S_ISDIR(stat_buf.st_mode)) {
+        err << "\"" << dir_name << "\" is not a directory!";
+        throw EDLSLogger(err.str());
     }
 
-    _channel_file_exists = true;
+    channel_file_name = dir_name + "/channel.xml";
+    if (lstat(channel_file_name.c_str(), &stat_buf) == -1) {
+        err << "Failed to stat() \"" << channel_file_name << "\": "
+            << strerror(errno);
+        throw EDLSLogger(err.str());
+    }
 
-    // Datei existiert. Jetzt öffnen.
     channel_file.open(channel_file_name.c_str(), ios::in);
-
-    if (!channel_file.is_open())
-    {
-        err << "Could not open \"" << channel_file_name << "\"!";
+    if (!channel_file) {
+        err << "Failed to open() \"" << channel_file_name << "\": "
+            << strerror(errno);
         throw EDLSLogger(err.str());
     }
 
-    try
-    {
+    try {
         xml.parse(&channel_file, "dlschannel", dxttBegin);
         channel_tag = *xml.parse(&channel_file, "channel", dxttSingle);
         xml.parse(&channel_file, "dlschannel", dxttEnd);
     }
-    catch (ECOMXMLParser &e)
-    {
+    catch (ECOMXMLParser &e) {
         err << "Parsing \"" << channel_file_name << "\": " << e.msg
             << " tag: " << e.tag;
         throw EDLSLogger(err.str());
     }
 
-    // Den Kanalnamen überprüfen
     if (channel_tag.att("name")->to_str() != _channel_preset.name)
-    {
-        err << "Different channel name in \"" << channel_file_name << "\": ";
-        err << "\"" << channel_tag.att("name")->to_str() << "\" instead of ";
-        err << "\"" << _channel_preset.name << "\"!";
-        throw EDLSLogger(err.str());
-    }
+        return 0;
 
-    // Index überprüfen (sollte immer richtig sein)
-    if (channel_tag.att("index")->to_int() != _real_channel.index)
-    {
-        err << "Wrong channel index in \"" << channel_file_name << "\": ";
-        err << channel_tag.att("index")->to_int() << " instead of ";
-        err << _real_channel.index << "!";
-        throw EDLSLogger(err.str());
-    }
-
-    // Einheit überprüfen
     if (channel_tag.att("unit")->to_str() != _real_channel.unit)
-    {
-        err << "Different channel unit in \"" << channel_file_name << "\": ";
-        err << "\"" << channel_tag.att("unit")->to_str() << "\" instead of ";
-        err << "\"" << _real_channel.unit << "\"!";
-        throw EDLSLogger(err.str());
-    }
+        return 0;
 
-    // Datentyp überprüfen
     if (channel_tag.att("type")->to_str()
-        != dls_channel_type_to_str(_real_channel.type))
-    {
-        err << "Different channel type in \"" << channel_file_name << "\": ";
-        err << "\"" << channel_tag.att("type")->to_str() << "\" instead of ";
-        err << "\"" << dls_channel_type_to_str(_real_channel.type) << "\"!";
-        throw EDLSLogger(err.str());
-    }
+            != dls_channel_type_to_str(_real_channel.type))
+        return 0;
+
+    return 1;
 }
 
 /*****************************************************************************/
@@ -490,97 +424,43 @@ void DLSLogger::process_data(const string &data, COMTime time)
 
 void DLSLogger::create_chunk(COMTime time_of_first)
 {
-    stringstream dir_name;
-    stringstream err;
+    stringstream dir_name, err;
     fstream file;
     COMXMLTag tag;
-    string arch_str;
+    string arch_str, file_name;
 
     _chunk_created = false;
 
     if (_channel_preset.format_index < 0
-        || _channel_preset.format_index >= DLS_FORMAT_COUNT)
-    {
+        || _channel_preset.format_index >= DLS_FORMAT_COUNT) {
         throw EDLSLogger("Invalid channel format!");
     }
 
-    switch (arch)
-    {
+    switch (arch) {
         case LittleEndian: arch_str = "LittleEndian"; break;
         case BigEndian: arch_str = "BigEndian"; break;
         default: throw EDLSLogger("Unknown architecture!");
     }
 
-    dir_name << _dls_dir;
-    dir_name << "/job" << _parent_job->preset()->id();
-    dir_name << "/channel" << _real_channel.index;
+    // acquire channel directory
+    if (!_channel_dir_acquired)
+        _acquire_channel_dir();
 
-    // Prüfen, ob Kanalverzeichnis bereits existiert
-    if (!_channel_dir_exists)
-    {
-        // Kanalverzeichnis existiert nicht. Anlegen.
-        if (mkdir(dir_name.str().c_str(), 0755) != 0)
-        {
-            err << "Could not create channel directory: ";
-            err << " \"" << dir_name.str() << "\" while creating chunk!";
-            throw EDLSLogger(err.str());
-        }
-
-        _channel_dir_exists = true;
-    }
-
-    if (!_channel_file_exists)
-    {
-        // channel.xml anlegen
-        file.open((dir_name.str() + "/channel.xml").c_str(), ios::out);
-
-        if (!file.is_open())
-        {
-            err << "Could not write channel.xml into dir \"";
-            err << dir_name.str() << "\" while creating chunk!";
-            throw EDLSLogger(err.str());
-        }
-
-        tag.clear();
-        tag.title("dlschannel");
-        tag.type(dxttBegin);
-        file << tag.tag() << endl;
-
-        tag.clear();
-        tag.title("channel");
-        tag.push_att("name", _channel_preset.name);
-        tag.push_att("index", _real_channel.index);
-        tag.push_att("unit", _real_channel.unit);
-        tag.push_att("type", dls_channel_type_to_str(_real_channel.type));
-        file << " " << tag.tag() << endl;
-
-        tag.clear();
-        tag.title("dlschannel");
-        tag.type(dxttEnd);
-        file << tag.tag() << endl;
-
-        file.close();
-
-        _channel_file_exists = true;
-    }
-
-    // Chunk-Verzeichnis erstellen
-    dir_name << "/chunk" << time_of_first;
-    if (mkdir(dir_name.str().c_str(), 0755) != 0)
-    {
-        err << "Could not create directory \"";
-        err << dir_name.str() << "\" while creating chunk!";
-        if (errno == EEXIST) err << " It already exists!";
+    // create chunk directory
+    dir_name << _channel_dir_name << "/chunk" << time_of_first;
+    _chunk_dir_name = dir_name.str();
+    if (mkdir(_chunk_dir_name.c_str(), 0755)) {
+        err << "Failed to create chunk directory \"" << _chunk_dir_name
+            << "\": " << strerror(errno);
         throw EDLSLogger(err.str());
     }
 
-    // chunk.xml anlegen
-    file.open((dir_name.str() + "/chunk.xml").c_str(), ios::out);
-
-    if (!file.is_open())
-    {
-        err << "Could not write chunk.xml into dir \"";
-        err << dir_name.str() << "\" while creating chunk!";
+    // create chunk.xml
+    file_name = dir_name.str() + "/chunk.xml";
+    file.open(file_name.c_str(), ios::out);
+    if (!file) {
+        err << "Failed to create \"" << file_name << "\": "
+            << strerror(errno);
         throw EDLSLogger(err.str());
     }
 
@@ -597,14 +477,11 @@ void DLSLogger::create_chunk(COMTime time_of_first)
     tag.push_att("meta_reduction", _channel_preset.meta_reduction);
     tag.push_att("format", dls_format_strings[_channel_preset.format_index]);
 
-    if (_channel_preset.format_index == DLS_FORMAT_MDCT)
-    {
+    if (_channel_preset.format_index == DLS_FORMAT_MDCT) {
         tag.push_att("mdct_block_size", _channel_preset.mdct_block_size);
         tag.push_att("mdct_accuracy", _channel_preset.accuracy);
     }
-
-    else if (_channel_preset.format_index == DLS_FORMAT_QUANT)
-    {
+    else if (_channel_preset.format_index == DLS_FORMAT_QUANT) {
         tag.push_att("accuracy", _channel_preset.accuracy);
     }
 
@@ -618,9 +495,112 @@ void DLSLogger::create_chunk(COMTime time_of_first)
     file << tag.tag() << endl;
 
     file.close();
-
-    _chunk_dir_name = dir_name.str();
     _chunk_created = true;
+}
+
+/*****************************************************************************/
+
+/**
+ * Searches for a matching channel directory to store data.
+ * If no matching directory is found, a new on is created.
+ * \throw EDLSLogger Failed to create directory.
+ */
+
+void DLSLogger::_acquire_channel_dir()
+{
+    stringstream job_dir_name, err, index_stream;
+    DIR *dir;
+    struct dirent *dir_ent;
+    string entry_name, channel_dir_name, file_name;
+    ofstream file;
+    unsigned int index, highest_index = 0;
+    COMXMLTag tag;
+
+    job_dir_name << _dls_dir << "/job" << _parent_job->preset()->id();
+
+    if (!(dir = opendir(job_dir_name.str().c_str()))) {
+        err << "Failed to open job directory \""
+            << job_dir_name.str() << "\": " << strerror(errno);
+        throw EDLSLogger(err.str());
+    }
+
+    while ((dir_ent = readdir(dir))) {
+        entry_name = dir_ent->d_name;
+
+        if (entry_name.size() < 8) // size of "channelX"
+            continue;
+
+        if (entry_name.substr(0, 7) != "channel")
+            continue;
+
+        // only continue, if remaining characters are all numbers
+        if (entry_name.find_first_not_of("0123456789", 7) != string::npos)
+            continue;
+
+        index_stream.clear();
+        index_stream.str("");
+        index_stream << entry_name.substr(7);
+        index_stream >> index;
+        if (index > highest_index) highest_index = index;
+
+        channel_dir_name = job_dir_name.str() + "/" + entry_name;
+
+        try {
+            if (_channel_dir_matches(channel_dir_name)) {
+                _channel_dir_name = channel_dir_name;
+                break;
+            }
+        }
+        catch (EDLSLogger &e) {
+            continue;
+        }
+    }
+
+    closedir(dir);
+
+    if (_channel_dir_name != "") // found a matching directory
+        return;
+
+    index_stream.clear();
+    index_stream.str("");
+    index_stream << (highest_index + 1);
+    channel_dir_name = job_dir_name.str() + "/channel" + index_stream.str();
+
+    if (mkdir(channel_dir_name.c_str(), 0755)) {
+        err << "Failed to create channel directory \""
+            << channel_dir_name << "\": " << strerror(errno);
+        throw EDLSLogger(err.str());
+    }
+
+    // create channel.xml
+    file_name = channel_dir_name + "/channel.xml";
+    file.open(file_name.c_str(), ios::out);
+    if (!file) {
+        err << "Failed to create \"" << file_name
+            << "\": " << strerror(errno);
+        throw EDLSLogger(err.str());
+    }
+
+    tag.clear();
+    tag.title("dlschannel");
+    tag.type(dxttBegin);
+    file << tag.tag() << endl;
+
+    tag.clear();
+    tag.title("channel");
+    tag.push_att("name", _channel_preset.name);
+    tag.push_att("unit", _real_channel.unit);
+    tag.push_att("type", dls_channel_type_to_str(_real_channel.type));
+    file << " " << tag.tag() << endl;
+
+    tag.clear();
+    tag.title("dlschannel");
+    tag.type(dxttEnd);
+    file << tag.tag() << endl;
+
+    file.close();
+
+    _channel_dir_name = channel_dir_name;
 }
 
 /*****************************************************************************/

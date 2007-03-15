@@ -57,7 +57,6 @@ public:
     //@{
     void get_real_channel(const list<COMRealChannel> *);
     void check_presettings(const COMChannelPreset * = 0) const;
-    void check_channel_info();
     void create_gen_saver();
     void process_data(const string &, COMTime);
     long long data_size() const;
@@ -105,11 +104,10 @@ private:
     //@}
 
     //@{
-    bool _channel_dir_exists; /**< Das Kanalverzeichnis existiert bereits */
-    bool _channel_file_exists; /**< Die Kanal-Infodatei existiert bereits */
-    bool _chunk_created; /**< Das aktuelle Chunk-Verzeichnis
-                            wurde bereits erstellt */
-    string _chunk_dir_name; /**< Pfad des aktuellen Chunk-Verzeichnisses */
+    bool _channel_dir_acquired; /**< channel directory already acquired */
+    string _channel_dir_name; /**< name of the channel directory */
+    bool _chunk_created; /**< the current chunk directory was created */
+    string _chunk_dir_name; /**< name of the current chunk directory */
     //@}
 
     //@{
@@ -123,6 +121,9 @@ private:
 
     bool _finished; /**< Keine Daten mehr im Speicher -
                        kein Datenverlust bei "delete"  */
+
+    void _acquire_channel_dir();
+    int _channel_dir_matches(const string &) const;
 };
 
 /*****************************************************************************/
@@ -157,7 +158,7 @@ inline const COMRealChannel *DLSLogger::real_channel() const
 /**
    Prüft, ob ein aktuelles Chunk-Verzeichnis erstellt wurde
 
-   Wenn ja, gibt chunk_dir() den Pfad zurück.
+   Wenn ja, gibt chunk_dir_name() den Pfad zurück.
 
    \return true, wenn es ein aktuelles Chunk-Verzeichnis gibt
 */
