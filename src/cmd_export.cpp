@@ -141,7 +141,8 @@ int export_main(int argc, char *argv[])
          channel_i != channels.end();
          channel_i++) {
         channel = *channel_i;
-        cout << "  (" << channel->index() << ") " << channel->name() << endl;
+        cout << "  (" << channel->dir_index() << ") "
+            << channel->name() << endl;
 
         try {
             channel->fetch_chunks();

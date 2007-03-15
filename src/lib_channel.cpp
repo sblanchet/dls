@@ -28,7 +28,7 @@ using namespace LibDLS;
 
 Channel::Channel()
 {
-    _index = 0;
+    _dir_index = 0;
 }
 
 /*****************************************************************************/
@@ -48,27 +48,24 @@ Channel::~Channel()
    Imports channel information.
 */
 
-void Channel::import(const string &job_path, /**< job directory path */
-                     unsigned int index /**< channel index */
-                     )
+void Channel::import(
+        const string &channel_path, /**< channel directory path */
+        unsigned int dir_index /**< index of the channel directory */
+        )
 {
-    stringstream channel_dir;
-    string channel_info_file_name;
+    string file_name;
     fstream file;
     COMXMLParser xml;
 
-    channel_dir << job_path << "/channel" << index;
+    _path = channel_path;
+    _dir_index = dir_index;
 
-    _path = channel_dir.str();
-    _index = index;
-
-    channel_info_file_name = _path + "/channel.xml";
-    file.open(channel_info_file_name.c_str(), ios::in);
+    file_name = _path + "/channel.xml";
+    file.open(file_name.c_str(), ios::in);
 
     if (!file.is_open()) {
         stringstream err;
-        err << "Failed to open channel file \""
-            << channel_info_file_name << "\".";
+        err << "Failed to open channel file \"" << file_name << "\".";
         throw ChannelException(err.str());
     }
 
@@ -94,19 +91,19 @@ void Channel::import(const string &job_path, /**< job directory path */
     catch (ECOMXMLParser &e) {
         stringstream err;
         file.close();
-        err << "Channel " << _index << " parsing error: " << e.msg;
+        err << "Parse error in " << file_name << ": " << e.msg;
         throw ChannelException(err.str());
     }
     catch (ECOMXMLParserEOF &e) {
         stringstream err;
         file.close();
-        err << "Channel " << _index << " parsing error: " << e.msg;
+        err << "Parse error in " << file_name << ": " << e.msg;
         throw ChannelException(err.str());
     }
     catch (ECOMXMLTag &e) {
         stringstream err;
         file.close();
-        err << "Channel " << _index << " parsing (tag) error: " << e.msg;
+        err << "XML tag parse error in " << file_name << ": " << e.msg;
         throw ChannelException(err.str());
     }
 

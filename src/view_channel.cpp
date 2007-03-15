@@ -158,7 +158,7 @@ void ViewChannel::_calc_min_max_data(const list<Data> &data, bool *first)
 bool ViewChannel::operator<(const ViewChannel &right) const
 {
     if (_channel && right._channel)
-        return _channel->index() < right._channel->index();
+        return _channel->dir_index() < right._channel->dir_index();
     else
         return true;
 }

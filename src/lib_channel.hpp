@@ -54,7 +54,9 @@ namespace LibDLS {
         void fetch_data(COMTime, COMTime, unsigned int,
                         DataCallback, void *) const;
 
-        unsigned int index() const;
+        string path() const;
+        unsigned int dir_index() const;
+
         const string &name() const;
         const string &unit() const;
         COMChannelType type() const;
@@ -65,13 +67,12 @@ namespace LibDLS {
         COMTime start() const;
         COMTime end() const;
 
-        string path() const;
-
 	bool operator<(const Channel &) const;
 
     private:
         string _path; /**< channel directory path */
-        unsigned int _index; /**< channel index */
+        unsigned int _dir_index; /**< index of the channel directory */
+
         string _name; /**< channel name */
         string _unit; /**< channel unit */
         COMChannelType _type; /**< channel type */
@@ -85,13 +86,24 @@ namespace LibDLS {
 /*****************************************************************************/
 
 /**
-   Returns the channel's index.
-   \return channel index
+   Returns the path of the channel directory.
 */
 
-inline unsigned int LibDLS::Channel::index() const
+inline string LibDLS::Channel::path() const
 {
-    return _index;
+    return _path;
+}
+
+/*****************************************************************************/
+
+/**
+   Returns the channel's directory index.
+   \return channel name
+*/
+
+inline unsigned int LibDLS::Channel::dir_index() const
+{
+    return _dir_index;
 }
 
 /*****************************************************************************/
@@ -169,20 +181,9 @@ inline COMTime LibDLS::Channel::end() const
 
 /*****************************************************************************/
 
-/**
-   Returns the path of the channel directory.
-*/
-
-inline string LibDLS::Channel::path() const
-{
-    return _path;
-}
-
-/*****************************************************************************/
-
 inline bool LibDLS::Channel::operator<(const Channel &right) const
 {
-    return _index < right._index;
+    return _dir_index < right._dir_index;
 }
 
 /*****************************************************************************/

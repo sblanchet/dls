@@ -41,7 +41,7 @@ void ExportAscii::begin(const Channel &channel, const string &path)
 {
     stringstream filename;
 
-    filename << path << "/channel" << channel.index() << ".dat";
+    filename << path << "/channel" << channel.dir_index() << ".dat";
     _file.open(filename.str().c_str(), ios::trunc);
 
     if (!_file.is_open()) {
@@ -96,7 +96,7 @@ void ExportMat4::begin(const Channel &channel, const string &path)
 {
     stringstream filename, name;
 
-    name << "channel" << channel.index();
+    name << "channel" << channel.dir_index();
 
     _header.type = 0000; // Little-Endian, double, numeric (full) matrix
     _header.mrows = 2;
@@ -104,7 +104,7 @@ void ExportMat4::begin(const Channel &channel, const string &path)
     _header.imagf = 0; // only real data, no imaginary part
     _header.namelen = name.str().size() + 1;
 
-    filename << path << "/channel" << channel.index() << ".mat";
+    filename << path << "/channel" << channel.dir_index() << ".mat";
     _file.open_read_write(filename.str().c_str());
 
     _file.write((const char *) &_header, sizeof(Mat4Header));

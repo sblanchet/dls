@@ -97,14 +97,14 @@ int list_chunks(Job *job)
                 return 1;
             }
             if (channel_i->has_same_chunks_as(*channel)) {
-                group_i->indices.push_back(channel_i->index());
+                group_i->indices.push_back(channel_i->dir_index());
                 same_chunks_found = true;
                 break;
             }
         }
         if (!same_chunks_found) {
             IndexList new_group;
-            new_group.indices.push_back(channel_i->index());
+            new_group.indices.push_back(channel_i->dir_index());
             groups.push_back(new_group);
         }
     }
@@ -118,7 +118,7 @@ int list_chunks(Job *job)
                 cout << "," << endl;
             }
             channel = job->find_channel(*index_i);
-            cout << "Channel " << channel->index()
+            cout << "Channel " << channel->dir_index()
                  << " " << channel->name();
             first = false;
         }
