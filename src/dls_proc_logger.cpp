@@ -6,11 +6,13 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netdb.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <syslog.h>
 #include <errno.h>
+#include <pwd.h>
 
 #include <fstream>
 using namespace std;
@@ -234,6 +236,7 @@ bool DLSProcLogger::_connect_socket()
     struct hostent *hp;
     const char *source = _job->preset()->source().c_str();
     stringstream ident;
+    struct passwd *passwd;
     char host_name[MAX_HOST_NAME_LEN + 1];
 
     // Socket öffnen
@@ -278,7 +281,14 @@ bool DLSProcLogger::_connect_socket()
 
     send_command(""); // Einmal Newline senden
 
-    // get current hostname
+    // get user name
+    if (!(passwd = getpwuid(getuid()))) {
+        msg() << "Failed to obtain user information: "
+            << strerror(errno) << "!";
+        log(DLSWarning);
+    }
+
+    // get host name
     if (gethostname(host_name, MAX_HOST_NAME_LEN)) {
         // failed to get host name
         strcpy(host_name, "unknown");
@@ -290,9 +300,11 @@ bool DLSProcLogger::_connect_socket()
     }
 
     // send identification
-    ident << "<remote_host name=\"" << host_name
-        << "\" applicationname=\"dlsd-" << PACKAGE_VERSION << "-r" << REVISION
-        << "\"/>";
+    ident << "<remote_host name=\"";
+    if (passwd) ident << passwd->pw_name << "@";
+    ident << host_name << "\""
+        << " applicationname=\"dlsd-" << PACKAGE_VERSION << "-r" << REVISION
+        << ", job " << _job_id << "\"/>";
     send_command(ident.str());
 
     return true;
