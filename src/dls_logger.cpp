@@ -619,7 +619,7 @@ void DLSLogger::create_chunk(COMTime time_of_first)
 
     file.close();
 
-    _chunk_dir = dir_name.str();
+    _chunk_dir_name = dir_name.str();
     _chunk_created = true;
 }
 

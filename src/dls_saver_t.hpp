@@ -495,7 +495,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     }
 
     // Pfad des Ebenenverzeichnisses konstruieren
-    dir_name << _parent_logger->chunk_dir() << "/level" << _meta_level();
+    dir_name << _parent_logger->chunk_dir_name() << "/level" << _meta_level();
 
     if (mkdir(dir_name.str().c_str(), 0755)) {
         if (errno != EEXIST) {
@@ -535,7 +535,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     // Globalen Index updaten
     file_name.str("");
     file_name.clear();
-    file_name << _parent_logger->chunk_dir();
+    file_name << _parent_logger->chunk_dir_name();
     file_name << "/level" << _meta_level();
     file_name << "/data_" << _meta_type() << ".idx";
 
@@ -601,7 +601,7 @@ void DLSSaverT<T>::_finish_files()
     if (was_open && _time_of_last.to_ll() != 0)
     {
         // Dateinamen des globalen Index` bestimmen
-        file_name << _parent_logger->chunk_dir();
+        file_name << _parent_logger->chunk_dir_name();
         file_name << "/level" << _meta_level();
         file_name << "/data_" << _meta_type() << ".idx";
 

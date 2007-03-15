@@ -84,7 +84,7 @@ public:
     //@{
     bool chunk_created() const;
     void create_chunk(COMTime);
-    const string &chunk_dir() const;
+    const string &chunk_dir_name() const;
     //@}
 
     void bytes_written(unsigned int);
@@ -109,7 +109,7 @@ private:
     bool _channel_file_exists; /**< Die Kanal-Infodatei existiert bereits */
     bool _chunk_created; /**< Das aktuelle Chunk-Verzeichnis
                             wurde bereits erstellt */
-    string _chunk_dir; /**< Pfad des aktuellen Chunk-Verzeichnisses */
+    string _chunk_dir_name; /**< Pfad des aktuellen Chunk-Verzeichnisses */
     //@}
 
     //@{
@@ -175,9 +175,9 @@ inline bool DLSLogger::chunk_created() const
    \return Pfad des Chunk-Verzeichnisses
 */
 
-inline const string &DLSLogger::chunk_dir() const
+inline const string &DLSLogger::chunk_dir_name() const
 {
-    return _chunk_dir;
+    return _chunk_dir_name;
 }
 
 /*****************************************************************************/
