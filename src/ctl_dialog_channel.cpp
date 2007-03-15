@@ -382,7 +382,7 @@ bool CTLDialogChannel::_save_channels()
     COMChannelPreset channel;
     stringstream str;
     list<const COMChannelPreset *>::const_iterator channel_i;
-    unsigned int freq, block, mask, red, mdct_block_size;
+    unsigned int freq, block, mask, red, mdct_block_size = 0;
     double accuracy;
     bool write_freq, write_block, write_mask, write_red, write_acc;
     bool channel_changed, channels_changed = false;
