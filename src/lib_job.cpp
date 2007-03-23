@@ -105,7 +105,7 @@ void Job::fetch_channels()
         }
 
         try {
-            channel.import(_path, channel_index);
+            channel.import(_path + "/" + channel_dir_name, channel_index);
         }
         catch (ChannelException &e) {
             cerr << "WARNING: " << e.msg << endl;
