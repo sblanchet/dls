@@ -9,6 +9,8 @@
 #include <iostream>
 using namespace std;
 
+#include "com_globals.hpp"
+
 /*****************************************************************************/
 
 unsigned int sig_int_term = 0;

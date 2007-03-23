@@ -3,10 +3,13 @@
 #------------------------------------------------------------------------------
 
 AC_INIT([dls],[1.1],[fp@igh-essen.com])
+AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_PROG_CXX
 AC_PROG_RANLIB
 AC_PREFIX_DEFAULT([/opt/etherlab])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([config.h.in])
 
 #------------------------------------------------------------------------------
 # FLTK

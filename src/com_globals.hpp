@@ -13,6 +13,8 @@
 #include <sstream>
 using namespace std;
 
+#include "../config.h"
+
 /*****************************************************************************/
 
 #define MSRD_PORT 2345

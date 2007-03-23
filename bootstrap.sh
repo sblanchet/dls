@@ -12,6 +12,7 @@ set -x
 mkdir -p autoconf
 touch ChangeLog
 aclocal -I autoconf
+autoheader
 automake --add-missing
 autoconf
 
