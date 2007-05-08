@@ -784,7 +784,9 @@ void DLSProcLogger::_process_tag()
                         _exit = true;
                         _exit_code = E_DLS_ERROR;
 
-                        msg() << "Expected /Taskinfo/Abtastfrequenz!";
+                        msg() << "Expected /Taskinfo/Abtastfrequenz! (Got: "
+                            << _xml.tag()->att("name")->to_str()
+                            << ")";
                         log(DLSError);
                     }
                     else
@@ -981,7 +983,10 @@ void DLSProcLogger::_do_trigger()
     stringstream cmd;
     struct timeval now;
 
-    if (_job->preset()->trigger() == "") return;
+    if (_job->preset()->trigger() == ""
+            || !(_state == dls_waiting_for_trigger
+                || _state == dls_listening
+                || _state == dls_getting_data)) return;
 
     gettimeofday(&now, 0);
 
