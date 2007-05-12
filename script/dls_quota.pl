@@ -24,6 +24,7 @@ my %opt;
 my $detached = 0;
 my $check_interval = 5; # Sekunden
 my $dls_dir;
+my $progname;
 
 &main;
 
@@ -39,30 +40,44 @@ my $dls_dir;
 
 sub main
 {
+    $0 =~ /^.*\/([^\/]+)$/; # Programmnamen ermitteln
+    $progname = $1;
+
     # Kommandozeilenparameter verarbeiten
     &get_options;
 
     # Syslog initialisieren
-    openlog "dls_cleanup.pl", "pid";
+    openlog $progname, "pid";
 
     &print_and_log("----- DLS QUOTA cleanup started -----");
     &print_and_log("Using DLS directory \"$dls_dir\".");
-    &print_and_log("Check interval: $check_interval seconds.");
+
+    if ($check_interval == 0) {
+        &print_and_log("Single check mode.");
+    } else {
+        &print_and_log("Check interval: $check_interval seconds.");
+    }   
+
     &print_and_log("Not detaching from tty!") if defined $opt{'k'};
 
-    # Daemon werden, wenn nicht verboten
-    &init_daemon unless defined $opt{'k'};
+    # Daemon werden, wenn nicht verboten, oder single check
+    &init_daemon unless (defined $opt{'k'} || $check_interval == 0);
 
     # Signalhandler setzen
     $SIG{TERM} = $SIG{INT} = \&do_term;
 
-    while (1)
-    {
-	# Alle Jobs überprüfen
-	&check_jobs;
+    while (1) {
+        # Alle Jobs überprüfen
+    	&check_jobs;
 
-	# Und warten
-	sleep $check_interval;
+        if ($check_interval == 0) {
+            &print_and_log("----- DLS QUOTA cleanup exiting -----");
+            closelog;
+            exit 0;
+        }
+        
+	    # Und warten
+	    sleep $check_interval;
     }
 }
 
@@ -81,28 +96,21 @@ sub get_options
     &print_usage if defined $opt{'h'} or $#ARGV > -1;
 
     # Pfad für DLS-Datenverzeichnis ermitteln
-    if (defined $opt{'d'})
-    {
-	$dls_dir = $opt{'d'};
-    }
-    elsif (defined $ENV{'DLS_DATA'})
-    {
-	$dls_dir = $ENV{'DLS_DATA'};
-    }
-    else
-    {
-	$dls_dir = "/vol/dls_data";
+    if (defined $opt{'d'}) {
+        $dls_dir = $opt{'d'};
+    } elsif (defined $ENV{'DLS_DIR'}) {
+        $dls_dir = $ENV{'DLS_DIR'};
+    } else {
+        $dls_dir = "/vol/dls_data";
     }
 
-    if (defined $opt{'i'})
-    {
-	unless ($opt{'i'} =~ /^\d+$/)
-	{
-	    print "FEHLER: Zeitintervall muss eine Ganzzahl sein!\n";
-	    &print_usage;
-	}
+    if (defined $opt{'i'}) {
+        unless ($opt{'i'} =~ /^\d+$/) {
+            print "FEHLER: Zeitintervall muss eine Ganzzahl sein!\n";
+            &print_usage;
+        }
 
-	$check_interval = $opt{'i'};
+        $check_interval = $opt{'i'};
     }
 }
 
@@ -117,11 +125,9 @@ sub get_options
 
 sub print_usage
 {
-    $0 =~ /^.*\/([^\/]+)$/; # Programmnamen ermitteln
-
-    print "Aufruf: $1 [OPTIONEN]\n";
+    print "Aufruf: $progname [OPTIONEN]\n";
     print "        -d [Verzeichnis]   DLS-Datenverzeichnis\n";
-    print "        -i [Sekunden]      Überprüfungs-Intervall\n";
+    print "        -i [Sekunden]      Überprüfungs-Intervall (0 = single check)\n";
     print "        -k                 Kein Daemon werden\n";
     print "        -h                 Diese Hilfe anzeigen\n";
     exit 0;
