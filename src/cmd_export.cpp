@@ -269,11 +269,6 @@ int export_main(int argc, char *argv[])
             info.channel_percentage = 100.0 * current_channel / total_channels;
             draw_progress(info.channel_percentage);
         }
-
-        if (sig_int_term) {
-            cerr << endl << "Interrupt detected." << endl;
-            break;
-        }
     }
 
     cout << endl << "Export finished." << endl;
@@ -300,11 +295,6 @@ int export_data_callback(Data *data, void *cb_data)
         diff_time = (data->end_time() - info->start).to_dbl();
         percentage = info->channel_percentage + diff_time * info->channel_factor;
         draw_progress(percentage + 0.5);
-    }
-
-    if (sig_int_term) {
-        cout << endl << "Interrupt detected. Exiting." << endl;
-        exit(1);
     }
 
     return 0; // not adopted
