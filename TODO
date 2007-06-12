@@ -7,6 +7,21 @@ $Id$
 	- check
 	- repair
 
+    - Option -Q für really quiet
+    - downsample beim export (default-Ausgabe: time, value, min, max)
+    - schön wär, wenn man die Export-Files kleiner machen könnte, indem 
+      man nur einzelne Spalten (s.o.) ausgeben könnte 
+    - start und end in Epochensekunden
+    - weitere Angaben in dls_export_info (sofern mit vernünftigem Aufwand
+      möglich): 
+      * Namen der Channels
+      * Einheiten der Channels
+      * die command line options, mit denen der Export gelaufen ist (so kann man
+        den Lauf leicht reproduzieren)
+      * die Chunks, aus denen der Export wirklich stattgefunden hat (ggf. kann man
+        ältere Chunks dann wegwerfen)
+      * Aufbau der Datei als XML-File (erleichtert das Parsen). 
+
 * lib:
 	- fetch_chunks(): Only Update!
 
