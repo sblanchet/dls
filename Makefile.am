@@ -4,7 +4,7 @@
 
 SUBDIRS = src script
 
-EXTRA_DIST = svnrevision.sh
+EXTRA_DIST = svnrevision.sh bootstrap.sh
 
 mydist:
 	@SVNREV=`svnversion $(srcdir)` && \
