@@ -26,10 +26,10 @@ using namespace std;
 
 #define MAX_HOST_NAME_LEN 50
 
-//#define DEBUG
 //#define DEBUG_SIZES
 //#define DEBUG_SEND
 //#define DEBUG_REC
+//#define DEBUG_REC_TAGS
 
 /*****************************************************************************/
 
@@ -359,8 +359,8 @@ void DLSProcLogger::_read_write_socket()
                 if ((recv_ret = recv(_socket, write_addr, write_size, 0)) > 0)
                 {
 #ifdef DEBUG_REC
-                    msg() << "REC: \"" << string(write_addr, recv_ret) << "\"";
-                    log(DLSInfo);
+                    cout << "REC " << write_size << " " << COMTime::now()
+                        << " " << string(write_addr, recv_ret) << " ENDREC" << endl;
 #endif
 
                     // Dem Ring-Puffer mitteilen, dass Daten geschrieben wurden
@@ -640,6 +640,10 @@ void DLSProcLogger::_process_tag()
 
     title = _xml.tag()->title();
 
+#ifdef DEBUG_REC_TAGS
+    cout << "TAG: " << _xml.tag()->tag() << " ENDTAG" << endl;
+#endif
+
     try
     {
         if (title == "info" || title == "warn"
@@ -896,6 +900,11 @@ void DLSProcLogger::_process_tag()
 
                     _data_time.from_dbl_time(
                         _xml.tag()->att("time")->to_dbl());
+
+#ifdef DEBUG_REC_TAGS
+                    cout << "data " << fixed << _data_time << endl;
+#endif
+
 
                     // Zeit des ersten Datenempfanges vermerken
                     if (_first_data_time.is_null())
