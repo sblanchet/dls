@@ -385,31 +385,35 @@ string DLSLogger::stop_tag() const
 void DLSLogger::process_data(const string &data, COMTime time)
 {
     COMBase64 base64;
+#ifdef DEBUG
+    COMTime start = COMTime::now();
+#endif
 
     // Jetzt ist etwas im Gange
     if (_finished) _finished = false;
 
-    try
-    {
+    try {
         // Daten dekodieren
         base64.decode(data.c_str(), data.length());
     }
-    catch (ECOMBase64 &e)
-    {
+    catch (ECOMBase64 &e) {
         throw EDLSLogger("Base64 error: " + e.msg);
     }
 
-    try
-    {
+    try {
         // Daten an Saver übergeben
         _gen_saver->process_data(base64.output(),
                                  base64.output_size(),
                                  time);
     }
-    catch (EDLSSaver &e)
-    {
+    catch (EDLSSaver &e) {
         throw EDLSLogger("GenSaver: " + e.msg);
     }
+
+#ifdef DEBUG
+    cout << "DLSLogger::process_data() for channel " << _real_channel.index
+        << " took " << (COMTime::now() - start).to_dbl_time() << " s." << endl;
+#endif
 }
 
 /*****************************************************************************/
@@ -615,11 +619,6 @@ void DLSLogger::_acquire_channel_dir()
 
 void DLSLogger::discard_chunk()
 {
-#ifdef DEBUG
-    msg() << "Discarding chunk. " << _data_size << " bytes written.";
-    log(DLSDebug);
-#endif
-
     // Vorgeben, dass noch keine Daten geschrieben wurden
     _data_size = 0;
 
@@ -724,39 +723,29 @@ void DLSLogger::finish()
 {
     stringstream err;
     bool error = false;
-
 #ifdef DEBUG
-    msg() << "logger::finish()";
-    log(DLSInfo);
+    COMTime start = COMTime::now();
 #endif
 
-    try
-    {
+    try {
         // Alle Daten speichern
         if (_gen_saver) _gen_saver->flush();
     }
-    catch (EDLSSaver &e)
-    {
+    catch (EDLSSaver &e) {
         error = true;
         err << "saver::flush(): " << e.msg;
     }
 
-#ifdef DEBUG
-    msg() << "logger::finish() ready";
-    log(DLSInfo);
-#endif
-
     // Chunk beenden
     _chunk_created = false;
 
-    if (error)
-    {
+    if (error) {
         throw EDLSLogger(err.str());
     }
 
 #ifdef DEBUG
-    msg() << "logger::finish() returning";
-    log(DLSInfo);
+    cout << "DLSLogger::finish() for channel " << _real_channel.index
+        << " took " << (COMTime::now() - start).to_dbl_time() << " s." << endl;
 #endif
 
     _finished = true;
