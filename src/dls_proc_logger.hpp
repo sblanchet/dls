@@ -75,10 +75,12 @@ private:
     COMTime _last_data_received;
     bool _no_data_warning;
     unsigned int _buffer_level;
+    COMTime _last_read_time;
 
     void _start();
     bool _connect_socket();
     void _read_write_socket();
+    void _read_socket();
     void _check_signals();
     void _parse_ring_buffer();
     void _process_tag();

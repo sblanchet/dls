@@ -301,8 +301,6 @@ void DLSProcLogger::_read_write_socket()
     fd_set read_fds, write_fds;
     int select_ret, recv_ret, send_ret;
     struct timeval timeout;
-    char *write_addr;
-    unsigned int write_size;
 
     while (1)
     {
@@ -319,52 +317,11 @@ void DLSProcLogger::_read_write_socket()
         if ((select_ret = select(_socket + 1, &read_fds,
                                  &write_fds, 0, &timeout)) > 0) {
             if (FD_ISSET(_socket, &read_fds)) { // Eingehende Daten?
-                _ring_buf->write_info(&write_addr, &write_size);
-
-                if (write_size == 0) {
-                    _exit = true;
-                    _exit_code = E_DLS_ERROR;
-                    msg() << "FATAL: Ring buffer full!";
-                    log(DLSError);
-                    break;
-                }
-
-                // Daten abholen...
-                if ((recv_ret = recv(_socket, write_addr, write_size, 0)) > 0) {
-#ifdef DEBUG_REC
-                    cout << "REC " << write_size << " " << COMTime::now()
-                        << " " << string(write_addr, recv_ret) << " ENDREC" << endl;
-#endif
-
-                    // Dem Ring-Puffer mitteilen, dass Daten geschrieben wurden
-                    _ring_buf->written(recv_ret);
-
-                    // Daten im Ring-Pugger parsen...
+                _read_socket();
+                if (!_exit)
                     _parse_ring_buffer();
-
-                    // Wenn ein Fehler passiert ist, jetzt ausbrechen!
-                    if (_exit) break;
-                }
-                else if (recv_ret == 0) // Verbindung geschlossen!
-                {
-                    _exit = true;
-                    _exit_code = E_DLS_ERROR;
-
-                    msg() << "Connection closed by server.";
-                    log(DLSError);
-
+                if (_exit)
                     break;
-                }
-                else // Fehler
-                {
-                    _exit = true;
-                    _exit_code = E_DLS_ERROR;
-
-                    msg() << "Error " << errno << " in recv()!";
-                    log(DLSError);
-
-                    break;
-                }
             }
 
             // Bereit zum Senden?
@@ -443,6 +400,57 @@ void DLSProcLogger::_read_write_socket()
 
         // Soll der Prozess beendet werden?
         if (_exit) break;
+    }
+}
+
+/*****************************************************************************/
+
+/**
+ * Reads new xml data into the ring buffer.
+ */
+
+void DLSProcLogger::_read_socket()
+{
+    char *write_addr;
+    unsigned int write_size;
+    int recv_ret;
+
+    _ring_buf->write_info(&write_addr, &write_size);
+
+    if (write_size == 0) {
+        _exit = true;
+        _exit_code = E_DLS_ERROR;
+        msg() << "FATAL: Ring buffer full!";
+        log(DLSError);
+    }
+    else if ((recv_ret = recv(_socket, write_addr, write_size, 0)) > 0) {
+#ifdef DEBUG_REC
+        cout << "REC " << write_size << " " << COMTime::now()
+            << " " << string(write_addr, recv_ret) << " ENDREC" << endl;
+#endif
+
+        // Dem Ring-Puffer mitteilen, dass Daten geschrieben wurden
+        _ring_buf->written(recv_ret);
+        _last_read_time.set_now();
+
+#ifdef DEBUG_REC
+        cout << "read " << recv_ret << " bytes, space left: "
+            << _ring_buf->remaining() << endl;
+#endif
+    }
+    else if (recv_ret == 0) // Verbindung geschlossen!
+    {
+        _exit = true;
+        _exit_code = E_DLS_ERROR;
+        msg() << "Connection closed by server.";
+        log(DLSError);
+    }
+    else // Fehler
+    {
+        _exit = true;
+        _exit_code = E_DLS_ERROR;
+        msg() << "Error " << errno << " in recv()!";
+        log(DLSError);
     }
 }
 
@@ -837,6 +845,14 @@ void DLSProcLogger::_process_tag()
                         msg() << "Processing data: " << e.msg;
                         log(DLSError);
                     }
+
+                    if ((COMTime::now() - _last_read_time).to_dbl_time() > 2.0) {
+#ifdef DEBUG_REC
+                        cout << "intermediate read!" << endl;
+#endif
+                        _read_socket();
+                    }
+                    _do_watchdogs();
                 }
                 break;
 
