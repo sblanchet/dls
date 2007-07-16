@@ -17,8 +17,8 @@
 #define LISTEN_TIMEOUT         1.0      // in Sekunden
 #define TRIGGER_INTERVAL       2        // in Sekunden
 #define WATCHDOG_INTERVAL      1        // in Sekunden
-#define RECEIVE_RING_BUF_SIZE  1048576  // 1MB
-#define SAVER_MAX_FILE_SIZE    10485760 // 10MB
+#define RECEIVE_RING_BUF_SIZE  10485760 // [byte]
+#define SAVER_MAX_FILE_SIZE    10485760 // [byte]
 #define ALLOWED_TIME_VARIANCE  500      // in Prozent rel. Fehler
 #define TIME_TOLERANCE_RESTART 30       // in Sekunden
 #define BUFFER_LEVEL_WARNING   50       // in Prozent Füllstand
