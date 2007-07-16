@@ -35,6 +35,7 @@ public:
     const TYPE &operator[](SIZE) const;
 
     SIZE length() const;
+    SIZE remaining() const;
     void clear();
     void erase_first(SIZE);
 
@@ -151,6 +152,18 @@ inline SIZE COMRingBufferT<TYPE, SIZE>::length() const
 /*****************************************************************************/
 
 /**
+   \return Free bytes.
+*/
+
+template <class TYPE, class SIZE>
+inline SIZE COMRingBufferT<TYPE, SIZE>::remaining() const
+{
+    return _size - _length;
+}
+
+/*****************************************************************************/
+
+/**
    Leert den Ring
 */
 
@@ -208,16 +221,16 @@ template <class TYPE, class SIZE>
 void COMRingBufferT<TYPE, SIZE>::write_info(TYPE **addr, SIZE *size)
 {
     SIZE write_index = (_index + _length) % _size;
-    SIZE remaining = _size - _length;
+    SIZE remaining_to_border = remaining();
 
     // Bei Übertretung der Ringgrenze abschneiden
-    if (write_index + remaining > _size)
+    if (write_index + remaining_to_border > _size)
     {
-        remaining = _size - write_index;
+        remaining_to_border = _size - write_index;
     }
 
     *addr = _buffer + write_index;
-    *size = remaining;
+    *size = remaining_to_border;
 }
 
 /*****************************************************************************/
