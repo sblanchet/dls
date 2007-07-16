@@ -400,6 +400,8 @@ void DLSJob::ack_received(const string &id)
    Kanal auf, und gibt sie intern an den dafür zuständigen Logger
    weiter.
 
+   \todo Effizientere Suche
+
    \param time_of_last die Zeit des letzten Datenwertes im Block
    \param channel_index Kanalindex aus dem <F>-Tag
    \param data Empfangene Daten
@@ -413,23 +415,20 @@ void DLSJob::process_data(COMTime time_of_last,
 {
     list<DLSLogger *>::iterator logger_i;
 
-    logger_i = _loggers.begin();
-    while (logger_i != _loggers.end())
-    {
-        if ((*logger_i)->real_channel()->index == channel_index)
-        {
-            try
-            {
-                (*logger_i)->process_data(data, time_of_last);
-            }
-            catch (EDLSLogger &e)
-            {
-                throw EDLSJob("Logger: " + e.msg);
-            }
+    for (logger_i = _loggers.begin();
+            logger_i != _loggers.end();
+            logger_i++) {
+        if ((*logger_i)->real_channel()->index != channel_index)
+            continue;
 
-            return;
+        try {
+            (*logger_i)->process_data(data, time_of_last);
         }
-        logger_i++;
+        catch (EDLSLogger &e) {
+            throw EDLSJob("Logger: " + e.msg);
+        }
+
+        return;
     }
 
     msg() << "Channel " << channel_index << " not required!";
@@ -589,25 +588,20 @@ void DLSJob::finish()
     _msg_chunk_created = false;
 
     // Alle Logger beenden
-    logger = _loggers.begin();
-    while (logger != _loggers.end())
-    {
-        try
-        {
+    for (logger = _loggers.begin();
+            logger != _loggers.end();
+            logger++) {
+        try {
             (*logger)->finish();
         }
-        catch (EDLSLogger &e)
-        {
+        catch (EDLSLogger &e) {
             errors = true;
             if (err.str().length()) err << "; ";
             err << e.msg;
         }
-
-        logger++;
     }
 
-    if (errors)
-    {
+    if (errors) {
         throw EDLSJob("Logger::finish(): " + err.str());
     }
 
