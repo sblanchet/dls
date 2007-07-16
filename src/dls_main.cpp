@@ -111,8 +111,8 @@ int main(int argc, char **argv)
         getrlimit(RLIMIT_NOFILE, &rlim);
         cout << "Maximal number of open files:" << endl;
         cout << "   Soft: " << rlim.rlim_cur;
-        cout << "Hard: " << rlim.rlim_max;
-        cout << "Kern: " << sysconf(_SC_OPEN_MAX) << endl;
+        cout << " Hard: " << rlim.rlim_max;
+        cout << " Kern: " << sysconf(_SC_OPEN_MAX) << endl;
     }
 
     if (strcmp(user_name, "") != 0) // Wenn Benutzer angegeben
