@@ -1,28 +1,35 @@
 
 $Id$
 
-* dls command-line tool:
+* dlsd:
+    - Automatic restart on error
+    - Channel trigger 
+    - Restart delay as command-line option
+
+* dls:
+    - option -Q for really quiet
+    - export:
+        * downsample (time, value, min, max)
+        * start/end time in epoch
+        * additional information in dls_export_info (channel name, unit,
+            command-line options, intersected chunks)
+        * dls_export_info as XML
 	- split
 	- delete
 	- check
 	- repair
 
-    - Option -Q für really quiet
-    - downsample beim export (default-Ausgabe: time, value, min, max)
-    - schön wär, wenn man die Export-Files kleiner machen könnte, indem 
-      man nur einzelne Spalten (s.o.) ausgeben könnte 
-    - start und end in Epochensekunden
-    - weitere Angaben in dls_export_info (sofern mit vernünftigem Aufwand
-      möglich): 
-      * Namen der Channels
-      * Einheiten der Channels
-      * die command line options, mit denen der Export gelaufen ist (so kann man
-        den Lauf leicht reproduzieren)
-      * die Chunks, aus denen der Export wirklich stattgefunden hat (ggf. kann man
-        ältere Chunks dann wegwerfen)
-      * Aufbau der Datei als XML-File (erleichtert das Parsen). 
-
 * lib:
-	- fetch_chunks(): Only Update!
+	- fetch_chunks(): only update
 
-* HELO command
+* dls_view:
+  - add shortcuts
+  - current time button 
+  - auto-Scrolling?
+  - graphical error messages at export
+  - Qt
+
+* dls_ctl
+  - sort channel list
+  - search function in channel list
+  - Qt
