@@ -39,6 +39,7 @@ char user_name[100 + 1];
 unsigned long num_files;
 #define WORKING_DIR_SIZE 100
 char working_dir[WORKING_DIR_SIZE + 1];
+unsigned int wait_before_restart = DEFAULT_WAIT_BEFORE_RESTART;
 
 /*****************************************************************************/
 
@@ -201,10 +202,10 @@ void get_options(int argc, char **argv)
 {
     int c;
     bool dir_set = false;
-    char *env;
+    char *env, *remainder;
 
     do {
-        c = getopt(argc, argv, "d:u:n:kh");
+        c = getopt(argc, argv, "d:u:n:kw:h");
 
         switch (c) {
             case 'd':
@@ -212,19 +213,30 @@ void get_options(int argc, char **argv)
                 dls_dir = optarg;
                 break;
 
-            case 'k':
-                is_daemon = false;
-                break;
-
             case 'u':
                 strncpy(user_name, optarg, 100);
                 break;
 
             case 'n':
-                num_files = strtoul(optarg, (char **) NULL, 10);
+                num_files = strtoul(optarg, &remainder, 10);
 
-                if (num_files == 0) {
-                    cerr << "Invalid number of open files!" << endl;
+                if (remainder == optarg || *remainder || num_files == 0) {
+                    cerr << "Invalid number of open files: "
+                        << optarg << endl;
+                    print_usage();
+                }
+
+                break;
+
+            case 'k':
+                is_daemon = false;
+                break;
+
+            case 'w':
+                wait_before_restart = strtoul(optarg, &remainder, 10);
+
+                if (remainder == optarg || *remainder) {
+                    cerr << "Invalid wait time: " << optarg << endl;
                     print_usage();
                 }
 
@@ -267,12 +279,16 @@ void get_options(int argc, char **argv)
 
 void print_usage()
 {
-    cout << "Usage: dlsd [OPTIONS]" << endl;
-    cout << "        -d <dir>       Set DLS data directory." << endl;
-    cout << "        -u <user>      Switch to <user>." << endl;
-    cout << "        -n <number>    Set maximal number of open files." << endl;
-    cout << "        -k             Do not detach from console." << endl;
-    cout << "        -h             Show this help." << endl;
+    cout
+        << "Usage: dlsd [OPTIONS]" << endl
+        << "  -d <dir>      Set DLS data directory." << endl
+        << "  -u <user>     Switch to <user>." << endl
+        << "  -n <number>   Set maximal number of open files." << endl
+        << "  -k            Do not detach from console." << endl
+        << "  -w <seconds>  Wait time before restarting logging" << endl
+        << "                  process after an error. Default is "
+        << DEFAULT_WAIT_BEFORE_RESTART << "." << endl
+        << "  -h            Show this help." << endl;
     exit(0);
 }
 

@@ -3,7 +3,6 @@ $Id$
 
 * dlsd:
     - Channel trigger 
-    - Restart delay as command-line option
 
 * dls:
     - option -Q for really quiet

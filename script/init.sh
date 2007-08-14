@@ -36,14 +36,6 @@ if [ -n "$DLS_DIR" ]; then
     PDIR="-d $DLS_DIR"
 fi
 
-if [ -n "$DLS_USER" ]; then
-    PUSER="-u $DLS_USER"
-fi
-
-if [ -n "$DLS_FILES" ]; then
-    PFILES="-n $DLS_FILES"
-fi
-
 #------------------------------------------------------------------------------
 
 DLSD=dlsd
@@ -76,7 +68,7 @@ case "$1" in
     start)
 	echo -n "Starting DLS Daemon "
 
-	if ! $DLSD $PDIR $PUSER $PFILES > /dev/null; then
+	if ! $DLSD $PDIR $DLSD_OPTIONS > /dev/null; then
 	    /bin/false
 	    rc_status -v
 	    rc_exit

@@ -24,15 +24,9 @@
 #DLS_EXPORT_FMT=export-%Y-%m-%d-%H-%M-%S
 
 #
-#  DLS user
-#  Switch to this user after startup
+#  Additional options for dlsd.
+#  Consider using "-u dls". For other options, see call "dlsd -h".
 #
-#DLS_USER=dls
-
-#
-#  Maximum number of open files
-#  Set open file limit
-#
-#DLS_FILES=10000
+#DLSD_OPTIONS=
 
 #------------------------------------------------------------------------------

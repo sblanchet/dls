@@ -20,7 +20,7 @@
 #define RECEIVE_RING_BUF_SIZE  10485760 // [byte]
 #define SAVER_MAX_FILE_SIZE    10485760 // [byte]
 #define ALLOWED_TIME_VARIANCE  500      // in Prozent rel. Fehler
-#define WAIT_BEFORE_RESTART    30       // in Sekunden
+#define DEFAULT_WAIT_BEFORE_RESTART 30 // seconds
 #define BUFFER_LEVEL_WARNING   50       // in Prozent Füllstand
 #define QUOTA_PART_QUOTIENT    10       // Anzahl Chunks in Quota-Bereich
 #define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt wird
@@ -70,6 +70,8 @@ extern unsigned int dlsd_job_id;
 
 // Versions-String mit Build-Nummer aus dls_build.cpp
 extern const char *dls_version_str;
+
+extern unsigned int wait_before_restart;
 
 /*****************************************************************************/
 
