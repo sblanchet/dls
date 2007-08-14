@@ -2,7 +2,6 @@
 $Id$
 
 * dlsd:
-    - Automatic restart on error
     - Channel trigger 
     - Restart delay as command-line option
 

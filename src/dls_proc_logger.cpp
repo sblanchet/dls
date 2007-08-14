@@ -152,7 +152,7 @@ void DLSProcLogger::_start()
         _job->import(_job_id);
     }
     catch (EDLSJob &e) {
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR; // no restart, invalid configuration
         msg() << "Importing: " << e.msg;
         log(DLSError);
         return;
@@ -174,7 +174,7 @@ void DLSProcLogger::_start()
 
     // Mit Prüfstand verbinden
     if (!_connect_socket()) {
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         return;
     }
 
@@ -191,7 +191,7 @@ void DLSProcLogger::_start()
         _job->finish();
     }
     catch (EDLSJob &e) {
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         msg() << "Finishing: " << e.msg;
         log(DLSError);
     }
@@ -339,7 +339,7 @@ void DLSProcLogger::_read_write_socket()
                 }
                 else if (send_ret == -1) {
                     _exit = true;
-                    _exit_code = E_DLS_ERROR;
+                    _exit_code = E_DLS_ERROR_RESTART;
                     msg() << "Error " << errno << " in send()!";
                     log(DLSError);
                     break;
@@ -359,7 +359,7 @@ void DLSProcLogger::_read_write_socket()
             }
             else {
                 _exit = true;
-                _exit_code = E_DLS_ERROR;
+                _exit_code = E_DLS_ERROR_RESTART;
                 msg() << "Error " << errno << " in select()!";
                 log(DLSError);
                 break;
@@ -419,7 +419,7 @@ void DLSProcLogger::_read_socket()
 
     if (write_size == 0) {
         _exit = true;
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         msg() << "FATAL: Ring buffer full!";
         log(DLSError);
     }
@@ -441,14 +441,14 @@ void DLSProcLogger::_read_socket()
     else if (recv_ret == 0) // Verbindung geschlossen!
     {
         _exit = true;
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         msg() << "Connection closed by server.";
         log(DLSError);
     }
     else // Fehler
     {
         _exit = true;
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         msg() << "Error " << errno << " in recv()!";
         log(DLSError);
     }
@@ -552,7 +552,7 @@ void DLSProcLogger::_parse_ring_buffer()
         }
         catch (ECOMXMLParser &e) { // Anderer Parsing-Fehler
             _exit = true;
-            _exit_code = E_DLS_ERROR;
+            _exit_code = E_DLS_ERROR_RESTART;
             msg() << "Parsing incoming data: " << e.msg << " Tag: " << e.tag;
             log(DLSError);
             return; // Prozess beenden!
@@ -637,7 +637,7 @@ void DLSProcLogger::_process_tag()
                     // Nur mit MSR sprechen
                     if (_xml.tag()->att("name")->to_str() != "MSR") {
                         _exit = true;
-                        _exit_code = E_DLS_ERROR;
+                        _exit_code = E_DLS_ERROR_RESTART;
                         msg() << "Expected name: MSR!";
                         log(DLSError);
                         break;
@@ -648,7 +648,7 @@ void DLSProcLogger::_process_tag()
 
                     if (_msr_version < MSR_VERSION(2, 7, 0)) {
                         _exit = true;
-                        _exit_code = E_DLS_ERROR;
+                        _exit_code = E_DLS_ERROR_RESTART;
                         msg() << "Expected version > 2.7.0! Current version:";
                         msg() << " " << MSR_V(_msr_version);
                         msg() << "." << MSR_P(_msr_version);
@@ -671,7 +671,7 @@ void DLSProcLogger::_process_tag()
                         }
                         else {
                             _exit = true;
-                            _exit_code = E_DLS_ERROR;
+                            _exit_code = E_DLS_ERROR_RESTART;
                             msg() << "Unknown architecture: "
                                   << _xml.tag()->att("arch")->to_str();
                             log(DLSError);
@@ -698,7 +698,7 @@ void DLSProcLogger::_process_tag()
                     if (_xml.tag()->att("name")->to_str()
                         != "/Taskinfo/Abtastfrequenz") {
                         _exit = true;
-                        _exit_code = E_DLS_ERROR;
+                        _exit_code = E_DLS_ERROR_RESTART;
                         msg() << "Expected /Taskinfo/Abtastfrequenz! (Got: "
                             << _xml.tag()->att("name")->to_str()
                             << ")";
@@ -746,7 +746,7 @@ void DLSProcLogger::_process_tag()
 
                         if (real_channel.type == TUNKNOWN) {
                             _exit = true;
-                            _exit_code = E_DLS_ERROR;
+                            _exit_code = E_DLS_ERROR_RESTART;
                             msg() << "Receiving MSR channel:"
                                   << " Unknown channel type \"";
                             msg() << "\"" << _xml.tag()->att("typ")->to_str()
@@ -759,7 +759,7 @@ void DLSProcLogger::_process_tag()
                     }
                     catch (ECOMXMLTag &e) {
                         _exit = true;
-                        _exit_code = E_DLS_ERROR;
+                        _exit_code = E_DLS_ERROR_RESTART;
                         msg() << "Receiving MSR channel: " << e.msg
                               << " tag: " << e.tag;
                         log(DLSError);
@@ -834,13 +834,13 @@ void DLSProcLogger::_process_tag()
                     }
                     catch (EDLSTimeTolerance &e) {
                         _exit = true;
-                        _exit_code = E_DLS_TIME_TOLERANCE;
+                        _exit_code = E_DLS_ERROR_RESTART;
                         msg() << "TIME TOLERANCE EXCEEDED: " << e.msg;
                         log(DLSError);
                     }
                     catch (EDLSJob &e) {
                         _exit = true;
-                        _exit_code = E_DLS_ERROR;
+                        _exit_code = E_DLS_ERROR_RESTART;
 
                         msg() << "Processing data: " << e.msg;
                         log(DLSError);
@@ -861,7 +861,7 @@ void DLSProcLogger::_process_tag()
     }
     catch (ECOMXMLTag &e) {
         _exit = true;
-        _exit_code = E_DLS_ERROR;
+        _exit_code = E_DLS_ERROR_RESTART;
         msg() << "Processing tag: " << e.msg << " tag: " << e.tag;
         log(DLSError);
     }
@@ -1082,7 +1082,7 @@ void DLSProcLogger::_do_quota()
 
         if ((fork_ret = fork()) == -1) {
             _exit = true;
-            _exit_code = E_DLS_ERROR;
+            _exit_code = E_DLS_ERROR_RESTART;
             msg() << "could not fork!";
             log(DLSError);
             return;

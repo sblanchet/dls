@@ -356,9 +356,10 @@ void DLSProcMother::_check_signals()
             {
                 job_i->process_exited(exit_code);
 
-                msg() << "Process for job " << job_i->id_desc();
-                msg() << " with PID " << pid;
-                msg() << " exited with code " << exit_code;
+                msg() << "Process for job " << job_i->id_desc()
+                    << " with PID " << pid
+                    << " exited with code " << exit_code
+                    << ". Restarting in " << WAIT_BEFORE_RESTART << " s.";
                 log(DLSInfo);
 
                 break;
@@ -680,25 +681,21 @@ void DLSProcMother::_check_processes()
             // und er darf entweder gestartet werden...
             && (job_i->last_exit_code() == E_DLS_NO_ERROR
 
-                // ...oder er wurde auf Grund eines
-                // Zeit-Toleranzfehlers beendet...
-                || (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE
+                // ...oder er ist fehlerhaft beendet worden, soll aber neu
+                // gestartet werden...
+                || (job_i->last_exit_code() == E_DLS_ERROR_RESTART
 
                     // ...und die Wartezeit ist um!
-                    && job_i->exit_time()
-                    <= COMTime::now() - COMTime(TIME_TOLERANCE_RESTART
-                                                * 1000000.0))))
+                    && (job_i->exit_time() <=
+                        COMTime::now() - COMTime(WAIT_BEFORE_RESTART * 1e6)))))
         {
-            if (job_i->last_exit_code() == E_DLS_TIME_TOLERANCE)
-            {
+            if (job_i->last_exit_code() == E_DLS_ERROR_RESTART) {
                 msg() << "Restarting process for job "
                       << job_i->id_desc();
-                msg() << " after time tolerance error";
-            }
-            else
-            {
+                msg() << " after error.";
+            } else {
                 msg() << "Starting process for job "
-                      << job_i->id_desc();
+                      << job_i->id_desc() << ".";
             }
 
             log(DLSInfo);

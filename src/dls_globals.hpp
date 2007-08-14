@@ -20,7 +20,7 @@
 #define RECEIVE_RING_BUF_SIZE  10485760 // [byte]
 #define SAVER_MAX_FILE_SIZE    10485760 // [byte]
 #define ALLOWED_TIME_VARIANCE  500      // in Prozent rel. Fehler
-#define TIME_TOLERANCE_RESTART 30       // in Sekunden
+#define WAIT_BEFORE_RESTART    30       // in Sekunden
 #define BUFFER_LEVEL_WARNING   50       // in Prozent Füllstand
 #define QUOTA_PART_QUOTIENT    10       // Anzahl Chunks in Quota-Bereich
 #define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt wird
@@ -33,7 +33,7 @@
 
 #define E_DLS_NO_ERROR       (0)
 #define E_DLS_ERROR          (-1)
-#define E_DLS_TIME_TOLERANCE (-2)
+#define E_DLS_ERROR_RESTART  (-2)
 #define E_DLS_SIGNAL         (-3)
 
 /*****************************************************************************/
