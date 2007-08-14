@@ -16,7 +16,7 @@
 # Should-Stop:       $time ntp msr etherlab
 # Default-Start:     3 5
 # Default-Stop:      0 1 2 6
-# Short-Description: Data Logging Server
+# Short-Description: Data Logging Service
 # Description:
 ### END INIT INFO
 

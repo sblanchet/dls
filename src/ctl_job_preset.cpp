@@ -37,7 +37,7 @@ CTLJobPreset::CTLJobPreset() : COMJobPreset()
 
    Schreibt alle Auftragsvorgaben (inclusive Kanalvorgaben)
    in eine XML-Datei im richtigen Verzeichnis. Danach wird
-   der Server über eine Spooling-Datei benachrichtigt,
+   der Mutterprozess über eine Spooling-Datei benachrichtigt,
    dass er die Vorgaben neu einlesen soll.
 
    \param dls_dir DLS-Datenverzeichnis
@@ -153,16 +153,16 @@ void CTLJobPreset::write(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Spooling-Datei erzeugen, um den Server zu benachrichtigen
+   Spooling-Datei erzeugen, um den Prozess zu benachrichtigen
 
-   Diese Methode benachrichtigt den Server bezüglich
+   Diese Methode benachrichtigt den Prozess bezüglich
    einer Änderung einer Auftragsvorgabe. Es kann z. B.
    eine neue Vorgabe erstellt worden sein, eine
    vorhandene Vorgabe kann sich geändert haben, oder es
    wurde eine Vorgabe gelöscht.
 
    Die Spooling-Datei enthält nur die ID des Auftrags. Der
-   Server entscheidet damit selbstständig, was zu tun ist.
+   Prozess entscheidet damit selbstständig, was zu tun ist.
 
    \param dls_dir DLS-Datenverzeichnis
 */
