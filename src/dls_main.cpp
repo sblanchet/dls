@@ -37,6 +37,8 @@ DLSArchitecture arch;
 DLSArchitecture source_arch;
 char user_name[100 + 1];
 unsigned long num_files;
+#define WORKING_DIR_SIZE 100
+char working_dir[WORKING_DIR_SIZE + 1];
 
 /*****************************************************************************/
 
@@ -80,6 +82,13 @@ int main(int argc, char **argv)
     is_daemon = true;
     strcpy(user_name, "");
     num_files = OPEN_MAX;
+
+    // remember current working directory
+    if (!getcwd(working_dir, WORKING_DIR_SIZE)) {
+        cerr << "ERROR: Failed to get working directory: "
+            << strerror(errno) << endl;
+        exit(-1);
+    }
 
     // Endianess ermitteln
     get_endianess();
@@ -240,10 +249,11 @@ void get_options(int argc, char **argv)
     if (!dir_set) {
         // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
-
-        // $DLS_DIR leer: Aktuelles Verzeichnis nutzen
-        else dls_dir = ".";
     }
+
+    // make dls_dir absolute
+    if (!dls_dir.size() || dls_dir[0] != '/')
+        dls_dir = string(working_dir) + "/" + dls_dir;
 
     // Benutztes Verzeichnis ausgeben
     cout << "Using dls directory \"" << dls_dir << "\"" << endl;
@@ -484,7 +494,7 @@ void create_pid_file(const string *dls_dir)
     if ((pid_fd = open(pid_file_name.c_str(), O_WRONLY | O_CREAT, 0644)) == -1)
     {
         cerr << "ERROR: could not create PID file \"" << pid_file_name
-             << "\"!" << endl;
+             << "\": " << strerror(errno) << endl;
         exit(-1);
     }
 
@@ -494,7 +504,7 @@ void create_pid_file(const string *dls_dir)
                      str.str().length())) != (int) str.str().length())
     {
         cerr << "ERROR: could not write to PID file \"" << pid_file_name
-             << "\"!" << endl;
+             << "\": " << strerror(errno) << endl;
         exit(-1);
     }
 
