@@ -43,41 +43,92 @@ PIDFILE=$DLS_DIR/dlsd.pid
 
 #------------------------------------------------------------------------------
 
-checkpid() {
-    if [ ! -r $PIDFILE ]; then
-	/bin/false
-	rc_status -v
-	rc_exit
-    fi
-
-    PID=`cat $PIDFILE`
-
-    if ! kill -0 $PID 2>/dev/null; then
-	/bin/false
-	rc_status -v
-	rc_exit
+function exit_success()
+{
+    if [ -r /etc/rc.status ]; then
+        rc_reset
+        rc_status -v
+        rc_exit
+    else
+        echo " done"
+        exit 0
     fi
 }
 
 #------------------------------------------------------------------------------
 
-. /etc/rc.status
-rc_reset
+function exit_running()
+{
+    if [ -r /etc/rc.status ]; then
+        rc_reset
+        rc_status -v
+        rc_exit
+    else
+        echo " running"
+        exit 0
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+function exit_fail()
+{
+    if [ -r /etc/rc.status ]; then
+        rc_failed
+        rc_status -v
+        rc_exit
+    else
+        echo " failed"
+        exit 1
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+function exit_dead()
+{
+    if [ -r /etc/rc.status ]; then
+        rc_failed
+        rc_status -v
+        rc_exit
+    else
+        echo " dead"
+        exit 1
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+function checkpid() {
+    if [ ! -r $PIDFILE ]; then
+        exit_dead
+    fi
+
+    PID=`cat $PIDFILE`
+
+    if ! kill -0 $PID 2>/dev/null; then
+        exit_dead
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+if [ -r /etc/rc.status ]; then
+    . /etc/rc.status
+    rc_reset
+fi
 
 case "$1" in
     start)
 	echo -n "Starting DLS Daemon "
 
 	if ! $DLSD $PDIR $DLSD_OPTIONS > /dev/null; then
-	    /bin/false
-	    rc_status -v
-	    rc_exit
+        exit_fail
 	fi
 
 	sleep 1
 	checkpid
-
-	rc_status -v
+    exit_success
 	;;
 
     stop)
@@ -87,34 +138,34 @@ case "$1" in
 	    PID=`cat $PIDFILE`
 
 	    if ! kill -TERM $PID 2>/dev/null; then
-		/bin/false
-		rc_status -v
-		rc_exit
+            exit_fail
 	    fi
 	fi
 
-	rc_status -v
+    exit_success
 	;;
 
     restart)
 	$0 stop || exit 1
 	$0 start
-
-	rc_status
 	;;
 
     status)
 	echo -n "Checking for DLS Daemon "
 
 	checkpid
-
-	rc_status -v
+    exit_running
 	;;
 
     *)
 	echo "USAGE: $0 {start|stop|restart|status}"
 	;;
 esac
-rc_exit
+
+if [ -r /etc/rc.status ]; then
+    rc_exit
+else
+    exit 1
+fi
 
 #------------------------------------------------------------------------------
