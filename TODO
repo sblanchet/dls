@@ -2,6 +2,7 @@
 $Id$
 
 * dlsd:
+    - examine reconnect bug
     - Channel trigger 
 
 * dls:
@@ -10,12 +11,15 @@ $Id$
         * downsample (time, value, min, max)
         * start/end time in epoch
         * additional information in dls_export_info (channel name, unit,
-            command-line options, intersected chunks)
+            command-line options, intersected chunks, min-max values)
         * dls_export_info as XML
+        * optionally make times relative to export start time
 	- split
 	- delete
 	- check
 	- repair
+    - list
+        * optionally don't go through every chunk
 
 * lib:
 	- fetch_chunks(): only update
