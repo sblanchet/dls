@@ -35,7 +35,7 @@ AC_ARG_WITH([fltk-dir],
 AC_PATH_PROG([FLTKCONF], [fltk-config],, [$FLTKDIR/bin:$PATH])
 
 if test -z "$FLTKCONF"; then
-    AC_MSG_WARN([fltk-config was not found.\
+    AC_MSG_ERROR([fltk-config was not found.\
                  Please use --with-fltk-dir.]);
 fi
 
