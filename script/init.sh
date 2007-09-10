@@ -2,7 +2,7 @@
 
 #------------------------------------------------------------------------------
 #
-#  DLS install script
+#  DLS init script
 #
 #  $Id$
 #
@@ -32,13 +32,17 @@ test -r $SYSCONFIG || { echo "$SYSCONFIG not existing";
 
 #------------------------------------------------------------------------------
 
+if [ -n "$DLS_USER" ]; then
+    DLSD_OPTIONS="-u $DLS_USER $DLSD_OPTIONS"
+fi
+
 if [ -n "$DLS_DIR" ]; then
-    PDIR="-d $DLS_DIR"
+    DLSD_OPTIONS="-d $DLS_DIR $DLSD_OPTIONS"
 fi
 
 #------------------------------------------------------------------------------
 
-DLSD=dlsd
+DLSD=/opt/etherlab/bin/dlsd
 PIDFILE=$DLS_DIR/dlsd.pid
 
 #------------------------------------------------------------------------------
@@ -122,7 +126,7 @@ case "$1" in
     start)
 	echo -n "Starting DLS Daemon "
 
-	if ! $DLSD $PDIR $DLSD_OPTIONS > /dev/null; then
+	if ! $DLSD $DLSD_OPTIONS > /dev/null; then
         exit_fail
 	fi
 

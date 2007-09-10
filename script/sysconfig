@@ -24,6 +24,12 @@
 #DLS_EXPORT_FMT=export-%Y-%m-%d-%H-%M-%S
 
 #
+#  DLS user.
+#  The dlsd will switch to this user, so does the dls_ctl command.
+#
+#DLS_USER=dls
+
+#
 #  Additional options for dlsd.
 #  Consider using "-u dls". For other options, see call "dlsd -h".
 #
