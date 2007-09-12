@@ -148,7 +148,7 @@ enum DLSLogType
 /*****************************************************************************/
 
 stringstream &msg();
-void log(DLSLogType, int = 0);
+void log(DLSLogType);
 
 COMChannelType dls_str_to_channel_type(const string &);
 char *dls_channel_type_to_str(COMChannelType);

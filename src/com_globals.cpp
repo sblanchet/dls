@@ -7,6 +7,7 @@
 #include <syslog.h>
 
 #include <iostream>
+#include <iomanip>
 
 #include "com_globals.hpp"
 #include "com_exception.hpp"
@@ -136,7 +137,7 @@ stringstream &msg()
 
 /*****************************************************************************/
 
-void log(DLSLogType type, int)
+void log(DLSLogType type)
 {
     string msg;
 
@@ -148,15 +149,14 @@ void log(DLSLogType type, int)
 
     msg += _msg.str();
 
-    if (type != DLSDebug)
-    {
+    if (type != DLSDebug) {
         // Nachricht an den syslogd weiterreichen
         syslog(LOG_INFO, "%s", msg.c_str());
     }
 
     // Wenn Verbindung zu einem Terminal besteht, die Meldung hier
     // ebenfalls ausgeben!
-    if (!is_daemon) cout << msg << endl;
+    if (!is_daemon) cout << setw(10) << getpid() << " " << msg << endl;
 
     // Nachricht entfernen
     _msg.str("");
