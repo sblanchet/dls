@@ -2,7 +2,6 @@
 $Id$
 
 * dlsd:
-    - examine reconnect bug
     - Channel trigger 
 
 * dls:
