@@ -342,30 +342,24 @@ void DLSProcMother::_check_signals()
         return;
     }
 
-    while (_sig_child != sig_child)
-    {
+    while (_sig_child != sig_child) {
         _sig_child++;
 
         pid = wait(&status); // Zombie töten!
         exit_code = (signed char) WEXITSTATUS(status);
 
-        job_i = _jobs.begin();
-        while (job_i != _jobs.end())
-        {
-            if (job_i->process_id() == pid)
-            {
-                job_i->process_exited(exit_code);
+        for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+            if (job_i->process_id() != pid)
+                continue;
 
-                msg() << "Process for job " << job_i->id_desc()
-                    << " with PID " << pid
-                    << " exited with code " << exit_code
-                    << ". Restarting in " << wait_before_restart << " s.";
-                log(DLSInfo);
-
-                break;
-            }
-
-            job_i++;
+            job_i->process_exited(exit_code);
+            msg() << "Process for job " << job_i->id_desc()
+                << " with PID " << pid
+                << " exited with code " << exit_code << ".";
+            if (exit_code == E_DLS_ERROR_RESTART)
+                msg() << " Restarting in " << wait_before_restart << " s.";
+            log(DLSInfo);
+            break;
         }
     }
 }
@@ -667,63 +661,41 @@ bool DLSProcMother::_remove_job(unsigned int job_id)
 void DLSProcMother::_check_processes()
 {
     int fork_ret;
-    list<DLSJobPreset>::iterator job_i = _jobs.begin();
+    list<DLSJobPreset>::iterator job_i;
     string dir;
 
-    while (job_i != _jobs.end())
-    {
-        // Prozess sollte laufen
-        if (job_i->running()
+    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+        if (!job_i->running()
+                || job_i->process_exists()
+                || (job_i->last_exit_code() != E_DLS_SUCCESS
+                    && (job_i->last_exit_code() != E_DLS_ERROR_RESTART
+                        || (COMTime::now() - job_i->exit_time()
+                            < COMTime(wait_before_restart * 1e6)))))
+            continue;
 
-            // Tut er aber nicht!
-            && !job_i->process_exists()
-
-            // und er darf entweder gestartet werden...
-            && (job_i->last_exit_code() == E_DLS_NO_ERROR
-
-                // ...oder er ist fehlerhaft beendet worden, soll aber neu
-                // gestartet werden...
-                || (job_i->last_exit_code() == E_DLS_ERROR_RESTART
-
-                    // ...und die Wartezeit ist um!
-                    && (job_i->exit_time() <=
-                        COMTime::now() - COMTime(wait_before_restart * 1e6)))))
-        {
-            if (job_i->last_exit_code() == E_DLS_ERROR_RESTART) {
-                msg() << "Restarting process for job "
-                      << job_i->id_desc();
-                msg() << " after error.";
-            } else {
-                msg() << "Starting process for job "
-                      << job_i->id_desc() << ".";
-            }
-
-            log(DLSInfo);
-
-            if ((fork_ret = fork()) == 0) // Kindprozess
-            {
-                // Globale Forking-Flags setzen
-                process_type = dlsLoggingProcess;
-                dlsd_job_id = job_i->id();
-
-                break;
-            }
-            else if (fork_ret > 0) // Elternprozess
-            {
-                job_i->process_started(fork_ret);
-
-                msg() << "Started process with PID "
-                      << job_i->process_id();
-                log(DLSInfo);
-            }
-            else // Fehler
-            {
-                msg() << "FATAL: Error " << errno << " in fork()";
-                log(DLSError);
-            }
+        if (job_i->last_exit_code() == E_DLS_ERROR_RESTART) {
+            msg() << "Restarting process for job " << job_i->id_desc();
+            msg() << " after error.";
+        } else {
+            msg() << "Starting process for job " << job_i->id_desc() << ".";
         }
 
-        job_i++;
+        log(DLSInfo);
+
+        if (!(fork_ret = fork())) { // Kindprozess
+            // Globale Forking-Flags setzen
+            process_type = dlsLoggingProcess;
+            dlsd_job_id = job_i->id();
+            break;
+        } else if (fork_ret > 0) { // Elternprozess
+            job_i->process_started(fork_ret);
+            msg() << "Started process with PID "
+                << job_i->process_id();
+            log(DLSInfo);
+        } else { // Fehler
+            msg() << "FATAL: Error " << errno << " in fork()";
+            log(DLSError);
+        }
     }
 }
 

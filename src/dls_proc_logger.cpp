@@ -47,7 +47,7 @@ DLSProcLogger::DLSProcLogger(const string &dls_dir, unsigned int job_id)
     _sig_hangup = sig_hangup;
     _sig_child = sig_child;
     _exit = false;
-    _exit_code = E_DLS_NO_ERROR;
+    _exit_code = E_DLS_SUCCESS;
     _state = dls_connecting;
     _got_channels = false;
     _socket = 0;
@@ -127,7 +127,7 @@ int DLSProcLogger::start()
         }
     }
 
-    if (_exit_code == E_DLS_NO_ERROR) {
+    if (_exit_code == E_DLS_SUCCESS) {
         msg() << "----- Logging process finished. Exiting gracefully. -----";
     }
     else {
@@ -302,8 +302,7 @@ void DLSProcLogger::_read_write_socket()
     int select_ret, recv_ret, send_ret;
     struct timeval timeout;
 
-    while (1)
-    {
+    while (1) {
         // File-Descriptor-Sets nullen und mit Client-FD vorbesetzen
         FD_ZERO(&read_fds);
         FD_ZERO(&write_fds);

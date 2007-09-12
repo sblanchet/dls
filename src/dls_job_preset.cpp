@@ -21,7 +21,7 @@
 DLSJobPreset::DLSJobPreset() : COMJobPreset()
 {
     _pid = 0;
-    _last_exit_code = 0;
+    _last_exit_code = E_DLS_SUCCESS;
 }
 
 /*****************************************************************************/
@@ -32,7 +32,7 @@ DLSJobPreset::DLSJobPreset() : COMJobPreset()
 
 void DLSJobPreset::allow_restart()
 {
-    _last_exit_code = E_DLS_NO_ERROR;
+    _last_exit_code = E_DLS_SUCCESS;
 }
 
 /*****************************************************************************/

@@ -31,7 +31,7 @@
 #define MSR_P(CODE) (((CODE) >> 8) & 0xFF)
 #define MSR_S(CODE) ((CODE) & 0xFF)
 
-#define E_DLS_NO_ERROR       (0)
+#define E_DLS_SUCCESS        (0)
 #define E_DLS_ERROR          (-1)
 #define E_DLS_ERROR_RESTART  (-2)
 #define E_DLS_SIGNAL         (-3)
