@@ -75,10 +75,9 @@ void DLSJobPreset::process_exited(int exit_code)
 
 void DLSJobPreset::process_terminate()
 {
-    if (_pid == 0) return;
+    if (!_pid) return;
 
-    if (kill(_pid, SIGTERM) == -1)
-    {
+    if (kill(_pid, SIGTERM) == -1) {
         throw ECOMJobPreset("kill(): Process not terminated!");
     }
 }
@@ -93,10 +92,9 @@ void DLSJobPreset::process_terminate()
 
 void DLSJobPreset::process_notify()
 {
-    if (_pid == 0) return;
+    if (!_pid) return;
 
-    if (kill(_pid, SIGHUP) == -1)
-    {
+    if (kill(_pid, SIGHUP) == -1) {
         throw ECOMJobPreset("Error in kill() - Process not notified!");
     }
 }
@@ -111,12 +109,10 @@ void DLSJobPreset::process_notify()
 
 bool DLSJobPreset::process_exists()
 {
-    if (_pid == 0) return false;
+    if (!_pid) return false;
 
-    if (kill(_pid, 0) == -1)
-    {
-        if (errno == ESRCH)
-        {
+    if (kill(_pid, 0) == -1) {
+        if (errno == ESRCH) {
             _pid = 0;
             return false;
         }
