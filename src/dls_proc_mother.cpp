@@ -123,15 +123,10 @@ int DLSProcMother::start(const string &dls_dir)
         sleep(JOB_CHECK_INTERVAL);
     }
 
-    if (process_type == dlsMotherProcess)
-    {
-        // Auf alle Erfassungprozesse Warten
-        while (_processes_running())
-        {
-            // Warten ...
+    if (process_type == dlsMotherProcess) {
+        while (_processes_running()) {
+            // wait for SIGCHLD
             sleep(JOB_CHECK_INTERVAL);
-
-            // ... auf SIGCHLD
             _check_signals();
         }
 
@@ -303,8 +298,7 @@ void DLSProcMother::_check_signals()
     list<pid_t> terminated;
     list<pid_t>::iterator term_i;
 
-    if (sig_int_term)
-    {
+    if (sig_int_term) {
         // Rücksetzen, um nochmaliges Auswerten zu verhindern
         sig_int_term = 0;
 
@@ -314,29 +308,22 @@ void DLSProcMother::_check_signals()
         log(DLSInfo);
 
         // Alle Kindprozesse beenden
-        job_i = _jobs.begin();
-        while (job_i != _jobs.end())
-        {
-            if (job_i->process_exists())
-            {
-                msg() << "Terminating process for job "
-                      << job_i->id_desc();
-                msg() << " with PID " << job_i->process_id();
-                log(DLSInfo);
+        for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+            if (!job_i->process_exists())
+                continue;
 
-                try
-                {
-                    // Prozess terminieren
-                    job_i->process_terminate();
-                }
-                catch (ECOMJobPreset &e)
-                {
-                    msg() << e.msg;
-                    log(DLSWarning);
-                }
+            msg() << "Terminating process for job " << job_i->id_desc()
+                << " with PID " << job_i->process_id();
+            log(DLSInfo);
+
+            try {
+                // Prozess terminieren
+                job_i->process_terminate();
             }
-
-            job_i++;
+            catch (ECOMJobPreset &e) {
+                msg() << e.msg;
+                log(DLSWarning);
+            }
         }
 
         return;
@@ -345,21 +332,22 @@ void DLSProcMother::_check_signals()
     while (_sig_child != sig_child) {
         _sig_child++;
 
-        pid = wait(&status); // Zombie töten!
-        exit_code = (signed char) WEXITSTATUS(status);
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+            exit_code = (signed char) WEXITSTATUS(status);
 
-        for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
-            if (job_i->process_id() != pid)
-                continue;
+            for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+                if (job_i->process_id() != pid)
+                    continue;
 
-            job_i->process_exited(exit_code);
-            msg() << "Process for job " << job_i->id_desc()
-                << " with PID " << pid
-                << " exited with code " << exit_code << ".";
-            if (exit_code == E_DLS_ERROR_RESTART)
-                msg() << " Restarting in " << wait_before_restart << " s.";
-            log(DLSInfo);
-            break;
+                job_i->process_exited(exit_code);
+                msg() << "Process for job " << job_i->id_desc()
+                    << " with PID " << pid
+                    << " exited with code " << exit_code << ".";
+                if (exit_code == E_DLS_ERROR_RESTART)
+                    msg() << " Restarting in " << wait_before_restart << " s.";
+                log(DLSInfo);
+                break;
+            }
         }
     }
 }
@@ -742,15 +730,10 @@ unsigned int DLSProcMother::_processes_running()
     list<DLSJobPreset>::iterator job_i;
     unsigned int process_count = 0;
 
-    job_i = _jobs.begin();
-    while (job_i != _jobs.end())
-    {
-        if (job_i->process_exists())
-        {
+    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+        if (job_i->process_exists()) {
             process_count++;
         }
-
-        job_i++;
     }
 
     return process_count;
