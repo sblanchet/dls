@@ -135,6 +135,8 @@ struct COMRealChannel
     unsigned int frequency; /**< Maximale Abtastrate des Kanals */
 };
 
+bool operator<(const COMRealChannel &a, const COMRealChannel &b);
+
 /*****************************************************************************/
 
 enum DLSLogType

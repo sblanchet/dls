@@ -163,3 +163,9 @@ void log(DLSLogType type)
 }
 
 /*****************************************************************************/
+
+bool operator<(const COMRealChannel &a, const COMRealChannel &b) {
+    return a.name < b.name;
+}
+
+/*****************************************************************************/

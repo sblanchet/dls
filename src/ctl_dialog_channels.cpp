@@ -431,6 +431,7 @@ void CTLDialogChannels::_thread_finished()
 
     if (_channels.size() > 0)
     {
+        sort(_channels.begin(), _channels.end());
         _grid_channels->record_count(_channels.size());
     }
     else if (_error != "")
