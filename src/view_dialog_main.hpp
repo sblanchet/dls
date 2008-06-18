@@ -16,6 +16,7 @@ using namespace std;
 #include <FL/Fl_Tile.h>
 #include <FL/Fl_Button.h>
 #include <FL/Fl_Choice.h>
+#include <FL/Fl_Check_Button.h>
 
 #include "lib_dir.hpp"
 using namespace LibDLS;
@@ -51,6 +52,8 @@ private:
                                 Zeitspanne */
     Fl_Button *_button_reload; /**< Button zum erneuten Laden der Daten */
     Fl_Button *_button_export; /**< Button zum Exportieren der Daten */
+    Fl_Check_Button *_checkbutton_messages; /**< Checkbutton zum Anzeigen der
+                                    Nachrichten. */
     Fl_Button *_button_close; /**< "Schliessen"-Button */
     Fl_Grid *_grid_channels; /**< Grid zum Anzeigen der Kanalliste*/
 
@@ -65,6 +68,7 @@ private:
     void _button_reload_clicked();
     void _button_full_clicked();
     void _button_export_clicked();
+    void _checkbutton_messages_clicked();
     void _choice_job_changed();
     void _grid_channels_changed();
 

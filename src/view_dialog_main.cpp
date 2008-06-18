@@ -22,7 +22,7 @@ using namespace std;
 
 /*****************************************************************************/
 
-#define WIDTH 780
+#define WIDTH 850
 #define HEIGHT 550
 
 /*****************************************************************************/
@@ -49,13 +49,17 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
     _choice_job->align(FL_ALIGN_TOP_LEFT);
     _choice_job->callback(_callback, this);
 
-    _button_full = new Fl_Button(260, 25, 100, 25, "Gesamt");
+    _checkbutton_messages = new Fl_Check_Button(260, 25, 100, 25, "Nachrichten");
+    _checkbutton_messages->set();
+    _checkbutton_messages->callback(_callback, this);
+
+    _button_full = new Fl_Button(370, 25, 100, 25, "Gesamt");
     _button_full->callback(_callback, this);
 
-    _button_reload = new Fl_Button(370, 25, 100, 25, "Aktualisieren");
+    _button_reload = new Fl_Button(480, 25, 100, 25, "Aktualisieren");
     _button_reload->callback(_callback, this);
 
-    _button_export = new Fl_Button(500, 25, 100, 25, "Exportieren...");
+    _button_export = new Fl_Button(590, 25, 100, 25, "Exportieren...");
     _button_export->callback(_callback, this);
 
     _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
@@ -153,6 +157,8 @@ void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
     if (sender == dialog->_button_reload) dialog->_button_reload_clicked();
     if (sender == dialog->_button_full) dialog->_button_full_clicked();
     if (sender == dialog->_button_export) dialog->_button_export_clicked();
+    if (sender == dialog->_checkbutton_messages)
+        dialog->_checkbutton_messages_clicked();
 }
 
 /*****************************************************************************/
@@ -239,6 +245,22 @@ void ViewDialogMain::_choice_job_changed()
 /*****************************************************************************/
 
 /**
+   Callback: Die Checkbox "Nachrichten" wurde angeklickt.
+*/
+
+void ViewDialogMain::_checkbutton_messages_clicked()
+{
+    if (_checkbutton_messages->value() && _current_job) {
+        _view_msg->load_msg(
+                _current_job, _view_data->start(), _view_data->end());
+    } else {
+        _view_msg->clear();
+    }
+}
+
+/*****************************************************************************/
+
+/**
    Callback der Kanal-Grids
 */
 
@@ -290,7 +312,8 @@ void ViewDialogMain::_data_range_callback(COMTime start,
                                           void *data)
 {
     ViewDialogMain *dialog = (ViewDialogMain *) data;
-    dialog->_view_msg->load_msg(dialog->_current_job, start, end);
+    if (dialog->_checkbutton_messages->value())
+        dialog->_view_msg->load_msg(dialog->_current_job, start, end);
 }
 
 /*****************************************************************************/
