@@ -52,7 +52,7 @@ namespace LibDLS {
         void import(const string &, unsigned int);
         void fetch_chunks();
         void fetch_data(COMTime, COMTime, unsigned int,
-                        DataCallback, void *) const;
+                        DataCallback, void *, unsigned int = 1) const;
 
         string path() const;
         unsigned int dir_index() const;

@@ -119,17 +119,25 @@ void Chunk::import(const string &path, COMChannelType type)
    Fetches data.
 */
 
-void LibDLS::Chunk::fetch_data(COMTime start,
-                               COMTime end,
-                               unsigned int min_values,
-                               COMRingBuffer *ring,
-                               DataCallback cb,
-                               void *cb_data /**< arbitrary callback param */
-                               ) const
+void LibDLS::Chunk::fetch_data(
+        COMTime start,
+        COMTime end,
+        unsigned int min_values,
+        COMRingBuffer *ring,
+        DataCallback cb,
+        void *cb_data, /**< arbitrary callback param */
+        unsigned int decimation
+        ) const
 {
-    unsigned int level;
+    unsigned int level, decimationCounter = 0;
     Data *data = NULL;
     COMTime time_per_value;
+
+    if (!decimation) {
+        stringstream err;
+        err << "Decimation may not be zero!";
+        throw ChunkException(err.str());
+    }
 
     // The requested time range does not intersect the chunk's range.
     if (start > _end || end < _start) return;
@@ -139,13 +147,15 @@ void LibDLS::Chunk::fetch_data(COMTime start,
 
     if (!level) {
         _fetch_level_data_wrapper(start, end, DLSMetaGen, level,
-                                  time_per_value, ring, &data, cb, cb_data);
-    }
-    else {
+                                  time_per_value, ring, &data, cb, cb_data,
+                                  decimation, decimationCounter);
+    } else {
         _fetch_level_data_wrapper(start, end, DLSMetaMin, level,
-                                  time_per_value, ring, &data, cb, cb_data);
+                                  time_per_value, ring, &data, cb, cb_data,
+                                  decimation, decimationCounter);
         _fetch_level_data_wrapper(start, end, DLSMetaMax, level,
-                                  time_per_value, ring, &data, cb, cb_data);
+                                  time_per_value, ring, &data, cb, cb_data,
+                                  decimation, decimationCounter);
     }
 }
 
@@ -163,55 +173,67 @@ void LibDLS::Chunk::_fetch_level_data_wrapper(COMTime start,
                                               COMRingBuffer *ring,
                                               Data **data,
                                               DataCallback cb,
-                                              void *cb_data /**< arbitrary
+                                              void *cb_data, /**< arbitrary
                                                                callback
                                                                parameter */
+                                              unsigned int decimation,
+                                              unsigned int &decimationCounter
                                               ) const
 {
     switch (_type) {
         case TCHAR:
             _fetch_level_data<char>(start, end, meta_type, level,
-                                    time_per_value, ring, data, cb, cb_data);
+                                    time_per_value, ring, data, cb, cb_data,
+                                    decimation, decimationCounter);
             break;
         case TUCHAR:
             _fetch_level_data<unsigned char>(start, end, meta_type, level,
                                              time_per_value, ring, data,
-                                             cb, cb_data);
+                                             cb, cb_data, decimation,
+                                             decimationCounter);
             break;
         case TSHORT:
             _fetch_level_data<short>(start, end, meta_type, level,
-                                     time_per_value, ring, data, cb, cb_data);
+                                     time_per_value, ring, data, cb, cb_data,
+                                     decimation, decimationCounter);
             break;
         case TUSHORT:
             _fetch_level_data<unsigned short>(start, end, meta_type, level,
                                               time_per_value, ring, data,
-                                              cb, cb_data);
+                                              cb, cb_data, decimation,
+                                              decimationCounter);
             break;
         case TINT:
             _fetch_level_data<int>(start, end, meta_type, level,
-                                   time_per_value, ring, data, cb, cb_data);
+                                   time_per_value, ring, data, cb, cb_data,
+                                   decimation, decimationCounter);
             break;
         case TUINT:
             _fetch_level_data<unsigned int>(start, end, meta_type, level,
                                             time_per_value, ring, data,
-                                            cb, cb_data);
+                                            cb, cb_data, decimation,
+                                            decimationCounter);
             break;
         case TLINT:
             _fetch_level_data<long>(start, end, meta_type, level,
-                                    time_per_value, ring, data, cb, cb_data);
+                                    time_per_value, ring, data, cb, cb_data,
+                                    decimation, decimationCounter);
             break;
         case TULINT:
             _fetch_level_data<unsigned long>(start, end, meta_type, level,
                                              time_per_value, ring, data,
-                                             cb, cb_data);
+                                             cb, cb_data, decimation,
+                                             decimationCounter);
             break;
         case TFLT:
             _fetch_level_data<float>(start, end, meta_type, level,
-                                     time_per_value, ring, data, cb, cb_data);
+                                     time_per_value, ring, data, cb, cb_data,
+                                     decimation, decimationCounter);
             break;
         case TDBL:
             _fetch_level_data<double>(start, end, meta_type, level,
-                                      time_per_value, ring, data, cb, cb_data);
+                                      time_per_value, ring, data, cb, cb_data,
+                                      decimation, decimationCounter);
             break;
 
         default: {
@@ -237,8 +259,10 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                                       COMRingBuffer *ring,
                                       Data **data,
                                       DataCallback cb,
-                                      void *cb_data /**< arbitrary callback
+                                      void *cb_data, /**< arbitrary callback
                                                        parameter */
+                                      unsigned int decimation,
+                                      unsigned int &decimationCounter
                                       ) const
 {
     stringstream level_dir_name;
@@ -298,8 +322,7 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
 
     try {
         global_index.open_read(global_index_file_name);
-    }
-    catch (ECOMIndexT &e) {
+    } catch (ECOMIndexT &e) {
         // global index not found.
         delete comp;
         return;
@@ -309,8 +332,7 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
     for (i = 0; i < global_index.record_count(); i++) {
         try {
             global_index_record = global_index[i];
-        }
-        catch (ECOMIndexT &e) {
+        } catch (ECOMIndexT &e) {
             cout << "ERROR: Failed read record " << i
                  << " from global index \"";
             cout << global_index_file_name << "\". Reason: " << e.msg << endl;
@@ -339,14 +361,12 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
         try {
             index.open_read(data_file_name.str() + ".idx");
             data_file.open_read(data_file_name.str().c_str());
-        }
-        catch (ECOMIndexT &e) {
+        } catch (ECOMIndexT &e) {
             cout << "ERROR: Failed to open index \"";
             cout << data_file_name.str() << ".idx\": " << e.msg << endl;
             delete comp;
             return;
-        }
-        catch (ECOMFile &e) {
+        } catch (ECOMFile &e) {
             cout << "ERROR: Failed to open data file \"";
             cout << data_file_name.str() << "\": " << e.msg << endl;
             delete comp;
@@ -357,8 +377,7 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
         for (j = 0; j < index.record_count(); j++) {
             try {
                 index_record = index[j];
-            }
-            catch (ECOMIndexT &e) {
+            } catch (ECOMIndexT &e) {
                 cout << "ERROR: Could not read from index: " << e.msg << endl;
                 delete comp;
                 return;
@@ -374,8 +393,7 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
 
             try {
                 data_file.seek(index_record.position);
-            }
-            catch (ECOMFile &e) {
+            } catch (ECOMFile &e) {
                 cout << "ERROR: Could not seek in data file!" << endl;
                 delete comp;
                 return;
@@ -390,8 +408,7 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
 
                 try {
                     data_file.read(write_ptr, write_len, &write_len);
-                }
-                catch (ECOMFile &e) {
+                } catch (ECOMFile &e) {
                     cout << "ERROR: Could not read from data file: "
                          << e.msg << endl;
                     delete comp;
@@ -410,11 +427,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
 
                 try {
                     xml.parse(ring);
-                }
-                catch (ECOMXMLParserEOF &e) {
+                } catch (ECOMXMLParserEOF &e) {
                     continue;
-                }
-                catch (ECOMXMLParser &e) {
+                } catch (ECOMXMLParser &e) {
                     cout << "parsing error: " << e.msg << endl;
                     delete comp;
                     return;
@@ -424,9 +439,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                     try {
                         _process_data_tag(xml.tag(), index_record.start_time,
                                           meta_type, level, time_per_value,
-                                          comp, data, cb, cb_data);
-                    }
-                    catch (ECOMXMLTag &e) {
+                                          comp, data, cb, cb_data,
+                                          decimation, decimationCounter);
+                    } catch (ECOMXMLTag &e) {
                         cout << "ERROR: Could not read block: "
                              << e.msg << endl;
                         delete comp;
@@ -496,7 +511,8 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             try {
                 _process_data_tag(xml.tag(), index_record.start_time,
                                   meta_type, level,
-                                  time_per_value, comp, data, cb, data);
+                                  time_per_value, comp, data, cb, data,
+                                  decimation, decimationCounter);
             }
             catch (ECOMXMLTag &e) {
                 cout << "ERROR: Failed to read block!" << endl;
@@ -524,8 +540,10 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
                                       COMCompressionT<T> *comp,
                                       Data **data,
                                       DataCallback cb,
-                                      void *cb_data /**< arbitrary callback
+                                      void *cb_data, /**< arbitrary callback
                                                        parameter */
+                                      unsigned int decimation,
+                                      unsigned int &decimationCounter
                                       ) const
 {
     unsigned int block_size;
@@ -537,8 +555,7 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
     if (block_size) {
         try {
             comp->uncompress(block_data, strlen(block_data), block_size);
-        }
-        catch (ECOMCompression &e) {
+        } catch (ECOMCompression &e) {
             cout << "ERROR while uncompressing: " << e.msg << endl;
             return;
         }
@@ -546,22 +563,19 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         if (!*data) *data = new Data();
 
         (*data)->import(start_time, time_per_value, meta_type, level,
-                        comp->decompression_output(),
-                        comp->decompressed_length());
+                decimation, decimationCounter, comp->decompression_output(),
+                comp->decompressed_length());
 
         // invoke data callback
         if (cb(*data, cb_data)) {
-            // data structure adoped: forget its address.
+            // data structure adopted: forget its address.
             *data = NULL;
         }
         return;
-    }
-    else if (_format_index == DLS_FORMAT_MDCT)
-    {
+    } else if (_format_index == DLS_FORMAT_MDCT) {
         try {
             comp->flush_uncompress(block_data, strlen(block_data));
-        }
-        catch (ECOMCompression &e) {
+        } catch (ECOMCompression &e) {
             cout << "ERROR while uncompressing: " << e.msg << endl;
             return;
         }
@@ -569,12 +583,12 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         if (!*data) *data = new Data();
 
         (*data)->import(start_time, time_per_value, meta_type, level,
-                        comp->decompression_output(),
-                        comp->decompressed_length());
+                decimation, decimationCounter, comp->decompression_output(),
+                comp->decompressed_length());
 
         // invoke data callback
         if (cb(*data, cb_data)) {
-            // data structure adoped: forget its address.
+            // data structure adopted: forget its address.
             *data = NULL;
         }
         return;

@@ -194,7 +194,8 @@ void Channel::fetch_data(COMTime start, /**< start of requested time range */
                          COMTime end, /**< end of requested time range */
                          unsigned int min_values, /**< minimal number */
                          DataCallback cb, /**< callback */
-                         void *cb_data /**< arbitrary callback parameter */
+                         void *cb_data, /**< arbitrary callback parameter */
+                         unsigned int decimation /**< Decimation. */
                          ) const
 {
     list<Chunk>::const_iterator chunk_i;
@@ -203,7 +204,8 @@ void Channel::fetch_data(COMTime start, /**< start of requested time range */
     if (start >= end) return;
 
     for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
-        chunk_i->fetch_data(start, end, min_values, &ring, cb, cb_data);
+        chunk_i->fetch_data(start, end, min_values, &ring, cb, cb_data,
+                decimation);
     }
 }
 

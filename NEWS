@@ -4,6 +4,11 @@ $Id$
 
 ------------------------------------------------------------------------------
 
+Recent changes:
+
+* Export decimation in dls and dls_view.
+* Disabling message loading in dls_view.
+
 Changes from version 1.0 to version 1.1:
 
 * Sending host and application identification after connect().

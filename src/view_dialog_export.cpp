@@ -25,7 +25,7 @@ using namespace std;
 /*****************************************************************************/
 
 #define WIDTH 400
-#define HEIGHT 230
+#define HEIGHT 255
 
 /*****************************************************************************/
 
@@ -66,10 +66,14 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
     _output_size->deactivate();
 #endif
 
-    _check_ascii = new Fl_Check_Button(10, HEIGHT - 130, 240, 25,
+    _check_ascii = new Fl_Check_Button(10, HEIGHT - 165, 240, 25,
                                        "Matlab ASCII (.dat)");
-    _check_mat4 = new Fl_Check_Button(10, HEIGHT - 105, 240, 25,
+    _check_mat4 = new Fl_Check_Button(10, HEIGHT - 140, 240, 25,
                                       "Matlab binary, level 4 (.mat)");
+    _spinner_decimation = new Fl_Spinner(10 + (WIDTH - 20) / 2, HEIGHT - 110,
+            (WIDTH - 20) / 2, 25, "Decimation");
+    _spinner_decimation->type(FL_INT_INPUT);
+    _spinner_decimation->range(1.0, ~0U);
 
     _progress = new Fl_Progress(10, HEIGHT - 70, WIDTH - 20, 25, "0%");
     _progress->maximum(100);
@@ -267,6 +271,8 @@ void ViewDialogExport::_button_export_clicked()
         _exporters.push_back(exporter);
     }
 
+    _decimation = (unsigned int) _spinner_decimation->value();
+
     if (pthread_create(&_thread, 0, _static_thread_function, this)) {
         cerr << "Failed to create thread!" << endl;
         return;
@@ -340,7 +346,8 @@ void ViewDialogExport::_thread_function()
         for (exp_i = _exporters.begin(); exp_i != _exporters.end(); exp_i++)
             (*exp_i)->begin(*channel_i, _export_dir);
 
-        channel_i->fetch_data(_start, _end, 0, _export_data_callback, &info);
+        channel_i->fetch_data(_start, _end, 0, _export_data_callback, &info,
+                _decimation);
 
         for (exp_i = _exporters.begin(); exp_i != _exporters.end(); exp_i++)
             (*exp_i)->end();

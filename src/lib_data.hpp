@@ -33,7 +33,7 @@ namespace LibDLS {
 
         template <class T>
         void import(COMTime, COMTime, DLSMetaType, unsigned int,
-                    T*, unsigned int);
+                unsigned int, unsigned int &, T*, unsigned int);
 
         void push_back(const Data &);
 
@@ -113,19 +113,28 @@ void LibDLS::Data::import(COMTime time,
                           COMTime tpv,
                           DLSMetaType meta_type,
                           unsigned int meta_level,
+                          unsigned int decimation,
+                          unsigned int &decimationCounter,
                           T *data,
                           unsigned int size
                           )
 {
     unsigned int i;
 
-    _start_time = time;
-    _time_per_value = tpv;
+    _start_time = time + tpv * decimationCounter;
+    _time_per_value = tpv * decimation;
     _meta_type = meta_type;
     _meta_level = meta_level;
     _data.clear();
 
-    for (i = 0; i < size; i++) _data.push_back((double) data[i]);
+    for (i = 0; i < size; i++) {
+        if (!decimationCounter) {
+            _data.push_back((double) data[i]);
+            decimationCounter = decimation - 1;
+        } else {
+            decimationCounter--;
+        }
+    }
 }
 
 /*****************************************************************************/

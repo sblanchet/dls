@@ -14,6 +14,7 @@
 #include <FL/Fl_Double_Window.h>
 #include <FL/Fl_Button.h>
 #include <FL/Fl_Check_Button.h>
+#include <FL/Fl_Spinner.h>
 #include <FL/Fl_Progress.h>
 #include <FL/Fl_Output.h>
 #include <FL/Fl_Box.h>
@@ -46,6 +47,7 @@ private:
 #endif
     Fl_Check_Button *_check_ascii; /**< export to ASCII */
     Fl_Check_Button *_check_mat4; /**< export to MATLAB level 4 file */
+    Fl_Spinner *_spinner_decimation; /**< Decimation spinner. */
     Fl_Progress *_progress; /**< Fortschrittsanzeige */
     Fl_Button *_button_export; /**< Export-Button */
     Fl_Button *_button_close;  /**< "Schliessen"-Button */
@@ -54,6 +56,7 @@ private:
     unsigned int _channel_count;
     COMTime _start, _end;
     list<Export *> _exporters;
+    unsigned int _decimation;
     string _export_dir;
     bool _export_finished;
     pthread_t _thread; /**< Export-Thread */

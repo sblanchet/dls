@@ -29,6 +29,7 @@ static unsigned int job_id = 0;
 static list<unsigned int> channel_indices;
 static COMTime start_time;
 static COMTime end_time;
+static unsigned int decimation = 1;
 static bool export_ascii = false;
 static bool export_matlab = false;
 static bool quiet = false;
@@ -76,9 +77,10 @@ int export_main(int argc, char *argv[])
 
     now.set_now();
 
-    term_width = terminal_width();
     export_get_environment();
     export_get_options(argc, argv);
+    if (!quiet)
+        term_width = terminal_width();
 
     if (export_ascii) exporters.push_back(new ExportAscii());
     if (export_matlab) exporters.push_back(new ExportMat4());
@@ -91,8 +93,7 @@ int export_main(int argc, char *argv[])
 
     try {
         dls_dir.import(dls_dir_path);
-    }
-    catch (DirectoryException &e) {
+    } catch (DirectoryException &e) {
         cerr << "ERROR: Importing DLS directory: " << e.msg << endl;
         exit(1);
     }
@@ -100,13 +101,12 @@ int export_main(int argc, char *argv[])
     if (!(job = dls_dir.find_job(job_id))) {
         cerr << "ERROR: No such job - " << job_id << "." << endl;
         cerr << "Call \"dls list\" to list available jobs." << endl;
-        return 1;
+        exit(1);
     }
 
     try {
         job->fetch_channels();
-    }
-    catch (JobException &e) {
+    } catch (JobException &e) {
         cerr << "ERROR: Fetching channels: " << e.msg << endl;
         exit(1);
     }
@@ -146,8 +146,7 @@ int export_main(int argc, char *argv[])
 
         try {
             channel->fetch_chunks();
-        }
-        catch (ChannelException &e) {
+        } catch (ChannelException &e) {
             cerr << "ERROR: Fetching chunks: " << e.msg << endl;
             exit(1);
         }
@@ -155,8 +154,7 @@ int export_main(int argc, char *argv[])
         if (!channel->start().is_null()) {
             if (channels_start.is_null()) {
                 channels_start = channel->start();
-            }
-            else if (channel->start() < channels_start) {
+            } else if (channel->start() < channels_start) {
                 channels_start = channel->start();
             }
         }
@@ -164,8 +162,7 @@ int export_main(int argc, char *argv[])
         if (!channel->end().is_null()) {
             if (channels_end.is_null()) {
                 channels_end = channel->end();
-            }
-            else if (channel->end() > channels_end) {
+            } else if (channel->end() > channels_end) {
                 channels_end = channel->end();
             }
         }
@@ -238,17 +235,15 @@ int export_main(int argc, char *argv[])
         try {
             for (exp_i = exporters.begin(); exp_i != exporters.end(); exp_i++)
                 (*exp_i)->begin(*channel, dls_export_dir);
-        }
-        catch (ExportException &e) {
+        } catch (ExportException &e) {
             cerr << "ERROR: Beginning export file: " << e.msg << endl;
             exit(1);
         }
 
         try {
             channel->fetch_data(start_time, end_time,
-                                0, export_data_callback, &info);
-        }
-        catch (ChannelException &e) {
+                                0, export_data_callback, &info, decimation);
+        } catch (ChannelException &e) {
             cerr << "ERROR: Fetching data: " << e.msg << endl;
             exit(1);
         }
@@ -256,8 +251,7 @@ int export_main(int argc, char *argv[])
         try {
             for (exp_i = exporters.begin(); exp_i != exporters.end(); exp_i++)
                 (*exp_i)->end();
-        }
-        catch (ExportException &e) {
+        } catch (ExportException &e) {
             cerr << "ERROR: Finishing export file: " << e.msg << endl;
             exit(1);
         }
@@ -493,7 +487,7 @@ void export_get_options(int argc, char *argv[])
     int c;
 
     while (1) {
-        if ((c = getopt(argc, argv, "d:o:f:amj:c:s:e:qh")) == -1) break;
+        if ((c = getopt(argc, argv, "d:o:f:amj:c:s:e:n:qh")) == -1) break;
 
         switch (c) {
             case 'd':
@@ -551,6 +545,10 @@ void export_get_options(int argc, char *argv[])
                          << e << endl;
                     exit(1);
                 }
+                break;
+
+            case 'n':
+                decimation = strtoul(optarg, NULL, 10);
                 break;
 
             case 'q':
@@ -619,6 +617,7 @@ void export_print_usage()
          << "   -e TIMESTAMP   End time (see below)."
          << " Default: End of recording"
          << endl
+         << "   -n DECIMATION  Export every n'th value." << endl
          << "   -q             Be quiet (no progress bar)" << endl
          << "   -h             Print this help" << endl
          << "CHANNELS is a comma-separated list of channel indices." << endl

@@ -56,7 +56,8 @@ namespace LibDLS
         COMTime end() const;
         void fetch_data(COMTime, COMTime, unsigned int,
                         COMRingBuffer *,
-                        DataCallback, void *) const;
+                        DataCallback, void *,
+                        unsigned int) const;
 
         bool operator<(const Chunk &) const;
         bool operator==(const Chunk &) const;
@@ -81,7 +82,9 @@ namespace LibDLS
                                        COMRingBuffer *,
                                        Data **,
                                        DataCallback,
-                                       void *) const;
+                                       void *,
+                                       unsigned int,
+                                       unsigned int &) const;
 
         template <class T>
         void _fetch_level_data(COMTime, COMTime,
@@ -91,7 +94,9 @@ namespace LibDLS
                                COMRingBuffer *,
                                Data **,
                                DataCallback,
-                               void *) const;
+                               void *,
+                               unsigned int,
+                               unsigned int &) const;
 
         template <class T>
         void _process_data_tag(const COMXMLTag *,
@@ -102,7 +107,9 @@ namespace LibDLS
                                COMCompressionT<T> *,
                                Data **,
                                DataCallback,
-                               void *) const;
+                               void *,
+                               unsigned int,
+                               unsigned int &) const;
     };
 }
 

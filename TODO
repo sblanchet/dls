@@ -2,12 +2,11 @@
 $Id$
 
 * dlsd:
-    - Channel trigger 
+    - Port to PdCom.
 
 * dls:
     - option -Q for really quiet
     - export:
-        * downsample (time, value, min, max)
         * start/end time in epoch
         * additional information in dls_export_info (channel name, unit,
             command-line options, intersected chunks, min-max values)
@@ -31,6 +30,5 @@ $Id$
   - Qt
 
 * dls_ctl
-  - sort channel list
   - search function in channel list
   - Qt
