@@ -1,6 +1,9 @@
 
 $Id$
 
+* All
+    - Synopsis in usage strings.
+
 * dlsd:
     - Port to PdCom.
 
@@ -12,6 +15,8 @@ $Id$
             command-line options, intersected chunks, min-max values)
         * dls_export_info as XML
         * optionally make times relative to export start time
+        * date parser
+        * times in dls_export_info in ISO format
 	- split
 	- delete
 	- check
