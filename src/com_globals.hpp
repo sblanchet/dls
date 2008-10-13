@@ -153,7 +153,7 @@ stringstream &msg();
 void log(DLSLogType);
 
 COMChannelType dls_str_to_channel_type(const string &);
-char *dls_channel_type_to_str(COMChannelType);
+const char *dls_channel_type_to_str(COMChannelType);
 string convert_to_bin(const void *, unsigned int, int);
 
 /*****************************************************************************/

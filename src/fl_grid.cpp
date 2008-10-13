@@ -61,7 +61,7 @@ Fl_Grid_Column::~Fl_Grid_Column()
    \param label Name des Widgets in FLTK (Wird nicht verwendet)
 */
 
-Fl_Grid::Fl_Grid(int xp, int yp, int wp, int hp, char *label)
+Fl_Grid::Fl_Grid(int xp, int yp, int wp, int hp, const char *label)
     : Fl_Widget(xp, yp, wp, hp, label)
 {
     _cb = 0;

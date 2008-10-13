@@ -74,7 +74,7 @@ private:
 class Fl_Grid : public Fl_Widget
 {
 public:
-    Fl_Grid(int, int, int, int, char * = "");
+    Fl_Grid(int, int, int, int, const char * = "");
     ~Fl_Grid();
 
     // Spaltenverwaltung

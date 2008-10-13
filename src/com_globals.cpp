@@ -45,7 +45,7 @@ COMChannelType dls_str_to_channel_type(const string &str)
 
 /*****************************************************************************/
 
-char *dls_channel_type_to_str(COMChannelType type)
+const char *dls_channel_type_to_str(COMChannelType type)
 {
     switch (type) {
         case TCHAR:  return "TCHAR";
