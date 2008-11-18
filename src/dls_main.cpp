@@ -14,6 +14,8 @@
 #include <sys/resource.h>
 #include <pwd.h>
 #include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include <iostream>
 using namespace std;
@@ -82,7 +84,7 @@ int main(int argc, char **argv)
 
     is_daemon = true;
     strcpy(user_name, "");
-    num_files = OPEN_MAX;
+    num_files = FOPEN_MAX;
 
     // remember current working directory
     if (!getcwd(working_dir, WORKING_DIR_SIZE)) {
@@ -104,7 +106,7 @@ int main(int argc, char **argv)
     // In einen Daemon verwandeln, wenn gewuenscht
     if (is_daemon) init_daemon();
 
-    if (num_files != OPEN_MAX)
+    if (num_files != FOPEN_MAX)
     {
         // Maximale Anzahl offener Dateien aendern
 

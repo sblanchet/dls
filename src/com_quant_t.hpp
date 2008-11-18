@@ -18,6 +18,7 @@
 // Nur für Debug
 #include <iostream>
 #include <iomanip>
+#include <stdlib.h>
 using namespace std;
 
 #include "com_globals.hpp"

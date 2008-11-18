@@ -6,9 +6,11 @@
 
 #include <sys/socket.h>
 #include <netdb.h>
+#include <string.h>
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 #include <FL/Fl.h>

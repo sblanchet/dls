@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <fstream>
 using namespace std;

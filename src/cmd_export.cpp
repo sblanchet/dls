@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string.h>
 
 #include <iostream>
 #include <sstream>

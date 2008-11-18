@@ -7,10 +7,12 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <math.h>
+#include <string.h>
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <typeinfo>
 using namespace std;
 
 /*****************************************************************************/
