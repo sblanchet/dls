@@ -19,7 +19,7 @@
 \usepackage{makeidx}
 \usepackage{listings}
 \usepackage{svn}
-\usepackage[pdfpagelabels,plainpages=false]{hyperref}
+\usepackage[pdfpagelabels,plainpages=false,linkcolor=blue,colorlinks=true]{hyperref}
 
 \setlength{\parskip}{1.5ex plus 0.8ex minus 0.5ex}
 \setlength{\parindent}{0mm}
@@ -1111,6 +1111,8 @@ Messaufträge\index{Messauftrag} in einem DLS-Datenverzeichnis. Er
 dient weiterhin zur Steuerung und Kontrolle der laufenden
 Erfassungsprozesse.
 
+Der Aufruf des DLS Managers erfolgt mit dem Kommando \texttt{dls\_ctl}.
+
 Wie auch der dlsd kann diesem Tool in der Kommandozeile mit dem
 Parameter \texttt{-d} das DLS-Daten\-verzeich\-nis mitgeteilt werden,
 auf dem es arbeiten soll (siehe Anhang \ref{sec:apx_cmd_dlsctl}).
@@ -2075,6 +2077,8 @@ nicht mehr) kann zuvor gelöscht werden.
 \section{dls\_ctl}
 \label{sec:apx_cmd_dlsctl}
 \index{DLS Manager!Kommandozeilenparameter}
+
+Der DLS Manager wird in Kap.~\ref{sec:manager} beschrieben.
 
 \begin{lstlisting}
   dls_ctl 1.0.0 revision 26
