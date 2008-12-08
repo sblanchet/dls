@@ -97,10 +97,11 @@ AC_MSG_RESULT(${ZLIB_DIR})
 #------------------------------------------------------------------------------
 
 AC_CONFIG_FILES([
-	Makefile
-	script/Makefile
-	src/Makefile
+    Makefile
     dls.spec
+    script/Makefile
+    script/init.sh
+    src/Makefile
 ])
 AC_OUTPUT
 
