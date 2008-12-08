@@ -76,7 +76,7 @@ void Chunk::import(const string &path, COMChannelType type)
         xml.parse(&file, "dlschunk", dxttBegin);
         xml.parse(&file, "chunk", dxttSingle);
 
-        _sample_frequency = xml.tag()->att("sample_frequency")->to_int();
+        _sample_frequency = xml.tag()->att("sample_frequency")->to_dbl();
         _meta_reduction = xml.tag()->att("meta_reduction")->to_int();
         format_str = xml.tag()->att("format")->to_str();
 

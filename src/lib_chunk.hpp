@@ -64,7 +64,7 @@ namespace LibDLS
 
     protected:
         string _dir;                    /**< Chunk-Verzeichnis */
-        unsigned int _sample_frequency; /**< Abtastfrequenz */
+        double _sample_frequency;       /**< Abtastfrequenz */
         unsigned int _meta_reduction;   /**< Meta-Untersetzung */
         int _format_index;              /**< Kompressionsformat */
         unsigned int _mdct_block_size;  /**< MDCT-Blockgroesse */

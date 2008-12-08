@@ -6,8 +6,12 @@ $Id$
 
 Recent changes:
 
+* Sample times may be floating-point (i. e. less than 1)
+* Sort signal names before displaying.
+* Restart logging after non-critical errors.
 * Export decimation in dls and dls_view.
 * Disabling message loading in dls_view.
+* Avoided buffer overflow via intermediate reading.
 
 Changes from version 1.0 to version 1.1:
 

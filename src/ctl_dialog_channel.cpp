@@ -50,7 +50,7 @@ CTLDialogChannel::CTLDialogChannel(const string &dls_dir)
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
-    _input_freq = new Fl_Input(10, 25, 120, 25, "Abtastrate (Hz)");
+    _input_freq = new Fl_Float_Input(10, 25, 120, 25, "Abtastrate (Hz)");
     _input_freq->align(FL_ALIGN_TOP_LEFT);
     _input_freq->callback(_callback, this);
 
@@ -146,7 +146,8 @@ void CTLDialogChannel::show(CTLJobPreset *job,
 {
     stringstream str;
     list<const COMChannelPreset *>::const_iterator channel_i;
-    unsigned int freq, block, mask, red, mdct_block_size;
+    double freq;
+    unsigned int block, mask, red, mdct_block_size;
     int format_index;
     bool freq_equal = true, block_equal = true;
     bool mask_equal = true, red_equal = true;
@@ -382,7 +383,8 @@ bool CTLDialogChannel::_save_channels()
     COMChannelPreset channel;
     stringstream str;
     list<const COMChannelPreset *>::const_iterator channel_i;
-    unsigned int freq, block, mask, red, mdct_block_size = 0;
+    double freq;
+    unsigned int block, mask, red, mdct_block_size = 0;
     double accuracy;
     bool write_freq, write_block, write_mask, write_red, write_acc;
     bool channel_changed, channels_changed = false;

@@ -80,7 +80,7 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
     try
     {
         name = tag->att("name")->to_str();
-        sample_frequency = tag->att("frequency")->to_int();
+        sample_frequency = tag->att("frequency")->to_dbl();
         block_size = tag->att("block_size")->to_int();
         meta_mask = tag->att("meta_mask")->to_int();
         meta_reduction = tag->att("meta_reduction")->to_int();
@@ -184,7 +184,7 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
 void COMChannelPreset::clear()
 {
     name = "";
-    sample_frequency = 0;
+    sample_frequency = 0.0;
     block_size = 0;
     meta_mask = 0;
     meta_reduction = 0;

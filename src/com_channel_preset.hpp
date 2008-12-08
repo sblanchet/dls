@@ -53,7 +53,7 @@ public:
     void clear();
 
     string name;                   /**< Kanalname */
-    unsigned int sample_frequency; /**< Abtastrate, mit der aufgezeichnet
+    double sample_frequency; /**< Abtastrate, mit der aufgezeichnet
                                       werden soll */
     unsigned int block_size;       /**< Blockgröße, mit der aufgezeichnet
                                       werden soll */

@@ -14,7 +14,7 @@ using namespace std;
 
 #include <FL/Fl_Double_Window.h>
 #include <FL/Fl_Return_Button.h>
-#include <FL/Fl_Input.h>
+#include <FL/Fl_Float_Input.h>
 #include <FL/Fl_Choice.h>
 
 /*****************************************************************************/

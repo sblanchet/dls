@@ -6,11 +6,14 @@ $Id$
 
 * dlsd:
     - Port to PdCom.
+    - Send keepalives.
+    - Restart after receiving no data for a long time.
 
 * dls:
     - option -Q for really quiet
     - export:
         * start/end time in epoch
+        * times with the date parser
         * additional information in dls_export_info (channel name, unit,
             command-line options, intersected chunks, min-max values)
         * dls_export_info as XML

@@ -200,9 +200,10 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
     // Wenn keine Kanalvorgaben übergeben, eigene überprüfen
     if (!channel) channel = &_channel_preset;
 
-    if (!channel->sample_frequency) {
+    if (channel->sample_frequency <= 0.0) {
         err << "Channel \"" << channel->name << "\": "
-            << "Invalid sample frequency!";
+            << "Invalid sample frequency "
+            << channel->sample_frequency << "!";
         throw EDLSLogger(err.str());
     }
 
@@ -214,14 +215,11 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
         throw EDLSLogger(err.str());
     }
 
-    if (_real_channel.frequency % channel->sample_frequency) {
-        err << "Channel \""<< channel->name << "\": "
-            << "Sample frequency leads to non-integer reduction!";
-        throw EDLSLogger(err.str());
-    }
-
-    reduction = _real_channel.frequency / channel->sample_frequency;
-    block_size = channel->sample_frequency;
+    reduction = (unsigned int)
+        (_real_channel.frequency / channel->sample_frequency + .5);
+    block_size = (unsigned int) (channel->sample_frequency + .5);
+    if (!block_size)
+        block_size = 1;
 
     if (block_size * reduction > _real_channel.bufsize / 2) {
         err << "Channel \""<< channel->name << "\": "
@@ -322,24 +320,26 @@ string DLSLogger::start_tag(const COMChannelPreset *channel,
     unsigned int reduction;
     unsigned int block_size;
 
-    if (_real_channel.frequency % channel->sample_frequency) {
-        throw EDLSLogger("Frequency leads to no integer reduction!");
-    }
-    reduction = _real_channel.frequency / channel->sample_frequency;
-
-    block_size = channel->sample_frequency;
+    reduction = (unsigned int)
+        (_real_channel.frequency / channel->sample_frequency + .5);
+    block_size = (unsigned int) (channel->sample_frequency + .5);
+    if (!block_size)
+        block_size = 1;
 
     // Blocksize begrenzen (msrd kann nur 1024)
-    if (block_size > 1000) block_size = 1000;
+    if (block_size > 1024)
+        block_size = 1024;
 
+#if 0
     // Blocksize muss ein Teiler von Sample-Frequency sein!
-    if (channel->sample_frequency % block_size) {
+    if (fmod(channel->sample_frequency, block_size)) {
         stringstream err;
         err << "Block size (" << block_size << ")";
         err << " doesn't match frequency (" << channel->sample_frequency
             << ")!";
         throw EDLSLogger(err.str());
     }
+#endif
 
     tag << "<xsad channels=\"" << _real_channel.index << "\""
         << " reduction=\"" << reduction << "\""
