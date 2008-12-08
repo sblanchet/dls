@@ -6,6 +6,8 @@ $Id$
 
 Recent changes:
 
+* If no data is received for NO_DATA_ABORT_TIME, the logger process is
+  restarted.
 * Sample times may be floating-point (i. e. less than 1)
 * Sort signal names before displaying.
 * Restart logging after non-critical errors.

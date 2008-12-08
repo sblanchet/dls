@@ -55,7 +55,7 @@ DLSProcLogger::DLSProcLogger(const string &dls_dir, unsigned int job_id)
     _last_trigger_requested.tv_usec = 0;
     _last_watchdog.tv_sec = 0;
     _last_watchdog.tv_usec = 0;
-    _no_data_warning = true;
+    _receiving_data = false;
     _buffer_level = 0;
 
     openlog("dlsd_logger", LOG_PID, LOG_DAEMON);
@@ -378,20 +378,22 @@ void DLSProcLogger::_read_write_socket()
 
         // Warnung ausgeben, wenn zu lange keine Daten mehr empfangen
         if (COMTime::now() - _last_data_received
-            > (long long) NO_DATA_WARNING * 1000000) {
-            if (!_no_data_warning) {
-                if (_state != dls_waiting_for_trigger) {
-                    msg() << "No data received for a long time!";
-                    log(DLSWarning);
-                }
-                _no_data_warning = true;
+                > (long long) NO_DATA_ABORT_TIME * 1000000) {
+            if (_receiving_data) {
+                _receiving_data = false;
                 _first_data_time.set_null();
+                if (_state != dls_waiting_for_trigger) {
+                    _exit = true;
+                    _exit_code = E_DLS_ERROR_RESTART;
+                    msg() << "No data received for " << NO_DATA_ABORT_TIME
+                        << " s! Seems that the server is down. Restarting...";
+                    log(DLSError);
+                }
             }
-        }
-        else if (_no_data_warning) {
-            msg() << "Receiving data!";
+        } else if (!_receiving_data) {
+            msg() << "Receiving data.";
             log(DLSInfo);
-            _no_data_warning = false;
+            _receiving_data = true;
         }
 
         // Quota
@@ -611,7 +613,7 @@ void DLSProcLogger::_process_tag()
                 _state = dls_listening; // Zustandswechsel!
                 msg() << "Trigger active! Start logging.";
                 log(DLSInfo);
-                _no_data_warning = true; // Gleich augeben, dass
+                _receiving_data = false; // Gleich augeben, dass
                                          // wieder Daten kommen
                 _job->start_logging();
             }
@@ -915,7 +917,7 @@ void DLSProcLogger::_do_watchdogs()
         // Schlieﬂen ohne Fehlerbehandlung!
         watchdog_file.close();
 
-        if (_state != dls_waiting_for_trigger && !_no_data_warning) {
+        if (_state != dls_waiting_for_trigger && _receiving_data) {
             logging_file.open((dir_name.str() + "/logging").c_str(), ios::out);
 
             // Schlieﬂen ohne Fehlerbehandlung!

@@ -73,7 +73,7 @@ private:
     struct timeval _last_trigger_requested;
     struct timeval _last_watchdog;
     COMTime _last_data_received;
-    bool _no_data_warning;
+    bool _receiving_data;
     unsigned int _buffer_level;
     COMTime _last_read_time;
 

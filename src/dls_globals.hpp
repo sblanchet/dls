@@ -20,10 +20,11 @@
 #define RECEIVE_RING_BUF_SIZE  10485760 // [byte]
 #define SAVER_MAX_FILE_SIZE    10485760 // [byte]
 #define ALLOWED_TIME_VARIANCE  500      // in Prozent rel. Fehler
-#define DEFAULT_WAIT_BEFORE_RESTART 30 // seconds
+#define DEFAULT_WAIT_BEFORE_RESTART 30  // seconds
 #define BUFFER_LEVEL_WARNING   50       // in Prozent Füllstand
 #define QUOTA_PART_QUOTIENT    10       // Anzahl Chunks in Quota-Bereich
-#define NO_DATA_WARNING        61       // Sekunden, nach denen gewarnt wird
+#define NO_DATA_ABORT_TIME     600      // Zeit ohne Daten, nach der abgebrochen
+                                        // wird.
 #define WRITE_TIME_WARNING     1.0      // Sekunden
 
 #define MSR_VERSION(V, P, S) (((V) << 16) + ((P) << 8) + (S))
