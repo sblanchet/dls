@@ -6,7 +6,7 @@
 
 Name: @PACKAGE@
 Version: @VERSION@
-Release: 2
+Release: 1
 
 Summary: Data Logging Service
 License: GPL
