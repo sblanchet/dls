@@ -361,7 +361,9 @@ void dump_signal(int sig)
     fd = open(file.str().c_str(), O_WRONLY | O_CREAT, 0644);
     if (fd != -1)
     {
-        write(fd, err.str().c_str(), err.str().length());
+        if (write(fd, err.str().c_str(), err.str().length()) == -1
+                && !is_daemon)
+            cerr << "Failed to dump signal." << endl;
         close(fd);
     }
 
