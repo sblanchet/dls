@@ -1,0 +1,51 @@
+#
+# $Id$
+#
+# vim: tw=78 spelllang=en spell
+#
+
+Name: @PACKAGE@
+Version: @VERSION@
+Release: 2
+
+Summary: Data Logging Service
+License: GPL
+Vendor: Ingenieurgemeinschaft IgH GmbH
+URL: http://etherlab.org
+Packager: Dipl.-Ing. (FH) Florian Pose <fp@igh-essen.com>
+Group: EtherLab
+
+Provides: dls
+Prefix: /opt/etherlab
+Source: %{name}-%{version}.tar.bz2
+BuildRoot: /tmp/%{name}-%{version}
+
+%description
+DLS is a process data logging service, capable of capturing high-frequency
+data over a long time and storing it in a compressed way. The aim is to allow
+the user unlimited high-performance access to the data at any time. Be it a
+year's overview or a small signal peak in fractions of a second.
+
+%prep
+%setup
+
+%build
+%configure
+make
+
+%install
+make DESTDIR=${RPM_BUILD_ROOT} install
+
+%clean
+rm -rf ${RPM_BUILD_ROOT}
+
+%files
+%defattr(-,root,root)
+%doc AUTHORS ChangeLog COPYING INSTALL NEWS
+/usr/bin/dls*
+/etc/init.d/dls
+/etc/sysconfig/dls
+/etc/profile.d/dls.sh
+
+%changelog
+
