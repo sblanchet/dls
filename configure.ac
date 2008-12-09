@@ -100,7 +100,6 @@ AC_CONFIG_FILES([
     Makefile
     dls.spec
     script/Makefile
-    script/init.sh
     src/Makefile
 ])
 AC_OUTPUT

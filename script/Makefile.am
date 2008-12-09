@@ -7,9 +7,7 @@ profiledir = $(sysconfdir)/profile.d
 sysdir = $(sysconfdir)/sysconfig
 
 noinst_SCRIPTS = dls_quota.pl dls_status.pl init.sh profile.sh sysconfig
-
-BUILT_SOURCES = \
-	init.sh
+EXTRA_DIST = $(noinst_SCRIPTS)
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
