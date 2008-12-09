@@ -35,6 +35,10 @@ make
 
 %install
 make DESTDIR=${RPM_BUILD_ROOT} install
+%if "%{_vendor}" == "suse"
+install -d ${RPM_BUILD_ROOT}/usr/sbin
+ln -s /etc/init.d/dls ${RPM_BUILD_ROOT}/usr/sbin/rcdls
+%endif
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -42,10 +46,13 @@ rm -rf ${RPM_BUILD_ROOT}
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS
-/usr/bin/dls*
 /etc/init.d/dls
-/etc/sysconfig/dls
 /etc/profile.d/dls.sh
+/etc/sysconfig/dls
+/usr/bin/dls*
+%if "%{_vendor}" == "suse"
+/usr/sbin/rcdls
+%endif
 
 %changelog
 
