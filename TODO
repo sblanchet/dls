@@ -1,11 +1,18 @@
 
 $Id$
 
+vim: tw=78 spelllang=en spell
+
 * All
     - Synopsis in usage strings.
+    - Client/Server architecture.
+    - Event-based variables
+    - Move unit and type attributes into chunk.
 
 * dlsd:
-    - Port to PdCom.
+    - Port to PdCom (trigger via channel).
+    - store the same signal with different settings (compression, sample
+      rate).
 
 * dls:
     - option -Q for really quiet
@@ -20,6 +27,9 @@ $Id$
 	- repair
     - list
         * optionally don't go through every chunk
+    - Status (replace dls_status).
+    - getopt() long
+    - show compression rate
 
 * lib:
 	- fetch_chunks(): only update
@@ -31,6 +41,8 @@ $Id$
   - graphical error messages at export
   - Qt
   - Update yellow chunk ranges on scrolling.
+  - date parser.
+  - multi-job and multi-host viewing.
 
 * dls_ctl
   - search function in channel list
