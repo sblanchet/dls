@@ -160,7 +160,7 @@ void COMBase64::decode(const char *src, unsigned int src_size)
 {
     int tarindex, state, ch;
     unsigned int out_size = src_size + 1;
-    char *pos;
+    const char *pos;
     stringstream err;
 
     free();

@@ -10,6 +10,7 @@
 #include <iostream>
 #endif
 #include <sstream>
+#include <fstream>
 using namespace std;
 
 /*****************************************************************************/
