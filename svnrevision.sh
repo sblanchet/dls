@@ -6,10 +6,10 @@
 
 DIR=$1
 
-if test -s $DIR/svnrevision; then
-    cat $DIR/svnrevision
+if test -s $DIR/revision; then
+    cat $DIR/revision
 else
-    svnversion $DIR || echo "unknown"
+    hg identify $DIR || echo "unknown"
 fi
 
 #------------------------------------------------------------------------------

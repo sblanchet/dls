@@ -18,6 +18,7 @@ using namespace std;
 #include <FL/Fl_Double_Window.h>
 #include <FL/Fl_Button.h>
 #include <FL/Fl_Box.h>
+#include <FL/Fl_Check_Button.h>
 
 /*****************************************************************************/
 
@@ -45,6 +46,7 @@ private:
     Fl_Button *_button_cancel; /**< "Abbrechen"-Button */
     Fl_Grid *_grid_channels;   /**< Grid für die MSR-Kanäle */
     Fl_Box *_box_message;      /**< Box für die Fehleranzeige */
+    Fl_Check_Button *_checkbutton_reduceToOneHz;
 
     string _source; /**< IP-Adresse/Hostname der Datenquelle */
     int _socket; /**< File-Deskriptor für die TCP-Verbindung */
@@ -64,7 +66,8 @@ private:
     void _thread_function();
 
     void _thread_finished();
-};
+
+ };
 
 /*****************************************************************************/
 
