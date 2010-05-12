@@ -178,7 +178,7 @@ void CTLJobPreset::spool(const string &dls_dir)
     // Eindeutigen Dateinamen erzeugen
     filename << dls_dir << "/spool/";
     filename << tv.tv_sec << "_" << tv.tv_usec;
-    filename << "_" << (unsigned int) this;
+    filename << "_" << (unsigned long) this;
 
     file.open(filename.str().c_str(), ios::out);
 

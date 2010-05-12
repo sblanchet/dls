@@ -557,7 +557,7 @@ string DLSJob::_generate_id()
     stringstream id;
 
     // ID aus Adresse und Counter erzeugen
-    id << (unsigned int) this << "_" << ++_id_gen;
+    id << (unsigned long) this << "_" << ++_id_gen;
 
     return id.str();
 }
