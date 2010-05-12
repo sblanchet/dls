@@ -739,7 +739,7 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
     int drawing_top, drawing_height;
     ScanInfo scan;
     double channel_min, channel_max;
-    double y_scale;
+    double y_scale = 0.0;
 
     // Box für Beschriftung zeichnen
     fl_color(FL_WHITE);
@@ -822,8 +822,8 @@ void ViewViewData::_draw_gen(const ViewChannel *channel,
                              double channel_min) const
 {
     list<Data>::const_iterator data_i;
-    double xv, yv, value, old_value;
-    int xp, yp, old_xp, old_yp, dx, dy;
+    double xv, yv, value, old_value = 0.0;
+    int xp, yp, old_xp = 0, old_yp = 0, dx, dy;
     bool first_in_chunk = true, first_drawn = true;
     unsigned int i;
 
@@ -1097,7 +1097,7 @@ void ViewViewData::_draw_scan(const ViewChannel *channel, ScanInfo *scan,
     stringstream text_time, text_value;
     int text_time_width, text_value_width;
     int text_time_x, text_value_x;
-    int text_height, yp1, yp2, y_pos, scan_x;
+    int text_height, yp1 = 0, yp2, y_pos, scan_x;
     COMTime scan_time;
 
     // Wenn nicht gescannt werden soll, oder die
