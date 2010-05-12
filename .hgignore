@@ -1,0 +1,27 @@
+syntax: glob
+
+**.o
+ChangeLog
+Makefile
+Makefile.in
+aclocal.m4
+autoconf
+autom4te.cache
+config.h
+config.h.in
+config.log
+config.status
+configure
+dls.spec
+script/Makefile
+script/Makefile.in
+src/.deps
+src/Makefile
+src/Makefile.in
+src/dls
+src/dls_ctl
+src/dls_view
+src/dlsd
+src/libcomdls.a
+src/libdls.a
+stamp-h1
