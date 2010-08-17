@@ -9,6 +9,8 @@
 
 /*****************************************************************************/
 
+#include <inttypes.h>
+
 #include <string>
 #include <vector>
 using namespace std;
@@ -55,6 +57,7 @@ public:
     long long quota_time() const;
     long long quota_size() const;
     const string &source() const;
+    uint16_t port() const;
     const string &trigger() const;
     const vector<COMChannelPreset> *channels() const;
     bool channel_exists(const string &) const;
@@ -67,6 +70,7 @@ protected:
     long long _quota_time; /**< Auftrags-Quota nach Zeit */
     long long _quota_size; /**< Auftrags-Quota nach Datengröße */
     string _source; /**< IP-Adresse oder Hostname der Datenquelle */
+    uint16_t _port; /**< Port der Datenquelle. */
     string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
     vector<COMChannelPreset> _channels; /**< Liste der Kanalvorgaben */
 };
@@ -139,6 +143,20 @@ inline bool COMJobPreset::running() const
 inline const string &COMJobPreset::source() const
 {
     return _source;
+}
+
+/*****************************************************************************/
+
+/**
+   Ermöglicht Lesezugriff auf den Port der Datenquelle
+
+   \returns Port der Datenquelle
+   \see _port
+*/
+
+inline uint16_t COMJobPreset::port() const
+{
+    return _port;
 }
 
 /*****************************************************************************/

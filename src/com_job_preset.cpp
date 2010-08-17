@@ -24,7 +24,8 @@ using namespace std;
    Konstruktor
 */
 
-COMJobPreset::COMJobPreset()
+COMJobPreset::COMJobPreset():
+    _port(MSRD_PORT)
 {
     _id = 0;
     _running = false;
@@ -63,6 +64,7 @@ void COMJobPreset::import(const string &dls_dir, unsigned int id)
     fstream file;
     COMXMLParser parser;
     stringstream err;
+    const COMXMLTag *tag;
 
     _id = id;
 
@@ -98,8 +100,14 @@ void COMJobPreset::import(const string &dls_dir, unsigned int id)
             throw ECOMJobPreset("Unknown state \"" + value + "\"!");
         }
 
-        _source = parser.parse(&file, "source",
-                               dxttSingle)->att("address")->to_str();
+        tag = parser.parse(&file, "source",
+                               dxttSingle);
+        _source = tag->att("address")->to_str();
+        if (tag->has_att("port")) {
+            _port = tag->att("port")->to_int();
+        } else {
+            _port = MSRD_PORT;
+        }
 
         parser.parse(&file, "quota", dxttSingle);
 

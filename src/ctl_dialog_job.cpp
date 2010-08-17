@@ -239,7 +239,7 @@ void CTLDialogJob::_button_add_clicked()
     list<COMRealChannel *>::const_iterator ch_i;
     CTLDialogChannels *dialog;
 
-    dialog = new CTLDialogChannels(_job->source());
+    dialog = new CTLDialogChannels(_job->source(), _job->port());
     dialog->show();
 
     _insert_channels(dialog->channels());

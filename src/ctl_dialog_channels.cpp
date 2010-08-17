@@ -37,12 +37,13 @@ using namespace std;
    \param source IP-Adresse oder Hostname der Datenquelle
 */
 
-CTLDialogChannels::CTLDialogChannels(const string &source)
+CTLDialogChannels::CTLDialogChannels(const string &source, uint16_t port)
 {
     int x = Fl::w() / 2 - WIDTH / 2;
     int y = Fl::h() / 2 - HEIGHT / 2;
 
     _source = source;
+    _port = port;
     _thread_running = false;
 
     _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Kanäle auswählen");
@@ -295,7 +296,7 @@ void CTLDialogChannels::_thread_function()
 
     // Adresse in sockaddr-Struktur kopieren
     memcpy((char *) &address.sin_addr, (char *) hp->h_addr, hp->h_length);
-    address.sin_port = htons(MSRD_PORT);
+    address.sin_port = htons(_port);
 
     // Verbinden
     if ((::connect(socket, (struct sockaddr *) &address,

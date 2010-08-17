@@ -215,6 +215,7 @@ bool DLSProcLogger::_connect_socket()
     struct sockaddr_in address;
     struct hostent *hp;
     const char *source = _job->preset()->source().c_str();
+    uint16_t port = _job->preset()->port();
     stringstream ident;
     struct passwd *passwd;
     char host_name[MAX_HOST_NAME_LEN + 1];
@@ -242,7 +243,7 @@ bool DLSProcLogger::_connect_socket()
 
     // Adresse in sockaddr-Struktur kopieren
     memcpy((char *) &address.sin_addr, (char *) hp->h_addr, hp->h_length);
-    address.sin_port = htons(MSRD_PORT);
+    address.sin_port = htons(port);
 
     // Verbinden
     if ((::connect(_socket, (struct sockaddr *) &address,
@@ -256,7 +257,7 @@ bool DLSProcLogger::_connect_socket()
     }
 
     // Verbunden!
-    msg() << "Connected to \"" << source << "\"!";
+    msg() << "Connected to \"" << source << "\", port " << port << ".";
     log(DLSInfo);
 
     send_command(""); // Einmal Newline senden

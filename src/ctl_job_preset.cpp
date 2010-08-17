@@ -97,6 +97,7 @@ void CTLJobPreset::write(const string &dls_dir)
         tag.clear();
         tag.title("source");
         tag.push_att("address", _source);
+        tag.push_att("port", _port);
         file << " " << tag.tag() << endl;
 
         tag.clear();

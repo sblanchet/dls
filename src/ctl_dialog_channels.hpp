@@ -33,7 +33,7 @@ using namespace std;
 class CTLDialogChannels
 {
 public:
-    CTLDialogChannels(const string &);
+    CTLDialogChannels(const string &, uint16_t);
     ~CTLDialogChannels();
 
     void show();
@@ -49,6 +49,7 @@ private:
     Fl_Check_Button *_checkbutton_reduceToOneHz;
 
     string _source; /**< IP-Adresse/Hostname der Datenquelle */
+    uint16_t _port; /**< Port der Datenquelle */
     int _socket; /**< File-Deskriptor für die TCP-Verbindung */
     pthread_t _thread; /**< Thread für die Abfrage */
     bool _thread_running; /**< true, wenn der Thread läuft */
