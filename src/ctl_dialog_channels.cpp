@@ -57,9 +57,9 @@ CTLDialogChannels::CTLDialogChannels(const string &source, uint16_t port)
                                    "Abbrechen");
     _button_cancel->callback(_callback, this);
 
-    _checkbutton_reduceToOneHz= new Fl_Check_Button(10, HEIGHT -35 , WIDTH -200 , 25, "Reduziere auf 1 Hz");
+    _checkbutton_reduceToOneHz = new Fl_Check_Button(10, HEIGHT - 35,
+            WIDTH - 200, 25, "Reduziere auf 1 Hz");
     _checkbutton_reduceToOneHz->set();
-
 
     _grid_channels = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
     _grid_channels->add_column("name", "Kanal", 200);
@@ -69,7 +69,6 @@ CTLDialogChannels::CTLDialogChannels(const string &source, uint16_t port)
     _grid_channels->select_mode(flgMultiSelect);
     _grid_channels->callback(_callback, this);
     _grid_channels->hide();
-
 
     _box_message = new Fl_Box(10, 10, WIDTH - 20, HEIGHT - 55);
     _box_message->align(FL_ALIGN_CENTER);
@@ -356,7 +355,10 @@ void CTLDialogChannels::_thread_function()
                                     string type;
 
                                     channel.name = tag->att("name")->to_str();
-                                    channel.unit = tag->att("unit")->to_str();
+                                    if (tag->has_att("unit")) {
+                                        channel.unit =
+                                            tag->att("unit")->to_str();
+                                    }
                                     channel.index =
                                         tag->att("index")->to_int();
                                     channel.frequency =

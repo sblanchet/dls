@@ -737,7 +737,10 @@ void DLSProcLogger::_process_tag()
                         string type;
 
                         real_channel.name = _xml.tag()->att("name")->to_str();
-                        real_channel.unit = _xml.tag()->att("unit")->to_str();
+                        if (_xml.tag()->has_att("unit")) {
+                            real_channel.unit =
+                                _xml.tag()->att("unit")->to_str();
+                        }
                         real_channel.index =
                             _xml.tag()->att("index")->to_int();
                         real_channel.frequency =
