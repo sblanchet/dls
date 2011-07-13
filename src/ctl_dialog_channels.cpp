@@ -353,6 +353,8 @@ void CTLDialogChannels::_thread_function()
                             {
                                 try
                                 {
+                                    string type;
+
                                     channel.name = tag->att("name")->to_str();
                                     channel.unit = tag->att("unit")->to_str();
                                     channel.index =
@@ -361,9 +363,19 @@ void CTLDialogChannels::_thread_function()
                                         tag->att("HZ")->to_int();
                                     channel.bufsize =
                                         tag->att("bufsize")->to_int();
-                                    channel.type =
-                                        dls_str_to_channel_type(
-                                            tag->att("typ")->to_str());
+
+                                    type = tag->att("typ")->to_str();
+
+                                    if (type.rfind("_LIST") != string::npos) {
+                                        // ignore vector channels
+                                        continue;
+                                    }
+                                    if (type.rfind("_MATRIX") != string::npos) {
+                                        // ignore matrix channels
+                                        continue;
+                                    }
+
+                                    channel.type = dls_str_to_channel_type(type);
 
                                     if (channel.type == TUNKNOWN)
                                     {
@@ -441,17 +453,17 @@ void CTLDialogChannels::_thread_finished()
     _grid_channels->show();
     _grid_channels->take_focus();
 
-    if (_channels.size() > 0)
-    {
-        sort(_channels.begin(), _channels.end());
-        _grid_channels->record_count(_channels.size());
-    }
-    else if (_error != "")
+    if (_error != "")
     {
         msg_win->str() << _error;
         msg_win->error();
 
         _wnd->hide();
+    }
+    else if (_channels.size() > 0)
+    {
+        sort(_channels.begin(), _channels.end());
+        _grid_channels->record_count(_channels.size());
     }
 }
 

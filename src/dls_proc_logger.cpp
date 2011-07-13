@@ -734,6 +734,8 @@ void DLSProcLogger::_process_tag()
             case dls_getting_channels: //------------------------------
                 if (_xml.tag()->title() == "channel") {
                     try {
+                        string type;
+
                         real_channel.name = _xml.tag()->att("name")->to_str();
                         real_channel.unit = _xml.tag()->att("unit")->to_str();
                         real_channel.index =
@@ -742,17 +744,27 @@ void DLSProcLogger::_process_tag()
                             _xml.tag()->att("HZ")->to_int();
                         real_channel.bufsize =
                             _xml.tag()->att("bufsize")->to_int();
-                        real_channel.type =
-                            dls_str_to_channel_type(_xml.tag()->
-                                                    att("typ")->to_str());
+
+                        type = _xml.tag()->att("typ")->to_str();
+
+                        if (type.rfind("_LIST") != string::npos) {
+                            // ignore vector channels
+                            break;
+                        }
+                        if (type.rfind("_MATRIX") != string::npos) {
+                            // ignore matrix channels
+                            break;
+                        }
+
+                        real_channel.type = dls_str_to_channel_type(type);
 
                         if (real_channel.type == TUNKNOWN) {
                             _exit = true;
                             _exit_code = E_DLS_ERROR_RESTART;
                             msg() << "Receiving MSR channel:"
-                                  << " Unknown channel type \"";
-                            msg() << "\"" << _xml.tag()->att("typ")->to_str()
-                                  << "\"";
+                                << " Unknown channel type \"";
+                            msg() << _xml.tag()->att("typ")->to_str()
+                                << "\"";
                             log(DLSError);
                             break;
                         }
