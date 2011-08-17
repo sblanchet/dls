@@ -118,18 +118,21 @@ case "$1" in
         fi
 
         sleep 1
-        checkproc -p$PIDFILE $DLSD
-        exit_success
+        if checkproc -p$PIDFILE $DLSD; then
+            exit_success
+        else
+            exit_fail
+        fi
         ;;
 
     stop)
         echo -n "Shutting down DLS Daemon "
 
-        if ! killproc $KILL_PARAM $DLSD; then
+        if killproc $KILL_PARAM $DLSD; then
+            exit_success
+        else
             exit_fail
         fi
-
-        exit_success
         ;;
 
     restart)
@@ -140,8 +143,11 @@ case "$1" in
     status)
         echo -n "Checking for DLS Daemon "
 
-        checkproc -p$PIDFILE $DLSD
-        exit_running
+        if checkproc -p$PIDFILE $DLSD; then
+            exit_running
+        else
+            exit_dead
+        fi
         ;;
 
     *)
