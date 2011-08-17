@@ -44,6 +44,7 @@ fi
 
 DLSD=dlsd
 PIDFILE=$DLS_DIR/dlsd.pid
+KILL_PARAM="-t600 -p$PIDFILE"
 
 #------------------------------------------------------------------------------
 
@@ -103,20 +104,6 @@ function exit_dead()
 
 #------------------------------------------------------------------------------
 
-function checkpid() {
-    if [ ! -r $PIDFILE ]; then
-        exit_dead
-    fi
-
-    PID=`cat $PIDFILE`
-
-    if ! kill -0 $PID 2>/dev/null; then
-        exit_dead
-    fi
-}
-
-#------------------------------------------------------------------------------
-
 if [ -r /etc/rc.status ]; then
     . /etc/rc.status
     rc_reset
@@ -124,46 +111,42 @@ fi
 
 case "$1" in
     start)
-	echo -n "Starting DLS Daemon "
+        echo -n "Starting DLS Daemon "
 
-	if ! $DLSD $DLSD_OPTIONS > /dev/null; then
-        exit_fail
-	fi
+        if ! $DLSD $DLSD_OPTIONS > /dev/null; then
+            exit_fail
+        fi
 
-	sleep 1
-	checkpid
-    exit_success
-	;;
+        sleep 1
+        checkproc -p$PIDFILE $DLSD
+        exit_success
+        ;;
 
     stop)
-	echo -n "Shutting down DLS Daemon "
+        echo -n "Shutting down DLS Daemon "
 
-	if [ -r $PIDFILE ]; then
-	    PID=`cat $PIDFILE`
-
-	    if ! kill -TERM $PID 2>/dev/null; then
+        if ! killproc $KILL_PARAM $DLSD; then
             exit_fail
-	    fi
-	fi
+        fi
 
-    exit_success
-	;;
+        exit_success
+        ;;
 
     restart)
-	$0 stop || exit 1
-	$0 start
-	;;
+        $0 stop || exit 1
+        $0 start
+        ;;
 
     status)
-	echo -n "Checking for DLS Daemon "
+        echo -n "Checking for DLS Daemon "
 
-	checkpid
-    exit_running
-	;;
+        checkproc -p$PIDFILE $DLSD
+        exit_running
+        ;;
 
     *)
-	echo "USAGE: $0 {start|stop|restart|status}"
-	;;
+        echo "USAGE: $0 {start|stop|restart|status}"
+        ;;
 esac
 
 if [ -r /etc/rc.status ]; then
