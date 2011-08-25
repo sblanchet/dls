@@ -4,7 +4,9 @@
 
 AC_INIT([dls],[1.2.2],[fp@igh-essen.com])
 AC_CONFIG_AUX_DIR([autoconf])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
+
 AC_PROG_CXX
 AC_PROG_RANLIB
 AC_PREFIX_DEFAULT([/opt/etherlab])
@@ -96,10 +98,16 @@ AC_MSG_RESULT(${ZLIB_DIR})
 
 #------------------------------------------------------------------------------
 
+AC_DEFINE([BINDIR], [], [Fully expanded binary directory.])
+AX_DEFINE_DIR([BINDIR], [bindir])
+
+#------------------------------------------------------------------------------
+
 AC_CONFIG_FILES([
     Makefile
     dls.spec
     script/Makefile
+    script/init.sh
     src/Makefile
 ])
 AC_OUTPUT
