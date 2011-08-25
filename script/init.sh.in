@@ -113,11 +113,12 @@ case "$1" in
     start)
         echo -n "Starting DLS Daemon "
 
-        if ! $DLSD $DLSD_OPTIONS > /dev/null; then
+        if ! startproc -p$PIDFILE $DLSD $DLSD_OPTIONS > /dev/null; then
             exit_fail
         fi
 
         sleep 1
+
         if checkproc -p$PIDFILE $DLSD; then
             exit_success
         else
