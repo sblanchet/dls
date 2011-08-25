@@ -4,6 +4,7 @@ syntax: glob
 ChangeLog
 Makefile
 Makefile.in
+TAGS
 aclocal.m4
 autoconf
 autom4te.cache
@@ -15,6 +16,7 @@ configure
 dls.spec
 script/Makefile
 script/Makefile.in
+script/init.sh
 src/.deps
 src/Makefile
 src/Makefile.in
