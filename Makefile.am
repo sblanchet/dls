@@ -10,7 +10,7 @@ EXTRA_DIST = \
 	bootstrap.sh \
 	dls.spec \
 	dls.spec.in \
-	svnrevision.sh
+	revision.sh
 
 BUILT_SOURCES = \
 	dls.spec
