@@ -21,7 +21,7 @@ mydist:
 
 dist-hook:
 	if which hg >/dev/null 2>&1; then \
-		hg id $(srcdir) 2>/dev/null >$(distdir)/revision; \
+		hg id -i $(srcdir) 2>/dev/null >$(distdir)/revision; \
 	fi
 
 #------------------------------------------------------------------------------
