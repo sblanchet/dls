@@ -9,8 +9,8 @@ DIR=$1
 if test -s $DIR/revision; then
     cat $DIR/revision
 else
-    rev=$(hg identify $DIR || echo "unknown");
-    echo ${rev%% tip}
+    rev=$(hg id -i $DIR || echo "unknown");
+    echo ${rev}
 fi
 
 #------------------------------------------------------------------------------
