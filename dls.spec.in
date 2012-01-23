@@ -11,14 +11,11 @@ Release: 1
 Summary: Data Logging Service
 License: GPL
 Vendor: Ingenieurgemeinschaft IgH GmbH
-URL: http://etherlab.org
-Packager: Dipl.-Ing. (FH) Florian Pose <fp@igh-essen.com>
 Group: EtherLab
-
-Provides: dls
-Prefix: /opt/etherlab
-Source: %{name}-%{version}.tar.bz2
-BuildRoot: /tmp/%{name}-%{version}
+Url: http://etherlab.org/en/dls
+Source: http://etherlab.org/download/dls/%{name}-%{version}.tar.bz2
+BuildRoot: %_tmppath/%name-%version-root
+BuildRequires: gcc-c++ fltk-devel fftw3-devel
 
 %description
 DLS is a process data logging service, capable of capturing high-frequency
@@ -55,4 +52,5 @@ rm -rf ${RPM_BUILD_ROOT}
 %endif
 
 %changelog
-
+* Mon Jan 23 2012 fp@igh-essen.com
+- Improved Url, BuildRoot, Source, BuildRequires.
