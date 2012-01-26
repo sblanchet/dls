@@ -34,7 +34,7 @@ make
 make DESTDIR=${RPM_BUILD_ROOT} install
 %if "%{_vendor}" == "suse"
 install -d ${RPM_BUILD_ROOT}/usr/sbin
-ln -s /etc/init.d/dls ${RPM_BUILD_ROOT}/usr/sbin/rcdls
+ln -s %{_sysconfdir}/init.d/dls ${RPM_BUILD_ROOT}%{_sbindir}/rcdls
 %endif
 
 %clean
@@ -43,14 +43,18 @@ rm -rf ${RPM_BUILD_ROOT}
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS
-/etc/init.d/dls
-/etc/profile.d/dls.sh
-/etc/sysconfig/dls
-/usr/bin/dls*
+%{_sysconfdir}/init.d/dls
+%{_sysconfdir}/profile.d/dls.sh
+%{_sysconfdir}/sysconfig/dls
+%{_bindir}/dls*
 %if "%{_vendor}" == "suse"
-/usr/sbin/rcdls
+%{_sbindir}/rcdls
 %endif
+%{_datadir}/applications/*.desktop
 
 %changelog
+* Thu Jan 26 2012 fp@igh-essen.com
+- Used macro dirs
+- Added .desktop files
 * Mon Jan 23 2012 fp@igh-essen.com
 - Improved Url, BuildRoot, Source, BuildRequires.

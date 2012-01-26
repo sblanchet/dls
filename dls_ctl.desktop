@@ -1,0 +1,7 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=DLS Manager
+Name[de]=DLS-Manager
+Name[en]=DLS Manager
+Exec=dls_ctl
+Type=Application
