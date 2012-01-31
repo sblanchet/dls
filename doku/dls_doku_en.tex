@@ -54,7 +54,7 @@
 
 \vspace{\fill}
 
-The \glqq DLS\grqq\ is a measured data logging system capable of collecting high-frequency data over a long period and storing them in a highly compressed fashion. Its objective is to grant the user unrestricted, high-performance access to the acquired data at all times: whether the overview for a whole year or just a tiny variation in a fraction of a second is needed.
+The \glqq DLS\grqq\ is a data logging system capable of collecting high-frequency data over a long period and storing them in a highly compressed fashion. Its objective is to grant the user unrestricted, high-performance access to the acquired data at all times: whether the overview for a whole year or just a tiny variation in a fraction of a second is needed.
 
 \vspace{\fill}
 
@@ -78,9 +78,11 @@ The \glqq DLS\grqq\ is a measured data logging system capable of collecting high
 
 \section{Principles of data acquisition} \label{sec:allg_grund}
 
-The \glqq Data Logging Service\grqq\ (hereinafter \textit{DLS})\index{DLS} is a data logging system that is not only able to collect, compress and store any type measured data over a long period, but also to display them quickly whenever required.
+The \glqq Data Logging Service\grqq\ (hereinafter
+\textit{DLS})\index{DLS} is a data logging system that is not only
+able to collect, compress and store any type of measured data over a long period, but also to display them quickly whenever required.
 
-Prerequisite for a data logging process is a \textit{data source}\index{data source!Definition}, which provides the measured data. In this case it is a server that provides the measured data of the \textit{rt}, developed by the \textit{IgH\_lib}, via the network. The communication with the data source is described in chapter \ref{sec:dlsd_logger_comm}.
+Prerequisite for a data logging process is a \textit{data source}\index{data source!Definition}, which provides the measured data. In this case it is a server that provides the measured data of the \textit{rt\_lib}, developed by the \textit{IgH}, via the network. The communication with the data source is described in chapter \ref{sec:dlsd_logger_comm}.
 
 All data to be delivered are organised in \textit{channels}\index{channel!definition}. A channel is the abstraction of a measurable physical quantity provided by the data source. The properties of a channel are the unit\index{channel!unit}, the maximum sampling frequency\index{channel!sampling frequency} and the data type\index{channel!data type}.
 
@@ -104,12 +106,16 @@ It is certainly possible that several DLS data directories exist at a time, whic
 
 A detailed description of the DLS data directory’s structure and the data contained therein can be found in chapter \ref{sec:data}.
 
-%------------------------------------------------------------------------------
+%----------------------------------------------------------------------------
 
-\section{Tools} \label{sec:allg_tools} \index{tools}
+\section{Tools} 
+\label{sec:allg_tools} 
+\index{tools}
 
 \begin{description} 
-\item[DLS Manager]\index{DLS Manager} Measurement jobs\index{measurement job} can be edited by means of a graphical user interface, the\textit{DLS Manager} (see chapter\ref{sec:manager}). It allows the user to create new measurement jobs and adapt existing ones. This can be done during a data acquisition. The user can also see whether a data acquisition is currently being performed. 
+\item[DLS Manager]\index{DLS Manager} Measurement
+  jobs\index{measurement job} can be edited by means of a graphical
+  user interface, the \textit{DLS Manager} (see chapter \ref{sec:manager}). It allows the user to create new measurement jobs and adapt existing ones. This can be done during a data acquisition. The user can also see whether data acquisition is currently being performed. 
 \item[DLS View] A graphical tool \textit{DLS View}\index{DLS View} is provided to view the data (see chapter \ref{sec:view}). The user can have any of the channels involved in a measurement job be displayed above a common time scale. Here, it is also possible to navigate in the time window and to determine individual data values.
 \item[dls] The command line tool \textit{dls}\index{dls (tool)} recognises commands to view and export data that have already been acquired. See section~\ref{sec:apx_cmd_dls} for a list. 
 \item[Init-Script]\index{Init Script} An init script is provided for starting and stopping the dlsd and all associated services. It recognises the parameters \texttt{start}, \texttt{stop}, \texttt{restart} and \texttt{status}. The configuration of the service is made via a sysconfig file\index{sysconfig file} which contains all required variables. It is recommended to export the included variables via the profile script, which is provided as well, and to thus make them accessible to all users. 
@@ -121,7 +127,8 @@ A detailed description of the DLS data directory’s structure and the data cont
 
 The \textit{DLS daemon} (short: \textit{dlsd}) serves for the entire data acquisition and data storage\index{dlsd}. It is a process that is running in the background (without being connected to a bracket) and is bound to a specific DLS data directory\index{DLS data directory}. It must always be running when data are to be acquired.
 
-A representation of the entire system architecture\index{architecture}can be seen in Figure \ref{fig:arch}.
+A representation of the entire system architecture\index{architecture}
+can be seen in Figure \ref{fig:arch}.
 
 \begin{figure}[htb] \begin{center} \includegraphics[width=250pt]{bilder/arch} \end{center} \caption{Architecture} \label{fig:arch} \end{figure}
 
@@ -156,7 +163,8 @@ For the dlsd, a valid spooling command is a file with any name in the spooling d
 
 \begin{itemize} 
 \item If it does not yet know a job with this ID, it will assume that the job has been newly created. It will import it and start the corresponding acquisition process, if required. 
-\item If, however, it knows a job with this ID \textbf{and}the file with the job specifications exists (\textit{job.xml}see chapter \ref{sec:data_jobs}), the specifications will be newly read in and the acquisition process will be started, stopped or notified, as appropriate. 
+\item If, however, it knows a job with this ID \textbf{and} the file
+  with the job specifications exists (\textit{job.xml} see chapter \ref{sec:data_jobs}), the specifications will be newly read in and the acquisition process will be started, stopped or notified, as appropriate. 
 \item If it knows a job with this ID but the specifications file does \textbf{not} exist, the dlsd will assume that the job was deleted. It will terminate a possibly running acquisition process and cancel the specification from its list. \end{itemize}
 
 Generally, the spooling file is deleted to confirm that the new information has been received. If an error occurs during processing, the file will be left in the spooling directory.
@@ -195,7 +203,7 @@ In this connection, a sequence of data blocks that is continuous in terms of tim
 
 \subsection{Generation of meta data} \label{sec:dlsd_data_meta}
 
-In order to provide a fast survey even with large amounts of data, the DLS acquisition process does not only store the (\glqq generic\grqq) data values\index{data!generic} that were received from the data source but additionally saves data that have been aggregated over certain time spans, so-called \glqq meta data\grqq\index{meta data}. The latter exist in various reduction levels, the so-called \glqq meta levels\grqq. A read process can then - according to the desired resolution - decide, which meta level it is going to use and thus load the data very quickly.
+In order to provide a fast preview even with large amounts of data, the DLS acquisition process does not only store the (\glqq generic\grqq) data values\index{data!generic} that were received from the data source but additionally saves data that have been aggregated over certain time spans, so-called \glqq meta data\grqq\index{meta data}. The latter exist in various reduction levels, the so-called \glqq meta levels\grqq. A read process can then - according to the desired resolution - decide, which meta level it is going to use and thus load the data very quickly.
 
 Mathematically, this means that the complexity of the algorithm for the loading of $n$ data values of a time span $\Delta t$ and a sampling frequency $f$, where: $n = \Delta t \cdot f$ no longer is $O(n)$, i.e. linear dependent on the number of underlying data values in the period, but remains dependent only on the number of supporting points desired in the current resolution, which again is independent of the number of underlying data values. Accordingly, in terms of time and storage requirement, the algorithm is of order $O(1)$.
 
@@ -501,7 +509,8 @@ Figure \ref{fig:dls_ctl_main} shows the main window of the DLS Manager, which wi
 
 \subsection{Display features}
 
-In the main dialogue the individual measurement jobs\index{measurement job}are displayed as lines in a table. The following information is made available in the columns:
+In the main dialogue the individual measurement jobs\index{measurement
+  job} are displayed as lines in a table. The following information is made available in the columns:
 
 \begin{description} 
 \item[Job ID and designation] The designation of the job is arbitrary and can be changed at any time. The ID is a fixed number automatically chosen when creating the job. All data of a job are stored in the DLS data directory in subdirectory \textit{job\textless ID\textgreater}. 
@@ -528,7 +537,7 @@ In the main dialogue the individual measurement jobs\index{measurement job}are d
 
 \section{The \glqq Create job\grqq\  and \glqq Change job dialogues\grqq} \label{sec:manager_auftrag_create}
 
-Figure \ref{fig:dls_ctl_change} shows the dialogue for creating or changing a measurement job. It is displayed after clicking the buttons \glqq New job\grqq\ in the main dialogue or \glqq Change\grqq\ in the \glqq Edit job\grqq.  dialogue. They differ in that the data source can only be changed when creating a job.
+Figure \ref{fig:dls_ctl_change} shows the dialog for creating or changing a measurement job. It is displayed after clicking the buttons \glqq New job\grqq\ in the main dialog or \glqq Change\grqq\ in the \glqq Edit job\grqq.  dialog. They differ in that the data source can only be changed when creating a job.
 
 \begin{figure}[tbh] \begin{center} \includegraphics[width=100pt]{bilder/ctl_change} \end{center} \caption{Dialogue for creating or changing a measurement job} \label{fig:dls_ctl_change} \end{figure}
 
@@ -555,9 +564,9 @@ The dialogue mask enables the user to indicate several particulars regarding the
 
 %------------------------------------------------------------------------------
 
-\section{The \glqq Edit job dialogue\grqq} \label{sec:manager_auftrag_edit}
+\section{The \glqq Edit job dialog\grqq} \label{sec:manager_auftrag_edit}
 
-Figure \ref{fig:dls_ctl_edit} shows the dialogue for editing a job, which will be displayed in the main dialogue window after having double-clicked on a job.
+Figure \ref{fig:dls_ctl_edit} shows the dialog for editing a job, which will be displayed in the main dialogue window after having double-clicked on a job.
 
 \begin{figure}[tbh] \begin{center} \includegraphics[width=300pt]{bilder/ctl_edit} \end{center} \caption{Dialogue for editing a job} \label{fig:dls_ctl_edit} \end{figure}
 
