@@ -1,0 +1,7 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=DLS View
+Name[de]=DLS View
+Name[en]=DLS View
+Exec=dls_view
+Type=Application

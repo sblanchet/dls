@@ -343,7 +343,9 @@ void CTLDialogChannels::_thread_function()
                         }
                         catch (ECOMXMLParser &e) // Anderer Parsing-Fehler
                         {
-                            continue;
+                            _error = "Parser error in tag \"" + e.tag + "\"!";
+                            exit_thread = true;
+                            break;
                         }
 
                         try

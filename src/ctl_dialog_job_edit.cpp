@@ -116,6 +116,11 @@ void CTLDialogJobEdit::show(CTLJobPreset *job)
     // Wenn der Auftrag schon existiert, soll kein Editieren
     // der Datenquelle mehr möglich sein!
     _input_source->readonly(_job != 0);
+    if (_job != 0) {
+        _input_source->tooltip("Can not be edited for an existing job!");
+    } else {
+        _input_source->tooltip("");
+    }
 
     // Fenster anzeigen
     _wnd->show();
