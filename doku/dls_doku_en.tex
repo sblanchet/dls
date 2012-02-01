@@ -246,8 +246,8 @@ mechanisms (\textit{PID files}\index{PID files}, see \autoref{sec:apx_pid}).
 \label{sec:dlsd_mother_behaviour}
 
 Initially, the parent process reads in all measurement job specifications in
-the DLS data directory and splits off a copy of itself for every active
-measurement job\index{measurement job} (\textit{dlsd acquisition process}, see
+the DLS data directory and fork a child for every active
+measurement job \index{measurement job} (\textit{dlsd acquisition process}, see
 \autoref{sec:dlsd_logger}), which will thereafter serve for the data
 acquisition of the measurement job concerned. Subsequently, it performs the
 following tasks in a defined time interval:
@@ -323,7 +323,7 @@ The acquisition process that was split off the dlsd parent process serves for
 the communication with the data source, the compressing of the received data
 and the storing of the compressed data on the hard disk. It is associated with
 a specific measurement job\index{measurement job} that was assigned to it by
-the dlsd parent process at the start. This measurement job is unequivocally
+the dlsd parent process at the start. This measurement job is uniquely
 identified via the DLS data directory and the corresponding measurement job
 ID. All data referring to this job are stored there in the subdirectory
 \textit{job\textless ID\textgreater} (see \autoref{sec:data}).
@@ -804,8 +804,8 @@ that the \textit{\textless rk\textgreater}  command has returned when it reads
 out all the channels of the data source during the starting process of the
 dlsd parent process (see \autoref{sec:dlsd_logger_comm}).
 
-\item[messages] Every acquisition process files the messages, which it has
-received from the data source during the data acquisition, in this directory.
+\item[messages] Every acquisition process stores the messages, which it has
+received from the data source during the data acquisition, to this directory.
 If it does not yet exist, the process will create it when required. Just like
 the measured data, messages are organised in chunks. See
 \autoref{sec:data_msg}.
@@ -945,7 +945,7 @@ message file. The structure of an entry is shown in
 
 The \textit{DLS Manager}\index{DLS Manager} is the graphical user interface for the configuration of the measurement jobs\index{measurement job} in a DLS data directory. Furthermore, it serves for the control and monitoring of the running acquisition processes.
 
-The DLS Manager is called up with the command \texttt{dls\_ctl}.
+The DLS Manager is called with the command \texttt{dls\_ctl}.
 
 Same as for the dlsd, in the command line, with the parameter \texttt{-d},
 this tool can be notified of the DLS data directory, in which it is to work
@@ -1118,7 +1118,7 @@ conditions apply, however, for the editing of several channels (see
 the specifications of the respective channel.
 
 \item If the ``Delete channels'' button is clicked, all highlighted
-channels\-le  will be removed from the specifications. Any data acquired,
+channels will be removed from the specifications. Any data acquired,
 however, will remain available.
 
 \item When the ``Add channels'' button is clicked, the dialog for the adding
@@ -1215,7 +1215,7 @@ parameters need to be specified.
 compression methods and behaves similar to the block size. See
 \autoref{sec:comp_mdct}.
 
-\item[Accuracy]  Some loss-afflicted compression methods allow specifying the
+\item[Accuracy]  Some non lossless compression methods allow specifying the
 maximum, absolute error. The error must always be indicated in the unit of the
 corresponding channel.
 
@@ -1416,8 +1416,8 @@ The compression of the measured data received from the data source serves to
 reduce the required storage space in the file system. It is always done
 block-wise (i.\,e. a certain number of data values is always jointly
 compressed) with the user being able to adjust the block size in the channel
-specifications. A basic distinction is made between loss-free and
-loss-afflicted compression.
+specifications. A basic distinction is made between lossless and
+non lossless compression.
 
 The DLS system supports various compression algorithms. Since most of the algorithms have binary data as output, these will be coded in Base64 before being stored in the data files. Although this results in an expansion of the required storage space by one third, the advantage is that the compressed data will be available in ``printable'' characters and can thus be coded in XML. Therefore, all compression methods of the DLS have the suffix \textit{/Base64}.
 
@@ -1426,7 +1426,7 @@ The following compression methods are supported by the DLS:
 \begin{description}
 
 \item[ZLib/Base64] A simple but efficient compression method offering a
-loss-free compression. See \autoref{sec:comp_zlib}.
+lossless compression. See \autoref{sec:comp_zlib}.
 
 \item[MDCT/ZLib/Base64] An enhanced compression method that processes the data
 by a transformation and a quantisation and then only compresses them. See
@@ -1441,7 +1441,7 @@ by a transformation and a quantisation and then only compresses them. See
 
 Compression method: ZLib/Base64\\ Compressible data types: all.
 
-The ``ZLib''\index{ZLib} (\url{http://www.gzip.org/zlib}) library provides functions for the loss-free compression of data. The dlsd acquisition process uses these functions in the compression method ZLib/Base64. Moreover, the ZLib algorithm is used for support in the subsequent processes to further compress the data already processed.
+The ``ZLib''\index{ZLib} (\url{http://www.gzip.org/zlib}) library provides functions for the lossless compression of data. The dlsd acquisition process uses these functions in the compression method ZLib/Base64. Moreover, the ZLib algorithm is used for support in the subsequent processes to further compress the data already processed.
 
 As the ZLib provides binary data, these will then be stored in all processes coded in Base64.
 
@@ -1451,11 +1451,18 @@ As the ZLib provides binary data, these will then be stored in all processes cod
 
 Compression method: MDCT/ZLib/Base64\\ Compressible data types: \textit{TFLT}, \textit{TDBL}
 
-The compression method MDCT (``modified, discrete cosinus transformation'') of the DLS actually is a hybrid process in which the data are first transformed with the MDCT, then quantised and finally bit-wise transposed, in order to render the following compression with the ZLib more effectively. Here, the intention is to compress the measured data with restricted error, albeit loss-afflicted.
+The compression method MDCT (``modified, discrete cosinus
+transformation'') of the DLS actually is a hybrid process in which the
+data are first transformed with the MDCT, then quantised and finally
+bit-wise transposed, in order to render the following compression with
+the ZLib more effectively. Here, the intention is to compress the
+measured data lossy with limited error.
 
 \subsection{MDCT}
 
-The MDCT is a kind of discrete equivalent to the Fourier transformation method that transforms a signal into the corresponding representation as a coefficient of harmonic vibrations which again produce the original signal when overlaid.
+The MDCT is a kind of discrete equivalent to the Fourier
+transformation method that transforms a signal into the corresponding
+frequency domain which again produces the original signal when overlaid.
 
 While the ``normal'' DCT is based on the principle that $n$ values are
 transformed into $n$ coefficients, from which the original signal can then be
@@ -1480,7 +1487,7 @@ Signals from technical processes are frequently most suitable for a transformati
 
 \subsection{Transposition} \label{sec:comp_mdct_trans}
 
-The transposition is needed because the compression method ZLib works byte-wise and in most cases cannot recognise similar bit patterns. So, the individual bits of the quantised coefficients are re-sorted in the memory. For this purpose the coefficients are first of all separated from their algebraic signs. The sign bits are separately stored before the coefficient bits. This is first followed by all \textit{MSB}s (``most significant bits'') of the coefficients and last by all \textit{LSB}s (``least significant bits''). Due to the mostly very small coefficients of the higher-frequency vibrations this results in a lot of zero bytes that can easily be compressed.
+The transposition is needed because the compression method ZLib works byte-wise and in most cases cannot recognise similar bit patterns. So, the individual bits of the quantised coefficients are re-sorted in the memory. For this purpose the coefficients are first of all separated from their algebraic signs. The sign bits are separately stored before the coefficient bits. This is first followed by all \textit{MSB}s (``most significant bits'') of the coefficients and last by all \textit{LSB}s (``least significant bits''). Due to the mostly very small coefficients of the higher-frequencys this results in a lot of zero bytes that can easily be compressed.
 
 Accordingly, a compressed MDCT block consists of the scaling factor of the quantised coefficients (4 byte, or 8 bytes), the quantity $q$ of quantisation bits used (1 byte), $n$ sign bits and finally $q \cdot (n - 1) $ coefficient bits.
 
@@ -1607,8 +1614,7 @@ The DLS data directory will automatically be created when the DLS Manager is sta
 \chapter{Data types} \label{sec:apx_types}
 
 \autoref{tab:typen} shows all previously supported channel data
-types\index{channel!data types} and the respective possible\-lichen
-compression methods.
+types\index{channel!data types} and the respective possible compression methods.
 
 \begin{table}[htb] \centering \caption{Supported channel data types} \label{tab:typen} \vspace{1.5ex} \begin{tabular}[thb]{|l|l|l|} \hline \textbf{Typ} & \textbf{Description} & \textbf{Compression}\\ \hline \textit{TCHAR} & 1 byte integer (with sign) & ZLib/Base64\\ \hline \textit{TUCHAR} & 1 byte integer (without sign) & ZLib/Base64\\ \hline \textit{TINT} & 4 bytes integer (with sign) & ZLib/Base64\\ \hline \textit{TUINT} & 4 bytes integer (without sign) & ZLib/Base64\\ \hline \textit{TLINT} & 4 bytes integer (with sign) & ZLib/Base64\\ \hline \textit{TULINT} & 4 bytes integer (without sign) & ZLib/Base64\\ \hline \textit{TFLT} & 4 bytes floating point & ZLib/Base64,\\ & & MDCT/ZLib/Base64,\\ & & Quant/ZLib/Base64\\ \hline \textit{TDBL} & 8 bytes floating point & ZLib/Base64,\\ & & MDCT/ZLib/Base64,\\ & & Quant/ZLib/Base64\\ \hline \end{tabular} \end{table}
 
@@ -1616,9 +1622,9 @@ compression methods.
 
 \chapter{PID files} \label{sec:apx_pid}
 
-At several points the DLS system uses so-called \textit{PID}files\index{PID
+At several points the DLS system uses so-called \textit{PID} files\index{PID
 files}, a mechanism that is to prevent that several processes will run for one
-concrete task. A \textit{PID}file contains the \textit{ASCII}-coded process ID
+concrete task. A \textit{PID} file contains the \textit{ASCII}-coded process ID
 (\textit{PID}) of the currently running process. After each process start it
 is therefore determined whether the corresponding file and possibly a process
 with the specified PID already exist. If both exist, a new process must not be
