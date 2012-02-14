@@ -272,7 +272,7 @@ void CTLDialogChannels::_thread_function()
     const COMXMLTag *tag;
     COMRealChannel channel;
     string to_send;
-    COMRingBuffer ring(10000);
+    COMRingBuffer ring(65535);
     char *write_pointer;
     unsigned int write_size;
     bool exit_thread = false;
@@ -324,6 +324,12 @@ void CTLDialogChannels::_thread_function()
             if (FD_ISSET(socket, &read_fds))
             {
                 ring.write_info(&write_pointer, &write_size);
+
+                if (!write_size) {
+                    _error = "Receive ring buffer full!";
+                    exit_thread = true;
+                    break;
+                }
 
                 // Daten abholen...
                 if ((recv_ret = recv(socket, write_pointer,
