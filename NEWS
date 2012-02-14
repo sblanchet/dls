@@ -4,7 +4,32 @@ $Id$
 
 ------------------------------------------------------------------------------
 
-Recent changes:
+Version 1.2.5
+
+* English documentation.
+* Fixed freezing channel selection dialog if receive ringbuffer is full.
+
+Version 1.2.4
+
+* Bugfix: Abort reading channels after parser error.
+* Added .desktop files for dls_view and dls_ctl.
+
+Version 1.2.3
+
+* Added support for changing data source port (not in GUI yet).
+* Accept missing unit attribute.
+* Ignore _LIST and _MATRIX types.
+* Init script using startproc, checkprog and killproc (wait for completion).
+
+Version 1.2.2
+
+* Support for newer compilers and 64-bit.
+
+Version 1.2.1
+
+* "Reduce to 1 Hz" checkbox in channel selection.
+
+Version 1.2
 
 * If no data is received for NO_DATA_ABORT_TIME, the logger process is
   restarted.
