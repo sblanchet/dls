@@ -10,6 +10,7 @@
 /*****************************************************************************/
 
 #include <sys/time.h>
+#include <stdint.h>
 
 #include <ostream>
 using namespace std;
@@ -19,7 +20,7 @@ using namespace std;
 /**
    Datentyp zur Speicherung der Zeit in Mikrosekunden
 
-   Dieser Datentyp verwaltet einen long long integer
+   Dieser Datentyp verwaltet einen uint64_t integer
    zur Speicherung der Mikrosekunden nach epoch.
 */
 
@@ -29,7 +30,7 @@ class COMTime
 
 public:
     COMTime();
-    COMTime(long long);
+    COMTime(uint64_t);
     COMTime(double);
     COMTime(struct timeval *);
     COMTime(struct tm *, unsigned int);
@@ -39,7 +40,7 @@ public:
     void set_now();
 
     //  COMTime &operator =(int);
-    COMTime &operator =(long long);
+    COMTime &operator =(uint64_t);
     COMTime &operator =(double);
     COMTime &operator =(struct timeval);
 
@@ -54,11 +55,11 @@ public:
     COMTime operator +(const COMTime &) const;
     COMTime &operator +=(const COMTime &);
     COMTime operator -(const COMTime &) const;
-    COMTime operator *(long long) const;
+    COMTime operator *(uint64_t) const;
 
     double to_dbl() const;
     double to_dbl_time() const;
-    long long to_ll() const;
+    uint64_t to_uint64() const;
     string to_str() const;
     struct timeval to_tv() const;
     string to_real_time() const;
@@ -69,7 +70,7 @@ public:
     static COMTime now();
 
 private:
-    long long _time; /**< Mikrosekunden nach epoch */
+    uint64_t _time; /**< Mikrosekunden nach epoch */
 };
 
 /*****************************************************************************/

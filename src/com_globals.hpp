@@ -9,6 +9,8 @@
 
 /*****************************************************************************/
 
+#include <stdint.h>
+
 #include <string>
 #include <sstream>
 using namespace std;
@@ -84,15 +86,18 @@ string dls_meta_type_str(DLSMetaType);
 
 /*****************************************************************************/
 
+#pragma pack(push)
+#pragma pack(1)
+
 /**
    Index-Record für einen Datendatei-Index innerhalb eines Chunks
 */
 
 struct COMIndexRecord
 {
-    long long start_time;
-    long long end_time;
-    unsigned int position;
+    uint64_t start_time;
+    uint64_t end_time;
+    uint32_t position;
 };
 
 /*****************************************************************************/
@@ -103,8 +108,8 @@ struct COMIndexRecord
 
 struct COMGlobalIndexRecord
 {
-    long long start_time;
-    long long end_time;
+    uint64_t start_time;
+    uint64_t end_time;
 };
 
 /*****************************************************************************/
@@ -115,9 +120,11 @@ struct COMGlobalIndexRecord
 
 struct COMMessageIndexRecord
 {
-    long long time;
-    unsigned int position;
+    uint64_t time;
+    uint32_t position;
 };
+
+#pragma pack(pop)
 
 /*****************************************************************************/
 

@@ -59,8 +59,8 @@ private:
     bool _get_new_id(int *);
     void _display_time_quota();
     void _display_size_quota();
-    bool _calc_time_quota(long long *);
-    bool _calc_size_quota(long long *);
+    bool _calc_time_quota(uint64_t *);
+    bool _calc_size_quota(uint64_t *);
 };
 
 /*****************************************************************************/

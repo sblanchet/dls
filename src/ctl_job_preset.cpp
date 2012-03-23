@@ -267,7 +267,7 @@ void CTLJobPreset::trigger(const string &trigger_name)
    \param seconds Anzahl der maximal zu erfassenden Sekunden
 */
 
-void CTLJobPreset::quota_time(long long seconds)
+void CTLJobPreset::quota_time(uint64_t seconds)
 {
     _quota_time = seconds;
 }
@@ -280,7 +280,7 @@ void CTLJobPreset::quota_time(long long seconds)
    \param bytes Anzahl der maximal zu erfassenden Bytes
 */
 
-void CTLJobPreset::quota_size(long long bytes)
+void CTLJobPreset::quota_size(uint64_t bytes)
 {
     _quota_size = bytes;
 }

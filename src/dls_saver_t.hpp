@@ -308,8 +308,8 @@ void DLSSaverT<T>::_save_block()
     }
 
     // Daten für neuen Indexeintrag erfassen
-    index_record.start_time = _block_time.to_ll();
-    index_record.end_time = _time_of_last.to_ll();
+    index_record.start_time = _block_time.to_uint64();
+    index_record.end_time = _time_of_last.to_uint64();
     index_record.position = _data_file.calc_size();
 
     try
@@ -351,7 +351,7 @@ void DLSSaverT<T>::_save_block()
     end_time.set_now(); // Zeiterfassung
 
     // Warnen, wenn Aufruf von write() sehr lange gebraucht hat
-    if (end_time - start_time > (long long) (WRITE_TIME_WARNING * 1000000))
+    if (end_time - start_time > (uint64_t) (WRITE_TIME_WARNING * 1000000))
     {
         msg() << "Writing to disk took "
               << (end_time - start_time).to_dbl_time() << " seconds!";
@@ -540,7 +540,7 @@ void DLSSaverT<T>::_begin_files(COMTime time_of_first)
     file_name << "/level" << _meta_level();
     file_name << "/data_" << _meta_type() << ".idx";
 
-    global_index_record.start_time = time_of_first.to_ll();
+    global_index_record.start_time = time_of_first.to_uint64();
     global_index_record.end_time = 0; // Datei noch nicht beendet
 
     try
@@ -599,7 +599,7 @@ void DLSSaverT<T>::_finish_files()
     }
 
     // Wenn Dateien geöffnet waren und Daten hineingeschrieben wurden
-    if (was_open && _time_of_last.to_ll() != 0)
+    if (was_open && _time_of_last.to_uint64() != 0)
     {
         // Dateinamen des globalen Index` bestimmen
         file_name << _parent_logger->chunk_dir_name();
@@ -631,7 +631,7 @@ void DLSSaverT<T>::_finish_files()
             }
 
             // Letzten Record im Index updaten
-            global_index_record.end_time = _time_of_last.to_ll();
+            global_index_record.end_time = _time_of_last.to_uint64();
             global_index.change_record(index_of_last, &global_index_record);
             global_index.close();
         }

@@ -43,8 +43,8 @@ public:
     void running(bool);
     void source(const string &);
     void trigger(const string &);
-    void quota_time(long long);
-    void quota_size(long long);
+    void quota_time(uint64_t);
+    void quota_size(uint64_t);
 
     void toggle_running();
     void add_channel(const COMChannelPreset *);

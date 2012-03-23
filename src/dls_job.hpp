@@ -68,7 +68,7 @@ public:
 
     //@{
     void process_data(COMTime, int, const string &);
-    long long data_size() const;
+    uint64_t data_size() const;
     //@}
 
     void ack_received(const string &);

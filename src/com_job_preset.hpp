@@ -9,7 +9,7 @@
 
 /*****************************************************************************/
 
-#include <inttypes.h>
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -54,8 +54,8 @@ public:
     string id_desc() const;
     const string &owner() const;
     bool running() const;
-    long long quota_time() const;
-    long long quota_size() const;
+    uint64_t quota_time() const;
+    uint64_t quota_size() const;
     const string &source() const;
     uint16_t port() const;
     const string &trigger() const;
@@ -67,8 +67,8 @@ protected:
     string _description; /**< Beschreibender Name des Auftrages */
     string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
     bool _running; /**< Soll erfasst werden? */
-    long long _quota_time; /**< Auftrags-Quota nach Zeit */
-    long long _quota_size; /**< Auftrags-Quota nach Datengröße */
+    uint64_t _quota_time; /**< Auftrags-Quota nach Zeit */
+    uint64_t _quota_size; /**< Auftrags-Quota nach Datengröße */
     string _source; /**< IP-Adresse oder Hostname der Datenquelle */
     uint16_t _port; /**< Port der Datenquelle. */
     string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
@@ -182,7 +182,7 @@ inline const string &COMJobPreset::trigger() const
    \see _quota_time
 */
 
-inline long long COMJobPreset::quota_time() const
+inline uint64_t COMJobPreset::quota_time() const
 {
     return _quota_time;
 }
@@ -196,7 +196,7 @@ inline long long COMJobPreset::quota_time() const
    \see _quota_size
 */
 
-inline long long COMJobPreset::quota_size() const
+inline uint64_t COMJobPreset::quota_size() const
 {
     return _quota_size;
 }

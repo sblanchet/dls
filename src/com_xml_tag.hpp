@@ -9,6 +9,8 @@
 
 /*****************************************************************************/
 
+#include <stdint.h>
+
 #include <string>
 #include <list>
 using namespace std;
@@ -49,7 +51,7 @@ public:
     const string &to_str() const;
     int to_int() const;
     double to_dbl() const;
-    long long to_ll() const;
+    uint64_t to_uint64() const;
 
 private:
     string _name;  /**< Attributname */
@@ -85,7 +87,7 @@ public:
     void push_att(const string &, int);
     void push_att(const string &, unsigned int);
     void push_att(const string &, double);
-    void push_att(const string &, long long);
+    void push_att(const string &, uint64_t);
     int att_count() const;
     string tag() const;
 

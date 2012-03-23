@@ -464,10 +464,10 @@ void DLSJob::discard_data()
    \return Größe in Bytes
 */
 
-long long DLSJob::data_size() const
+uint64_t DLSJob::data_size() const
 {
     list<DLSLogger *>::const_iterator logger_i;
-    long long size = 0;
+    uint64_t size = 0;
 
     logger_i = _loggers.begin();
     while (logger_i != _loggers.end())
@@ -708,7 +708,7 @@ void DLSJob::message(const COMXMLTag *info_tag)
     }
 
     // Aktuelle Zeit und Dateiposition als Einsprungspunkt merken
-    index_record.time = time.to_ll();
+    index_record.time = time.to_uint64();
     index_record.position = _message_file.calc_size();
 
     tag = info_tag->tag() + "\n";

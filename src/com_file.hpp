@@ -9,6 +9,8 @@
 
 /*****************************************************************************/
 
+#include <stdint.h>
+
 #include "com_exception.hpp"
 
 /*****************************************************************************/
@@ -62,7 +64,7 @@ public:
     void seek(unsigned int);
     //@}
 
-    long long calc_size();
+    uint64_t calc_size();
 
 private:
     int _fd;                /**< File-Descriptor */

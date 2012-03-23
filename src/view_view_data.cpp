@@ -1356,7 +1356,7 @@ int ViewViewData::handle(int event)
                     else zoom_out_factor = 2;
 
                     // Herauszoomen um den geklickten Zeitpunkt
-                    new_start = _range_start + (long long) (xp * scale_x);
+                    new_start = _range_start + (uint64_t) (xp * scale_x);
                     time_range = _range_end - _range_start;
                     time_range = time_range * zoom_out_factor;
                     _range_start = new_start.to_dbl()
@@ -1413,8 +1413,8 @@ int ViewViewData::handle(int event)
             if (_zooming) {
                 _zooming = false;
 
-                new_start = _range_start + (long long) (dx * scale_x);
-                new_end = _range_start + (long long) ((dx + dw) * scale_x);
+                new_start = _range_start + (uint64_t) (dx * scale_x);
+                new_end = _range_start + (uint64_t) ((dx + dw) * scale_x);
 
                 if (new_start < new_end) {
                     _range_start = new_start;
@@ -1430,7 +1430,7 @@ int ViewViewData::handle(int event)
             if (_moving) {
                 _moving = false;
 
-                time_diff = (long long) ((_end_x - _start_x) * scale_x);
+                time_diff = (uint64_t) ((_end_x - _start_x) * scale_x);
 
                 new_start = _range_start + time_diff;
                 new_end = _range_end + time_diff;

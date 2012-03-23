@@ -205,7 +205,7 @@ bool CTLDialogJobEdit::_save_job()
 {
     CTLJobPreset job_copy;
     string quota_str;
-    long long quota_time, quota_size;
+    uint64_t quota_time, quota_size;
 
     if (!_calc_time_quota(&quota_time)) return false;
     if (!_calc_size_quota(&quota_size)) return false;
@@ -272,7 +272,7 @@ bool CTLDialogJobEdit::_create_job()
 {
     int new_id;
     CTLJobPreset job;
-    long long quota_time, quota_size;
+    uint64_t quota_time, quota_size;
 
     if (!_calc_time_quota(&quota_time)) return false;
     if (!_calc_size_quota(&quota_size)) return false;
@@ -393,7 +393,7 @@ bool CTLDialogJobEdit::_get_new_id(int *id)
 
 void CTLDialogJobEdit::_display_time_quota()
 {
-    long long time_quota = _job->quota_time();
+    uint64_t time_quota = _job->quota_time();
     stringstream str;
 
     if (time_quota > 0)
@@ -436,7 +436,7 @@ void CTLDialogJobEdit::_display_time_quota()
 
 void CTLDialogJobEdit::_display_size_quota()
 {
-    long long size_quota = _job->quota_size();
+    uint64_t size_quota = _job->quota_size();
     stringstream str;
 
     if (size_quota > 0)
@@ -475,7 +475,7 @@ void CTLDialogJobEdit::_display_size_quota()
    \return true, wenn Quota berechnet werden konnte
 */
 
-bool CTLDialogJobEdit::_calc_time_quota(long long *time_quota)
+bool CTLDialogJobEdit::_calc_time_quota(uint64_t *time_quota)
 {
     stringstream str;
     string quota_str = _input_quota_time->value();
@@ -528,7 +528,7 @@ bool CTLDialogJobEdit::_calc_time_quota(long long *time_quota)
    \return true, wenn Quota berechnet wurde
 */
 
-bool CTLDialogJobEdit::_calc_size_quota(long long *size_quota)
+bool CTLDialogJobEdit::_calc_size_quota(uint64_t *size_quota)
 {
     stringstream str;
     string quota_str = _input_quota_size->value();

@@ -113,7 +113,7 @@ template <class REC>
 void COMIndexT<REC>::open_read(const string &file_name)
 {
     stringstream err;
-    long long size;
+    uint64_t size;
 
     try
     {
@@ -128,7 +128,8 @@ void COMIndexT<REC>::open_read(const string &file_name)
 
     if (size % sizeof(REC) != 0)
     {
-        err << "Illegal size of index file \"" << file_name << "\"";
+        err << "Index file \"" << file_name << "\" size (" << size << ")"
+            << " is no multiple of record size (" << sizeof(REC) << ")!";
 
         try
         {
@@ -161,7 +162,7 @@ template <class REC>
 void COMIndexT<REC>::open_read_write(const string &file_name)
 {
     stringstream err;
-    long long size;
+    uint64_t size;
 
     try
     {
@@ -209,7 +210,7 @@ template <class REC>
 void COMIndexT<REC>::open_read_append(const string &file_name)
 {
     stringstream err;
-    long long size;
+    uint64_t size;
 
     try
     {

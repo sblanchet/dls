@@ -59,7 +59,7 @@ public:
     void check_presettings(const COMChannelPreset * = 0) const;
     void create_gen_saver();
     void process_data(const string &, COMTime);
-    long long data_size() const;
+    uint64_t data_size() const;
     void finish();
     void discard_chunk();
     //@}
@@ -100,7 +100,7 @@ private:
     //@{
     DLSSaverGen *_gen_saver; /**< Zeiger auf das Objekt zur Speicherung
                                 der generischen Daten */
-    long long _data_size;    /**< Größe der bisher erzeugten Daten */
+    uint64_t _data_size;    /**< Größe der bisher erzeugten Daten */
     //@}
 
     //@{
@@ -202,7 +202,7 @@ inline void DLSLogger::bytes_written(unsigned int bytes)
    Gibt die Größe des Chunks in Bytes zurück
 */
 
-inline long long DLSLogger::data_size() const
+inline uint64_t DLSLogger::data_size() const
 {
     return _data_size;
 }

@@ -615,8 +615,8 @@ void Chunk::fetch_range()
     COMIndexT<COMIndexRecord> index;
     COMIndexRecord index_record;
 
-    _start = (long long) 0;
-    _end = (long long) 0;
+    _start = (uint64_t) 0;
+    _end = (uint64_t) 0;
 
     global_index_file_name = _dir + "/level0/data_gen.idx";
 

@@ -379,7 +379,7 @@ void DLSProcLogger::_read_write_socket()
 
         // Warnung ausgeben, wenn zu lange keine Daten mehr empfangen
         if (COMTime::now() - _last_data_received
-                > (long long) NO_DATA_ABORT_TIME * 1000000) {
+                > (uint64_t) NO_DATA_ABORT_TIME * 1000000) {
             if (_receiving_data) {
                 _receiving_data = false;
                 _first_data_time.set_null();
@@ -1068,14 +1068,14 @@ void DLSProcLogger::_remove_pid_file()
 void DLSProcLogger::_do_quota()
 {
     int fork_ret;
-    long long quota_time = _job->preset()->quota_time();
-    long long quota_size = _job->preset()->quota_size();
+    uint64_t quota_time = _job->preset()->quota_time();
+    uint64_t quota_size = _job->preset()->quota_size();
     bool quota_reached = false;
     COMTime quota_time_limit;
 
     if (quota_time && !_first_data_time.is_null()) {
         quota_time_limit = _first_data_time
-            + (long long) (quota_time * 1000000 / QUOTA_PART_QUOTIENT);
+            + (uint64_t) (quota_time * 1000000 / QUOTA_PART_QUOTIENT);
 
         if (_data_time >= quota_time_limit) {
             quota_reached = true;

@@ -191,16 +191,16 @@ void COMXMLTag::push_att(const string &name, double value)
 /*****************************************************************************/
 
 /**
-   Fügt dem Tag ein Attribut mit Namen und Wert hinzu (long long)
+   Fügt dem Tag ein Attribut mit Namen und Wert hinzu (uint64_t)
 
-   Dies ist die (long long)-Version von
+   Dies ist die (uint64_t)-Version von
    push_att(const string &, const string &).
 
    \param name name des Attributes
    \param value Wert des Attributes
 */
 
-void COMXMLTag::push_att(const string &name, long long value)
+void COMXMLTag::push_att(const string &name, uint64_t value)
 {
     stringstream str;
     str << value;
@@ -341,14 +341,14 @@ double COMXMLAtt::to_dbl() const
 /*****************************************************************************/
 
 /**
-   Gibt den Wert des Attributes als (long long) zurück
+   Gibt den Wert des Attributes als (uint64_t) zurück
 
    \return Attributwert
 */
 
-long long COMXMLAtt::to_ll() const
+uint64_t COMXMLAtt::to_uint64() const
 {
-    long long value;
+    uint64_t value;
     stringstream str;
     str.exceptions(stringstream::failbit | stringstream::badbit);
     str << _value;
@@ -359,7 +359,7 @@ long long COMXMLAtt::to_ll() const
     }
     catch (...)
     {
-        throw ECOMXMLTag("\"" + _value + "\" is no long long!", "");
+        throw ECOMXMLTag("\"" + _value + "\" is no uint64_t!", "");
     }
 
     return value;

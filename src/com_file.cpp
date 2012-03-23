@@ -483,10 +483,10 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
    \return Dateigröße in Bytes
 */
 
-long long COMFile::calc_size()
+uint64_t COMFile::calc_size()
 {
     stringstream err;
-    long long size;
+    uint64_t size;
 
     if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
     {

@@ -105,9 +105,9 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
     DIR *dir;
     struct dirent *dir_ent;
     string entry_name;
-    long long msg_chunk_time;
-    list<long long> chunk_times;
-    list<long long>::iterator chunk_time_i;
+    uint64_t msg_chunk_time;
+    list<uint64_t> chunk_times;
+    list<uint64_t>::iterator chunk_time_i;
 
     clear();
 
@@ -129,13 +129,13 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
 
         // Wenn das Verzeichnis nicht mit "chunk" beginnt,
         // das Nächste verarbeiten
-        if (entry_name.substr(0, 5) != "chunk") continue;
+        if (entry_name.substr(0, 5) != "chunk")
+            continue;
 
         str.str("");
         str.clear();
         str << entry_name.substr(5); // Alles nach "chunk" in den
                                      // Stringstream einfügen
-
         try {
             // Den Zeitstempel auslesen
             str >> msg_chunk_time;
@@ -166,6 +166,15 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
         chunk_times.pop_front();
     }
 
+#if DEBUG
+    cerr << _range_start << " - " << _range_end << endl;
+    for (chunk_time_i = chunk_times.begin();
+         chunk_time_i != chunk_times.end();
+         chunk_time_i++) {
+        cerr << *chunk_time_i << endl;
+    }
+#endif
+
     // Alle übriggebliebenen Message-Chunks durchlaufen
     for (chunk_time_i = chunk_times.begin();
          chunk_time_i != chunk_times.end();
@@ -178,8 +187,19 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
             file.open_read((msg_chunk_dir.str() + "/messages").c_str());
             index.open_read((msg_chunk_dir.str() + "/messages.idx").c_str());
 
+#if DEBUG
+            cerr << (msg_chunk_dir.str() + "/messages.idx").c_str() << ": "
+                << index.record_count() << " index records." << endl;
+#endif
+
             for (i = 0; i < index.record_count(); i++) {
+                bool skip = false;
                 index_record = index[i];
+
+#if DEBUG
+                cerr << "idxrec " << index_record.time << ": "
+                    << index_record.position << endl;
+#endif
 
                 if (COMTime(index_record.time) < _range_start) continue;
                 if (COMTime(index_record.time) > _range_end) break;
@@ -202,8 +222,11 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
                     file.read(write_ptr, write_len, &write_len);
 
                     if (!write_len) {
-                        cerr << "FEHLER: Message-Datei zuende!" << endl;
-                        return;
+                        cerr << "Warning: Message file "
+                            << (msg_chunk_dir.str() + "/messages").c_str()
+                            << " inconsistent!" << endl;
+                        skip = true;
+                        break;
                     }
 
                     ring.written(write_len);
@@ -216,6 +239,10 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
                         continue;
                     }
 
+                    break;
+                }
+
+                if (skip) {
                     break;
                 }
 

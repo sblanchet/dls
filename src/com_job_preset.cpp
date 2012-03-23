@@ -113,7 +113,7 @@ void COMJobPreset::import(const string &dls_dir, unsigned int id)
 
         if (parser.tag()->has_att("time"))
         {
-            _quota_time = parser.tag()->att("time")->to_ll();
+            _quota_time = parser.tag()->att("time")->to_uint64();
         }
         else
         {
@@ -122,7 +122,7 @@ void COMJobPreset::import(const string &dls_dir, unsigned int id)
 
         if (parser.tag()->has_att("size"))
         {
-            _quota_size = parser.tag()->att("size")->to_ll();
+            _quota_size = parser.tag()->att("size")->to_uint64();
         }
         else
         {

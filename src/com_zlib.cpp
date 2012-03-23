@@ -134,6 +134,7 @@ void COMZLib::uncompress(const char *src, unsigned int src_size,
 {
     int uncomp_ret;
     stringstream err;
+    uLongf zlib_out_size = out_size;
 
     _out_size = 0;
 
@@ -151,13 +152,15 @@ void COMZLib::uncompress(const char *src, unsigned int src_size,
     }
 
     // Dekomprimieren
-    uncomp_ret = ::uncompress((Bytef *) _out_buf, (uLongf *) &out_size,
+    uncomp_ret = ::uncompress((Bytef *) _out_buf, &zlib_out_size,
                               (const Bytef *) src, src_size);
 
     if (uncomp_ret != Z_OK) // Fehler beim Dekomprimieren
     {
         err << "uncompress() returned " << uncomp_ret;
-        if (uncomp_ret == Z_BUF_ERROR) err << " (BUFFER ERROR)";
+        if (uncomp_ret == Z_BUF_ERROR) {
+            err << " (BUFFER ERROR)";
+        }
         err << ", out_size=" << out_size;
         err << ", src_size=" << src_size;
         throw ECOMZLib(err.str());
