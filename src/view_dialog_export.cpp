@@ -24,8 +24,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#define WIDTH 400
-#define HEIGHT 255
+#define WIDTH 500
+#define HEIGHT 285
 
 /*****************************************************************************/
 
@@ -58,6 +58,8 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
 
     _box_info = new Fl_Box(10, 10, WIDTH - 20, 40);
     _box_info->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_TOP);
+
+    _output_times = new Fl_Output(WIDTH - 410, 85, 400, 25, "Zeitstempel");
 
 #if 0
     _output_time = new Fl_Output(WIDTH - 60, 85, 50, 25, "Verbleibende Zeit");
@@ -143,6 +145,13 @@ void ViewDialogExport::show(const list<Channel> *channels,
         << "Ende: " << _end.to_real_time() << endl
         << "Zeitspanne: " << _start.diff_str_to(_end);
     _box_info->copy_label(str.str().c_str());
+
+    {
+        stringstream str;
+        str << _start.to_real_time() << " "
+            << _end.to_real_time();
+        _output_times->value(str.str().c_str());
+    }
 
     _wnd->show();
 

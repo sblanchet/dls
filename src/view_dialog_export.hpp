@@ -41,6 +41,7 @@ private:
     string _dls_dir;           /**< DLS-Datenverzeichnis */
     Fl_Double_Window *_wnd;    /**< Dialogfenster */
     Fl_Box *_box_info; /**< Info-Zeile */
+    Fl_Output *_output_times; /**< Zeitstempel */
 #if 0
     Fl_Output *_output_time; /**< Verbleibende Zeit */
     Fl_Output *_output_size; /**< Geschätzte Größe */
