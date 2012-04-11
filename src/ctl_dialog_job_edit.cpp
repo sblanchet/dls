@@ -8,7 +8,7 @@
 #include <fstream>
 using namespace std;
 
-#include <FL/Fl.h>
+#include <FL/Fl.H>
 
 /*****************************************************************************/
 

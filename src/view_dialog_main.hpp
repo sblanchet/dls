@@ -12,11 +12,11 @@
 #include <vector>
 using namespace std;
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Tile.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Choice.h>
-#include <FL/Fl_Check_Button.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Tile.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Check_Button.H>
 
 #include "lib_dir.hpp"
 using namespace LibDLS;

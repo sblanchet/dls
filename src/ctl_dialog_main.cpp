@@ -19,8 +19,8 @@
 #include <fstream>
 using namespace std;
 
-#include <FL/Fl.h>
-#include <FL/fl_ask.h>
+#include <FL/Fl.H>
+#include <FL/fl_ask.H>
 
 /*****************************************************************************/
 

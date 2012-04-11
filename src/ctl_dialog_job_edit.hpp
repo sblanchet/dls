@@ -9,10 +9,10 @@
 
 /*****************************************************************************/
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Return_Button.h>
-#include <FL/Fl_Input.h>
-#include <FL/Fl_Choice.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Return_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Choice.H>
 
 /*****************************************************************************/
 

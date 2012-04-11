@@ -11,13 +11,13 @@
 
 #include <pthread.h>
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Check_Button.h>
-#include <FL/Fl_Spinner.h>
-#include <FL/Fl_Progress.h>
-#include <FL/Fl_Output.h>
-#include <FL/Fl_Box.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Spinner.H>
+#include <FL/Fl_Progress.H>
+#include <FL/Fl_Output.H>
+#include <FL/Fl_Box.H>
 
 #include "lib_export.hpp"
 

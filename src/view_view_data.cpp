@@ -16,8 +16,8 @@
 #include <algorithm>
 using namespace std;
 
-#include <FL/Fl.h>
-#include <FL/fl_draw.h>
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
 
 /*****************************************************************************/
 
@@ -1317,7 +1317,7 @@ void ViewViewData::_draw_interactions(double x_scale) const
 
 int ViewViewData::handle(int event)
 {
-    int xp, yp, dx, dy, dw, dh, zoom_out_factor;
+    int xp, yp, dx, dw, zoom_out_factor;
     double scale_x;
     COMTime new_start, new_end, time_diff;
     unsigned int channel_area_width;
@@ -1399,15 +1399,6 @@ int ViewViewData::handle(int event)
             else {
                 dx = _end_x;
                 dw = _start_x - _end_x;
-            }
-
-            if (_start_y < _end_y) {
-                dy = _start_y;
-                dh = _end_y - _start_y;
-            }
-            else {
-                dy = _end_y;
-                dh = _start_y - _end_y;
             }
 
             if (_zooming) {

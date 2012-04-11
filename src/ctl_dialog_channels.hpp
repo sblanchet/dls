@@ -15,10 +15,10 @@
 #include <list>
 using namespace std;
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Check_Button.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Check_Button.H>
 
 /*****************************************************************************/
 
