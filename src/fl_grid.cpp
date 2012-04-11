@@ -7,8 +7,8 @@
 #include <iostream>
 using namespace std;
 
-#include <FL/Fl.h>
-#include <FL/fl_draw.h>
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
 
 /*****************************************************************************/
 

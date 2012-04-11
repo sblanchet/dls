@@ -12,7 +12,7 @@
 #include <list>
 using namespace std;
 
-#include <FL/Fl_Widget.h>
+#include <FL/Fl_Widget.H>
 
 /*****************************************************************************/
 

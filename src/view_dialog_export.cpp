@@ -14,8 +14,8 @@
 #include <sstream>
 using namespace std;
 
-#include <FL/Fl.h>
-#include <FL/Fl_File_Chooser.h>
+#include <FL/Fl.H>
+#include <FL/Fl_File_Chooser.H>
 
 /*****************************************************************************/
 
