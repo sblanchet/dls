@@ -2,7 +2,7 @@
 # $Id$
 #------------------------------------------------------------------------------
 
-AC_INIT([dls],[1.2.5],[fp@igh-essen.com])
+AC_INIT([dls],[1.2.6],[fp@igh-essen.com])
 AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
