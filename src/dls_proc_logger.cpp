@@ -687,40 +687,16 @@ void DLSProcLogger::_process_tag()
                         log(DLSWarning);
                     }
 
-                    // Zustandswechsel!
-                    _state = dls_waiting_for_frequency;
+                    _state = dls_waiting_for_channels; // Zustandswechsel!
 
-                    // Maximale Abtastfrequenz des Systems auslesen
-                    send_command("<rp name=\"/Taskinfo/Abtastfrequenz\">");
-                }
-                break;
+                    msg() << "Connected to MSR version";
+                    msg() << " " << MSR_V(_msr_version);
+                    msg() << "." << MSR_P(_msr_version);
+                    msg() << "." << MSR_S(_msr_version);
+                    log(DLSInfo);
 
-            case dls_waiting_for_frequency: //-------------------------
-                if (_xml.tag()->title() == "parameter") {
-                    if (_xml.tag()->att("name")->to_str()
-                        != "/Taskinfo/Abtastfrequenz") {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-                        msg() << "Expected /Taskinfo/Abtastfrequenz! (Got: "
-                            << _xml.tag()->att("name")->to_str()
-                            << ")";
-                        log(DLSError);
-                    }
-                    else {
-                        _max_frequency = _xml.tag()->att("value")->to_int();
-
-                        _state = dls_waiting_for_channels; // Zustandswechsel!
-
-                        msg() << "Connected to MSR version";
-                        msg() << " " << MSR_V(_msr_version);
-                        msg() << "." << MSR_P(_msr_version);
-                        msg() << "." << MSR_S(_msr_version);
-                        msg() << ", " << _max_frequency << " Hz";
-                        log(DLSInfo);
-
-                        // Alle Kanäle auslesen
-                        send_command("<rk>");
-                    }
+                    // Alle Kanäle auslesen
+                    send_command("<rk>");
                 }
                 break;
 
