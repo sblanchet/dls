@@ -71,7 +71,7 @@ void COMZLib::free()
 
 void COMZLib::compress(const char *src, unsigned int src_size)
 {
-    unsigned int out_size;
+    uLongf out_size;
     int comp_ret;
     stringstream err;
 
@@ -83,7 +83,7 @@ void COMZLib::compress(const char *src, unsigned int src_size)
     // Die komprimierten Daten können in sehr ungünstigen Fällen
     // größer sein, als die Quelldaten. Siehe ZLib-Doku:
     // http://www.gzip.org/zlib/manual.html#compress
-    out_size = (unsigned int) (src_size * 1.01 + 12);
+    out_size = src_size * 1.01 + 12;
 
     try
     {
@@ -96,7 +96,7 @@ void COMZLib::compress(const char *src, unsigned int src_size)
     }
 
     // Komprimieren
-    comp_ret = ::compress((Bytef *) _out_buf, (uLongf *) &out_size,
+    comp_ret = ::compress((Bytef *) _out_buf, &out_size,
                           (const Bytef *) src, src_size);
 
     if (comp_ret != Z_OK) // Fehler beim Komprimieren
