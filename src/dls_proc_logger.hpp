@@ -25,7 +25,6 @@ using namespace std;
 enum DLSProcLoggerState
 {
     dls_connecting,
-    dls_waiting_for_frequency,
     dls_waiting_for_channels,
     dls_getting_channels,
     dls_waiting_for_trigger,
@@ -65,7 +64,6 @@ private:
     COMXMLTag _tag;
     DLSProcLoggerState _state;
     int _msr_version;
-    double _max_frequency;
     list<COMRealChannel> _real_channels;
     COMTime _data_time;
     COMTime _first_data_time;
@@ -91,13 +89,6 @@ private:
     void _create_pid_file();
     void _remove_pid_file();
 };
-
-/*****************************************************************************/
-
-inline double DLSProcLogger::max_frequency() const
-{
-    return _max_frequency;
-}
 
 /*****************************************************************************/
 
