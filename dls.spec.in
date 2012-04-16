@@ -43,9 +43,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS
+%config %{_sysconfdir}/sysconfig/dls
 %{_sysconfdir}/init.d/dls
 %{_sysconfdir}/profile.d/dls.sh
-%{_sysconfdir}/sysconfig/dls
 %{_bindir}/dls*
 %if "%{_vendor}" == "suse"
 %{_sbindir}/rcdls
