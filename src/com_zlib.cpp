@@ -78,12 +78,14 @@ void COMZLib::compress(const char *src, unsigned int src_size)
     free();
 
     // Keine Daten - Nichts zu komprimieren
-    if (!src_size) return;
+    if (!src_size) {
+        return;
+    }
 
     // Die komprimierten Daten können in sehr ungünstigen Fällen
     // größer sein, als die Quelldaten. Siehe ZLib-Doku:
     // http://www.gzip.org/zlib/manual.html#compress
-    out_size = src_size * 1.01 + 12;
+    out_size = (uLongf) (src_size * 1.01 + 12 + 0.5);
 
     try
     {
