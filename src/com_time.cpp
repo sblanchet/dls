@@ -27,6 +27,19 @@ COMTime::COMTime()
 /*****************************************************************************/
 
 /**
+   Konstruktor mit int64-Parameter
+
+   \param t Initialzeit
+*/
+
+COMTime::COMTime(int64_t t)
+{
+    *this = t;
+}
+
+/*****************************************************************************/
+
+/**
    Konstruktor mit uint64-Parameter
 
    \param t Initialzeit
@@ -34,7 +47,7 @@ COMTime::COMTime()
 
 COMTime::COMTime(uint64_t t)
 {
-    *this = t;
+    *this = (int64_t) t;
 }
 
 /*****************************************************************************/
@@ -79,6 +92,21 @@ COMTime::COMTime(struct tm *t, unsigned int usec)
 /*****************************************************************************/
 
 /**
+   Zuweisungsoperator von "int64_t"
+
+   \param t Neue Zeit
+   \returns Referenz auf sich selber
+*/
+
+COMTime &COMTime::operator =(int64_t t)
+{
+    _time = t;
+    return *this;
+}
+
+/*****************************************************************************/
+
+/**
    Zuweisungsoperator von "uint64_t"
 
    \param t Neue Zeit
@@ -87,7 +115,7 @@ COMTime::COMTime(struct tm *t, unsigned int usec)
 
 COMTime &COMTime::operator =(uint64_t t)
 {
-    _time = t;
+    _time = (int64_t) t;
     return *this;
 }
 
@@ -102,7 +130,7 @@ COMTime &COMTime::operator =(uint64_t t)
 
 COMTime &COMTime::operator =(double t)
 {
-    _time = (uint64_t) t;
+    _time = (int64_t) t;
     return *this;
 }
 
@@ -117,7 +145,7 @@ COMTime &COMTime::operator =(double t)
 
 COMTime &COMTime::operator =(struct timeval tv)
 {
-    _time = ((uint64_t) tv.tv_sec) * 1000000 + (uint64_t) tv.tv_usec;
+    _time = ((int64_t) tv.tv_sec) * 1000000 + (int64_t) tv.tv_usec;
     return *this;
 }
 
@@ -135,7 +163,7 @@ COMTime &COMTime::operator =(struct timeval tv)
 
 void COMTime::from_dbl_time(double t)
 {
-    _time = (uint64_t) (t * 1000000.0 + 0.5);
+    _time = (int64_t) (t * 1000000.0 + 0.5);
 }
 
 /*****************************************************************************/
@@ -146,7 +174,7 @@ void COMTime::from_dbl_time(double t)
 
 void COMTime::set_null()
 {
-    _time = (uint64_t) 0;
+    _time = (int64_t) 0;
 }
 
 /*****************************************************************************/
@@ -159,7 +187,7 @@ void COMTime::set_null()
 
 bool COMTime::is_null() const
 {
-    return _time == (uint64_t) 0;
+    return _time == (int64_t) 0;
 }
 
 /*****************************************************************************/
@@ -304,7 +332,7 @@ COMTime &COMTime::operator +=(const COMTime &right)
    mit dem Faktor
 */
 
-COMTime COMTime::operator *(uint64_t factor) const
+COMTime COMTime::operator *(int64_t factor) const
 {
     return _time * factor;
 }
@@ -356,6 +384,19 @@ double COMTime::to_dbl_time() const
 /*****************************************************************************/
 
 /**
+   Konvertierung nach "int64_t"
+
+   \returns Anzahl der Mikrosekunden als int64_t
+*/
+
+int64_t COMTime::to_int64() const
+{
+    return _time;
+}
+
+/*****************************************************************************/
+
+/**
    Konvertierung nach "uint64_t"
 
    \returns Anzahl der Mikrosekunden als uint64_t
@@ -363,7 +404,7 @@ double COMTime::to_dbl_time() const
 
 uint64_t COMTime::to_uint64() const
 {
-    return _time;
+    return (uint64_t) _time;
 }
 
 /*****************************************************************************/
@@ -445,7 +486,7 @@ string COMTime::to_rfc811_time() const
 string COMTime::diff_str_to(const COMTime &other) const
 {
     stringstream str;
-    uint64_t diff, part;
+    int64_t diff, part;
 
     if (other._time > _time) {
 	diff = other._time - _time;
@@ -455,17 +496,17 @@ string COMTime::diff_str_to(const COMTime &other) const
         str << "-";
     }
 
-    part = diff / ((uint64_t) 1000000 * 60 * 60 * 24); // Tage
+    part = diff / ((int64_t) 1000000 * 60 * 60 * 24); // Tage
     if (part) str << part << "d ";
-    diff -= part * ((uint64_t) 1000000 * 60 * 60 * 24);
+    diff -= part * ((int64_t) 1000000 * 60 * 60 * 24);
 
-    part = diff / ((uint64_t) 1000000 * 60 * 60); // Stunden
+    part = diff / ((int64_t) 1000000 * 60 * 60); // Stunden
     if (part) str << part << "h ";
-    diff -= part * ((uint64_t) 1000000 * 60 * 60);
+    diff -= part * ((int64_t) 1000000 * 60 * 60);
 
-    part = diff / ((uint64_t) 1000000 * 60); // Minuten
+    part = diff / ((int64_t) 1000000 * 60); // Minuten
     if (part) str << part << "m ";
-    diff -= part * ((uint64_t) 1000000 * 60);
+    diff -= part * ((int64_t) 1000000 * 60);
 
     part = diff / 1000000; // Sekunden
     if (part) str << part << "s ";
