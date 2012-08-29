@@ -2,7 +2,12 @@
 
 $Id$
 
+vim700: spelllang=en spell
+
 ------------------------------------------------------------------------------
+
+* Fixed displaying negative time differences.
+* Fixed scrolling in dls_view introduced in 1.2.6.
 
 Version 1.2.6
 
