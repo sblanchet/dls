@@ -1,12 +1,27 @@
 #!/usr/bin/perl -w
 
-#----------------------------------------------------------------
+#----------------------------------------------------------------------------
 #
-#  DLS - Quota-Script
+# DLS - Quota-Script
 #
-#  $Id$
+# $Id$
 #
-#----------------------------------------------------------------
+# This file is part of the Data Logging Service (DLS).
+#
+# DLS is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DLS is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with DLS. If not, see <http://www.gnu.org/licenses/>.
+#
+#----------------------------------------------------------------------------
 
 use strict;
 use FileHandle;
@@ -34,7 +49,7 @@ my $progname;
 #
 #  Hauptfunktion. Wertet die Kommandozeilenparameter aus, startet
 #  das Logging, initialisiert den Daemon, installiert die
-#  Signalhandler und läuft schliesslich in die Hauptschleife 
+#  Signalhandler und läuft schliesslich in die Hauptschleife
 #
 #----------------------------------------------------------------
 
@@ -56,7 +71,7 @@ sub main
         &print_and_log("Single check mode.");
     } else {
         &print_and_log("Check interval: $check_interval seconds.");
-    }   
+    }
 
     &print_and_log("Not detaching from tty!") if defined $opt{'k'};
 
@@ -75,7 +90,7 @@ sub main
             closelog;
             exit 0;
         }
-        
+
 	    # Und warten
 	    sleep $check_interval;
     }
@@ -280,7 +295,7 @@ sub check_jobs
 #
 #  Parameter: job_dir    - Job-Verzeichnis
 #             quota_time - Länge der Zeit-Quota in Sekunden
-# 
+#
 #----------------------------------------------------------------
 
 sub check_channels_time
@@ -462,7 +477,7 @@ sub check_channels_size
     {
 	# Den ältesten Chunk betrachten...
 	(pop @du_lines) =~ /(\d+)\s+(.*)$/ or &log_and_die("du parsing error!");
-	
+
 	foreach (@current_chunks)
 	{
 	    # Abbrechen, wenn der Chunk aktiv ist
@@ -471,7 +486,7 @@ sub check_channels_size
 
 	&print_and_log("size quota exceeded - removing $2");
 	&remove_dir($2);
-	
+
 	$total_size -= $1;
     }
 }
