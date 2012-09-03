@@ -1,12 +1,27 @@
 #!/bin/sh
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #
-#  DLS init script
+# DLS init script
 #
-#  $Id: init.sh,v 5ddbbb894dc7 2011/08/17 13:21:30 fp $
+# $Id: init.sh,v 5ddbbb894dc7 2011/08/17 13:21:30 fp $
 #
-#------------------------------------------------------------------------------
+# This file is part of the Data Logging Service (DLS).
+#
+# DLS is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# DLS is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with DLS. If not, see <http://www.gnu.org/licenses/>.
+#
+#-----------------------------------------------------------------------------
 
 ### BEGIN INIT INFO
 # Provides:          dls
@@ -20,7 +35,7 @@
 # Description:
 ### END INIT INFO
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 SYSCONFIG=/etc/sysconfig/dls
 
@@ -30,7 +45,7 @@ test -r $SYSCONFIG || { echo "$SYSCONFIG not existing";
 
 . $SYSCONFIG
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 if [ -n "$DLS_USER" ]; then
     DLSD_OPTIONS="-u $DLS_USER $DLSD_OPTIONS"
@@ -40,13 +55,13 @@ if [ -n "$DLS_DIR" ]; then
     DLSD_OPTIONS="-d $DLS_DIR $DLSD_OPTIONS"
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 DLSD=@BINDIR@/dlsd
 PIDFILE=$DLS_DIR/dlsd.pid
 KILL_PARAM="-t600 -p$PIDFILE"
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 function exit_success()
 {
@@ -60,7 +75,7 @@ function exit_success()
     fi
 }
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 function exit_running()
 {
@@ -74,7 +89,7 @@ function exit_running()
     fi
 }
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 function exit_fail()
 {
@@ -88,7 +103,7 @@ function exit_fail()
     fi
 }
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 function exit_dead()
 {
@@ -102,7 +117,7 @@ function exit_dead()
     fi
 }
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 if [ -r /etc/rc.status ]; then
     . /etc/rc.status
@@ -162,4 +177,4 @@ else
     exit 1
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
