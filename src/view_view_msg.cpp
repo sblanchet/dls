@@ -272,17 +272,25 @@ void ViewViewMsg::load_msg(const Job *job, COMTime start, COMTime end)
                     msg.text = "??? Kein Text";
                 }
 
-                if (xml.tag()->title() == "info")
+                if (xml.tag()->title() == "info") {
                     msg.type = MSG_INFO;
-                else if (xml.tag()->title() == "warning")
+                }
+                else if (xml.tag()->title() == "warn") {
                     msg.type = MSG_WARNING;
-                else if (xml.tag()->title() == "error")
+                }
+                else if (xml.tag()->title() == "error") {
                     msg.type = MSG_ERROR;
-                else if (xml.tag()->title() == "crit_error")
+                }
+                else if (xml.tag()->title() == "crit_error") {
                     msg.type = MSG_CRITICAL;
-                else if (xml.tag()->title() == "broadcast")
+                }
+                else if (xml.tag()->title() == "broadcast") {
                     msg.type = MSG_BROADCAST;
-                else msg.type = MSG_UNKNOWN;
+                }
+                else {
+                    cerr << "unknown type " << xml.tag()->title() << endl;
+                    msg.type = MSG_UNKNOWN;
+                }
 
                 _messages.push_back(msg);
             }
@@ -395,9 +403,12 @@ void ViewViewMsg::draw()
                         + LEVEL_HEIGHT / 2 - scroll_pos);
 
                 // Text zeichnen
-                if (msg_i->type >= 0 && msg_i->type < MSG_COUNT)
+                if (msg_i->type >= 0 && msg_i->type < MSG_COUNT) {
                     fl_color(msg_colors[msg_i->type]);
-                else fl_color(FL_BLACK);
+                }
+                else {
+                    fl_color(FL_BLACK);
+                }
                 fl_draw(msg_i->text.c_str(),
                         x() + FRAME_WIDTH + xp + 4,
                         y() + FRAME_WIDTH + i * LEVEL_HEIGHT
