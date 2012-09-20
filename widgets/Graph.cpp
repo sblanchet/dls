@@ -36,7 +36,7 @@ Graph::Graph(
         QWidget *parent /**< parent widget */
         ): QWidget(parent)
 {
-    setAttribute(Qt::WA_NoBackground);
+    //setAttribute(Qt::WA_NoBackground);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(60, 50);
 }
