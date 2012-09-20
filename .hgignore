@@ -14,6 +14,19 @@ config.log
 config.status
 configure
 dls.spec
+doku/dls_doku.aux
+doku/dls_doku.dvi
+doku/dls_doku.idx
+doku/dls_doku.log
+doku/dls_doku.out
+doku/dls_doku.pdf
+doku/dls_doku.toc
+doku/dls_doku_en.aux
+doku/dls_doku_en.idx
+doku/dls_doku_en.log
+doku/dls_doku_en.out
+doku/dls_doku_en.pdf
+doku/dls_doku_en.toc
 script/Makefile
 script/Makefile.in
 script/init.sh
@@ -27,3 +40,5 @@ src/dlsd
 src/libcomdls.a
 src/libdls.a
 stamp-h1
+widgets/.moc
+widgets/libDlsWidgets.so
