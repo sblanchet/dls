@@ -6,12 +6,12 @@
 #
 # This file is part of the data logging service (DLS).
 #
-# The DLS is free software: you can redistribute it and/or modify it under the
+# DLS is free software: you can redistribute it and/or modify it under the
 # terms of the GNU Lesser General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
 #
-# The DLS is distributed in the hope that it will be useful, but WITHOUT ANY
+# DLS is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
 # more details.
@@ -27,11 +27,13 @@ TEMPLATE = app
 TARGET = dlsgui
 DEPENDPATH += .
 
-INCLUDEPATH += ../widgets
+INCLUDEPATH += ../widgets ../src
 CONFIG += debug
 
 unix {
     LIBS += -L../widgets -lDlsWidgets
+    LIBS += ../src/libdls.a ../src/libcomdls.a
+    LIBS += -lfftw3 -lm -lz
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
 }
 win32 {
@@ -41,5 +43,10 @@ win32 {
 HEADERS += MainWindow.h
 SOURCES += main.cpp MainWindow.cpp
 FORMS += MainWindow.ui
+
+RESOURCES += dlsgui.qrc
+
+HEADERS += modeltest.h
+SOURCES += modeltest.cpp
 
 #-----------------------------------------------------------------------------

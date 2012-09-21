@@ -25,6 +25,9 @@
 
 #include "ui_MainWindow.h"
 
+#include "Model.h"
+#include "lib_dir.hpp"
+
 /****************************************************************************/
 
 class MainWindow:
@@ -36,6 +39,11 @@ class MainWindow:
     public:
         MainWindow(QWidget * = 0);
         ~MainWindow();
+
+    private:
+        LibDLS::Directory dir;
+        LibDLS::Directory dir2;
+        QtDls::Model model;
 };
 
 /****************************************************************************/

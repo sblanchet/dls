@@ -27,6 +27,10 @@ doku/dls_doku_en.log
 doku/dls_doku_en.out
 doku/dls_doku_en.pdf
 doku/dls_doku_en.toc
+gui/dlsgui
+gui/moc_*.cpp
+gui/qrc_*.cpp
+gui/ui_*.h
 script/Makefile
 script/Makefile.in
 script/init.sh
