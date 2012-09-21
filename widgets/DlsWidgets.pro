@@ -53,7 +53,7 @@ unix {
 }
 
 unix {
-    INCLUDEPATH += .
+    INCLUDEPATH += . ../src
 }
 win32 {
     INCLUDEPATH += .
@@ -88,17 +88,27 @@ win32 {
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
 win32:inst_headers.path = "$${PREFIX}\include\DlsWidgets"
 inst_headers.files = \
+    Model.h \
     Graph.h
 
 INSTALLS += inst_headers
 
 HEADERS += \
     $${inst_headers.files} \
+    Channel.h \
+    Dir.h \
+    Job.h \
+    Node.h \
     Plugin.h \
     WidgetCollection.h
 
 SOURCES += \
+    Channel.cpp \
+    Dir.cpp \
     Graph.cpp \
+    Job.cpp \
+    Model.cpp \
+    Node.cpp \
     Plugin.cpp \
     WidgetCollection.cpp
 
