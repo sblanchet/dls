@@ -39,7 +39,8 @@ using namespace LibDLS;
    Constructor
 */
 
-Job::Job()
+Job::Job():
+    _id(0)
 {
 }
 
@@ -68,6 +69,7 @@ void Job::import(const string &dls_path, /**< DLS directory path */
     job_dir << dls_path << "/job" << job_id;
 
     _path = job_dir.str();
+    _id = job_id;
     _channels.clear();
 
     try {
