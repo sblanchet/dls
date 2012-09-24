@@ -38,13 +38,21 @@ MainWindow::MainWindow(QWidget *parent):
 
     new ModelTest(&model);
 
-    dir.import("/vol/projekte/airbus/a4q_airbus-4q-technologie"
-            "/messungen/dls_data");
-    dir2.import("/vol/projekte/airbus/amb_airbus-messbolzen/messungen"
-            "/kalibrierung/dls-data");
+    try {
+        dir.import("/vol/projekte/airbus/a4q_airbus-4q-technologie"
+                "/messungen/dls_data");
+        model.addLocalDir(&dir);
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
 
-    model.addLocalDir(&dir);
-    model.addLocalDir(&dir2);
+    try {
+        dir2.import("/vol/projekte/airbus/amb_airbus-messbolzen/messungen"
+                "/kalibrierung/dls-data");
+        model.addLocalDir(&dir2);
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
 
     treeView->setModel(&model);
 }
