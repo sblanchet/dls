@@ -30,6 +30,9 @@ AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 
+# workaround for automake >= 1.12
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
 #------------------------------------------------------------------------------
 # FLTK
 #------------------------------------------------------------------------------
