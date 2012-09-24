@@ -11,6 +11,10 @@
 
 /*****************************************************************************/
 
+namespace LibDLS {
+    class Channel;
+}
+
 namespace QtDls {
 
 class Node
@@ -24,6 +28,7 @@ class Node
         virtual void *child(int) const = 0;
         virtual int row(void *) const = 0;
         virtual Qt::ItemFlags flags() const;
+        virtual LibDLS::Channel *channel() const;
 
         Node *parent() const;
 

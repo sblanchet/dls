@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2009 - 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -22,56 +22,33 @@
  *
  ****************************************************************************/
 
-#ifndef DLS_GRAPH_H
-#define DLS_GRAPH_H
+#include <QtGui>
 
-#include <QWidget>
-#include <QtDesigner/QDesignerExportWidget>
+#include "Section.h"
+#include "Layer.h"
 
-namespace DLS {
-
-class Section;
+using DLS::Section;
+using DLS::Layer;
 
 /****************************************************************************/
 
-/** Graph widget.
+/** Constructor.
  */
-class QDESIGNER_WIDGET_EXPORT Graph:
-    public QWidget
+Layer::Layer(
+        Section *section,
+        LibDLS::Channel *ch
+        ):
+    section(section),
+    ch(ch)
 {
-    Q_OBJECT
-
-    public:
-        Graph(QWidget *parent = 0);
-        virtual ~Graph();
-
-        virtual QSize sizeHint() const;
-
-        Section *appendSection();
-        Section *insertSectionBefore(Section *);
-
-    protected:
-        bool event(QEvent *);
-        void resizeEvent(QResizeEvent *);
-        void paintEvent(QPaintEvent *);
-        void contextMenuEvent(QContextMenuEvent *);
-        void dragEnterEvent(QDragEnterEvent *);
-        void dragLeaveEvent(QDragLeaveEvent *);
-        void dragMoveEvent(QDragMoveEvent *);
-        void dropEvent(QDropEvent *);
-
-    private:
-        QList<Section *> sections; /**< List of data sections. */
-        Section *dropSection;
-        int dropLine;
-        int dropRemaining;
-
-        void updateDragging(QPoint);
-        void resetDragging();
-};
+}
 
 /****************************************************************************/
 
-} // namespace
+/** Destructor.
+ */
+Layer::~Layer()
+{
+}
 
-#endif
+/****************************************************************************/

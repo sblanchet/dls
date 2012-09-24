@@ -88,8 +88,10 @@ win32 {
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
 win32:inst_headers.path = "$${PREFIX}\include\DlsWidgets"
 inst_headers.files = \
+    Graph.h \
+    Layer.h \
     Model.h \
-    Graph.h
+    Section.h
 
 INSTALLS += inst_headers
 
@@ -107,9 +109,11 @@ SOURCES += \
     Dir.cpp \
     Graph.cpp \
     Job.cpp \
+    Layer.cpp \
     Model.cpp \
     Node.cpp \
     Plugin.cpp \
+    Section.cpp \
     WidgetCollection.cpp
 
 ADDITIONAL_DISTFILES =

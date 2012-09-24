@@ -24,9 +24,15 @@
 
 #include <QtGui>
 
+#include "lib_channel.hpp"
+
 #include "Graph.h"
+#include "Section.h"
 
 using DLS::Graph;
+using DLS::Section;
+
+#define DROP_TOLERANCE 10
 
 /****************************************************************************/
 
@@ -34,11 +40,15 @@ using DLS::Graph;
  */
 Graph::Graph(
         QWidget *parent /**< parent widget */
-        ): QWidget(parent)
+        ): QWidget(parent),
+    dropSection(NULL),
+    dropLine(-1),
+    dropRemaining(-1)
 {
     //setAttribute(Qt::WA_NoBackground);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(60, 50);
+    setAcceptDrops(true);
 }
 
 /****************************************************************************/
@@ -56,6 +66,32 @@ Graph::~Graph()
 QSize Graph::sizeHint() const
 {
     return QSize(300, 100);
+}
+
+/****************************************************************************/
+
+Section *Graph::appendSection()
+{
+    Section *s = new Section(this);
+    sections.append(s);
+    return s;
+}
+
+/****************************************************************************/
+
+Section *Graph::insertSectionBefore(Section *before)
+{
+    int index = sections.indexOf(before);
+    Section *s = new Section(this);
+
+    if (index > -1) {
+        sections.insert(index, s);
+    }
+    else {
+        sections.append(s);
+    }
+
+    return s;
 }
 
 /****************************************************************************/
@@ -100,13 +136,36 @@ void Graph::paintEvent(
     Q_UNUSED(event);
 
     QPainter painter(this);
-    QPen pen = painter.pen();
 
-    pen.setColor(Qt::red);
-    pen.setStyle(Qt::DotLine);
-    painter.setPen(pen);
+    if (dropLine >= 0) {
+        QPen pen;
+        pen.setColor(Qt::blue);
+        pen.setWidth(3);
+        painter.setPen(pen);
 
-    painter.drawLine(10, 10, 20, 20);
+        painter.drawLine(5, dropLine, width() - 10, dropLine);
+    }
+    else if (dropRemaining >= 0) {
+        QPen pen;
+        QBrush brush = painter.brush();
+
+        pen.setColor(Qt::blue);
+        painter.setPen(pen);
+
+        brush.setColor(QColor(0, 0, 255, 63));
+        brush.setStyle(Qt::SolidPattern);
+        painter.setBrush(brush);
+
+        painter.drawRect(5, dropRemaining + 5,
+                width() - 10, height() - dropRemaining - 10);
+    }
+
+    int height_sum = 0;
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->draw(painter, height_sum, width());
+        height_sum += (*s)->getHeight();
+    }
 }
 
 /****************************************************************************/
@@ -116,6 +175,116 @@ void Graph::paintEvent(
 void Graph::contextMenuEvent(QContextMenuEvent *event)
 {
     Q_UNUSED(event);
+}
+
+/****************************************************************************/
+
+void Graph::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (!event->mimeData()->hasFormat("application/dls_channel")) {
+        return;
+    }
+
+    updateDragging(event->pos());
+
+    event->acceptProposedAction();
+}
+
+/****************************************************************************/
+
+void Graph::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    Q_UNUSED(event);
+
+    resetDragging();
+}
+
+/****************************************************************************/
+
+void Graph::dragMoveEvent(QDragMoveEvent *event)
+{
+    updateDragging(event->pos());
+}
+
+/****************************************************************************/
+
+void Graph::dropEvent(QDropEvent *event)
+{
+    Section *s = NULL;
+
+    updateDragging(event->pos());
+
+    if (dropSection) {
+        if (dropLine >= 0) {
+            /* insert before dropSection */
+            s = insertSectionBefore(dropSection);
+        }
+        else {
+            s = dropSection;
+        }
+    }
+    else {
+        s = appendSection();
+    }
+
+    QByteArray ba = event->mimeData()->data("application/dls_channel");
+    QDataStream stream(&ba, QIODevice::ReadOnly);
+    quint64 addr;
+    while (!stream.atEnd()) {
+        stream >> addr;
+        LibDLS::Channel *ch = (LibDLS::Channel *) addr;
+        s->appendLayer(ch);
+    }
+
+    resetDragging();
+    event->acceptProposedAction();
+}
+
+/****************************************************************************/
+
+void Graph::updateDragging(QPoint p)
+{
+    int height_sum = 0, y = p.y();
+
+    resetDragging();
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        if (y <= height_sum + DROP_TOLERANCE) {
+            dropSection = *s;
+            dropLine = height_sum;
+            break;
+        } else if (y <= height_sum + (*s)->getHeight() - DROP_TOLERANCE) {
+            dropSection = *s;
+            break;
+        }
+
+        height_sum += (*s)->getHeight();
+    }
+
+    if (dropSection) {
+        if (dropLine < 0) {
+            dropSection->setDropTarget(true);
+        }
+        update();
+    } else { // no sections
+        dropRemaining = height_sum;
+        update();
+    }
+}
+
+/****************************************************************************/
+
+void Graph::resetDragging()
+{
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->setDropTarget(false);
+    }
+    dropSection = NULL;
+    dropLine = -1;
+    dropRemaining = -1;
+    update();
 }
 
 /****************************************************************************/

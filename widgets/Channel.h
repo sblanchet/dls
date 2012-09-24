@@ -20,7 +20,7 @@ class Channel:
    public Node
 {
     public:
-        Channel(Node *, const LibDLS::Channel *);
+        Channel(Node *, LibDLS::Channel *);
         ~Channel();
 
 
@@ -36,9 +36,10 @@ class Channel:
         void *child(int) const;
         int row(void *) const;
         Qt::ItemFlags flags() const;
+        LibDLS::Channel *channel() const;
 
     private:
-        const LibDLS::Channel * const channel;
+        LibDLS::Channel * const ch;
 
         Channel();
 };
