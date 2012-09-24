@@ -36,10 +36,10 @@ using DLS::Layer;
  */
 Layer::Layer(
         Section *section,
-        LibDLS::Channel *ch
+        LibDLS::Channel *channel
         ):
     section(section),
-    ch(ch)
+    channel(channel)
 {
 }
 
