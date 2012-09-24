@@ -16,10 +16,10 @@ using namespace QtDls;
 
 Channel::Channel(
         Node *parent,
-        const LibDLS::Channel *channel
+        LibDLS::Channel *channel
         ):
     Node(parent),
-    channel(channel)
+    ch(channel)
 {
 }
 
@@ -46,7 +46,7 @@ QVariant Channel::data(const QModelIndex &index, int role) const
         case 0:
             switch (role) {
                 case Qt::DisplayRole:
-                    ret = QString(channel->name().c_str());
+                    ret = QString(ch->name().c_str());
                     break;
             }
             break;
@@ -79,6 +79,13 @@ int Channel::row(void *n) const
 Qt::ItemFlags Channel::flags() const
 {
     return Qt::ItemIsDragEnabled | Qt::ItemIsSelectable;
+}
+
+/****************************************************************************/
+
+LibDLS::Channel *Channel::channel() const
+{
+    return ch;
 }
 
 /****************************************************************************/

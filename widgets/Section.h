@@ -22,52 +22,39 @@
  *
  ****************************************************************************/
 
-#ifndef DLS_GRAPH_H
-#define DLS_GRAPH_H
+#ifndef DLS_SECTION_H
+#define DLS_SECTION_H
 
-#include <QWidget>
-#include <QtDesigner/QDesignerExportWidget>
+namespace LibDLS {
+    class Channel;
+}
 
 namespace DLS {
 
-class Section;
+class Graph;
+class Layer;
 
 /****************************************************************************/
 
-/** Graph widget.
+/** Graph section.
  */
-class QDESIGNER_WIDGET_EXPORT Graph:
-    public QWidget
+class Section
 {
-    Q_OBJECT
-
     public:
-        Graph(QWidget *parent = 0);
-        virtual ~Graph();
+        Section(Graph *graph);
+        virtual ~Section();
 
-        virtual QSize sizeHint() const;
+        void setDropTarget(bool);
+        int getHeight() const { return height; };
+        void draw(QPainter &, int, int) const;
 
-        Section *appendSection();
-        Section *insertSectionBefore(Section *);
-
-    protected:
-        bool event(QEvent *);
-        void resizeEvent(QResizeEvent *);
-        void paintEvent(QPaintEvent *);
-        void contextMenuEvent(QContextMenuEvent *);
-        void dragEnterEvent(QDragEnterEvent *);
-        void dragLeaveEvent(QDragLeaveEvent *);
-        void dragMoveEvent(QDragMoveEvent *);
-        void dropEvent(QDropEvent *);
+        Layer *appendLayer(LibDLS::Channel *);
 
     private:
-        QList<Section *> sections; /**< List of data sections. */
-        Section *dropSection;
-        int dropLine;
-        int dropRemaining;
-
-        void updateDragging(QPoint);
-        void resetDragging();
+        Graph * const graph;
+        QList<Layer *> layers; /**< List of data layers. */
+        int height;
+        bool isDropTarget;
 };
 
 /****************************************************************************/

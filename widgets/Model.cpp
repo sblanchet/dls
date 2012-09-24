@@ -193,7 +193,7 @@ Qt::ItemFlags Model::flags(const QModelIndex &index) const
 QStringList Model::mimeTypes() const
 {
     QStringList types;
-    types << "text/plain";
+    types << "application/dls_channel";
     return types;
 }
 
@@ -202,15 +202,19 @@ QStringList Model::mimeTypes() const
 QMimeData *Model::mimeData(const QModelIndexList &indexes) const
 {
     QMimeData *mimeData = new QMimeData();
-    QString text;
+    QByteArray encodedData;
 
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+
+    /* FIXME storing pointers in MIME data! Come on, you can do better! */
     foreach (QModelIndex index, indexes) {
         if (index.isValid()) {
-            text += "DLS channel";
+            Node *n = (Node *) index.internalPointer();
+            stream << (quint64) n->channel();
         }
     }
 
-    mimeData->setData("text/plain", text.toUtf8());
+    mimeData->setData("application/dls_channel", encodedData);
     return mimeData;
 }
 
