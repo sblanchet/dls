@@ -21,7 +21,7 @@ class Node
 {
     public:
         Node(Node *);
-        ~Node();
+        virtual ~Node();
 
         virtual int rowCount() const = 0;
         virtual QVariant data(const QModelIndex &, int) const = 0;
