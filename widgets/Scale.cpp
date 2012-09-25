@@ -108,9 +108,10 @@ void Scale::update()
     rawMajorStep = (s.width() + 6) * range / length;
 
     if (rawMajorStep > 3600.0 * 24.0) { // days
-        int decade = (int) floor(log10(rawMajorStep / 3600.0 * 24.0));
-        double normMajorStep =
-            rawMajorStep / pow(10.0, decade); // 1 <= step < 10
+        double scaledMajor = rawMajorStep / 3600.0 / 24.0;
+        int decade = (int) floor(log10(scaledMajor));
+        double normMajorStep = scaledMajor / pow(10.0, decade);
+        /* 1 <= step < 10 */
 
         if (normMajorStep > 5.0) {
             normMajorStep = 1.0;
