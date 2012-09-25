@@ -52,8 +52,18 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *appendSection();
         Section *insertSectionBefore(Section *);
 
+        void updateRange();
+        void loadData();
+        void setStart(const COMTime &);
+        const COMTime &getStart() const { return scale.getStart(); };
+        void setEnd(const COMTime &);
+        const COMTime &getEnd() const { return scale.getEnd(); };
+
     protected:
         bool event(QEvent *);
+        void mousePressEvent(QMouseEvent *);
+        void mouseReleaseEvent(QMouseEvent *);
+        void mouseMoveEvent(QMouseEvent *);
         void resizeEvent(QResizeEvent *);
         void paintEvent(QPaintEvent *);
         void contextMenuEvent(QContextMenuEvent *);
@@ -65,9 +75,13 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     private:
         Scale scale;
         QList<Section *> sections; /**< List of data sections. */
+        bool autoRange;
         Section *dropSection;
         int dropLine;
         int dropRemaining;
+        QPoint startPos;
+        QPoint endPos;
+        bool zooming;
 
         void updateDragging(QPoint);
         void resetDragging();

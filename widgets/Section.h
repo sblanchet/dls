@@ -40,6 +40,8 @@ class Layer;
  */
 class Section
 {
+    friend class Layer;
+
     public:
         Section(Graph *graph);
         virtual ~Section();
@@ -50,9 +52,15 @@ class Section
 
         Layer *appendLayer(LibDLS::Channel *);
 
+        void getRange(bool &, COMTime &, COMTime &);
+        void loadData(const COMTime &, const COMTime &, int);
+
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */
+        COMTime start;
+        COMTime end;
+        bool rangeValid;
         int height;
         bool isDropTarget;
 };

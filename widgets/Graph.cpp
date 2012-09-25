@@ -33,6 +33,7 @@ using DLS::Graph;
 using DLS::Section;
 
 #define DROP_TOLERANCE 10
+#define MARGIN 5
 
 /****************************************************************************/
 
@@ -42,9 +43,11 @@ Graph::Graph(
         QWidget *parent /**< parent widget */
         ): QWidget(parent),
     scale(this),
+    autoRange(true),
     dropSection(NULL),
     dropLine(-1),
-    dropRemaining(-1)
+    dropRemaining(-1),
+    zooming(false)
 {
     //setAttribute(Qt::WA_NoBackground);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -102,6 +105,55 @@ Section *Graph::insertSectionBefore(Section *before)
 
 /****************************************************************************/
 
+void Graph::updateRange()
+{
+    if (!autoRange) {
+        return;
+    }
+
+    COMTime start, end;
+    bool valid = false;
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->getRange(valid, start, end);
+    }
+
+    if (valid) {
+        scale.setStart(start);
+        scale.setEnd(end);
+        update();
+    }
+}
+
+/****************************************************************************/
+
+void Graph::loadData()
+{
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->loadData(scale.getStart(), scale.getEnd(),
+                contentsRect().width());
+    }
+    update();
+}
+
+/****************************************************************************/
+
+void Graph::setStart(const COMTime &t)
+{
+    scale.setStart(t);
+}
+
+/****************************************************************************/
+
+void Graph::setEnd(const COMTime &t)
+{
+    scale.setEnd(t);
+}
+
+/****************************************************************************/
+
 /** Event handler.
  */
 bool Graph::event(
@@ -110,7 +162,12 @@ bool Graph::event(
 {
     switch (event->type()) {
         case QEvent::MouseButtonDblClick:
-            return true;
+            zooming = false;
+            autoRange = true;
+            updateRange();
+            loadData();
+            update();
+            break;
 
         case QEvent::LanguageChange:
             break;
@@ -124,12 +181,73 @@ bool Graph::event(
 
 /****************************************************************************/
 
+/** Mouse press event.
+ */
+void Graph::mousePressEvent(QMouseEvent *event)
+{
+    startPos = event->pos();
+    endPos = event->pos();
+    zooming = true;
+    update();
+}
+
+/****************************************************************************/
+
+/** Mouse press event.
+ */
+void Graph::mouseMoveEvent(QMouseEvent *event)
+{
+    endPos = event->pos();
+    update();
+}
+
+/****************************************************************************/
+
+/** Mouse release event.
+ */
+void Graph::mouseReleaseEvent(QMouseEvent *event)
+{
+    zooming = false;
+    update();
+
+    if (startPos.x() == endPos.x()) {
+        return;
+    }
+
+    if (width() - 2 * MARGIN <= 0) {
+        return;
+    }
+
+    COMTime range = getEnd() - getStart();
+
+    if (range <= 0.0) {
+        return;
+    }
+
+    double scale = range.to_dbl_time() / (width() - 2 * MARGIN);
+
+    COMTime diff;
+    diff.from_dbl_time((startPos.x() - MARGIN) * scale);
+    COMTime newStart = getStart() + diff;
+    diff.from_dbl_time((event->pos().x() - MARGIN) * scale);
+    COMTime newEnd = getStart() + diff;
+
+    setStart(newStart);
+    setEnd(newEnd);
+    autoRange = false;
+
+    loadData();
+}
+
+/****************************************************************************/
+
 /** Handles the widget's resize event.
  */
 void Graph::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
     scale.setLength(width());
+    loadData();
 }
 
 /****************************************************************************/
@@ -149,7 +267,7 @@ void Graph::paintEvent(
     if (dropLine >= 0) {
         QPen pen;
         pen.setColor(Qt::blue);
-        pen.setWidth(3);
+        pen.setWidth(5);
         painter.setPen(pen);
 
         painter.drawLine(5, dropLine, width() - 10, dropLine);
@@ -169,11 +287,24 @@ void Graph::paintEvent(
                 width() - 10, height() - dropRemaining - 10);
     }
 
-    int height_sum = 0;
+    int height_sum = scale.getOuterLength();
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         (*s)->draw(painter, height_sum, width());
         height_sum += (*s)->getHeight();
+    }
+
+    if (zooming) {
+        QPen pen;
+        pen.setColor(Qt::red);
+        painter.setPen(pen);
+
+        painter.drawLine(startPos.x(), scale.getOuterLength() + 5,
+                startPos.x(), height() - 5);
+        pen.setColor(Qt::yellow);
+        painter.setPen(pen);
+        painter.drawLine(endPos.x(), scale.getOuterLength() + 5,
+                endPos.x(), height() - 5);
     }
 }
 
@@ -247,13 +378,15 @@ void Graph::dropEvent(QDropEvent *event)
 
     resetDragging();
     event->acceptProposedAction();
+
+    loadData();
 }
 
 /****************************************************************************/
 
 void Graph::updateDragging(QPoint p)
 {
-    int height_sum = 0, y = p.y();
+    int height_sum = scale.getOuterLength(), y = p.y();
 
     resetDragging();
 
