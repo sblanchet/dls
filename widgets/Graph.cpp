@@ -41,6 +41,7 @@ using DLS::Section;
 Graph::Graph(
         QWidget *parent /**< parent widget */
         ): QWidget(parent),
+    scale(this),
     dropSection(NULL),
     dropLine(-1),
     dropRemaining(-1)
@@ -49,6 +50,11 @@ Graph::Graph(
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(60, 50);
     setAcceptDrops(true);
+    COMTime t, diff;
+    t.set_now();
+    diff.from_dbl_time(20.0);
+    scale.setStart(t - diff);
+    scale.setEnd(t);
 }
 
 /****************************************************************************/
@@ -123,6 +129,7 @@ bool Graph::event(
 void Graph::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
+    scale.setLength(width());
 }
 
 /****************************************************************************/
@@ -136,6 +143,8 @@ void Graph::paintEvent(
     Q_UNUSED(event);
 
     QPainter painter(this);
+
+    scale.draw(painter, contentsRect());
 
     if (dropLine >= 0) {
         QPen pen;

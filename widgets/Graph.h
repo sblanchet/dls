@@ -28,6 +28,8 @@
 #include <QWidget>
 #include <QtDesigner/QDesignerExportWidget>
 
+#include "Scale.h"
+
 namespace DLS {
 
 class Section;
@@ -61,6 +63,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void dropEvent(QDropEvent *);
 
     private:
+        Scale scale;
         QList<Section *> sections; /**< List of data sections. */
         Section *dropSection;
         int dropLine;

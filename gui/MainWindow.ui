@@ -16,39 +16,42 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="DLS::Graph" name="dlsGraph"/>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="groupBox">
-      <property name="title">
-       <string>Signal selection</string>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QTreeView" name="treeView">
-         <property name="dragEnabled">
-          <bool>true</bool>
-         </property>
-         <property name="dragDropMode">
-          <enum>QAbstractItemView::DragOnly</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButtonNewJob">
-         <property name="text">
-          <string>New Job</string>
-         </property>
-         <property name="icon">
-          <iconset resource="dlsgui.qrc">
-           <normaloff>:/images/document-new.svg</normaloff>:/images/document-new.svg</iconset>
-         </property>
-         <property name="shortcut">
-          <string>Ctrl+N</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="DLS::Graph" name="dlsGraph"/>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Signal selection</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QTreeView" name="treeView">
+          <property name="dragEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::DragOnly</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButtonNewJob">
+          <property name="text">
+           <string>New Job</string>
+          </property>
+          <property name="icon">
+           <iconset resource="dlsgui.qrc">
+            <normaloff>:/images/document-new.svg</normaloff>:/images/document-new.svg</iconset>
+          </property>
+          <property name="shortcut">
+           <string>Ctrl+N</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
