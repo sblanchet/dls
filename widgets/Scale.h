@@ -40,14 +40,14 @@ class Scale
     public:
         Scale(QWidget *);
 
-        COMTime getStart() const;
+        const COMTime &getStart() const { return start; }
         void setStart(const COMTime &);
-        COMTime getEnd() const;
+        const COMTime &getEnd() const { return end; }
         void setEnd(const COMTime &);
-        int getLength() const;
+        int getLength() const { return length; }
         void setLength(int);
 
-        int getOuterLength() const;
+        int getOuterLength() const { return outerLength; }
 
         void draw(QPainter &, const QRect &) const;
 
@@ -67,46 +67,6 @@ class Scale
         void update();
         QString formatValue(double) const;
 };
-
-/****************************************************************************/
-
-/**
- * \return The scale minimum value (#start).
- */
-inline COMTime Scale::getStart() const
-{
-    return start;
-}
-
-/****************************************************************************/
-
-/**
- * \return The scale maximum value (#end).
- */
-inline COMTime Scale::getEnd() const
-{
-    return end;
-}
-
-/****************************************************************************/
-
-/**
- * \return The #length.
- */
-inline int Scale::getLength() const
-{
-    return length;
-}
-
-/****************************************************************************/
-
-/**
- * \return The #outerLength.
- */
-inline int Scale::getOuterLength() const
-{
-    return outerLength;
-}
 
 /****************************************************************************/
 
