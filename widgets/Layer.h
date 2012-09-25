@@ -44,10 +44,22 @@ class Layer
         virtual ~Layer();
 
         LibDLS::Channel *getChannel() const { return channel; };
+        void loadData(const COMTime &, const COMTime &, int);
+        void draw(QPainter &, int, int) const;
 
     private:
         Section * const section;
         LibDLS::Channel * const channel;
+        QList<LibDLS::Data *> genericData;
+        QList<LibDLS::Data *> minimumData;
+        QList<LibDLS::Data *> maximumData;
+        double minimum;
+        double maximum;
+
+        static int dataCallback(LibDLS::Data *, void *);
+        void newData(LibDLS::Data *);
+        void clearDataList(QList<LibDLS::Data *> &);
+        void updateExtrema(const QList<LibDLS::Data *> &, bool *);
 };
 
 /****************************************************************************/

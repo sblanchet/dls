@@ -93,14 +93,16 @@ void Section::draw(QPainter &painter, int y, int width) const
     }
 
     pen.setColor(Qt::black);
-    painter.setPen(pen);
     QFont f = painter.font();
     f.setPixelSize(8);
-    painter.setFont(f);
 
     int off = 0;
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
+        (*l)->draw(painter, y, width);
+
+        painter.setPen(pen);
+        painter.setFont(f);
         painter.drawText(5, y + off + 5, width - 10, 10, Qt::AlignLeft,
                 (*l)->getChannel()->name().c_str(), NULL);
         off += 10;
@@ -113,7 +115,44 @@ Layer *Section::appendLayer(LibDLS::Channel *ch)
 {
     Layer *l = new Layer(this, ch);
     layers.append(l);
+    graph->updateRange();
     return l;
+}
+
+/****************************************************************************/
+
+void Section::getRange(bool &valid, COMTime &start, COMTime &end)
+{
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        LibDLS::Channel *ch = (*l)->getChannel();
+        if (valid) {
+            COMTime t = ch->start();
+            if (t < start) {
+                start = t;
+            }
+            t = ch->end();
+            if (t > end) {
+                end = t;
+            }
+        }
+        else {
+            start = ch->start();
+            end = ch->end();
+            valid = true;
+        }
+    }
+}
+
+/****************************************************************************/
+
+void Section::loadData(const COMTime &start, const COMTime &end,
+        int min_values)
+{
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        (*l)->loadData(start, end, min_values);
+    }
 }
 
 /****************************************************************************/
