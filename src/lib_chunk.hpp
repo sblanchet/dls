@@ -38,6 +38,11 @@ namespace LibDLS
     class Channel;
     class Data;
 
+    /** Data callback.
+     *
+     * \return non-zero, if the Data object is adopted. In this case, the
+     * caller has to delete the object.
+     */
     typedef int (*DataCallback)(Data *, void *);
 
     /*************************************************************************/
