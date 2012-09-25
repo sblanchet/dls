@@ -91,6 +91,7 @@ inst_headers.files = \
     Graph.h \
     Layer.h \
     Model.h \
+    Scale.h \
     Section.h
 
 INSTALLS += inst_headers
@@ -113,6 +114,7 @@ SOURCES += \
     Model.cpp \
     Node.cpp \
     Plugin.cpp \
+    Scale.cpp \
     Section.cpp \
     WidgetCollection.cpp
 
