@@ -54,9 +54,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         void updateRange();
         void loadData();
-        void setStart(const COMTime &);
+        void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
-        void setEnd(const COMTime &);
         const COMTime &getEnd() const { return scale.getEnd(); };
 
     protected:
