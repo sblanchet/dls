@@ -47,6 +47,8 @@ class Layer
         void loadData(const COMTime &, const COMTime &, int);
         void draw(QPainter &, int, int) const;
 
+        enum {Margin = 2};
+
     private:
         Section * const section;
         LibDLS::Channel * const channel;

@@ -33,8 +33,6 @@
 using DLS::Section;
 using DLS::Layer;
 
-#define MARGIN 5
-
 /****************************************************************************/
 
 /** Constructor.
@@ -153,15 +151,18 @@ void Layer::draw(QPainter &painter, int y, int width) const
     QPen pen;
     QBrush brush;
     double x_scale, y_scale;
+    int height = section->height - 2 * Margin;
+
+    width -= 2 * Margin;
 
     // Kanaldaten nur zeichnen, wenn sinnvolle Werteskala
-    if (minimum >= maximum) {
+    if (minimum >= maximum || width <= 0 || height <= 0) {
         return;
     }
 
     x_scale = width /
         (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
-    y_scale = section->height / (maximum - minimum);
+    y_scale = height / (maximum - minimum);
 
     if (genericData.size()) {
         double old_value = 0.0;
@@ -197,8 +198,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                 if (xp >= 0) {
                     if (first_in_chunk) {
-                        painter.drawPoint(MARGIN + xp,
-                                y + section->height - yp);
+                        painter.drawPoint(Margin + xp,
+                                y + section->height - Margin - yp);
                     }
                     else {
                         dx = xp - old_xp;
@@ -206,9 +207,10 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                         if ((float) dx * (float) dx
                                 + (float) dy * (float) dy > 0) {
-                            painter.drawLine(MARGIN + old_xp,
-                                    y + section->height - old_yp,
-                                    MARGIN + xp, y + section->height - yp);
+                            painter.drawLine(Margin + old_xp,
+                                    y + section->height - Margin - old_yp,
+                                    Margin + xp,
+                                    y + section->height - Margin - yp);
                         }
                     }
 
@@ -330,19 +332,19 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
         for (i = 0; i < width; i++) {
             if (min_px[i] != -1 && max_px[i] != -1) {
-                painter.drawLine(MARGIN + i,
-                        y + section->height - min_px[i],
-                        MARGIN + i,
-                        y + section->height - max_px[i]);
+                painter.drawLine(Margin + i,
+                        y + section->height - Margin - min_px[i],
+                        Margin + i,
+                        y + section->height - Margin - max_px[i]);
             }
             else {
                 if (min_px[i] != -1) {
-                    painter.drawPoint(MARGIN + i,
-                            y + section->height - min_px[i]);
+                    painter.drawPoint(Margin + i,
+                            y + section->height - Margin - min_px[i]);
                 }
                 if (max_px[i] != -1) {
-                    painter.drawPoint(MARGIN + i,
-                            y + section->height - max_px[i]);
+                    painter.drawPoint(Margin + i,
+                            y + section->height - Margin - max_px[i]);
                 }
             }
         }

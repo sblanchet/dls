@@ -44,28 +44,26 @@ Scale::Scale(QWidget *p):
 
 /****************************************************************************/
 
-/** Sets the scale start time (#start).
+/** Sets the scale start and end time.
  *
- * If the value changes, this re-calculates the scale layout.
+ * If the values change, this re-calculates the scale layout.
  */
-void Scale::setStart(const COMTime &t)
+void Scale::setRange(const COMTime &t1, const COMTime &t2)
 {
-    if (t != start) {
-        start = t;
-        update();
+    bool changed;
+
+    if (t1 <= t2) {
+        changed = start != t1 || end != t2;
+        start = t1;
+        end = t2;
     }
-}
+    else {
+        changed = start != t2 || end != t1;
+        start = t2;
+        end = t1;
+    }
 
-/****************************************************************************/
-
-/** Sets the scale end time (#end).
- *
- * If the value changes, this re-calculates the scale layout.
- */
-void Scale::setEnd(const COMTime &t)
-{
-    if (t != end) {
-        end = t;
+    if (changed) {
         update();
     }
 }

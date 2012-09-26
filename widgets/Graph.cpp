@@ -28,12 +28,12 @@
 
 #include "Graph.h"
 #include "Section.h"
+#include "Layer.h"
 
 using DLS::Graph;
 using DLS::Section;
 
 #define DROP_TOLERANCE 10
-#define MARGIN 5
 
 /****************************************************************************/
 
@@ -56,8 +56,7 @@ Graph::Graph(
     COMTime t, diff;
     t.set_now();
     diff.from_dbl_time(20.0);
-    scale.setStart(t - diff);
-    scale.setEnd(t);
+    scale.setRange(t - diff, t);
 }
 
 /****************************************************************************/
@@ -120,8 +119,7 @@ void Graph::updateRange()
     }
 
     if (valid) {
-        scale.setStart(start);
-        scale.setEnd(end);
+        scale.setRange(start, end);
         update();
     }
 }
@@ -140,16 +138,9 @@ void Graph::loadData()
 
 /****************************************************************************/
 
-void Graph::setStart(const COMTime &t)
+void Graph::setRange(const COMTime &start, const COMTime &end)
 {
-    scale.setStart(t);
-}
-
-/****************************************************************************/
-
-void Graph::setEnd(const COMTime &t)
-{
-    scale.setEnd(t);
+    scale.setRange(start, end);
 }
 
 /****************************************************************************/
@@ -214,7 +205,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    if (width() - 2 * MARGIN <= 0) {
+    if (width() - 2 * Layer::Margin <= 0) {
         return;
     }
 
@@ -224,16 +215,15 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    double scale = range.to_dbl_time() / (width() - 2 * MARGIN);
+    double scale = range.to_dbl_time() / (width() - 2 * Layer::Margin);
 
     COMTime diff;
-    diff.from_dbl_time((startPos.x() - MARGIN) * scale);
+    diff.from_dbl_time((startPos.x() - Layer::Margin) * scale);
     COMTime newStart = getStart() + diff;
-    diff.from_dbl_time((event->pos().x() - MARGIN) * scale);
+    diff.from_dbl_time((event->pos().x() - Layer::Margin) * scale);
     COMTime newEnd = getStart() + diff;
 
-    setStart(newStart);
-    setEnd(newEnd);
+    setRange(newStart, newEnd);
     autoRange = false;
 
     loadData();

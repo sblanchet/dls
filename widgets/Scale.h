@@ -41,9 +41,8 @@ class Scale
         Scale(QWidget *);
 
         const COMTime &getStart() const { return start; }
-        void setStart(const COMTime &);
         const COMTime &getEnd() const { return end; }
-        void setEnd(const COMTime &);
+        void setRange(const COMTime &, const COMTime &);
         int getLength() const { return length; }
         void setLength(int);
 
