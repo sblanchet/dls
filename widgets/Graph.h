@@ -83,6 +83,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void dragLeaveEvent(QDragLeaveEvent *);
         void dragMoveEvent(QDragMoveEvent *);
         void dropEvent(QDropEvent *);
+        void wheelEvent(QWheelEvent *);
 
     private:
         Scale scale;

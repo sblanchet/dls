@@ -511,6 +511,40 @@ void Graph::dropEvent(QDropEvent *event)
 
 /****************************************************************************/
 
+void Graph::wheelEvent(QWheelEvent *event)
+{
+    int w = width() - 2 * Layer::Margin;
+    COMTime range = getEnd() - getStart();
+
+    if (w <= 0 || range <= 0.0 || event->delta() == 0) {
+        return;
+    }
+
+    double x_scale = range.to_dbl_time() / w;
+
+    COMTime rel;
+    rel.from_dbl_time((event->pos().x() - Layer::Margin) * x_scale);
+    COMTime zoomAround = getStart() + rel;
+
+    COMTime diff;
+
+    if (event->delta() > 0) { // zoom in
+        diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
+    }
+    else { // zoom out
+        diff.from_dbl_time((getEnd() - getStart()).to_dbl_time());
+    }
+
+    COMTime newStart = zoomAround - diff;
+    COMTime newEnd = zoomAround + diff;
+    setRange(newStart, newEnd);
+    autoRange = false;
+    updateActions();
+    loadData();
+}
+
+/****************************************************************************/
+
 void Graph::updateDragging(QPoint p)
 {
     int height_sum = scale.getOuterLength(), y = p.y();
