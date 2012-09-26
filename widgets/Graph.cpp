@@ -47,7 +47,11 @@ Graph::Graph(
     dropSection(NULL),
     dropLine(-1),
     dropRemaining(-1),
-    zooming(false)
+    zooming(false),
+    interaction(Zoom),
+    panning(false),
+    zoomAction(this),
+    panAction(this)
 {
     //setAttribute(Qt::WA_NoBackground);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -58,6 +62,19 @@ Graph::Graph(
     t.set_now();
     diff.from_dbl_time(20.0);
     scale.setRange(t - diff, t);
+    setInteraction(Zoom);
+
+    zoomAction.setText(tr("&Zoom"));
+    zoomAction.setShortcut(Qt::Key_Z);
+    zoomAction.setStatusTip(tr("Set mouse interaction to zooming."));
+    zoomAction.setIcon(QIcon(":/images/system-search.svg"));
+    connect(&zoomAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
+
+    panAction.setText(tr("&Pan"));
+    panAction.setShortcut(Qt::Key_P);
+    panAction.setStatusTip(tr("Set mouse interaction to panning."));
+    panAction.setIcon(QIcon(":/images/go-next.svg"));
+    connect(&panAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
 }
 
 /****************************************************************************/
@@ -168,6 +185,18 @@ void Graph::zoomOut()
 
 /****************************************************************************/
 
+void Graph::setInteraction(Interaction i)
+{
+    interaction = i;
+
+    zoomAction.setEnabled(interaction != Zoom);
+    panAction.setEnabled(interaction != Pan);
+
+    updateCursor();
+}
+
+/****************************************************************************/
+
 /** Event handler.
  */
 bool Graph::event(
@@ -201,8 +230,8 @@ void Graph::mousePressEvent(QMouseEvent *event)
 {
     startPos = event->pos();
     endPos = event->pos();
-    zooming = true;
-    update();
+    dragStart = getStart();
+    dragEnd = getEnd();
 }
 
 /****************************************************************************/
@@ -212,7 +241,30 @@ void Graph::mousePressEvent(QMouseEvent *event)
 void Graph::mouseMoveEvent(QMouseEvent *event)
 {
     endPos = event->pos();
-    update();
+
+    if (endPos.x() != startPos.x() && interaction == Zoom) {
+        zooming = true;
+        updateCursor();
+        update();
+    }
+
+    if (interaction == Pan) {
+        int w = width() - 2 * Layer::Margin;
+        COMTime range = getEnd() - getStart();
+        double x_scale = range.to_dbl_time() / w;
+
+        if (range <= 0.0 || w <= 0) {
+            return;
+        }
+
+        panning = true;
+        COMTime diff;
+        diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
+        setRange(dragStart - diff, dragEnd - diff);
+        autoRange = false;
+        updateCursor();
+        update();
+    }
 }
 
 /****************************************************************************/
@@ -221,33 +273,37 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
  */
 void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
-    zooming = false;
-    update();
-
-    if (startPos.x() == endPos.x()) {
-        return;
-    }
-
-    if (width() - 2 * Layer::Margin <= 0) {
-        return;
-    }
-
+    bool wasZooming = zooming;
+    bool wasPanning = panning;
+    int w = width() - 2 * Layer::Margin;
     COMTime range = getEnd() - getStart();
 
-    if (range <= 0.0) {
+    zooming = false;
+    panning = false;
+    updateCursor();
+    update();
+
+    if (startPos.x() == endPos.x() || w <= 0 || range <= 0.0) {
         return;
     }
 
-    double scale = range.to_dbl_time() / (width() - 2 * Layer::Margin);
+    double x_scale = range.to_dbl_time() / w;
 
-    COMTime diff;
-    diff.from_dbl_time((startPos.x() - Layer::Margin) * scale);
-    COMTime newStart = getStart() + diff;
-    diff.from_dbl_time((event->pos().x() - Layer::Margin) * scale);
-    COMTime newEnd = getStart() + diff;
-
-    setRange(newStart, newEnd);
-    autoRange = false;
+    if (wasZooming) {
+        COMTime diff;
+        diff.from_dbl_time((startPos.x() - Layer::Margin) * x_scale);
+        COMTime newStart = getStart() + diff;
+        diff.from_dbl_time((event->pos().x() - Layer::Margin) * x_scale);
+        COMTime newEnd = getStart() + diff;
+        setRange(newStart, newEnd);
+        autoRange = false;
+    }
+    else if (wasPanning) {
+        COMTime diff;
+        diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
+        setRange(dragStart - diff, dragEnd - diff);
+        autoRange = false;
+    }
 
     loadData();
 }
@@ -262,6 +318,12 @@ void Graph::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_Minus:
             zoomOut();
+            break;
+        case Qt::Key_Z:
+            setInteraction(Zoom);
+            break;
+        case Qt::Key_P:
+            setInteraction(Pan);
             break;
         default:
             QWidget::keyPressEvent(event);
@@ -344,7 +406,10 @@ void Graph::paintEvent(
  */
 void Graph::contextMenuEvent(QContextMenuEvent *event)
 {
-    Q_UNUSED(event);
+    QMenu menu(this);
+    menu.addAction(&zoomAction);
+    menu.addAction(&panAction);
+    menu.exec(event->globalPos());
 }
 
 /****************************************************************************/
@@ -457,6 +522,37 @@ void Graph::resetDragging()
     dropLine = -1;
     dropRemaining = -1;
     update();
+}
+
+/****************************************************************************/
+
+void Graph::updateCursor()
+{
+    switch (interaction) {
+        case Zoom:
+            setCursor(Qt::ArrowCursor);
+            break;
+        case Pan:
+            if (panning) {
+                setCursor(Qt::ClosedHandCursor);
+            }
+            else {
+                setCursor(Qt::OpenHandCursor);
+            }
+            break;
+    }
+}
+
+/****************************************************************************/
+
+void Graph::interactionSlot()
+{
+    if (sender() == &zoomAction) {
+        setInteraction(Zoom);
+    }
+    else if (sender() == &panAction) {
+        setInteraction(Pan);
+    }
 }
 
 /****************************************************************************/

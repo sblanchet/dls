@@ -118,6 +118,8 @@ SOURCES += \
     Section.cpp \
     WidgetCollection.cpp
 
+RESOURCES = DlsWidgets.qrc
+
 ADDITIONAL_DISTFILES =
 
 DISTFILES += $${ADDITIONAL_DISTFILES}

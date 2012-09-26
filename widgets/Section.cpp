@@ -70,15 +70,6 @@ void Section::draw(QPainter &painter, int y, int width) const
     QPen pen;
     QBrush brush;
 
-    pen.setColor(Qt::red);
-    painter.setPen(pen);
-
-    brush.setColor(QColor(0, 255, 0, 10));
-    brush.setStyle(Qt::SolidPattern);
-    painter.setBrush(brush);
-
-    painter.drawRect(0, y, width - 1, height - 1);
-
     if (isDropTarget) {
         pen.setColor(Qt::blue);
         pen.setStyle(Qt::SolidLine);
