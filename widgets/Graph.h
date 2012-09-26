@@ -57,12 +57,15 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
+        void zoomIn();
+        void zoomOut();
 
     protected:
         bool event(QEvent *);
         void mousePressEvent(QMouseEvent *);
         void mouseReleaseEvent(QMouseEvent *);
         void mouseMoveEvent(QMouseEvent *);
+        void keyPressEvent(QKeyEvent *event);
         void resizeEvent(QResizeEvent *);
         void paintEvent(QPaintEvent *);
         void contextMenuEvent(QContextMenuEvent *);
