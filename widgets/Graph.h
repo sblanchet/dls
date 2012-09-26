@@ -58,13 +58,16 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
-        void zoomIn();
-        void zoomOut();
 
         enum Interaction {
             Zoom,
             Pan
         };
+
+    public slots:
+        void zoomIn();
+        void zoomOut();
+        void zoomReset();
         void setInteraction(Interaction);
 
     protected:
@@ -97,10 +100,14 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool panning;
         QAction zoomAction;
         QAction panAction;
+        QAction zoomInAction;
+        QAction zoomOutAction;
+        QAction zoomResetAction;
 
         void updateDragging(QPoint);
         void resetDragging();
         void updateCursor();
+        void updateActions();
 
     private slots:
         void interactionSlot();
