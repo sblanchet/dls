@@ -94,7 +94,7 @@ void Section::draw(QPainter &painter, int y, int width) const
 
     pen.setColor(Qt::black);
     QFont f = painter.font();
-    f.setPixelSize(8);
+    f.setPointSize(8);
 
     int off = 0;
     for (QList<Layer *>::const_iterator l = layers.begin();
