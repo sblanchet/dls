@@ -58,10 +58,18 @@ class Layer
         double minimum;
         double maximum;
 
+        struct TimeRange
+        {
+            COMTime start;
+            COMTime end;
+        };
+        static bool range_before(const TimeRange &, const TimeRange &);
+
         static int dataCallback(LibDLS::Data *, void *);
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
         void updateExtrema(const QList<LibDLS::Data *> &, bool *);
+        void drawGaps(QPainter &, int, int, double) const;
 };
 
 /****************************************************************************/
