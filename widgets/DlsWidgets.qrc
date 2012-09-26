@@ -2,5 +2,6 @@
   <qresource prefix="/" >
     <file>images/system-search.svg</file>
     <file>images/go-next.svg</file>
+    <file>images/view-fullscreen.svg</file>
   </qresource>
 </RCC>

@@ -51,7 +51,10 @@ Graph::Graph(
     interaction(Zoom),
     panning(false),
     zoomAction(this),
-    panAction(this)
+    panAction(this),
+    zoomInAction(this),
+    zoomOutAction(this),
+    zoomResetAction(this)
 {
     //setAttribute(Qt::WA_NoBackground);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -62,7 +65,7 @@ Graph::Graph(
     t.set_now();
     diff.from_dbl_time(20.0);
     scale.setRange(t - diff, t);
-    setInteraction(Zoom);
+    updateActions();
 
     zoomAction.setText(tr("&Zoom"));
     zoomAction.setShortcut(Qt::Key_Z);
@@ -75,6 +78,26 @@ Graph::Graph(
     panAction.setStatusTip(tr("Set mouse interaction to panning."));
     panAction.setIcon(QIcon(":/images/go-next.svg"));
     connect(&panAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
+
+    zoomInAction.setText(tr("Zoom in"));
+    zoomInAction.setShortcut(Qt::Key_Plus);
+    zoomInAction.setStatusTip(tr("Zoom the current view in to half"
+                " of the time around the center."));
+    zoomInAction.setIcon(QIcon(":/images/system-search.svg"));
+    connect(&zoomInAction, SIGNAL(triggered()), this, SLOT(zoomIn()));
+
+    zoomOutAction.setText(tr("Zoom out"));
+    zoomOutAction.setShortcut(Qt::Key_Minus);
+    zoomOutAction.setStatusTip(tr("Zoom the current view out the double"
+                " time around the center."));
+    zoomOutAction.setIcon(QIcon(":/images/system-search.svg"));
+    connect(&zoomOutAction, SIGNAL(triggered()), this, SLOT(zoomOut()));
+
+    zoomResetAction.setText(tr("Auto range"));
+    zoomResetAction.setShortcut(Qt::Key_Minus);
+    zoomResetAction.setStatusTip(tr("Automatically zoom to the data extent."));
+    zoomResetAction.setIcon(QIcon(":/images/view-fullscreen.svg"));
+    connect(&zoomResetAction, SIGNAL(triggered()), this, SLOT(zoomReset()));
 }
 
 /****************************************************************************/
@@ -124,10 +147,6 @@ Section *Graph::insertSectionBefore(Section *before)
 
 void Graph::updateRange()
 {
-    if (!autoRange) {
-        return;
-    }
-
     COMTime start, end;
     bool valid = false;
 
@@ -169,6 +188,7 @@ void Graph::zoomIn()
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
     setRange(getStart() + diff, getEnd() - diff);
     autoRange = false;
+    updateActions();
     loadData();
 }
 
@@ -180,6 +200,17 @@ void Graph::zoomOut()
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 2.0);
     setRange(getStart() - diff, getEnd() + diff);
     autoRange = false;
+    updateActions();
+    loadData();
+}
+
+/****************************************************************************/
+
+void Graph::zoomReset()
+{
+    autoRange = true;
+    updateActions();
+    updateRange();
     loadData();
 }
 
@@ -189,9 +220,7 @@ void Graph::setInteraction(Interaction i)
 {
     interaction = i;
 
-    zoomAction.setEnabled(interaction != Zoom);
-    panAction.setEnabled(interaction != Pan);
-
+    updateActions();
     updateCursor();
 }
 
@@ -205,11 +234,7 @@ bool Graph::event(
 {
     switch (event->type()) {
         case QEvent::MouseButtonDblClick:
-            zooming = false;
-            autoRange = true;
-            updateRange();
-            loadData();
-            update();
+            zoomReset();
             break;
 
         case QEvent::LanguageChange:
@@ -262,6 +287,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
         setRange(dragStart - diff, dragEnd - diff);
         autoRange = false;
+        updateActions();
         updateCursor();
         update();
     }
@@ -297,12 +323,14 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
         COMTime newEnd = getStart() + diff;
         setRange(newStart, newEnd);
         autoRange = false;
+        updateActions();
     }
     else if (wasPanning) {
         COMTime diff;
         diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
         setRange(dragStart - diff, dragEnd - diff);
         autoRange = false;
+        updateActions();
     }
 
     loadData();
@@ -409,6 +437,10 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
+    menu.addSeparator();
+    menu.addAction(&zoomInAction);
+    menu.addAction(&zoomOutAction);
+    menu.addAction(&zoomResetAction);
     menu.exec(event->globalPos());
 }
 
@@ -541,6 +573,15 @@ void Graph::updateCursor()
             }
             break;
     }
+}
+
+/****************************************************************************/
+
+void Graph::updateActions()
+{
+    zoomAction.setEnabled(interaction != Zoom);
+    panAction.setEnabled(interaction != Pan);
+    zoomResetAction.setEnabled(!autoRange);
 }
 
 /****************************************************************************/
