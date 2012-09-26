@@ -1,6 +1,6 @@
-- Operation mode (zoom/pan/mark).
+- Improve Scale divisions.
+- Marking.
 - Context menu
-    - Operation mode
     - Remove section
     - Remove Layer
     - Find extrema
@@ -9,8 +9,7 @@
     - PNG
     - PDF using gnuplot
     - CSV
-- Draw gaps
-- Scrolling
+- Vertical Scrolling
 - Section properties
     - Scale
     - Title
