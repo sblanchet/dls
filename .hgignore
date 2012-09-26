@@ -46,3 +46,4 @@ src/libdls.a
 stamp-h1
 widgets/.moc
 widgets/libDlsWidgets.so
+widgets/qrc_*.cpp

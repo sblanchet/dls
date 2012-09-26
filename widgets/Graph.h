@@ -26,6 +26,7 @@
 #define DLS_GRAPH_H
 
 #include <QWidget>
+#include <QAction>
 #include <QtDesigner/QDesignerExportWidget>
 
 #include "Scale.h"
@@ -60,6 +61,12 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void zoomIn();
         void zoomOut();
 
+        enum Interaction {
+            Zoom,
+            Pan
+        };
+        void setInteraction(Interaction);
+
     protected:
         bool event(QEvent *);
         void mousePressEvent(QMouseEvent *);
@@ -83,10 +90,21 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int dropRemaining;
         QPoint startPos;
         QPoint endPos;
+        COMTime dragStart;
+        COMTime dragEnd;
         bool zooming;
+        Interaction interaction;
+        bool panning;
+        QAction zoomAction;
+        QAction panAction;
 
         void updateDragging(QPoint);
         void resetDragging();
+        void updateCursor();
+
+    private slots:
+        void interactionSlot();
+
 };
 
 /****************************************************************************/

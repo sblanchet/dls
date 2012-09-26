@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/" >
+    <file>images/system-search.svg</file>
+    <file>images/go-next.svg</file>
+  </qresource>
+</RCC>
