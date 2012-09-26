@@ -162,6 +162,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
         return;
     }
 
+    int y_off = y + section->height - Margin;
+
     x_scale = width /
         (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
     y_scale = height / (maximum - minimum);
@@ -202,8 +204,7 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                 if (xp >= 0) {
                     if (first_in_chunk) {
-                        painter.drawPoint(Margin + xp,
-                                y + section->height - Margin - yp);
+                        painter.drawPoint(Margin + xp, y_off - yp);
                     }
                     else {
                         dx = xp - old_xp;
@@ -211,10 +212,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                         if ((float) dx * (float) dx
                                 + (float) dy * (float) dy > 0) {
-                            painter.drawLine(Margin + old_xp,
-                                    y + section->height - Margin - old_yp,
-                                    Margin + xp,
-                                    y + section->height - Margin - yp);
+                            painter.drawLine(Margin + old_xp, y_off - old_yp,
+                                    Margin + xp, y_off - yp);
                         }
                     }
 
@@ -233,7 +232,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
                 first_in_chunk = false;
             }
         }
-    } else if (minimumData.size() && maximumData.size()) {
+    }
+    else if (minimumData.size() && maximumData.size()) {
         double yv, value;
         int xp, yp, i;
         unsigned int j;
@@ -336,19 +336,20 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
         for (i = 0; i < width; i++) {
             if (min_px[i] != -1 && max_px[i] != -1) {
-                painter.drawLine(Margin + i,
-                        y + section->height - Margin - min_px[i],
-                        Margin + i,
-                        y + section->height - Margin - max_px[i]);
+                if (min_px[i] != max_px[i]) {
+                    painter.drawLine(Margin + i, y_off - min_px[i],
+                            Margin + i, y_off - max_px[i]);
+                }
+                else {
+                    painter.drawPoint(Margin + i, y_off - min_px[i]);
+                }
             }
             else {
                 if (min_px[i] != -1) {
-                    painter.drawPoint(Margin + i,
-                            y + section->height - Margin - min_px[i]);
+                    painter.drawPoint(Margin + i, y_off - min_px[i]);
                 }
                 if (max_px[i] != -1) {
-                    painter.drawPoint(Margin + i,
-                            y + section->height - Margin - max_px[i]);
+                    painter.drawPoint(Margin + i, y_off - max_px[i]);
                 }
             }
         }
