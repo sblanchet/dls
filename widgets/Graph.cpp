@@ -53,6 +53,7 @@ Graph::Graph(
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(60, 50);
     setAcceptDrops(true);
+    setFocusPolicy(Qt::StrongFocus);
     COMTime t, diff;
     t.set_now();
     diff.from_dbl_time(20.0);
@@ -145,6 +146,28 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
 /****************************************************************************/
 
+void Graph::zoomIn()
+{
+    COMTime diff;
+    diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
+    setRange(getStart() + diff, getEnd() - diff);
+    autoRange = false;
+    loadData();
+}
+
+/****************************************************************************/
+
+void Graph::zoomOut()
+{
+    COMTime diff;
+    diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 2.0);
+    setRange(getStart() - diff, getEnd() + diff);
+    autoRange = false;
+    loadData();
+}
+
+/****************************************************************************/
+
 /** Event handler.
  */
 bool Graph::event(
@@ -227,6 +250,23 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
     autoRange = false;
 
     loadData();
+}
+
+/****************************************************************************/
+
+void Graph::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key()) {
+        case Qt::Key_Plus:
+            zoomIn();
+            break;
+        case Qt::Key_Minus:
+            zoomOut();
+            break;
+        default:
+            QWidget::keyPressEvent(event);
+            break;
+    }
 }
 
 /****************************************************************************/
