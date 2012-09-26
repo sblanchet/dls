@@ -52,15 +52,20 @@ void Scale::setRange(const COMTime &t1, const COMTime &t2)
 {
     bool changed;
 
-    if (t1 <= t2) {
+    if (t1 < t2) {
         changed = start != t1 || end != t2;
         start = t1;
         end = t2;
     }
-    else {
+    else if (t1 > t2) {
         changed = start != t2 || end != t1;
         start = t2;
         end = t1;
+    }
+    else {
+        changed = start != t1 || end != t1 + (uint64_t) 1;
+        start = t1;
+        end = t1 + (uint64_t) 1;
     }
 
     if (changed) {
@@ -92,6 +97,8 @@ void Scale::update()
     double range = (end - start).to_dbl_time();
 
     if (length <= 0 || range <= 0.0) {
+        format = "";
+        subDigits = 0;
         outerLength = 0;
         majorStep = 0.0;
         minorDiv = 2;
@@ -101,7 +108,7 @@ void Scale::update()
     QFont f = parent->font();
     f.setPointSize(8);
     QFontMetrics fm(f);
-    QSize s = fm.size(0, "8888-88-88\n00:00:00");
+    QSize s = fm.size(0, "8888-88-88\n88:88:88\n888.888 ms");
 
     rawMajorStep = (s.width() + 6) * range / length;
 
@@ -125,6 +132,7 @@ void Scale::update()
 
         majorStep = normMajorStep * pow(10.0, decade) * 3600.0 * 24.0;
         format = "%Y-%m-%d";
+        subDigits = 0;
     }
     else if (rawMajorStep > 3600.0) { // hours
         double normMajorStep = rawMajorStep / 3600.0;
@@ -145,6 +153,7 @@ void Scale::update()
 
         majorStep = normMajorStep * 3600.0;
         format = "%Y-%m-%d\n%H:%M";
+        subDigits = 0;
     }
     else if (rawMajorStep > 60.0) { // minutes
         double normMajorStep = rawMajorStep / 60.0;
@@ -170,6 +179,7 @@ void Scale::update()
         }
         majorStep = normMajorStep * 60.0;
         format = "%Y-%m-%d\n%H:%M";
+        subDigits = 0;
     }
     else if (rawMajorStep > 1.0) { // seconds
         double normMajorStep = rawMajorStep;
@@ -195,9 +205,13 @@ void Scale::update()
         }
         majorStep = normMajorStep;
         format = "%Y-%m-%d\n%H:%M:%S";
+        subDigits = 0;
     }
     else { // sub-second
         int decade = (int) floor(log10(rawMajorStep));
+        if (decade < -6) {
+            decade = -6;
+        }
         double normMajorStep =
             rawMajorStep / pow(10.0, decade); // 1 <= step < 10
 
@@ -208,9 +222,12 @@ void Scale::update()
         } else if (normMajorStep > 2.0) {
             normMajorStep = 5.0;
             minorDiv = 5;
-        } else {
+        } else if (normMajorStep > 1.0) {
             normMajorStep = 2.0;
             minorDiv = 2;
+        } else {
+            normMajorStep = 1.0;
+            minorDiv = 2; // FIXME
         }
 
         majorStep = normMajorStep * pow(10.0, decade);
@@ -307,8 +324,27 @@ QString Scale::formatValue(double value) const
 {
     COMTime t;
 
+    if (subDigits > 0) {
+        value = round(value * pow(10, subDigits)) * pow(10, -subDigits);
+    }
+
     t.from_dbl_time(value);
-    return t.format_time(format.toLatin1().constData()).c_str();
+    QString str = t.format_time(format.toLatin1().constData()).c_str();
+
+    if (subDigits > 0) {
+        double frac = value - (int) value;
+        double ms = frac * 1e3;
+
+        int prec = subDigits - 3;
+        if (prec < 0) {
+            prec = 0;
+        }
+
+        QString fmt = "\n%0." + QString().setNum(prec) + "lf ms";
+        str += QString().sprintf(fmt.toLatin1().constData(), ms);
+    }
+
+    return str;
 }
 
 /****************************************************************************/
