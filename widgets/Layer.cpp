@@ -24,6 +24,8 @@
 
 #include <QtGui>
 
+#include <algorithm>
+
 #include "lib_channel.hpp"
 
 #include "Section.h"
@@ -163,6 +165,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
     x_scale = width /
         (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
     y_scale = height / (maximum - minimum);
+
+    drawGaps(painter, y, width, x_scale);
 
     if (genericData.size()) {
         double old_value = 0.0;
@@ -351,6 +355,90 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
         delete [] min_px;
         delete [] max_px;
+    }
+}
+
+/****************************************************************************/
+
+bool Layer::range_before(
+        const Layer::TimeRange &range1,
+        const Layer::TimeRange &range2
+        )
+{
+    return range1.start < range2.start;
+}
+
+/****************************************************************************/
+
+void Layer::drawGaps(QPainter &painter, int y, int width,
+        double x_scale) const
+{
+    double xp, old_xp;
+    int offset_drawing, height_drawing;
+    vector<TimeRange> ranges, relevant_chunk_ranges;
+    COMTime last_end;
+    QColor gapColor(255, 255, 220, 127);
+
+    offset_drawing = y + section->height - Margin;
+    height_drawing = section->height - 2 * Margin;
+
+    for (list<LibDLS::Chunk>::const_iterator c = channel->chunks().begin();
+            c != channel->chunks().end(); c++) {
+        TimeRange r;
+        r.start = c->start();
+        r.end = c->end();
+        ranges.push_back(r);
+    }
+
+    sort(ranges.begin(), ranges.end(), range_before);
+
+    // check if chunks overlap
+    last_end.set_null();
+    for (vector<TimeRange>::iterator range = ranges.begin();
+         range != ranges.end();
+         range++) {
+        if (range->start <= last_end) {
+            cerr << "WARNING: Chunks overlapping in channel \""
+                 << channel->name() << "\"!" << endl;
+            return;
+        }
+        last_end = range->end;
+    }
+
+    for (vector<TimeRange>::iterator range = ranges.begin();
+         range != ranges.end(); range++) {
+        if (range->end < section->graph->getStart()) {
+            continue;
+        }
+        if (range->start > section->graph->getEnd()) {
+            break;
+        }
+        relevant_chunk_ranges.push_back(*range);
+    }
+
+    old_xp = -1;
+
+    for (vector<TimeRange>::iterator range = relevant_chunk_ranges.begin();
+         range != relevant_chunk_ranges.end(); range++) {
+        xp = (range->start -
+                section->graph->getStart()).to_dbl_time() * x_scale;
+
+        if (xp > old_xp + 1) {
+            painter.fillRect(Margin + (int) (old_xp + 1.5),
+                     offset_drawing - height_drawing,
+                     (int) (xp - old_xp - 1),
+                     height_drawing, gapColor);
+        }
+
+        old_xp = (range->end -
+                section->graph->getStart()).to_dbl_time() * x_scale;
+    }
+
+    if (width > old_xp + 1) {
+        painter.fillRect(Margin + (int) (old_xp + 1.5),
+                 offset_drawing - height_drawing,
+                 (int) (width - old_xp - 1),
+                 height_drawing, gapColor);
     }
 }
 
