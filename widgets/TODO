@@ -1,0 +1,17 @@
+
+- Operation mode (zoom/pan/mark).
+- Context menu
+    - Operation mode
+    - Remove section
+    - Remove Layer
+    - Find extrema
+    - Export
+- Export
+    - PNG
+    - PDF using gnuplot
+    - CSV
+- Zoom/unzoom using keys
+- Draw gaps
+
+
+    
