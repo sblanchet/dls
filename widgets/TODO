@@ -1,4 +1,3 @@
-
 - Operation mode (zoom/pan/mark).
 - Context menu
     - Operation mode
@@ -12,6 +11,11 @@
     - CSV
 - Zoom/unzoom using keys
 - Draw gaps
-
-
-    
+- Scrolling
+- Section properties
+    - Scale
+    - Title
+    - Unit
+- Layer properties
+    - Color
+    - Title
