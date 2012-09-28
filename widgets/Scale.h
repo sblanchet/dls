@@ -57,6 +57,14 @@ class Scale
         int length; /**< Scale length in pixel. */
 
         int outerLength; /**< Space for the numbering in pixel. */
+        enum Tics {
+            Time,
+            Hours,
+            Days,
+            Months,
+            Years
+        };
+        Tics tics;
         double majorStep; /**< The major division (long ticks). */
         unsigned int minorDiv; /**< The minor division (short ticks). */
         QString format;
@@ -64,7 +72,11 @@ class Scale
 
         Scale();
         void update();
-        QString formatValue(double) const;
+        QString formatValue(const COMTime &, QString &) const;
+        void drawMajor(QPainter &, const QRect &, double, const COMTime &,
+                const COMTime &, QString &) const;
+        void drawMinor(QPainter &, const QRect &, double,
+                const COMTime &) const;
 };
 
 /****************************************************************************/
