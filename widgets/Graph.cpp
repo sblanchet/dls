@@ -41,7 +41,7 @@ using DLS::Section;
  */
 Graph::Graph(
         QWidget *parent /**< parent widget */
-        ): QWidget(parent),
+        ): QFrame(parent),
     scale(this),
     autoRange(true),
     dropSection(NULL),
@@ -56,7 +56,9 @@ Graph::Graph(
     zoomOutAction(this),
     zoomResetAction(this)
 {
-    //setAttribute(Qt::WA_NoBackground);
+    setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+    setBackgroundRole(QPalette::Base);
+    setAutoFillBackground(true);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMinimumSize(60, 50);
     setAcceptDrops(true);
@@ -274,7 +276,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     if (interaction == Pan) {
-        int w = width() - 2 * Layer::Margin;
+        int w = contentsRect().width() - 2 * Layer::Margin;
         COMTime range = getEnd() - getStart();
         double x_scale = range.to_dbl_time() / w;
 
@@ -301,7 +303,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
     bool wasZooming = zooming;
     bool wasPanning = panning;
-    int w = width() - 2 * Layer::Margin;
+    int w = contentsRect().width() - 2 * Layer::Margin;
     COMTime range = getEnd() - getStart();
 
     zooming = false;
@@ -366,7 +368,7 @@ void Graph::keyPressEvent(QKeyEvent *event)
 void Graph::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
-    scale.setLength(width());
+    scale.setLength(contentsRect().width());
     loadData();
 }
 
@@ -378,7 +380,7 @@ void Graph::paintEvent(
         QPaintEvent *event /**< paint event flags */
         )
 {
-    Q_UNUSED(event);
+    QFrame::paintEvent(event);
 
     QPainter painter(this);
 
@@ -390,7 +392,7 @@ void Graph::paintEvent(
         pen.setWidth(5);
         painter.setPen(pen);
 
-        painter.drawLine(5, dropLine, width() - 10, dropLine);
+        painter.drawLine(5, dropLine, contentsRect().width() - 10, dropLine);
     }
     else if (dropRemaining >= 0) {
         QPen pen;
@@ -404,13 +406,14 @@ void Graph::paintEvent(
         painter.setBrush(brush);
 
         painter.drawRect(5, dropRemaining + 5,
-                width() - 10, height() - dropRemaining - 10);
+                contentsRect().width() - 10,
+                contentsRect().height() - dropRemaining - 10);
     }
 
     int height_sum = scale.getOuterLength();
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        (*s)->draw(painter, height_sum, width());
+        (*s)->draw(painter, height_sum, contentsRect().width());
         height_sum += (*s)->getHeight();
     }
 
@@ -420,11 +423,11 @@ void Graph::paintEvent(
         painter.setPen(pen);
 
         painter.drawLine(startPos.x(), scale.getOuterLength() + 5,
-                startPos.x(), height() - 5);
+                startPos.x(), contentsRect().height() - 5);
         pen.setColor(Qt::yellow);
         painter.setPen(pen);
         painter.drawLine(endPos.x(), scale.getOuterLength() + 5,
-                endPos.x(), height() - 5);
+                endPos.x(), contentsRect().height() - 5);
     }
 }
 
