@@ -25,7 +25,7 @@
 #ifndef DLS_GRAPH_H
 #define DLS_GRAPH_H
 
-#include <QWidget>
+#include <QFrame>
 #include <QAction>
 #include <QtDesigner/QDesignerExportWidget>
 
@@ -40,7 +40,7 @@ class Section;
 /** Graph widget.
  */
 class QDESIGNER_WIDGET_EXPORT Graph:
-    public QWidget
+    public QFrame
 {
     Q_OBJECT
 
