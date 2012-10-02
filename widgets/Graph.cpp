@@ -386,6 +386,13 @@ void Graph::paintEvent(
 
     scale.draw(painter, contentsRect());
 
+    QPen verLinePen;
+    painter.setPen(verLinePen);
+    painter.drawLine(contentsRect().left(),
+            contentsRect().top() + scale.getOuterLength(),
+            contentsRect().right(),
+            contentsRect().top() + scale.getOuterLength());
+
     if (dropLine >= 0) {
         QPen pen;
         pen.setColor(Qt::blue);
