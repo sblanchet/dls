@@ -99,7 +99,6 @@ void Scale::setLength(int l)
  */
 void Scale::update()
 {
-    double ticPeriod;
     double range = (end - start).to_dbl_time();
 
     if (length <= 0 || range <= 0.0) {
@@ -116,6 +115,9 @@ void Scale::update()
     f.setPointSize(8);
     QFontMetrics fm(f);
     QSize s;
+    double ticPeriod;
+
+    outerLength = 2; // margin to bottom end
 
     s = fm.size(0, "88. 88. 8888\n88:88:88\n888.888 ms");
     ticPeriod = range * (s.width() + 6) / length;
@@ -150,7 +152,7 @@ void Scale::update()
         majorStep = normMajorStep * pow(10.0, decade);
         format = "%x\n%H:%M:%S";
         subDigits = -decade;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
         return;
     }
 
@@ -188,7 +190,7 @@ void Scale::update()
         majorStep = ticPeriod;
         format = "%x\n%H:%M:%S";
         subDigits = 0;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
         return;
     }
 
@@ -225,7 +227,7 @@ void Scale::update()
         majorStep = minutes * 60.0;
         format = "%x\n%H:%M";
         subDigits = 0;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
         return;
     }
 
@@ -252,7 +254,7 @@ void Scale::update()
         tics = Hours;
         format = "%x\n%H:%M";
         subDigits = 0;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
 #ifdef DEBUG
         qDebug() << "hours" << hours << majorStep << minorDiv;
 #endif
@@ -282,7 +284,7 @@ void Scale::update()
         tics = Days;
         format = "%b. %Y\n%d (%a.)";
         subDigits = 0;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
 #ifdef DEBUG
         qDebug() << "days" << days << majorStep << minorDiv;
 #endif
@@ -325,7 +327,7 @@ void Scale::update()
         tics = Months;
         subDigits = 0;
         s = fm.size(0, sample);
-        outerLength = s.height() + 5;
+        outerLength += s.height();
 #ifdef DEBUG
         qDebug() << "months" << months << majorStep << minorDiv;
 #endif
@@ -359,7 +361,7 @@ void Scale::update()
         majorStep = normMajorStep * pow(10.0, decade);
         format = "%Y";
         subDigits = 0;
-        outerLength = s.height() + 5;
+        outerLength += s.height();
 #ifdef DEBUG
         qDebug() << "years" << years << majorStep << minorDiv;
 #endif
