@@ -408,7 +408,14 @@ void Graph::paintEvent(
 
     QPainter painter(this);
 
-    scale.draw(painter, contentsRect());
+    QRect scaleRect(contentsRect());
+    int height = scale.getOuterLength();
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        height += 1 + (*s)->getHeight();
+    }
+    scaleRect.setHeight(height);
+    scale.draw(painter, scaleRect);
 
     QPen verLinePen;
     painter.setPen(verLinePen);
