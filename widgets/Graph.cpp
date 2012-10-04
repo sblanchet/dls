@@ -149,6 +149,10 @@ Section *Graph::insertSectionBefore(Section *before)
 
 void Graph::updateRange()
 {
+    if (!autoRange) {
+        return;
+    }
+
     COMTime start, end;
     bool valid = false;
 
