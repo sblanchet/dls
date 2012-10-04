@@ -396,7 +396,14 @@ void Graph::keyPressEvent(QKeyEvent *event)
 void Graph::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
+
     scale.setLength(contentsRect().width());
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->resize(contentsRect().width());
+    }
+
     loadData();
 }
 

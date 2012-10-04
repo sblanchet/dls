@@ -47,6 +47,8 @@ class Section
         Graph *getGraph() { return graph; }
 
         int getHeight() const { return height; };
+
+        void resize(int);
         void draw(QPainter &, const QRect &);
 
         Layer *appendLayer(LibDLS::Channel *);
