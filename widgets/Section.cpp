@@ -67,38 +67,53 @@ void Section::setDropTarget(bool d)
 
 void Section::draw(QPainter &painter, const QRect &rect) const
 {
+    QString legend;
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        if (!legend.isEmpty()) {
+            legend += ", ";
+        }
+        legend += (*l)->getChannel()->name().c_str();
+    }
+
+    QFont f = painter.font();
+    f.setPointSize(8);
+    QFontMetrics fm(f);
+
+    QRect textRect(rect);
+    textRect.setWidth(rect.width() - 4);
+    QRect bound = fm.boundingRect(textRect, Qt::TextWordWrap, legend);
+
+    QRect legendRect(rect);
+    legendRect.setHeight(bound.height() + 4);
+    QRect dataRect(rect);
+    dataRect.setTop(legendRect.bottom() + 1);
+
+    QColor legendColor(graph->palette().window().color());
+    painter.fillRect(legendRect, legendColor);
+
     QPen pen;
-    QBrush brush;
+    painter.setPen(pen);
+    painter.setFont(f);
+    painter.drawText(legendRect.adjusted(2, 2, -2, -2),
+            Qt::AlignLeft, legend);
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        (*l)->draw(painter, dataRect);
+    }
 
     if (isDropTarget) {
+        QPen pen;
         pen.setColor(Qt::blue);
-        pen.setStyle(Qt::SolidLine);
-        pen.setWidth(1);
         painter.setPen(pen);
 
+        QBrush brush;
         brush.setColor(QColor(0, 0, 255, 63));
         brush.setStyle(Qt::SolidPattern);
         painter.setBrush(brush);
 
-        painter.drawRect(rect.left() + 5, rect.top() + 5,
-                rect.width() - 10, rect.height() - 10);
-    }
-
-    pen.setColor(Qt::black);
-    QFont f = painter.font();
-    f.setPointSize(8);
-
-    int off = 0;
-    for (QList<Layer *>::const_iterator l = layers.begin();
-            l != layers.end(); l++) {
-        (*l)->draw(painter, rect);
-
-        painter.setPen(pen);
-        painter.setFont(f);
-        painter.drawText(rect.left() + 5, rect.top() + off + 5,
-                rect.width() - 10, 10, Qt::AlignLeft,
-                (*l)->getChannel()->name().c_str(), NULL);
-        off += 10;
+        painter.drawRect(rect);
     }
 }
 

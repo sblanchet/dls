@@ -447,9 +447,9 @@ void Graph::paintEvent(
         brush.setStyle(Qt::SolidPattern);
         painter.setBrush(brush);
 
-        painter.drawRect(5, dropRemaining + 5,
-                contentsRect().width() - 10,
-                contentsRect().height() - dropRemaining - 10);
+        QRect remRect(contentsRect());
+        remRect.setTop(dropRemaining);
+        painter.drawRect(remRect);
     }
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
