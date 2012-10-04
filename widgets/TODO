@@ -1,6 +1,7 @@
 - Marking.
     - (*) Measurement line.
     - Persistent markers.
+
 - Context menu
     - Remove section
     - Remove Layer
@@ -19,17 +20,17 @@
 - Section properties
     - (*) Scale
     - (*) Unit
+
 - Layer properties
     - (*) Color
     - (*) Title
     - (*) Scaling
+
 - (*) View stack using context menu and Alt-Left/Right
 - Value scale display.
-- Display colors.
 - Display combined gaps below scale.
 
-- Sections
-    - Legend with channel title and unit.
+- Display Unit in legend.
 
 - (*) Messages
 - Data caching

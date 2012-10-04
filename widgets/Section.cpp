@@ -38,7 +38,7 @@ using DLS::Layer;
 const QColor Section::colorList[] = {
     Qt::blue,
     Qt::red,
-    Qt::green,
+    Qt::darkGreen,
     Qt::black
 };
 
@@ -64,38 +64,26 @@ Section::~Section()
 
 /****************************************************************************/
 
-void Section::draw(QPainter &painter, const QRect &rect) const
+void Section::draw(QPainter &painter, const QRect &rect)
 {
-    QString legend;
-    for (QList<Layer *>::const_iterator l = layers.begin();
-            l != layers.end(); l++) {
-        if (!legend.isEmpty()) {
-            legend += ", ";
-        }
-        legend += (*l)->getChannel()->name().c_str();
-    }
-
-    QFont f = painter.font();
-    f.setPointSize(8);
-    QFontMetrics fm(f);
-
-    QRect textRect(rect);
-    textRect.setWidth(rect.width() - 4);
-    QRect bound = fm.boundingRect(textRect, Qt::TextWordWrap, legend);
+    legend.setPageSize(rect.size());
 
     QRect legendRect(rect);
-    legendRect.setHeight(bound.height() + 4);
+    legendRect.setHeight(legend.size().height());
+    legendRect = legendRect.intersected(rect);
     QRect dataRect(rect);
     dataRect.setTop(legendRect.bottom() + 1);
 
     QColor legendColor(graph->palette().window().color());
     painter.fillRect(legendRect, legendColor);
 
-    QPen pen;
-    painter.setPen(pen);
-    painter.setFont(f);
-    painter.drawText(legendRect.adjusted(2, 2, -2, -2),
-            Qt::AlignLeft, legend);
+    painter.translate(rect.topLeft());
+    legend.drawContents(&painter, QRect(QPoint(), rect.size()));
+    painter.resetTransform();
+
+    if (!dataRect.isValid()) {
+        return;
+    }
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
@@ -109,6 +97,7 @@ Layer *Section::appendLayer(LibDLS::Channel *ch)
 {
     Layer *l = new Layer(this, ch);
     layers.append(l);
+    updateLegend();
     graph->updateRange();
     return l;
 }
@@ -163,7 +152,8 @@ QColor Section::nextColor() const
     unsigned int max = 0U;
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+        for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor);
+                i++) {
             if (colorList[i] == (*l)->getColor()) {
                 used[i]++;
                 if (used[i] > max) {
@@ -191,6 +181,32 @@ QColor Section::nextColor() const
 
 
     return Qt::blue;
+}
+
+/****************************************************************************/
+
+void Section::updateLegend()
+{
+    QString html = "<html><head><meta http-equiv=\"Content-Type\" "
+        "content=\"text/html; charset=utf-8\"></head>"
+        "<body style=\"font-size: 8pt\">";
+
+    bool first = true;
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        if (first) {
+            first = false;
+        } else {
+            html += ", ";
+        }
+        html += "<span style=\"color: " + (*l)->getColor().name() + ";\">";
+        html += (*l)->getChannel()->name().c_str();
+        html += "</span>";
+    }
+
+    html += "</body></html>";
+
+    legend.setHtml(html);
 }
 
 /****************************************************************************/
