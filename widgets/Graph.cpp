@@ -292,7 +292,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     if (interaction == Pan) {
-        int w = contentsRect().width() - 2 * Layer::Margin;
+        int w = contentsRect().width() - 2 * Section::Margin;
         COMTime range = getEnd() - getStart();
         double x_scale = range.to_dbl_time() / w;
 
@@ -319,7 +319,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
     bool wasZooming = zooming;
     bool wasPanning = panning;
-    int w = contentsRect().width() - 2 * Layer::Margin;
+    int w = contentsRect().width() - 2 * Section::Margin;
     COMTime range = getEnd() - getStart();
 
     zooming = false;
@@ -335,9 +335,9 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 
     if (wasZooming) {
         COMTime diff;
-        diff.from_dbl_time((startPos.x() - Layer::Margin) * x_scale);
+        diff.from_dbl_time((startPos.x() - Section::Margin) * x_scale);
         COMTime newStart = getStart() + diff;
-        diff.from_dbl_time((event->pos().x() - Layer::Margin) * x_scale);
+        diff.from_dbl_time((event->pos().x() - Section::Margin) * x_scale);
         COMTime newEnd = getStart() + diff;
         setRange(newStart, newEnd);
         autoRange = false;

@@ -81,13 +81,48 @@ void Section::draw(QPainter &painter, const QRect &rect)
     legend.drawContents(&painter, QRect(QPoint(), rect.size()));
     painter.resetTransform();
 
+    dataRect.adjust(Margin, Margin, -Margin, -Margin);
+
     if (!dataRect.isValid()) {
         return;
     }
 
+    bool valid = false;
+    double minimum = 0.0, maximum = 0.0;
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->draw(painter, dataRect);
+        if (!(*l)->getExtremaValid()) {
+            continue;
+        }
+
+        double min = (*l)->getMinimum();
+        double max = (*l)->getMaximum();
+
+        if (valid) {
+            if (min < minimum) {
+                minimum = min;
+            }
+            if (max > maximum) {
+                maximum = max;
+            }
+        } else {
+            minimum = min;
+            maximum = max;
+            valid = true;
+        }
+    }
+
+    if (minimum >= maximum) {
+        return;
+    }
+
+    double xScale = (dataRect.width() - 1) /
+        (graph->getEnd() - graph->getStart()).to_dbl_time();
+    double yScale = (dataRect.height() - 1) / (maximum - minimum);
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        (*l)->draw(painter, dataRect, xScale, yScale, minimum);
     }
 }
 
