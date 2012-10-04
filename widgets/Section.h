@@ -47,7 +47,7 @@ class Section
         Graph *getGraph() { return graph; }
 
         int getHeight() const { return height; };
-        void draw(QPainter &, const QRect &) const;
+        void draw(QPainter &, const QRect &);
 
         Layer *appendLayer(LibDLS::Channel *);
 
@@ -63,8 +63,11 @@ class Section
         COMTime end;
         bool rangeValid;
         int height;
+        QTextDocument legend;
 
         static const QColor colorList[];
+
+        void updateLegend();
 };
 
 /****************************************************************************/
