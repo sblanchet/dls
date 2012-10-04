@@ -153,18 +153,21 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
     int dataWidth = rect.width() - 2 * Margin;
     int dataHeight = section->height - 2 * Margin;
 
-    // Kanaldaten nur zeichnen, wenn sinnvolle Werteskala
-    if (minimum >= maximum || dataWidth <= 0 || dataHeight <= 0) {
+    if (dataWidth <= 0) {
         return;
     }
 
-    int y_off = rect.top() + section->height - 1 - Margin;
-
-    double x_scale = dataWidth /
+    double xScale = dataWidth /
         (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
-    double y_scale = dataHeight / (maximum - minimum);
 
-    drawGaps(painter, rect, dataWidth, x_scale);
+    drawGaps(painter, rect, dataWidth, xScale);
+
+    if (minimum >= maximum || dataHeight <= 0) {
+        return;
+    }
+
+    double yScale = (dataHeight - 1) / (maximum - minimum);
+    int yOff = rect.top() + section->height - 1 - Margin;
 
     if (genericData.size()) {
         double old_value = 0.0;
@@ -181,8 +184,8 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
             for (unsigned int i = 0; i < (*d)->size(); i++) {
                 double value = (*d)->value(i);
                 COMTime dt = (*d)->time(i) - section->graph->getStart();
-                double xv = dt.to_dbl_time() * x_scale;
-                double yv = (value - minimum) * y_scale;
+                double xv = dt.to_dbl_time() * xScale;
+                double yv = (value - minimum) * yScale;
                 int xp, yp;
 
                 if (xv >= 0.0) {
@@ -202,7 +205,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
                 if (xp >= 0) {
                     if (first_in_chunk) {
                         painter.drawPoint(rect.left() + Margin + xp,
-                                y_off - yp);
+                                yOff - yp);
                     }
                     else {
                         dx = xp - old_xp;
@@ -211,8 +214,8 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
                         if ((float) dx * (float) dx
                                 + (float) dy * (float) dy > 0) {
                             painter.drawLine(rect.left() + Margin + old_xp,
-                                    y_off - old_yp,
-                                    rect.left() + Margin + xp, y_off - yp);
+                                    yOff - old_yp,
+                                    rect.left() + Margin + xp, yOff - yp);
                         }
                     }
 
@@ -270,8 +273,8 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j);
                 COMTime dt = (*d)->time(j) - section->graph->getStart();
-                double xv = dt.to_dbl_time() * x_scale;
-                yv = (value - minimum) * y_scale;
+                double xv = dt.to_dbl_time() * xScale;
+                yv = (value - minimum) * yScale;
 
                 if (xv >= 0.0) {
                     xp = (int) (xv + 0.5);
@@ -305,8 +308,8 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j);
                 COMTime dt = (*d)->time(j) - section->graph->getStart();
-                double xv = dt.to_dbl_time() * x_scale;
-                yv = (value - minimum) * y_scale;
+                double xv = dt.to_dbl_time() * xScale;
+                yv = (value - minimum) * yScale;
 
                 if (xv >= 0.0) {
                     xp = (int) (xv + 0.5);
@@ -338,22 +341,22 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
             if (min_px[i] != -1 && max_px[i] != -1) {
                 if (min_px[i] != max_px[i]) {
                     painter.drawLine(rect.left() + Margin + i,
-                            y_off - min_px[i],
-                            rect.left() + Margin + i, y_off - max_px[i]);
+                            yOff - min_px[i],
+                            rect.left() + Margin + i, yOff - max_px[i]);
                 }
                 else {
                     painter.drawPoint(rect.left() + Margin + i,
-                            y_off - min_px[i]);
+                            yOff - min_px[i]);
                 }
             }
             else {
                 if (min_px[i] != -1) {
                     painter.drawPoint(rect.left() + Margin + i,
-                            y_off - min_px[i]);
+                            yOff - min_px[i]);
                 }
                 if (max_px[i] != -1) {
                     painter.drawPoint(rect.left() + Margin + i,
-                            y_off - max_px[i]);
+                            yOff - max_px[i]);
                 }
             }
         }
@@ -376,7 +379,7 @@ bool Layer::range_before(
 /****************************************************************************/
 
 void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
-        double x_scale) const
+        double xScale) const
 {
     double xp, old_xp;
     int yOff, dataHeight;
@@ -426,7 +429,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
     for (vector<TimeRange>::iterator range = relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
-                section->graph->getStart()).to_dbl_time() * x_scale;
+                section->graph->getStart()).to_dbl_time() * xScale;
 
         if (xp > old_xp + 1) {
             QRect f(rect.left() + Margin + (int) (old_xp + 1.5),
@@ -437,7 +440,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
         }
 
         old_xp = (range->end -
-                section->graph->getStart()).to_dbl_time() * x_scale;
+                section->graph->getStart()).to_dbl_time() * xScale;
     }
 
     if (dataWidth > old_xp + 1) {
