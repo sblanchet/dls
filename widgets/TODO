@@ -1,19 +1,38 @@
-- Improve Scale divisions.
 - Marking.
+    - (*) Measurement line.
+    - Persistent markers.
 - Context menu
     - Remove section
     - Remove Layer
     - Find extrema
-    - Export
+    - (*) Export
+    - (*) Goto date/time picker, last hour, day, week
+
 - Export
     - PNG
-    - PDF using gnuplot
-    - CSV
-- Vertical Scrolling
+    - (*) PDF
+    - (*) CSV
+    - (*) Delta-t specifiction
+
+- (*) Vertical Scrolling
+
 - Section properties
-    - Scale
-    - Title
-    - Unit
+    - (*) Scale
+    - (*) Unit
 - Layer properties
-    - Color
-    - Title
+    - (*) Color
+    - (*) Title
+    - (*) Scaling
+- (*) Move via arrow keys
+- (*) View stack using context menu and Alt-Left/Right
+- Value scale display.
+- Display colors.
+- Display combined gaps below scale.
+- Display time scale only over sections.
+
+- Sections
+    - Legend with channel title and unit.
+
+- (*) Messages
+- Data caching
+- (*) Data access via network
