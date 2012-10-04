@@ -46,7 +46,6 @@ class Section
 
         Graph *getGraph() { return graph; }
 
-        void setDropTarget(bool);
         int getHeight() const { return height; };
         void draw(QPainter &, const QRect &) const;
 
@@ -62,7 +61,6 @@ class Section
         COMTime end;
         bool rangeValid;
         int height;
-        bool isDropTarget;
 };
 
 /****************************************************************************/
