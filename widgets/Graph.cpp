@@ -54,7 +54,9 @@ Graph::Graph(
     panAction(this),
     zoomInAction(this),
     zoomOutAction(this),
-    zoomResetAction(this)
+    zoomResetAction(this),
+    removeSectionAction(this),
+    selectedSection(NULL)
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -100,6 +102,12 @@ Graph::Graph(
     zoomResetAction.setStatusTip(tr("Automatically zoom to the data extent."));
     zoomResetAction.setIcon(QIcon(":/images/view-fullscreen.svg"));
     connect(&zoomResetAction, SIGNAL(triggered()), this, SLOT(zoomReset()));
+
+    removeSectionAction.setText(tr("Remove section"));
+    removeSectionAction.setStatusTip(tr("Remove the selected section."));
+    removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
+    connect(&removeSectionAction, SIGNAL(triggered()),
+            this, SLOT(removeSelectedSection()));
 }
 
 /****************************************************************************/
@@ -143,6 +151,19 @@ Section *Graph::insertSectionBefore(Section *before)
     }
 
     return s;
+}
+
+/****************************************************************************/
+
+void Graph::removeSection(Section *section)
+{
+    int num = sections.removeAll(section);
+
+    delete section;
+
+    if (num > 0) {
+        update();
+    }
 }
 
 /****************************************************************************/
@@ -492,12 +513,19 @@ void Graph::paintEvent(
 void Graph::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
+
+    selectedSection = sectionFromPos(event->pos());
+    removeSectionAction.setEnabled(selectedSection);
+
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
     menu.addSeparator();
     menu.addAction(&zoomInAction);
     menu.addAction(&zoomOutAction);
     menu.addAction(&zoomResetAction);
+    menu.addSeparator();
+    menu.addAction(&removeSectionAction);
+
     menu.exec(event->globalPos());
 }
 
@@ -647,6 +675,34 @@ void Graph::updateActions()
 
 /****************************************************************************/
 
+Section *Graph::sectionFromPos(const QPoint &pos)
+{
+    if (!contentsRect().contains(pos)) {
+        return NULL;
+    }
+
+    QRect scaleRect(contentsRect());
+    scaleRect.setHeight(scale.getOuterLength());
+    if (scaleRect.contains(pos)) {
+        return NULL;
+    }
+
+    int top = contentsRect().top() + scale.getOuterLength() + 1;
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        QRect rect(contentsRect().left(), top,
+                contentsRect().width(), (*s)->getHeight());
+        if (rect.contains(pos)) {
+            return *s;
+        }
+        top += (*s)->getHeight() + 1;
+    }
+
+    return NULL;
+}
+
+/****************************************************************************/
+
 /** Draws a dop target rectangle.
  */
 void Graph::drawDropRect(QPainter &painter, const QRect &rect)
@@ -674,6 +730,18 @@ void Graph::interactionSlot()
     else if (sender() == &panAction) {
         setInteraction(Pan);
     }
+}
+
+/****************************************************************************/
+
+void Graph::removeSelectedSection()
+{
+    if (!selectedSection) {
+        return;
+    }
+
+    removeSection(selectedSection);
+    selectedSection = NULL;
 }
 
 /****************************************************************************/
