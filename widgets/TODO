@@ -3,7 +3,6 @@
     - Persistent markers.
 
 - Context menu
-    - Remove section
     - Remove Layer
     - Find extrema
     - (*) Export
@@ -29,6 +28,7 @@
 - (*) View stack using context menu and Alt-Left/Right
 - Value scale display.
 - Display combined gaps below scale.
+- Display values centered if minimum == maximum.
 
 - Display units in legend.
 

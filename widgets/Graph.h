@@ -52,6 +52,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         Section *appendSection();
         Section *insertSectionBefore(Section *);
+        void removeSection(Section *);
 
         void updateRange();
         void loadData();
@@ -105,16 +106,19 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction zoomInAction;
         QAction zoomOutAction;
         QAction zoomResetAction;
+        QAction removeSectionAction;
+        Section *selectedSection;
 
         void updateDragging(QPoint);
         void resetDragging();
         void updateCursor();
         void updateActions();
+        Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
 
     private slots:
         void interactionSlot();
-
+        void removeSelectedSection();
 };
 
 /****************************************************************************/
