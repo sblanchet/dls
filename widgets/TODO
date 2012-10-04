@@ -23,7 +23,6 @@
     - (*) Color
     - (*) Title
     - (*) Scaling
-- (*) Move via arrow keys
 - (*) View stack using context menu and Alt-Left/Right
 - Value scale display.
 - Display colors.
