@@ -35,6 +35,15 @@ using DLS::Layer;
 
 /****************************************************************************/
 
+const QColor Section::colorList[] = {
+    Qt::blue,
+    Qt::red,
+    Qt::green,
+    Qt::black
+};
+
+/****************************************************************************/
+
 /** Constructor.
  */
 Section::Section(
@@ -138,6 +147,50 @@ void Section::loadData(const COMTime &start, const COMTime &end,
             l != layers.end(); l++) {
         (*l)->loadData(start, end, min_values);
     }
+}
+
+/****************************************************************************/
+
+QColor Section::nextColor() const
+{
+    unsigned int used[sizeof(colorList) / sizeof(QColor)];
+
+    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+        used[i] = 0;
+    }
+
+    // count usage and find maximum
+    unsigned int max = 0U;
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+            if (colorList[i] == (*l)->getColor()) {
+                used[i]++;
+                if (used[i] > max) {
+                    max = used[i];
+                }
+                break;
+            }
+        }
+    }
+
+    // find minimum
+    unsigned int min = max;
+    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+        if (used[i] < min) {
+            min = used[i];
+        }
+    }
+
+    // return first in list that is least used
+    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+        if (used[i] == min) {
+            return colorList[i];
+        }
+    }
+
+
+    return Qt::blue;
 }
 
 /****************************************************************************/

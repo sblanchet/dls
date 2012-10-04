@@ -40,10 +40,14 @@ class Section;
 class Layer
 {
     public:
-        Layer(Section *, LibDLS::Channel *);
+        Layer(Section *, LibDLS::Channel *, const QColor & = QColor());
         virtual ~Layer();
 
         LibDLS::Channel *getChannel() const { return channel; };
+
+        void setColor(const QColor &);
+        QColor getColor() const { return color; }
+
         void loadData(const COMTime &, const COMTime &, int);
         void draw(QPainter &, const QRect &) const;
 
@@ -52,6 +56,7 @@ class Layer
     private:
         Section * const section;
         LibDLS::Channel * const channel;
+        QColor color;
         QList<LibDLS::Data *> genericData;
         QList<LibDLS::Data *> minimumData;
         QList<LibDLS::Data *> maximumData;

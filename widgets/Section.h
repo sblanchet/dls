@@ -54,6 +54,8 @@ class Section
         void getRange(bool &, COMTime &, COMTime &);
         void loadData(const COMTime &, const COMTime &, int);
 
+        QColor nextColor() const;
+
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */
@@ -61,6 +63,8 @@ class Section
         COMTime end;
         bool rangeValid;
         int height;
+
+        static const QColor colorList[];
 };
 
 /****************************************************************************/

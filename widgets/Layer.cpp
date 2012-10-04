@@ -41,13 +41,19 @@ using DLS::Layer;
  */
 Layer::Layer(
         Section *section,
-        LibDLS::Channel *channel
+        LibDLS::Channel *channel,
+        const QColor &c
         ):
     section(section),
     channel(channel),
+    color(c),
     minimum(0.0),
     maximum(0.0)
 {
+    if (!color.isValid()) {
+        color = section->nextColor();
+    }
+
     channel->fetch_chunks();
 }
 
@@ -60,6 +66,17 @@ Layer::~Layer()
     clearDataList(genericData);
     clearDataList(minimumData);
     clearDataList(maximumData);
+}
+
+/****************************************************************************/
+
+void Layer::setColor(const QColor &c)
+{
+    color = c;
+
+    if (!color.isValid()) {
+        color = section->nextColor();
+    }
 }
 
 /****************************************************************************/
@@ -175,7 +192,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
         bool first_in_chunk = true;
 
         QPen pen;
-        pen.setColor(Qt::blue);
+        pen.setColor(color);
         painter.setPen(pen);
 
         for (QList<LibDLS::Data *>::const_iterator d = genericData.begin();
@@ -264,7 +281,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
         }
 
         QPen pen;
-        pen.setColor(Qt::darkGreen);
+        pen.setColor(color);
         painter.setPen(pen);
 
         for (QList<LibDLS::Data *>::const_iterator d = minimumData.begin();
