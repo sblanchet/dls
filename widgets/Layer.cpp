@@ -151,14 +151,14 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
 void Layer::draw(QPainter &painter, const QRect &rect) const
 {
     int dataWidth = rect.width() - 2 * Margin;
-    int dataHeight = section->height - 2 * Margin;
+    int dataHeight = rect.height() - 2 * Margin;
 
     if (dataWidth <= 0) {
         return;
     }
 
-    double xScale = dataWidth /
-        (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
+    double xScale = dataWidth / (section->getGraph()->getEnd() -
+            section->getGraph()->getStart()).to_dbl_time();
 
     drawGaps(painter, rect, dataWidth, xScale);
 
@@ -167,7 +167,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
     }
 
     double yScale = (dataHeight - 1) / (maximum - minimum);
-    int yOff = rect.top() + section->height - 1 - Margin;
+    int yOff = rect.top() + rect.height() - 1 - Margin;
 
     if (genericData.size()) {
         double old_value = 0.0;
@@ -183,7 +183,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
 
             for (unsigned int i = 0; i < (*d)->size(); i++) {
                 double value = (*d)->value(i);
-                COMTime dt = (*d)->time(i) - section->graph->getStart();
+                COMTime dt = (*d)->time(i) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 double yv = (value - minimum) * yScale;
                 int xp, yp;
@@ -272,7 +272,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j);
-                COMTime dt = (*d)->time(j) - section->graph->getStart();
+                COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - minimum) * yScale;
 
@@ -307,7 +307,7 @@ void Layer::draw(QPainter &painter, const QRect &rect) const
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j);
-                COMTime dt = (*d)->time(j) - section->graph->getStart();
+                COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - minimum) * yScale;
 
@@ -388,7 +388,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
     QColor gapColor(255, 255, 220, 127);
 
     yOff = rect.top() + Margin;
-    dataHeight = section->height - 2 * Margin;
+    dataHeight = rect.height() - 2 * Margin;
 
     for (list<LibDLS::Chunk>::const_iterator c = channel->chunks().begin();
             c != channel->chunks().end(); c++) {
@@ -415,10 +415,10 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
 
     for (vector<TimeRange>::iterator range = ranges.begin();
          range != ranges.end(); range++) {
-        if (range->end < section->graph->getStart()) {
+        if (range->end < section->getGraph()->getStart()) {
             continue;
         }
-        if (range->start > section->graph->getEnd()) {
+        if (range->start > section->getGraph()->getEnd()) {
             break;
         }
         relevant_chunk_ranges.push_back(*range);
@@ -429,7 +429,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
     for (vector<TimeRange>::iterator range = relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
-                section->graph->getStart()).to_dbl_time() * xScale;
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
 
         if (xp > old_xp + 1) {
             QRect f(rect.left() + Margin + (int) (old_xp + 1.5),
@@ -440,7 +440,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
         }
 
         old_xp = (range->end -
-                section->graph->getStart()).to_dbl_time() * xScale;
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
     }
 
     if (dataWidth > old_xp + 1) {

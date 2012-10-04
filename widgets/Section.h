@@ -40,11 +40,11 @@ class Layer;
  */
 class Section
 {
-    friend class Layer;
-
     public:
         Section(Graph *graph);
         virtual ~Section();
+
+        Graph *getGraph() { return graph; }
 
         void setDropTarget(bool);
         int getHeight() const { return height; };
