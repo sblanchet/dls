@@ -56,6 +56,8 @@ class Section
 
         QColor nextColor() const;
 
+        enum {Margin = 1};
+
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */

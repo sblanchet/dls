@@ -49,9 +49,11 @@ class Layer
         QColor getColor() const { return color; }
 
         void loadData(const COMTime &, const COMTime &, int);
-        void draw(QPainter &, const QRect &) const;
+        void draw(QPainter &, const QRect &, double, double, double) const;
 
-        enum {Margin = 1};
+        double getMinimum() const { return minimum; }
+        double getMaximum() const { return maximum; }
+        double getExtremaValid() const { return extremaValid; }
 
     private:
         Section * const section;
@@ -62,6 +64,7 @@ class Layer
         QList<LibDLS::Data *> maximumData;
         double minimum;
         double maximum;
+        bool extremaValid;
 
         struct TimeRange
         {
@@ -74,7 +77,7 @@ class Layer
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
         void updateExtrema(const QList<LibDLS::Data *> &, bool *);
-        void drawGaps(QPainter &, const QRect &, int, double) const;
+        void drawGaps(QPainter &, const QRect &, double) const;
 };
 
 /****************************************************************************/
