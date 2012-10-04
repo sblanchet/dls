@@ -23,14 +23,14 @@
 
 - Layer properties
     - (*) Color
-    - (*) Title
+    - (*) Title (alias)
     - (*) Scaling
 
 - (*) View stack using context menu and Alt-Left/Right
 - Value scale display.
 - Display combined gaps below scale.
 
-- Display Unit in legend.
+- Display units in legend.
 
 - (*) Messages
 - Data caching
