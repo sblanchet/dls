@@ -64,10 +64,15 @@ Section::~Section()
 
 /****************************************************************************/
 
+void Section::resize(int width)
+{
+    legend.setPageSize(QSize(width, height));
+}
+
+/****************************************************************************/
+
 void Section::draw(QPainter &painter, const QRect &rect)
 {
-    legend.setPageSize(rect.size());
-
     QRect legendRect(rect);
     legendRect.setHeight(legend.size().height());
     legendRect = legendRect.intersected(rect);
@@ -78,7 +83,7 @@ void Section::draw(QPainter &painter, const QRect &rect)
     painter.fillRect(legendRect, legendColor);
 
     painter.translate(rect.topLeft());
-    legend.drawContents(&painter, QRect(QPoint(), rect.size()));
+    legend.drawContents(&painter, QRect(QPoint(), legendRect.size()));
     painter.resetTransform();
 
     dataRect.adjust(Margin, Margin, -Margin, -Margin);
