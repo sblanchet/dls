@@ -428,30 +428,6 @@ void Graph::paintEvent(
             contentsRect().right(),
             contentsRect().top() + scale.getOuterLength());
 
-    if (dropLine >= 0) {
-        QPen pen;
-        pen.setColor(Qt::blue);
-        pen.setWidth(5);
-        painter.setPen(pen);
-
-        painter.drawLine(5, dropLine, contentsRect().width() - 10, dropLine);
-    }
-    else if (dropRemaining >= 0) {
-        QPen pen;
-        QBrush brush = painter.brush();
-
-        pen.setColor(Qt::blue);
-        painter.setPen(pen);
-
-        brush.setColor(QColor(0, 0, 255, 63));
-        brush.setStyle(Qt::SolidPattern);
-        painter.setBrush(brush);
-
-        QRect remRect(contentsRect());
-        remRect.setTop(dropRemaining);
-        painter.drawRect(remRect);
-    }
-
     int top = contentsRect().top() + scale.getOuterLength() + 1;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
@@ -465,7 +441,25 @@ void Graph::paintEvent(
                 contentsRect().right(),
                 top + (*s)->getHeight());
 
+        if (*s == dropSection && dropLine < 0) {
+            drawDropRect(painter, r);
+        }
+
         top += (*s)->getHeight() + 1;
+    }
+
+    if (dropLine >= 0) {
+        QPen pen;
+        pen.setColor(Qt::blue);
+        pen.setWidth(5);
+        painter.setPen(pen);
+
+        painter.drawLine(5, dropLine, contentsRect().width() - 10, dropLine);
+    }
+    else if (dropRemaining >= 0) {
+        QRect remRect(contentsRect());
+        remRect.setTop(dropRemaining);
+        drawDropRect(painter, remRect);
     }
 
     if (zooming) {
@@ -599,25 +593,17 @@ void Graph::updateDragging(QPoint p)
         top += (*s)->getHeight() + 1;
     }
 
-    if (dropSection) {
-        if (dropLine < 0) {
-            dropSection->setDropTarget(true);
-        }
-        update();
-    } else { // no sections
+    if (!dropSection) {
         dropRemaining = top;
-        update();
     }
+
+    update();
 }
 
 /****************************************************************************/
 
 void Graph::resetDragging()
 {
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        (*s)->setDropTarget(false);
-    }
     dropSection = NULL;
     dropLine = -1;
     dropRemaining = -1;
@@ -650,6 +636,25 @@ void Graph::updateActions()
     zoomAction.setEnabled(interaction != Zoom);
     panAction.setEnabled(interaction != Pan);
     zoomResetAction.setEnabled(!autoRange);
+}
+
+/****************************************************************************/
+
+/** Draws a dop target rectangle.
+ */
+void Graph::drawDropRect(QPainter &painter, const QRect &rect)
+{
+    QPen pen;
+    QBrush brush;
+
+    pen.setColor(Qt::blue);
+    painter.setPen(pen);
+
+    brush.setColor(QColor(0, 0, 255, 63));
+    brush.setStyle(Qt::SolidPattern);
+    painter.setBrush(brush);
+
+    painter.drawRect(rect);
 }
 
 /****************************************************************************/

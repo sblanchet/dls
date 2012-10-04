@@ -41,8 +41,7 @@ Section::Section(
         Graph *graph
         ):
     graph(graph),
-    height(100),
-    isDropTarget(false)
+    height(100)
 {
 }
 
@@ -52,15 +51,6 @@ Section::Section(
  */
 Section::~Section()
 {
-}
-
-/****************************************************************************/
-
-/** Gives a hint aboute the optimal size.
- */
-void Section::setDropTarget(bool d)
-{
-    isDropTarget = d;
 }
 
 /****************************************************************************/
@@ -101,19 +91,6 @@ void Section::draw(QPainter &painter, const QRect &rect) const
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         (*l)->draw(painter, dataRect);
-    }
-
-    if (isDropTarget) {
-        QPen pen;
-        pen.setColor(Qt::blue);
-        painter.setPen(pen);
-
-        QBrush brush;
-        brush.setColor(QColor(0, 0, 255, 63));
-        brush.setStyle(Qt::SolidPattern);
-        painter.setBrush(brush);
-
-        painter.drawRect(rect);
     }
 }
 

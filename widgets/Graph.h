@@ -110,6 +110,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void resetDragging();
         void updateCursor();
         void updateActions();
+        static void drawDropRect(QPainter &, const QRect &);
 
     private slots:
         void interactionSlot();
