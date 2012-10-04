@@ -48,7 +48,7 @@ class Section
 
         void setDropTarget(bool);
         int getHeight() const { return height; };
-        void draw(QPainter &, int, int) const;
+        void draw(QPainter &, const QRect &) const;
 
         Layer *appendLayer(LibDLS::Channel *);
 

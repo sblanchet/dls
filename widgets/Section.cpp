@@ -65,7 +65,7 @@ void Section::setDropTarget(bool d)
 
 /****************************************************************************/
 
-void Section::draw(QPainter &painter, int y, int width) const
+void Section::draw(QPainter &painter, const QRect &rect) const
 {
     QPen pen;
     QBrush brush;
@@ -80,7 +80,8 @@ void Section::draw(QPainter &painter, int y, int width) const
         brush.setStyle(Qt::SolidPattern);
         painter.setBrush(brush);
 
-        painter.drawRect(5, y + 5, width - 10, height - 10);
+        painter.drawRect(rect.left() + 5, rect.top() + 5,
+                rect.width() - 10, rect.height() - 10);
     }
 
     pen.setColor(Qt::black);
@@ -90,11 +91,12 @@ void Section::draw(QPainter &painter, int y, int width) const
     int off = 0;
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->draw(painter, y, width);
+        (*l)->draw(painter, rect);
 
         painter.setPen(pen);
         painter.setFont(f);
-        painter.drawText(5, y + off + 5, width - 10, 10, Qt::AlignLeft,
+        painter.drawText(rect.left() + 5, rect.top() + off + 5,
+                rect.width() - 10, 10, Qt::AlignLeft,
                 (*l)->getChannel()->name().c_str(), NULL);
         off += 10;
     }

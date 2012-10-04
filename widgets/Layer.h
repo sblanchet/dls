@@ -45,9 +45,9 @@ class Layer
 
         LibDLS::Channel *getChannel() const { return channel; };
         void loadData(const COMTime &, const COMTime &, int);
-        void draw(QPainter &, int, int) const;
+        void draw(QPainter &, const QRect &) const;
 
-        enum {Margin = 2};
+        enum {Margin = 1};
 
     private:
         Section * const section;
@@ -69,7 +69,7 @@ class Layer
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
         void updateExtrema(const QList<LibDLS::Data *> &, bool *);
-        void drawGaps(QPainter &, int, int, double) const;
+        void drawGaps(QPainter &, const QRect &, int, double) const;
 };
 
 /****************************************************************************/

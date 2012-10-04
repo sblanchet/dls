@@ -417,11 +417,20 @@ void Graph::paintEvent(
                 contentsRect().height() - dropRemaining - 10);
     }
 
-    int height_sum = scale.getOuterLength();
+    int top = contentsRect().top() + scale.getOuterLength() + 1;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        (*s)->draw(painter, height_sum, contentsRect().width());
-        height_sum += (*s)->getHeight();
+        QRect r(contentsRect().left(), top,
+                contentsRect().width(), (*s)->getHeight());
+        (*s)->draw(painter, r);
+
+        painter.setPen(verLinePen);
+        painter.drawLine(contentsRect().left(),
+                top + (*s)->getHeight(),
+                contentsRect().right(),
+                top + (*s)->getHeight());
+
+        top += (*s)->getHeight() + 1;
     }
 
     if (zooming) {
@@ -429,12 +438,14 @@ void Graph::paintEvent(
         pen.setColor(Qt::red);
         painter.setPen(pen);
 
-        painter.drawLine(startPos.x(), scale.getOuterLength() + 5,
-                startPos.x(), contentsRect().height() - 5);
+        painter.drawLine(startPos.x(),
+                contentsRect().top() + scale.getOuterLength() + 1,
+                startPos.x(), contentsRect().bottom());
         pen.setColor(Qt::yellow);
         painter.setPen(pen);
-        painter.drawLine(endPos.x(), scale.getOuterLength() + 5,
-                endPos.x(), contentsRect().height() - 5);
+        painter.drawLine(endPos.x(),
+                contentsRect().top() + scale.getOuterLength() + 1,
+                endPos.x(), contentsRect().bottom());
     }
 }
 
@@ -535,22 +546,22 @@ void Graph::wheelEvent(QWheelEvent *event)
 
 void Graph::updateDragging(QPoint p)
 {
-    int height_sum = scale.getOuterLength(), y = p.y();
+    int top = contentsRect().top() + scale.getOuterLength() + 1, y = p.y();
 
     resetDragging();
 
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        if (y <= height_sum + DROP_TOLERANCE) {
+        if (y <= top + DROP_TOLERANCE) {
             dropSection = *s;
-            dropLine = height_sum;
+            dropLine = top;
             break;
-        } else if (y <= height_sum + (*s)->getHeight() - DROP_TOLERANCE) {
+        } else if (y <= top + (*s)->getHeight() - DROP_TOLERANCE) {
             dropSection = *s;
             break;
         }
 
-        height_sum += (*s)->getHeight();
+        top += (*s)->getHeight() + 1;
     }
 
     if (dropSection) {
@@ -559,7 +570,7 @@ void Graph::updateDragging(QPoint p)
         }
         update();
     } else { // no sections
-        dropRemaining = height_sum;
+        dropRemaining = top;
         update();
     }
 }

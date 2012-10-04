@@ -148,33 +148,30 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
 
 /****************************************************************************/
 
-void Layer::draw(QPainter &painter, int y, int width) const
+void Layer::draw(QPainter &painter, const QRect &rect) const
 {
-    QPen pen;
-    QBrush brush;
-    double x_scale, y_scale;
-    int height = section->height - 2 * Margin;
-
-    width -= 2 * Margin;
+    int dataWidth = rect.width() - 2 * Margin;
+    int dataHeight = section->height - 2 * Margin;
 
     // Kanaldaten nur zeichnen, wenn sinnvolle Werteskala
-    if (minimum >= maximum || width <= 0 || height <= 0) {
+    if (minimum >= maximum || dataWidth <= 0 || dataHeight <= 0) {
         return;
     }
 
-    int y_off = y + section->height - Margin;
+    int y_off = rect.top() + section->height - 1 - Margin;
 
-    x_scale = width /
+    double x_scale = dataWidth /
         (section->graph->getEnd() - section->graph->getStart()).to_dbl_time();
-    y_scale = height / (maximum - minimum);
+    double y_scale = dataHeight / (maximum - minimum);
 
-    drawGaps(painter, y, width, x_scale);
+    drawGaps(painter, rect, dataWidth, x_scale);
 
     if (genericData.size()) {
         double old_value = 0.0;
         int old_xp = 0, old_yp = 0, dx, dy;
         bool first_in_chunk = true;
 
+        QPen pen;
         pen.setColor(Qt::blue);
         painter.setPen(pen);
 
@@ -204,7 +201,8 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                 if (xp >= 0) {
                     if (first_in_chunk) {
-                        painter.drawPoint(Margin + xp, y_off - yp);
+                        painter.drawPoint(rect.left() + Margin + xp,
+                                y_off - yp);
                     }
                     else {
                         dx = xp - old_xp;
@@ -212,17 +210,18 @@ void Layer::draw(QPainter &painter, int y, int width) const
 
                         if ((float) dx * (float) dx
                                 + (float) dy * (float) dy > 0) {
-                            painter.drawLine(Margin + old_xp, y_off - old_yp,
-                                    Margin + xp, y_off - yp);
+                            painter.drawLine(rect.left() + Margin + old_xp,
+                                    y_off - old_yp,
+                                    rect.left() + Margin + xp, y_off - yp);
                         }
                     }
 
-                    if (xp >= width) {
+                    if (xp >= dataWidth) {
                         break;
                     }
                 }
 
-                if (xp >= width) {
+                if (xp >= dataWidth) {
                     break;
                 }
 
@@ -240,7 +239,7 @@ void Layer::draw(QPainter &painter, int y, int width) const
         int *min_px, *max_px;
 
         try {
-            min_px = new int[width];
+            min_px = new int[dataWidth];
         }
         catch (...) {
             qWarning() << "ERROR: Failed to allocate drawing memory!";
@@ -248,7 +247,7 @@ void Layer::draw(QPainter &painter, int y, int width) const
         }
 
         try {
-            max_px = new int[width];
+            max_px = new int[dataWidth];
         }
         catch (...) {
             qWarning() << "ERROR: Failed to allocate drawing memory!";
@@ -256,11 +255,12 @@ void Layer::draw(QPainter &painter, int y, int width) const
             return;
         }
 
-        for (i = 0; i < width; i++) {
+        for (i = 0; i < dataWidth; i++) {
             min_px[i] = -1;
             max_px[i] = -1;
         }
 
+        QPen pen;
         pen.setColor(Qt::darkGreen);
         painter.setPen(pen);
 
@@ -286,14 +286,14 @@ void Layer::draw(QPainter &painter, int y, int width) const
                     yp = (int) (yv - 0.5);
                 }
 
-                if (xp >= 0 && xp < width) {
+                if (xp >= 0 && xp < dataWidth) {
                     if (min_px[xp] == -1
                             || (min_px[xp] != -1 && yp < min_px[xp])) {
                         min_px[xp] = yp;
                     }
                 }
 
-                else if (xp >= width) {
+                else if (xp >= dataWidth) {
                     break;
                 }
             }
@@ -321,35 +321,39 @@ void Layer::draw(QPainter &painter, int y, int width) const
                     yp = (int) (yv - 0.5);
                 }
 
-                if (xp >= 0 && xp < width) {
+                if (xp >= 0 && xp < dataWidth) {
                     if (max_px[xp] == -1
                             || (max_px[xp] != -1 && yp > max_px[xp])) {
                         max_px[xp] = yp;
                     }
                 }
 
-                else if (xp >= width) {
+                else if (xp >= dataWidth) {
                     break;
                 }
             }
         }
 
-        for (i = 0; i < width; i++) {
+        for (i = 0; i < dataWidth; i++) {
             if (min_px[i] != -1 && max_px[i] != -1) {
                 if (min_px[i] != max_px[i]) {
-                    painter.drawLine(Margin + i, y_off - min_px[i],
-                            Margin + i, y_off - max_px[i]);
+                    painter.drawLine(rect.left() + Margin + i,
+                            y_off - min_px[i],
+                            rect.left() + Margin + i, y_off - max_px[i]);
                 }
                 else {
-                    painter.drawPoint(Margin + i, y_off - min_px[i]);
+                    painter.drawPoint(rect.left() + Margin + i,
+                            y_off - min_px[i]);
                 }
             }
             else {
                 if (min_px[i] != -1) {
-                    painter.drawPoint(Margin + i, y_off - min_px[i]);
+                    painter.drawPoint(rect.left() + Margin + i,
+                            y_off - min_px[i]);
                 }
                 if (max_px[i] != -1) {
-                    painter.drawPoint(Margin + i, y_off - max_px[i]);
+                    painter.drawPoint(rect.left() + Margin + i,
+                            y_off - max_px[i]);
                 }
             }
         }
@@ -371,17 +375,17 @@ bool Layer::range_before(
 
 /****************************************************************************/
 
-void Layer::drawGaps(QPainter &painter, int y, int width,
+void Layer::drawGaps(QPainter &painter, const QRect &rect, int dataWidth,
         double x_scale) const
 {
     double xp, old_xp;
-    int offset_drawing, height_drawing;
+    int yOff, dataHeight;
     vector<TimeRange> ranges, relevant_chunk_ranges;
     COMTime last_end;
     QColor gapColor(255, 255, 220, 127);
 
-    offset_drawing = y + section->height - Margin;
-    height_drawing = section->height - 2 * Margin;
+    yOff = rect.top() + Margin;
+    dataHeight = section->height - 2 * Margin;
 
     for (list<LibDLS::Chunk>::const_iterator c = channel->chunks().begin();
             c != channel->chunks().end(); c++) {
@@ -425,21 +429,23 @@ void Layer::drawGaps(QPainter &painter, int y, int width,
                 section->graph->getStart()).to_dbl_time() * x_scale;
 
         if (xp > old_xp + 1) {
-            painter.fillRect(Margin + (int) (old_xp + 1.5),
-                     offset_drawing - height_drawing,
+            QRect f(rect.left() + Margin + (int) (old_xp + 1.5),
+                     yOff,
                      (int) (xp - old_xp - 1),
-                     height_drawing, gapColor);
+                     dataHeight);
+            painter.fillRect(f, gapColor);
         }
 
         old_xp = (range->end -
                 section->graph->getStart()).to_dbl_time() * x_scale;
     }
 
-    if (width > old_xp + 1) {
-        painter.fillRect(Margin + (int) (old_xp + 1.5),
-                 offset_drawing - height_drawing,
-                 (int) (width - old_xp - 1),
-                 height_drawing, gapColor);
+    if (dataWidth > old_xp + 1) {
+        QRect f(rect.left() + Margin + (int) (old_xp + 1.5),
+                yOff,
+                (int) (dataWidth - old_xp - 1),
+                dataHeight);
+        painter.fillRect(f, gapColor);
     }
 }
 
