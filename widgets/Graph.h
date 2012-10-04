@@ -69,6 +69,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void zoomOut();
         void zoomReset();
         void setInteraction(Interaction);
+        void pan(double);
 
     protected:
         bool event(QEvent *);

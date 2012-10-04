@@ -228,6 +228,18 @@ void Graph::setInteraction(Interaction i)
 
 /****************************************************************************/
 
+void Graph::pan(double fraction)
+{
+    COMTime diff;
+    diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() * fraction);
+    setRange(getStart() + diff, getEnd() + diff);
+    autoRange = false;
+    updateActions();
+    loadData();
+}
+
+/****************************************************************************/
+
 /** Event handler.
  */
 bool Graph::event(
@@ -354,6 +366,18 @@ void Graph::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_P:
             setInteraction(Pan);
+            break;
+        case Qt::Key_Right:
+            pan(0.125);
+            break;
+        case Qt::Key_Left:
+            pan(-0.125);
+            break;
+        case Qt::Key_PageUp:
+            pan(1.0);
+            break;
+        case Qt::Key_PageDown:
+            pan(-1);
             break;
         default:
             QWidget::keyPressEvent(event);
