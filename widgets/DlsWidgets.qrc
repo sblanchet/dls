@@ -4,5 +4,6 @@
     <file>images/go-next.svg</file>
     <file>images/view-fullscreen.svg</file>
     <file>images/list-remove.svg</file>
+    <file>images/measure.svg</file>
   </qresource>
 </RCC>

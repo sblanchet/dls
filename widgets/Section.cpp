@@ -86,7 +86,7 @@ void Section::draw(QPainter &painter, const QRect &rect)
     legend.drawContents(&painter, QRect(QPoint(), legendRect.size()));
     painter.resetTransform();
 
-    dataRect.adjust(Margin, Margin, -Margin, -Margin);
+    dataRect.adjust(0, Margin, 0, -Margin);
 
     if (!dataRect.isValid()) {
         return;

@@ -62,7 +62,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         enum Interaction {
             Zoom,
-            Pan
+            Pan,
+            Measure
         };
 
     public slots:
@@ -77,6 +78,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void mousePressEvent(QMouseEvent *);
         void mouseReleaseEvent(QMouseEvent *);
         void mouseMoveEvent(QMouseEvent *);
+        void leaveEvent(QEvent *);
         void keyPressEvent(QKeyEvent *event);
         void resizeEvent(QResizeEvent *);
         void paintEvent(QPaintEvent *);
@@ -101,8 +103,11 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool zooming;
         Interaction interaction;
         bool panning;
+        bool measuring;
+        COMTime measureTime;
         QAction zoomAction;
         QAction panAction;
+        QAction measureAction;
         QAction zoomInAction;
         QAction zoomOutAction;
         QAction zoomResetAction;

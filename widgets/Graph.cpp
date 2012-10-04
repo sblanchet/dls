@@ -50,8 +50,10 @@ Graph::Graph(
     zooming(false),
     interaction(Zoom),
     panning(false),
+    measuring(false),
     zoomAction(this),
     panAction(this),
+    measureAction(this),
     zoomInAction(this),
     zoomOutAction(this),
     zoomResetAction(this),
@@ -82,6 +84,12 @@ Graph::Graph(
     panAction.setStatusTip(tr("Set mouse interaction to panning."));
     panAction.setIcon(QIcon(":/images/go-next.svg"));
     connect(&panAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
+
+    measureAction.setText(tr("&Measure"));
+    measureAction.setShortcut(Qt::Key_M);
+    measureAction.setStatusTip(tr("Set mouse interaction to measuring."));
+    measureAction.setIcon(QIcon(":/images/measure.svg"));
+    connect(&measureAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
 
     zoomInAction.setText(tr("Zoom in"));
     zoomInAction.setShortcut(Qt::Key_Plus);
@@ -247,6 +255,8 @@ void Graph::setInteraction(Interaction i)
 {
     interaction = i;
 
+    setMouseTracking(interaction == Measure);
+
     updateActions();
     updateCursor();
 }
@@ -313,21 +323,40 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     if (interaction == Pan) {
-        int w = contentsRect().width() - 2 * Section::Margin;
+        int w = contentsRect().width();
         COMTime range = getEnd() - getStart();
-        double x_scale = range.to_dbl_time() / w;
 
         if (range <= 0.0 || w <= 0) {
             return;
         }
 
+        double xScale = range.to_dbl_time() / w;
+
         panning = true;
         COMTime diff;
-        diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
+        diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
         setRange(dragStart - diff, dragEnd - diff);
         autoRange = false;
         updateActions();
         updateCursor();
+        update();
+    }
+    else if (interaction == Measure) {
+        QRect measureRect(contentsRect());
+        COMTime range = getEnd() - getStart();
+
+        if (range <= 0.0 || !measureRect.isValid() ||
+                !measureRect.contains(endPos)) {
+            measuring = false;
+            update();
+            return;
+        }
+
+        double xScale = range.to_dbl_time() / measureRect.width();
+
+        measureTime.from_dbl_time((endPos.x() - measureRect.left()) * xScale);
+        measureTime += getStart();
+        measuring = true;
         update();
     }
 }
@@ -340,7 +369,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
     bool wasZooming = zooming;
     bool wasPanning = panning;
-    int w = contentsRect().width() - 2 * Section::Margin;
+    int w = contentsRect().width();
     COMTime range = getEnd() - getStart();
 
     zooming = false;
@@ -352,13 +381,14 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    double x_scale = range.to_dbl_time() / w;
+    double xScale = range.to_dbl_time() / w;
 
     if (wasZooming) {
         COMTime diff;
-        diff.from_dbl_time((startPos.x() - Section::Margin) * x_scale);
+        diff.from_dbl_time((startPos.x() - contentsRect().left()) * xScale);
         COMTime newStart = getStart() + diff;
-        diff.from_dbl_time((event->pos().x() - Section::Margin) * x_scale);
+        diff.from_dbl_time(
+                (event->pos().x() - contentsRect().left()) * xScale);
         COMTime newEnd = getStart() + diff;
         setRange(newStart, newEnd);
         autoRange = false;
@@ -366,13 +396,24 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
     }
     else if (wasPanning) {
         COMTime diff;
-        diff.from_dbl_time((endPos.x() - startPos.x()) * x_scale);
+        diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
         setRange(dragStart - diff, dragEnd - diff);
         autoRange = false;
         updateActions();
     }
 
     loadData();
+}
+
+/****************************************************************************/
+
+/** Mouse release event.
+ */
+void Graph::leaveEvent(QEvent *event)
+{
+    Q_UNUSED(event);
+    measuring = false;
+    update();
 }
 
 /****************************************************************************/
@@ -504,6 +545,35 @@ void Graph::paintEvent(
                 contentsRect().top() + scale.getOuterLength() + 1,
                 endPos.x(), contentsRect().bottom());
     }
+
+    if (interaction == Measure && measuring) {
+        QPen pen;
+        pen.setColor(Qt::darkBlue);
+        painter.setPen(pen);
+
+        painter.drawLine(endPos.x(), contentsRect().top(),
+                endPos.x(), contentsRect().bottom());
+
+        QRect textRect(contentsRect());
+        textRect.setLeft(endPos.x() + 2);
+        QString label(measureTime.to_real_time().c_str());
+        QFontMetrics fm(painter.font());
+        QSize s = fm.size(0, label);
+        if (s.width() <= textRect.width()) {
+            painter.fillRect(QRect(textRect.topLeft(), s), Qt::white);
+            painter.drawText(textRect, Qt::AlignLeft, label);
+        }
+        else {
+            textRect = contentsRect();
+            textRect.setRight(endPos.x() - 2);
+            if (s.width() <= textRect.width()) {
+                painter.fillRect(QRect(
+                            QPoint(textRect.right() + 1 - s.width(),
+                            textRect.top()), s), Qt::white);
+                painter.drawText(textRect, Qt::AlignRight, label);
+            }
+        }
+    }
 }
 
 /****************************************************************************/
@@ -519,6 +589,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
 
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
+    menu.addAction(&measureAction);
     menu.addSeparator();
     menu.addAction(&zoomInAction);
     menu.addAction(&zoomOutAction);
@@ -661,6 +732,9 @@ void Graph::updateCursor()
                 setCursor(Qt::OpenHandCursor);
             }
             break;
+        case Measure:
+            setCursor(Qt::ArrowCursor);
+            break;
     }
 }
 
@@ -670,6 +744,7 @@ void Graph::updateActions()
 {
     zoomAction.setEnabled(interaction != Zoom);
     panAction.setEnabled(interaction != Pan);
+    measureAction.setEnabled(interaction != Measure);
     zoomResetAction.setEnabled(!autoRange);
 }
 
@@ -729,6 +804,9 @@ void Graph::interactionSlot()
     }
     else if (sender() == &panAction) {
         setInteraction(Pan);
+    }
+    else if (sender() == &measureAction) {
+        setInteraction(Measure);
     }
 }
 
