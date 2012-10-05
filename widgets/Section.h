@@ -49,7 +49,7 @@ class Section
         int getHeight() const { return height; };
 
         void resize(int);
-        void draw(QPainter &, const QRect &);
+        void draw(QPainter &, const QRect &, int);
 
         Layer *appendLayer(LibDLS::Channel *);
 

@@ -169,7 +169,7 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
 /****************************************************************************/
 
 void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
-        double yScale, double min) const
+        double yScale, double min, MeasureData *measure) const
 {
     drawGaps(painter, rect, xScale);
 
@@ -220,6 +220,45 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                             painter.drawLine(rect.left() + old_xp,
                                     rect.bottom() - old_yp,
                                     rect.left() + xp, rect.bottom() - yp);
+                        }
+                    }
+
+                    if (measure) {
+                        if (xp == measure->x) {
+                            if (measure->found) {
+                                if (value < measure->minimum) {
+                                    measure->minimum = value;
+                                    measure->minY = yp;
+                                }
+                                if (value > measure->maximum) {
+                                    measure->maximum = value;
+                                    measure->maxY = yp;
+                                }
+                            }
+                            else {
+                                measure->minimum = value;
+                                measure->maximum = value;
+                                measure->minY = yp;
+                                measure->maxY = yp;
+                                measure->found = true;
+                            }
+                        }
+                        else if (xp > measure->x && old_xp
+                                < measure->x && !first_in_chunk) {
+                            if (measure->x - old_xp < xp - measure->x) {
+                                measure->minimum = old_value;
+                                measure->maximum = old_value;
+                                measure->minY = old_yp;
+                                measure->maxY = old_yp;
+                            }
+                            else {
+                                measure->minimum = value;
+                                measure->maximum = value;
+                                measure->minY = yp;
+                                measure->maxY = yp;
+                            }
+
+                            measure->found = true;
                         }
                     }
 
@@ -298,6 +337,28 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                             || (min_px[xp] != -1 && yp < min_px[xp])) {
                         min_px[xp] = yp;
                     }
+
+                    if (measure) {
+                        if (xp == measure->x) {
+                            if (measure->found) {
+                                if (value < measure->minimum) {
+                                    measure->minimum = value;
+                                    measure->minY = yp;
+                                }
+                                if (value > measure->maximum) {
+                                    measure->maximum = value;
+                                    measure->maxY = yp;
+                                }
+                            }
+                            else {
+                                measure->minimum = value;
+                                measure->maximum = value;
+                                measure->minY = yp;
+                                measure->maxY = yp;
+                                measure->found = true;
+                            }
+                        }
+                    }
                 }
 
                 else if (xp >= rect.width()) {
@@ -332,6 +393,28 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                     if (max_px[xp] == -1
                             || (max_px[xp] != -1 && yp > max_px[xp])) {
                         max_px[xp] = yp;
+                    }
+
+                    if (measure) {
+                        if (xp == measure->x) {
+                            if (measure->found) {
+                                if (value < measure->minimum) {
+                                    measure->minimum = value;
+                                    measure->minY = yp;
+                                }
+                                if (value > measure->maximum) {
+                                    measure->maximum = value;
+                                    measure->maxY = yp;
+                                }
+                            }
+                            else {
+                                measure->minimum = value;
+                                measure->maximum = value;
+                                measure->minY = yp;
+                                measure->maxY = yp;
+                                measure->found = true;
+                            }
+                        }
                     }
                 }
 
