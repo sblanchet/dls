@@ -420,7 +420,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
             qDebug() << y << m << d << h;
 #endif
             COMTime t, step;
-            t.set_date(y, m, d, h);
+            if (t.set_date(y, m, d, h)) {
+                break;
+            }
             step.from_dbl_time(majorStep * 3600.0);
 
             while (t < end) {
@@ -452,7 +454,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
             qDebug() << y << m << d;
 #endif
             COMTime t, next;
-            t.set_date(y, m, d);
+            if (t.set_date(y, m, d)) {
+                break;
+            }
 
             while (t < end) {
                 int days = t.month_days();
@@ -478,7 +482,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                         y++;
                     }
                 }
-                next.set_date(y, m, d);
+                if (next.set_date(y, m, d)) {
+                    break;
+                }
 
                 if (t >= start) {
                     drawMajor(painter, rect, scale, t, next, label);
@@ -499,7 +505,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                             }
                         }
                     }
-                    minor.set_date(my, mm, md);
+                    if (minor.set_date(my, mm, md)) {
+                        break;
+                    }
                     if (minor >= next || minor >= end) {
                         break;
                     }
@@ -524,7 +532,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
             qDebug() << y << m;
 #endif
             COMTime t;
-            t.set_date(y, m);
+            if (t.set_date(y, m)) {
+                break;
+            }
 
             while (t < end) {
                 if (t >= start) {
@@ -537,7 +547,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                             ny++;
                         }
                     }
-                    next.set_date(ny, nm);
+                    if (next.set_date(ny, nm)) {
+                        break;
+                    }
                     drawMajor(painter, rect, scale, t, next, label);
                 }
 
@@ -553,7 +565,9 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                             my++;
                         }
                     }
-                    minor.set_date(my, mm);
+                    if (minor.set_date(my, mm)) {
+                        break;
+                    }
                     if (minor >= start && minor < end) {
                         drawMinor(painter, rect, scale, minor);
                     }
@@ -567,34 +581,47 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                         y++;
                     }
                 }
-                t.set_date(y, m);
+                if (t.set_date(y, m)) {
+                    break;
+                }
             }
         }
         break;
 
         case Years: {
-            int y = start.year();
-            y = floor(y / majorStep) * majorStep;
+            int y = floor(start.year() / majorStep) * majorStep;
+            int endYear = ceil(end.year() / majorStep) * majorStep;
+#ifdef DEBUG
+            qDebug() << "start" << start.to_real_time().c_str() << y;
+            qDebug() << "end" << end.to_real_time().c_str() << endYear;
+#endif
             COMTime t;
-            t.set_date(y);
 
-            while (t < end) {
-                if (t >= start) {
+            while (y < endYear) {
+                if (t.set_date(y)) {
+                    y += majorStep;
+                    continue;
+                }
+
+                if (t >= start && t < end) {
                     COMTime next;
-                    next.set_date(y + majorStep);
+                    if (next.set_date(y + majorStep)) {
+                        break;
+                    }
                     drawMajor(painter, rect, scale, t, next, label);
                 }
 
                 for (unsigned int i = 1; i < minorDiv; i++) {
                     COMTime minor;
-                    minor.set_date(y + i * majorStep / minorDiv);
+                    if (minor.set_date(y + i * majorStep / minorDiv)) {
+                        break;
+                    }
                     if (minor >= start && minor < end) {
                         drawMinor(painter, rect, scale, minor);
                     }
                 }
 
                 y += majorStep;
-                t.set_date(y);
             }
         }
         break;
