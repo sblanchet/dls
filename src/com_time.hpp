@@ -54,7 +54,7 @@ public:
     void from_dbl_time(double);
     void set_null();
     void set_now();
-    void set_date(int, int = 1, int = 1, int = 0, int = 0, int = 0);
+    int set_date(int, int = 1, int = 1, int = 0, int = 0, int = 0);
 
     COMTime &operator =(int64_t);
     COMTime &operator =(uint64_t);
