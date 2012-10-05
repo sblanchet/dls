@@ -49,7 +49,18 @@ class Layer
         QColor getColor() const { return color; }
 
         void loadData(const COMTime &, const COMTime &, int);
-        void draw(QPainter &, const QRect &, double, double, double) const;
+
+        struct MeasureData {
+            int x;
+            double minimum;
+            double maximum;
+            int minY;
+            int maxY;
+            bool found;
+        };
+
+        void draw(QPainter &, const QRect &, double, double, double,
+                MeasureData * = NULL) const;
 
         double getMinimum() const { return minimum; }
         double getMaximum() const { return maximum; }

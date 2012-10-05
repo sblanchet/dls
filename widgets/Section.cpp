@@ -71,7 +71,7 @@ void Section::resize(int width)
 
 /****************************************************************************/
 
-void Section::draw(QPainter &painter, const QRect &rect)
+void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 {
     QRect legendRect(rect);
     legendRect.setHeight(legend.size().height());
@@ -132,9 +132,47 @@ void Section::draw(QPainter &painter, const QRect &rect)
         yScale = 0.0;
     }
 
+    Layer::MeasureData measureData;
+    measureData.x = measureX;
+    QString measureStr;
+    QList<Layer::MeasureData> measureList;
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->draw(painter, dataRect, xScale, yScale, minimum);
+        Layer::MeasureData *measure;
+
+        if (measureX > -1) {
+            measureData.found = false;
+            measure = &measureData;
+        }
+        else {
+            measure = NULL;
+        }
+
+        (*l)->draw(painter, dataRect, xScale, yScale, minimum, measure);
+
+        if (measure && measureData.found) {
+            measureList.append(measureData);
+        }
+    }
+
+    for (QList<Layer::MeasureData>::const_iterator measure =
+            measureList.begin();
+            measure != measureList.end(); measure++) {
+        QString label;
+
+        if (measure->minimum != measure->maximum) {
+            label = QString("%1 - %2")
+                .arg(measure->minimum).arg(measure->maximum);
+        }
+        else {
+            label = QString("%1").arg(measure->minimum);
+        }
+
+        QRect textRect(dataRect);
+        textRect.setLeft(dataRect.left() + measure->x + 2);
+        textRect.moveTop(dataRect.bottom() - measure->maxY);
+        painter.drawText(textRect, Qt::AlignLeft, label);
     }
 }
 

@@ -48,7 +48,7 @@ Graph::Graph(
     dropLine(-1),
     dropRemaining(-1),
     zooming(false),
-    interaction(Zoom),
+    interaction(Pan),
     panning(false),
     measuring(false),
     zoomAction(this),
@@ -72,6 +72,7 @@ Graph::Graph(
     diff.from_dbl_time(2000000000.0);
     scale.setRange(t - diff, t);
     updateActions();
+    updateCursor();
 
     zoomAction.setText(tr("&Zoom"));
     zoomAction.setShortcut(Qt::Key_Z);
@@ -255,6 +256,10 @@ void Graph::setInteraction(Interaction i)
 {
     interaction = i;
 
+    if (measuring && interaction != Measure) {
+        measuring = false;
+    }
+
     setMouseTracking(interaction == Measure);
 
     updateActions();
@@ -354,7 +359,8 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
 
         double xScale = range.to_dbl_time() / measureRect.width();
 
-        measureTime.from_dbl_time((endPos.x() - measureRect.left()) * xScale);
+        measurePos = endPos.x() - measureRect.left();
+        measureTime.from_dbl_time(measurePos * xScale);
         measureTime += getStart();
         measuring = true;
         update();
@@ -498,11 +504,12 @@ void Graph::paintEvent(
             contentsRect().top() + scale.getOuterLength());
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
+    int mp = measuring ? measurePos : -1;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect r(contentsRect().left(), top,
                 contentsRect().width(), (*s)->getHeight());
-        (*s)->draw(painter, r);
+        (*s)->draw(painter, r, mp);
 
         painter.setPen(verLinePen);
         painter.drawLine(contentsRect().left(),
@@ -546,7 +553,7 @@ void Graph::paintEvent(
                 endPos.x(), contentsRect().bottom());
     }
 
-    if (interaction == Measure && measuring) {
+    if (measuring) {
         QPen pen;
         pen.setColor(Qt::darkBlue);
         painter.setPen(pen);
