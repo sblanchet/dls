@@ -406,8 +406,8 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
          range != ranges.end();
          range++) {
         if (range->start <= last_end) {
-            cerr << "WARNING: Chunks overlapping in channel \""
-                 << channel->name() << "\"!" << endl;
+            qWarning() << "WARNING: Chunks overlapping in channel"
+                 << channel->name().c_str();
             return;
         }
         last_end = range->end;
@@ -432,11 +432,11 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
 
         if (xp > old_xp + 1) {
-            QRect f(rect.left() + (int) (old_xp + 1.5),
+            QRect gapRect(rect.left() + (int) (old_xp + 1.5),
                      rect.top(),
                      (int) (xp - old_xp - 1),
                      rect.height());
-            painter.fillRect(f, gapColor);
+            painter.fillRect(gapRect, gapColor);
         }
 
         old_xp = (range->end -
@@ -444,11 +444,11 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
     }
 
     if (rect.width() > old_xp + 1) {
-        QRect f(rect.left() + (int) (old_xp + 1.5),
+        QRect gapRect(rect.left() + (int) (old_xp + 1.5),
                 rect.top(),
                 (int) (rect.width() - old_xp - 1),
                 rect.height());
-        painter.fillRect(f, gapColor);
+        painter.fillRect(gapRect, gapColor);
     }
 }
 
