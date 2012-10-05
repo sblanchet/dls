@@ -210,10 +210,10 @@ void COMTime::set_now()
 /**
    Setzt die Zeit auf die aktuelle Zeit
 
-   \returns Referenz auf die gesetzte Zeit
+   \returns 0 bei Erfolg, sonst ungleich 0
 */
 
-void COMTime::set_date(int year, int month, int day,
+int COMTime::set_date(int year, int month, int day,
         int hour, int min, int sec)
 {
     struct tm tm = {};
@@ -228,8 +228,27 @@ void COMTime::set_date(int year, int month, int day,
     tm.tm_isdst = -1;
 
     t = mktime(&tm);
+#if 0
+    if (t < -2147483648 || t > 2147483647) { // 32 bit test
+        std::cerr << __func__
+            << "(" << t << "): Failed to set date "
+                    << year << "-" << month << "-" << day << " "
+                    << hour << ":" << min << ":" << sec << std::endl;
+        t = -1;
+    }
+#endif
+    if (t == -1) {
+#if 0
+        std::cerr << __func__
+            << "(): Failed to set date "
+                    << year << "-" << month << "-" << day << " "
+                    << hour << ":" << min << ":" << sec << std::endl;
+#endif
+        return -1;
+    }
 
-    _time = t * 1000000;
+    _time = t * 1000000LL;
+    return 0;
 }
 
 /*****************************************************************************/
