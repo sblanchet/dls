@@ -88,7 +88,7 @@ void Section::draw(QPainter &painter, const QRect &rect)
 
     dataRect.adjust(0, Margin, 0, -Margin);
 
-    if (!dataRect.isValid()) {
+    if (!dataRect.isValid() || graph->getStart() >= graph->getEnd()) {
         return;
     }
 
@@ -117,13 +117,20 @@ void Section::draw(QPainter &painter, const QRect &rect)
         }
     }
 
-    if (minimum >= maximum) {
+    double xScale = (dataRect.width() - 1) /
+        (graph->getEnd() - graph->getStart()).to_dbl_time();
+
+    if (minimum > maximum) {
         return;
     }
 
-    double xScale = (dataRect.width() - 1) /
-        (graph->getEnd() - graph->getStart()).to_dbl_time();
-    double yScale = (dataRect.height() - 1) / (maximum - minimum);
+    double yScale;
+    if (minimum < maximum) {
+        yScale = (dataRect.height() - 1) / (maximum - minimum);
+    }
+    else {
+        yScale = 0.0;
+    }
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
