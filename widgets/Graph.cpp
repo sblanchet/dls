@@ -29,6 +29,7 @@
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
+#include "SectionDialog.h"
 
 using DLS::Graph;
 using DLS::Section;
@@ -58,6 +59,7 @@ Graph::Graph(
     zoomOutAction(this),
     zoomResetAction(this),
     removeSectionAction(this),
+    sectionPropertiesAction(this),
     selectedSection(NULL)
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
@@ -117,6 +119,12 @@ Graph::Graph(
     removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
     connect(&removeSectionAction, SIGNAL(triggered()),
             this, SLOT(removeSelectedSection()));
+
+    sectionPropertiesAction.setText(tr("Section properties..."));
+    sectionPropertiesAction.setStatusTip(tr("Open the section configuration"
+                " dialog.."));
+    connect(&sectionPropertiesAction, SIGNAL(triggered()),
+            this, SLOT(sectionProperties()));
 }
 
 /****************************************************************************/
@@ -586,6 +594,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
 
     selectedSection = sectionFromPos(event->pos());
     removeSectionAction.setEnabled(selectedSection);
+    sectionPropertiesAction.setEnabled(selectedSection);
 
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
@@ -596,6 +605,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(&zoomResetAction);
     menu.addSeparator();
     menu.addAction(&removeSectionAction);
+    menu.addAction(&sectionPropertiesAction);
 
     menu.exec(event->globalPos());
 }
@@ -819,6 +829,20 @@ void Graph::removeSelectedSection()
     }
 
     removeSection(selectedSection);
+    selectedSection = NULL;
+}
+
+/****************************************************************************/
+
+void Graph::sectionProperties()
+{
+    if (!selectedSection) {
+        return;
+    }
+
+    SectionDialog *dialog = new SectionDialog(selectedSection, this);
+    dialog->exec();
+    delete dialog;
     selectedSection = NULL;
 }
 

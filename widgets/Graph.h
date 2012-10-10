@@ -113,6 +113,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction zoomOutAction;
         QAction zoomResetAction;
         QAction removeSectionAction;
+        QAction sectionPropertiesAction;
         Section *selectedSection;
 
         void updateDragging(QPoint);
@@ -125,6 +126,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     private slots:
         void interactionSlot();
         void removeSelectedSection();
+        void sectionProperties();
 };
 
 /****************************************************************************/

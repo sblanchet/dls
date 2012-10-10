@@ -1,5 +1,6 @@
+vim700: spelllang=en spell
+
 - Marking.
-    - (*) Improve measurement display.
     - Persistent markers.
 
 - Context menu
@@ -12,22 +13,33 @@
     - PNG
     - (*) PDF
     - (*) CSV
-    - (*) Delta-t specifiction
+    - (*) Delta-t specification
 
 - (*) Vertical Scrolling
 
-- Section properties
-    - (*) Scale
+- Section properties / dialog
     - (*) Unit
 
-- Layer properties
+- Layer properties / dialog
     - (*) Color
     - (*) Title (alias)
-    - (*) Scaling
+    - (*) Scale factor / offset
 
-- (*) View stack using context menu and Alt-Left/Right
-- Value scale display.
+- Persistence
+    - Time range
+    - Sections
+        - Scale range
+        - Auto scale / manual scale
+        - Markers
+    - Layers
+        - Color
+        - Title (alias)
+        - Scale factor / offset
+
+- View stack using context menu and Alt-Left/Right
+- Value scale drawing.
 - Display combined gaps below scale.
+- Section properties with double click.
 
 - Display units in legend.
 
