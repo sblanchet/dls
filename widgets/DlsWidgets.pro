@@ -103,6 +103,7 @@ HEADERS += \
     Job.h \
     Node.h \
     Plugin.h \
+    SectionDialog.h \
     WidgetCollection.h
 
 SOURCES += \
@@ -116,7 +117,10 @@ SOURCES += \
     Plugin.cpp \
     Scale.cpp \
     Section.cpp \
+    SectionDialog.cpp \
     WidgetCollection.cpp
+
+FORMS = SectionDialog.ui
 
 RESOURCES = DlsWidgets.qrc
 
