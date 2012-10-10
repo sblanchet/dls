@@ -181,6 +181,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
         QPen pen;
         pen.setColor(color);
         painter.setPen(pen);
+        painter.setClipRect(rect);
 
         for (QList<LibDLS::Data *>::const_iterator d = genericData.begin();
                 d != genericData.end(); d++) {
@@ -277,33 +278,33 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 first_in_chunk = false;
             }
         }
+
+        painter.setClipping(false);
     }
     else if (minimumData.size() && maximumData.size()) {
         double yv, value;
         int xp, yp, i;
         unsigned int j;
-        int *min_px, *max_px;
+
+        struct extrema {
+            int min;
+            int max;
+            bool minValid;
+            bool maxValid;
+        };
+        struct extrema *extrema;
 
         try {
-            min_px = new int[rect.width()];
+            extrema = new struct extrema[rect.width()];
         }
         catch (...) {
             qWarning() << "ERROR: Failed to allocate drawing memory!";
-            return;
-        }
-
-        try {
-            max_px = new int[rect.width()];
-        }
-        catch (...) {
-            qWarning() << "ERROR: Failed to allocate drawing memory!";
-            delete [] min_px;
             return;
         }
 
         for (i = 0; i < rect.width(); i++) {
-            min_px[i] = -1;
-            max_px[i] = -1;
+            extrema[i].minValid = false;
+            extrema[i].maxValid = false;
         }
 
         QPen pen;
@@ -333,13 +334,12 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 }
 
                 if (xp >= 0 && xp < rect.width()) {
-                    if (min_px[xp] == -1
-                            || (min_px[xp] != -1 && yp < min_px[xp])) {
-                        min_px[xp] = yp;
-                    }
+                    if (!extrema[xp].minValid ||
+                            (extrema[xp].minValid && yp < extrema[xp].min)) {
+                        extrema[xp].min = yp;
+                        extrema[xp].minValid = true;
 
-                    if (measure) {
-                        if (xp == measure->x) {
+                        if (measure && xp == measure->x) {
                             if (measure->found) {
                                 if (value < measure->minimum) {
                                     measure->minimum = value;
@@ -390,13 +390,12 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 }
 
                 if (xp >= 0 && xp < rect.width()) {
-                    if (max_px[xp] == -1
-                            || (max_px[xp] != -1 && yp > max_px[xp])) {
-                        max_px[xp] = yp;
-                    }
+                    if (!extrema[xp].maxValid ||
+                            (extrema[xp].maxValid && yp > extrema[xp].max)) {
+                        extrema[xp].max = yp;
+                        extrema[xp].maxValid = true;
 
-                    if (measure) {
-                        if (xp == measure->x) {
+                        if (measure && xp == measure->x) {
                             if (measure->found) {
                                 if (value < measure->minimum) {
                                     measure->minimum = value;
@@ -425,31 +424,41 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
         }
 
         for (i = 0; i < rect.width(); i++) {
-            if (min_px[i] != -1 && max_px[i] != -1) {
-                if (min_px[i] != max_px[i]) {
+            if (extrema[i].minValid && extrema[i].maxValid) {
+                if (extrema[i].min >= rect.height() || extrema[i].max < 0) {
+                    continue;
+                }
+                if (extrema[i].min < 0) {
+                    extrema[i].min = 0;
+                }
+                if (extrema[i].max >= rect.height()) {
+                    extrema[i].max = rect.height() - 1;
+                }
+                if (extrema[i].min != extrema[i].max) {
                     painter.drawLine(rect.left() + i,
-                            rect.bottom() - min_px[i],
-                            rect.left() + i, rect.bottom() - max_px[i]);
+                            rect.bottom() - extrema[i].min,
+                            rect.left() + i, rect.bottom() - extrema[i].max);
                 }
                 else {
                     painter.drawPoint(rect.left() + i,
-                            rect.bottom() - min_px[i]);
+                            rect.bottom() - extrema[i].min);
                 }
             }
             else {
-                if (min_px[i] != -1) {
+                if (extrema[i].minValid && extrema[i].min >= 0 &&
+                        extrema[i].min < rect.height()) {
                     painter.drawPoint(rect.left() + i,
-                            rect.bottom() - min_px[i]);
+                            rect.bottom() - extrema[i].min);
                 }
-                if (max_px[i] != -1) {
+                if (extrema[i].maxValid && extrema[i].max >= 0 &&
+                        extrema[i].max < rect.height()) {
                     painter.drawPoint(rect.left() + i,
-                            rect.bottom() - max_px[i]);
+                            rect.bottom() - extrema[i].max);
                 }
             }
         }
 
-        delete [] min_px;
-        delete [] max_px;
+        delete [] extrema;
     }
 }
 
