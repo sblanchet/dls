@@ -50,6 +50,12 @@ class Section
 
         Graph *getGraph() { return graph; }
 
+        bool getAutoScale() const { return autoScale; }
+        void setAutoScale(bool);
+        double getScaleMinimum() const { return scaleMin; }
+        void setScaleMinimum(double);
+        double getScaleMaximum() const { return scaleMax; }
+        void setScaleMaximum(double);
         int getHeight() const { return height; };
 
         void resize(int);
@@ -67,6 +73,9 @@ class Section
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */
+        bool autoScale;
+        double scaleMin;
+        double scaleMax;
         int height;
         QTextDocument legend;
 

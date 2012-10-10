@@ -50,6 +50,9 @@ Section::Section(
         Graph *graph
         ):
     graph(graph),
+    autoScale(true),
+    scaleMin(0.0),
+    scaleMax(100.0),
     height(100)
 {
 }
@@ -60,6 +63,36 @@ Section::Section(
  */
 Section::~Section()
 {
+}
+
+/****************************************************************************/
+
+void Section::setAutoScale(bool a)
+{
+    if (a != autoScale) {
+        autoScale = a;
+        graph->update();
+    }
+}
+
+/****************************************************************************/
+
+void Section::setScaleMinimum(double min)
+{
+    if (min != scaleMin) {
+        scaleMin = min;
+        graph->update();
+    }
+}
+
+/****************************************************************************/
+
+void Section::setScaleMaximum(double max)
+{
+    if (max != scaleMax) {
+        scaleMax = max;
+        graph->update();
+    }
 }
 
 /****************************************************************************/
@@ -123,37 +156,44 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         return;
     }
 
-    bool valid = false;
     double minimum = 0.0, maximum = 0.0;
-    for (QList<Layer *>::const_iterator l = layers.begin();
-            l != layers.end(); l++) {
-        if (!(*l)->getExtremaValid()) {
-            continue;
-        }
 
-        double min = (*l)->getMinimum();
-        double max = (*l)->getMaximum();
+    if (autoScale) {
+        bool valid = false;
+        for (QList<Layer *>::const_iterator l = layers.begin();
+                l != layers.end(); l++) {
+            if (!(*l)->getExtremaValid()) {
+                continue;
+            }
 
-        if (valid) {
-            if (min < minimum) {
+            double min = (*l)->getMinimum();
+            double max = (*l)->getMaximum();
+
+            if (valid) {
+                if (min < minimum) {
+                    minimum = min;
+                }
+                if (max > maximum) {
+                    maximum = max;
+                }
+            } else {
                 minimum = min;
-            }
-            if (max > maximum) {
                 maximum = max;
+                valid = true;
             }
-        } else {
-            minimum = min;
-            maximum = max;
-            valid = true;
         }
     }
-
-    double xScale = (dataRect.width() - 1) /
-        (graph->getEnd() - graph->getStart()).to_dbl_time();
+    else {
+        minimum = scaleMin;
+        maximum = scaleMax;
+    }
 
     if (minimum > maximum) {
         return;
     }
+
+    double xScale = (dataRect.width() - 1) /
+        (graph->getEnd() - graph->getStart()).to_dbl_time();
 
     double yScale;
     if (minimum < maximum) {
