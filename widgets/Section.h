@@ -25,6 +25,10 @@
 #ifndef DLS_SECTION_H
 #define DLS_SECTION_H
 
+#include <QTextDocument>
+
+#include "../src/com_time.hpp"
+
 namespace LibDLS {
     class Channel;
 }
@@ -63,9 +67,6 @@ class Section
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */
-        COMTime start;
-        COMTime end;
-        bool rangeValid;
         int height;
         QTextDocument legend;
 
