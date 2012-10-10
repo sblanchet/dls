@@ -64,3 +64,13 @@ MainWindow::~MainWindow()
 }
 
 /****************************************************************************/
+
+void MainWindow::on_toolButtonView1_clicked()
+{
+    COMTime start, end;
+    start.set_date(2012, 8, 28, 2, 34);
+    end.set_date(2012, 8, 28, 2, 35, 10);
+    dlsGraph->setRange(start, end);
+}
+
+/****************************************************************************/

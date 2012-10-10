@@ -20,7 +20,20 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="DLS::Graph" name="dlsGraph"/>
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="DLS::Graph" name="dlsGraph"/>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButtonView1">
+          <property name="text">
+           <string>1</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Signal selection</string>
