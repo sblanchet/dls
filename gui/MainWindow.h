@@ -44,6 +44,9 @@ class MainWindow:
         LibDLS::Directory dir;
         LibDLS::Directory dir2;
         QtDls::Model model;
+
+    private slots:
+        void on_toolButtonView1_clicked();
 };
 
 /****************************************************************************/
