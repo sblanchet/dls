@@ -51,12 +51,20 @@ class Layer
         void loadData(const COMTime &, const COMTime &, int);
 
         struct MeasureData {
+            const Layer *layer;
             int x;
             double minimum;
             double maximum;
             int minY;
             int maxY;
+            int meanY;
+            unsigned int group;
+            int movedY;
             bool found;
+
+            bool operator<(const MeasureData &other) const {
+                return minimum < other.minimum;
+            }
         };
 
         void draw(QPainter &, const QRect &, double, double, double,
