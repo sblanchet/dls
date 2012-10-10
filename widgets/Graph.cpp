@@ -550,21 +550,26 @@ void Graph::paintEvent(
                 endPos.x(), contentsRect().bottom());
 
         QRect textRect(contentsRect());
-        textRect.setLeft(endPos.x() + 2);
+        textRect.setLeft(endPos.x() + 3);
+        textRect.setTop(contentsRect().top() + 2);
+        textRect.setHeight(contentsRect().height() - 4);
         QString label(measureTime.to_real_time().c_str());
         QFontMetrics fm(painter.font());
         QSize s = fm.size(0, label);
         if (s.width() <= textRect.width()) {
-            painter.fillRect(QRect(textRect.topLeft(), s), Qt::white);
+            painter.fillRect(
+                    QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
+                    Qt::white);
             painter.drawText(textRect, Qt::AlignLeft, label);
         }
         else {
-            textRect = contentsRect();
-            textRect.setRight(endPos.x() - 2);
+            textRect.setLeft(contentsRect().left());
+            textRect.setRight(endPos.x() - 3);
             if (s.width() <= textRect.width()) {
                 painter.fillRect(QRect(
                             QPoint(textRect.right() + 1 - s.width(),
-                            textRect.top()), s), Qt::white);
+                            textRect.top()), s).adjusted(-2, 0, 2, 0),
+                        Qt::white);
                 painter.drawText(textRect, Qt::AlignRight, label);
             }
         }
