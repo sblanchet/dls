@@ -71,6 +71,37 @@ void Section::resize(int width)
 
 /****************************************************************************/
 
+void spreadGroup(QList<Layer::MeasureData> &list,
+        unsigned int group, int height)
+{
+    int sumY = 0;
+    unsigned int count = 0;
+
+    for (QList<Layer::MeasureData>::const_iterator measure = list.begin();
+            measure != list.end(); measure++) {
+        if (measure->group == group) {
+            sumY += measure->meanY;
+            count++;
+        }
+    }
+
+    if (!count) {
+        return;
+    }
+
+    int off = sumY / count - (height * (count - 1) / 2);
+    unsigned int index = 0;
+
+    for (QList<Layer::MeasureData>::iterator measure = list.begin();
+            measure != list.end(); measure++) {
+        if (measure->group == group) {
+            measure->movedY = off + height * index++;
+        }
+    }
+}
+
+/****************************************************************************/
+
 void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 {
     QRect legendRect(rect);
@@ -136,7 +167,13 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
     measureData.x = measureX;
     QString measureStr;
     QList<Layer::MeasureData> measureList;
+    QFont font;
+    font.setPointSize(8);
+    QFontMetrics fm(font);
+    unsigned int group = 1;
+    int totalLabelHeight = 0;
 
+    // draw data and capture measuring intersections
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         Layer::MeasureData *measure;
@@ -151,15 +188,91 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 
         (*l)->draw(painter, dataRect, xScale, yScale, minimum, measure);
 
-        if (measure && measureData.found) {
+        if (measure && measureData.found &&
+                totalLabelHeight + fm.height() <= dataRect.height()) {
+            measureData.layer = *l;
+            measureData.meanY = (measureData.maxY + measureData.minY) / 2;
+            measureData.movedY = measureData.meanY;
+            measureData.group = group++;
             measureList.append(measureData);
+            totalLabelHeight += fm.height();
         }
     }
 
+    // sort labels by minimum value
+    qStableSort(measureList.begin(), measureList.end());
+
+    // eliminate overlaps
+    bool foundOverlaps;
+    do {
+        foundOverlaps = false;
+        int lastY = -1, lastGroup = 0;
+
+        for (QList<Layer::MeasureData>::iterator measure =
+                measureList.begin();
+                measure != measureList.end(); measure++) {
+            if (lastY >= 0) {
+                if (measure->movedY - lastY < fm.height()) {
+                    foundOverlaps = true;
+                    measure->group = lastGroup; // merge groups
+                    spreadGroup(measureList, measure->group, fm.height());
+                }
+            }
+            lastY = measure->movedY;
+            lastGroup = measure->group;
+        }
+    }
+    while (foundOverlaps);
+
+    // push out-of-range labels into the drawing rect from bottom side
+    if (!measureList.empty()) {
+        QList<Layer::MeasureData>::iterator measure = measureList.begin();
+        int bottom = measure->movedY - fm.height() / 2;
+        if (bottom < 0) {
+            measure->movedY -= bottom;
+            int lastY = measure->movedY;
+            measure++;
+            for (; measure != measureList.end(); measure++) {
+                if (measure->movedY - lastY >= fm.height()) {
+                    break;
+                }
+                measure->movedY = lastY + fm.height();
+                lastY = measure->movedY;
+            }
+        }
+    }
+
+    // push out-of-range labels into the drawing rect from top side
+    if (!measureList.empty()) {
+        QList<Layer::MeasureData>::iterator measure = measureList.end();
+        measure--;
+        int over = measure->movedY + fm.height() / 2 - dataRect.height();
+        if (over > 0) {
+            measure->movedY -= over;
+            int lastY = measure->movedY;
+
+            while (measure != measureList.begin()) {
+                measure--;
+
+                if (lastY - measure->movedY >= fm.height()) {
+                    break;
+                }
+                measure->movedY = lastY - fm.height();
+                lastY = measure->movedY;
+            }
+        }
+    }
+
+    // draw measuring labels
     for (QList<Layer::MeasureData>::const_iterator measure =
             measureList.begin();
             measure != measureList.end(); measure++) {
         QString label;
+        QPen pen;
+
+        pen.setColor(measure->layer->getColor());
+        painter.setPen(pen);
+        painter.setFont(font);
 
         if (measure->minimum != measure->maximum) {
             label = QString("%1 - %2")
@@ -170,9 +283,26 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         }
 
         QRect textRect(dataRect);
-        textRect.setLeft(dataRect.left() + measure->x + 2);
-        textRect.moveTop(dataRect.bottom() - measure->maxY);
-        painter.drawText(textRect, Qt::AlignLeft, label);
+        textRect.setLeft(dataRect.left() + measure->x + 10);
+        textRect.moveTop(
+                dataRect.bottom() + 1 - measure->movedY - fm.height() / 2);
+        textRect.setHeight(fm.height());
+        int flags = Qt::AlignLeft | Qt::AlignVCenter;
+        QRect rect = fm.boundingRect(textRect, flags, label);
+
+        // try drawing left from measure line
+        if (rect.width() > textRect.width() &&
+                measure->x - 10 > textRect.width()) {
+            textRect.setLeft(dataRect.left());
+            textRect.setWidth(measure->x - 10);
+            rect.moveRight(textRect.right());
+            flags = Qt::AlignRight | Qt::AlignVCenter;
+        }
+
+        painter.setClipRect(dataRect);
+        painter.fillRect(rect.adjusted(-2, 0, 2, 0), Qt::white);
+        painter.drawText(textRect, flags, label);
+        painter.setClipping(false);
     }
 }
 
