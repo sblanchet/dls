@@ -214,6 +214,9 @@ void Graph::loadData()
 void Graph::setRange(const COMTime &start, const COMTime &end)
 {
     scale.setRange(start, end);
+    autoRange = false;
+    updateActions();
+    loadData();
 }
 
 /****************************************************************************/
@@ -223,9 +226,6 @@ void Graph::zoomIn()
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
     setRange(getStart() + diff, getEnd() - diff);
-    autoRange = false;
-    updateActions();
-    loadData();
 }
 
 /****************************************************************************/
@@ -235,9 +235,6 @@ void Graph::zoomOut()
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 2.0);
     setRange(getStart() - diff, getEnd() + diff);
-    autoRange = false;
-    updateActions();
-    loadData();
 }
 
 /****************************************************************************/
@@ -273,9 +270,6 @@ void Graph::pan(double fraction)
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() * fraction);
     setRange(getStart() + diff, getEnd() + diff);
-    autoRange = false;
-    updateActions();
-    loadData();
 }
 
 /****************************************************************************/
@@ -340,7 +334,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         panning = true;
         COMTime diff;
         diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
-        setRange(dragStart - diff, dragEnd - diff);
+        scale.setRange(dragStart - diff, dragEnd - diff);
         autoRange = false;
         updateActions();
         updateCursor();
@@ -397,18 +391,12 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
                 (event->pos().x() - contentsRect().left()) * xScale);
         COMTime newEnd = getStart() + diff;
         setRange(newStart, newEnd);
-        autoRange = false;
-        updateActions();
     }
     else if (wasPanning) {
         COMTime diff;
         diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
         setRange(dragStart - diff, dragEnd - diff);
-        autoRange = false;
-        updateActions();
     }
-
-    loadData();
 }
 
 /****************************************************************************/
