@@ -36,6 +36,7 @@ vim700: spelllang=en spell
         - Scale range
         - Auto scale / manual scale
         - Markers
+        - Height
     - Layers
         - Color
         - Title (alias)
