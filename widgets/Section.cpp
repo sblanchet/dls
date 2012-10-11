@@ -355,8 +355,13 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         }
 
         painter.setClipRect(dataRect);
-        painter.fillRect(rect.adjusted(-2, 0, 2, 0), Qt::white);
+        QRect backRect = rect.adjusted(-2, 0, 2, 0);
+        painter.fillRect(backRect, Qt::white);
         painter.drawText(textRect, flags, label);
+        QPen linePen;
+        painter.setPen(linePen);
+        painter.drawLine(backRect.bottomLeft(), backRect.bottomRight());
+        painter.drawLine(backRect.bottomRight(), backRect.topRight());
         painter.setClipping(false);
     }
 }
