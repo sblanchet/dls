@@ -115,6 +115,10 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction removeSectionAction;
         QAction sectionPropertiesAction;
         Section *selectedSection;
+        const int splitterWidth;
+        Section *splitterSection;
+        Section *movingSection;
+        int startHeight;
 
         void updateDragging(QPoint);
         void resetDragging();
