@@ -561,7 +561,7 @@ void Graph::paintEvent(
         QStyle *style = QApplication::style();
         style->drawControl(QStyle::CE_Splitter, &styleOption, &painter, this);
 
-        if (*s == dropSection && dropLine < 0) {
+        if ((*s == dropSection && dropLine < 0) || *s == selectedSection) {
             drawDropRect(painter, r);
         }
 
@@ -656,6 +656,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(&sectionPropertiesAction);
 
     menu.exec(event->globalPos());
+    selectedSection = NULL;
 }
 
 /****************************************************************************/
