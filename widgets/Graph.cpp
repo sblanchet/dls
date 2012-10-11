@@ -60,7 +60,12 @@ Graph::Graph(
     zoomResetAction(this),
     removeSectionAction(this),
     sectionPropertiesAction(this),
-    selectedSection(NULL)
+    selectedSection(NULL),
+    splitterWidth(
+            QApplication::style()->pixelMetric(QStyle::PM_SplitterWidth)),
+    splitterSection(NULL),
+    movingSection(NULL),
+    startHeight(0)
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -69,6 +74,7 @@ Graph::Graph(
     setMinimumSize(60, 50);
     setAcceptDrops(true);
     setFocusPolicy(Qt::StrongFocus);
+    setMouseTracking(true);
     COMTime t, diff;
     t.set_now();
     diff.from_dbl_time(2000000000.0);
@@ -265,8 +271,6 @@ void Graph::setInteraction(Interaction i)
         measuring = false;
     }
 
-    setMouseTracking(interaction == Measure);
-
     updateActions();
     updateCursor();
 }
@@ -313,6 +317,21 @@ void Graph::mousePressEvent(QMouseEvent *event)
     endPos = event->pos();
     dragStart = getStart();
     dragEnd = getEnd();
+
+    if (event->button() & Qt::LeftButton) {
+        if (splitterSection) {
+            movingSection = splitterSection;
+            startHeight = splitterSection->getHeight();
+        }
+        else if (interaction == Zoom) {
+            zooming = true;
+        }
+        else if (interaction == Pan) {
+            panning = true;
+        }
+
+        update();
+    }
 }
 
 /****************************************************************************/
@@ -323,50 +342,77 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
 {
     endPos = event->pos();
 
-    if (endPos.x() != startPos.x() && interaction == Zoom) {
-        zooming = true;
-        updateCursor();
+    if (movingSection) {
+        int dh = endPos.y() - startPos.y();
+        int h = startHeight + dh;
+        if (h < 0) {
+            h = 0;
+        }
+        movingSection->setHeight(h);
+    }
+
+    if (zooming) {
         update();
     }
 
-    if (interaction == Pan) {
+    if (panning) {
         int w = contentsRect().width();
         COMTime range = getEnd() - getStart();
 
-        if (range <= 0.0 || w <= 0) {
-            return;
+        if (range > 0.0 && w > 0) {
+            double xScale = range.to_dbl_time() / w;
+
+            COMTime diff;
+            diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
+            scale.setRange(dragStart - diff, dragEnd - diff);
+            autoRange = false;
+            updateActions();
+            update();
         }
-
-        double xScale = range.to_dbl_time() / w;
-
-        panning = true;
-        COMTime diff;
-        diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
-        scale.setRange(dragStart - diff, dragEnd - diff);
-        autoRange = false;
-        updateActions();
-        updateCursor();
-        update();
     }
-    else if (interaction == Measure) {
+
+    if (interaction == Measure) {
         QRect measureRect(contentsRect());
         COMTime range = getEnd() - getStart();
 
         if (range <= 0.0 || !measureRect.isValid() ||
                 !measureRect.contains(endPos)) {
             measuring = false;
-            update();
-            return;
         }
+        else {
+            double xScale = range.to_dbl_time() / measureRect.width();
 
-        double xScale = range.to_dbl_time() / measureRect.width();
-
-        measurePos = endPos.x() - measureRect.left();
-        measureTime.from_dbl_time(measurePos * xScale);
-        measureTime += getStart();
-        measuring = true;
+            measurePos = endPos.x() - measureRect.left();
+            measureTime.from_dbl_time(measurePos * xScale);
+            measureTime += getStart();
+            measuring = true;
+        }
         update();
     }
+
+    Section *sec = NULL;
+    int top = contentsRect().top() + scale.getOuterLength() + 1;
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        if (top > event->pos().y()) {
+            break;
+        }
+        QRect splitterRect(contentsRect());
+        splitterRect.setTop(top + (*s)->getHeight());
+        splitterRect.setHeight(splitterWidth);
+        if (splitterRect.contains(event->pos())) {
+            sec = *s;
+            break;
+        }
+        top += (*s)->getHeight() + splitterWidth;
+    }
+
+    if (splitterSection != sec) {
+        splitterSection = sec;
+        update();
+    }
+
+    updateCursor();
 }
 
 /****************************************************************************/
@@ -382,6 +428,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 
     zooming = false;
     panning = false;
+    movingSection = NULL;
     updateCursor();
     update();
 
@@ -507,17 +554,27 @@ void Graph::paintEvent(
                 contentsRect().width(), (*s)->getHeight());
         (*s)->draw(painter, r, mp);
 
-        painter.setPen(verLinePen);
-        painter.drawLine(contentsRect().left(),
-                top + (*s)->getHeight(),
-                contentsRect().right(),
-                top + (*s)->getHeight());
+        QRect splitterRect(contentsRect());
+        splitterRect.setTop(top + (*s)->getHeight());
+        splitterRect.setHeight(splitterWidth);
+        painter.fillRect(splitterRect, palette().window());
+
+        QStyleOption styleOption;
+        styleOption.initFrom(this);
+        styleOption.rect = splitterRect;
+        QStyle::State state = QStyle::State_MouseOver;
+        styleOption.state &= ~state;
+        if (splitterSection == *s && !zooming && !panning) {
+            styleOption.state |= state;
+        }
+        QStyle *style = QApplication::style();
+        style->drawControl(QStyle::CE_Splitter, &styleOption, &painter, this);
 
         if (*s == dropSection && dropLine < 0) {
             drawDropRect(painter, r);
         }
 
-        top += (*s)->getHeight() + 1;
+        top += (*s)->getHeight() + splitterWidth;
     }
 
     if (dropLine >= 0) {
@@ -706,7 +763,7 @@ void Graph::updateDragging(QPoint p)
             break;
         }
 
-        top += (*s)->getHeight() + 1;
+        top += (*s)->getHeight() + splitterWidth;
     }
 
     if (!dropSection) {
@@ -730,22 +787,22 @@ void Graph::resetDragging()
 
 void Graph::updateCursor()
 {
-    switch (interaction) {
-        case Zoom:
-            setCursor(Qt::ArrowCursor);
-            break;
-        case Pan:
-            if (panning) {
-                setCursor(Qt::ClosedHandCursor);
-            }
-            else {
-                setCursor(Qt::OpenHandCursor);
-            }
-            break;
-        case Measure:
-            setCursor(Qt::ArrowCursor);
-            break;
+    QCursor cur;
+
+    if (zooming) {
+        cur = Qt::ArrowCursor;
     }
+    else if (panning) {
+        cur = Qt::ClosedHandCursor;
+    }
+    else if (splitterSection) {
+        cur = Qt::SizeVerCursor;
+    }
+    else if (interaction == Pan) {
+        cur = Qt::OpenHandCursor;
+    }
+
+    setCursor(cur);
 }
 
 /****************************************************************************/
@@ -780,7 +837,7 @@ Section *Graph::sectionFromPos(const QPoint &pos)
         if (rect.contains(pos)) {
             return *s;
         }
-        top += (*s)->getHeight() + 1;
+        top += (*s)->getHeight() + splitterWidth;
     }
 
     return NULL;
