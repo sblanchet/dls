@@ -124,6 +124,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void resetDragging();
         void updateCursor();
         void updateActions();
+        void updateMeasuring();
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
 

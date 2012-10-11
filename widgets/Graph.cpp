@@ -267,12 +267,17 @@ void Graph::setInteraction(Interaction i)
 {
     interaction = i;
 
-    if (measuring && interaction != Measure) {
-        measuring = false;
+    if (zooming && interaction != Zoom) {
+        zooming = false;
+    }
+    if (panning && interaction != Pan) {
+        panning = false;
     }
 
+    updateMeasuring();
     updateActions();
     updateCursor();
+    update();
 }
 
 /****************************************************************************/
@@ -371,24 +376,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         }
     }
 
-    if (interaction == Measure) {
-        QRect measureRect(contentsRect());
-        COMTime range = getEnd() - getStart();
-
-        if (range <= 0.0 || !measureRect.isValid() ||
-                !measureRect.contains(endPos)) {
-            measuring = false;
-        }
-        else {
-            double xScale = range.to_dbl_time() / measureRect.width();
-
-            measurePos = endPos.x() - measureRect.left();
-            measureTime.from_dbl_time(measurePos * xScale);
-            measureTime += getStart();
-            measuring = true;
-        }
-        update();
-    }
+    updateMeasuring();
 
     Section *sec = NULL;
     int top = contentsRect().top() + scale.getOuterLength() + 1;
@@ -481,6 +469,9 @@ void Graph::keyPressEvent(QKeyEvent *event)
             break;
         case Qt::Key_P:
             setInteraction(Pan);
+            break;
+        case Qt::Key_M:
+            setInteraction(Measure);
             break;
         case Qt::Key_Right:
             pan(0.125);
@@ -817,6 +808,36 @@ void Graph::updateActions()
 
 /****************************************************************************/
 
+/** Updates the measuring flag.
+ */
+void Graph::updateMeasuring()
+{
+    if (interaction != Measure) {
+        measuring = false;
+        return;
+    }
+
+    QRect measureRect(contentsRect());
+    COMTime range = getEnd() - getStart();
+
+    if (range <= 0.0 || !measureRect.isValid() ||
+            !measureRect.contains(endPos)) {
+        measuring = false;
+    }
+    else {
+        double xScale = range.to_dbl_time() / measureRect.width();
+
+        measurePos = endPos.x() - measureRect.left();
+        measureTime.from_dbl_time(measurePos * xScale);
+        measureTime += getStart();
+        measuring = true;
+    }
+
+    update();
+}
+
+/****************************************************************************/
+
 Section *Graph::sectionFromPos(const QPoint &pos)
 {
     if (!contentsRect().contains(pos)) {
@@ -845,7 +866,7 @@ Section *Graph::sectionFromPos(const QPoint &pos)
 
 /****************************************************************************/
 
-/** Draws a dop target rectangle.
+/** Draws a drop target rectangle.
  */
 void Graph::drawDropRect(QPainter &painter, const QRect &rect)
 {
