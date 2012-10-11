@@ -57,6 +57,7 @@ class Section
         double getScaleMaximum() const { return scaleMax; }
         void setScaleMaximum(double);
         int getHeight() const { return height; };
+        void setHeight(int);
 
         void resize(int);
         void draw(QPainter &, const QRect &, int);
