@@ -97,6 +97,20 @@ void Section::setScaleMaximum(double max)
 
 /****************************************************************************/
 
+void Section::setHeight(int h)
+{
+    if (h < 0) {
+        h = 0;
+    }
+
+    if (h != height) {
+        height = h;
+        graph->update();
+    }
+}
+
+/****************************************************************************/
+
 void Section::resize(int width)
 {
     legend.setPageSize(QSize(width, height));
@@ -105,7 +119,7 @@ void Section::resize(int width)
 /****************************************************************************/
 
 void spreadGroup(QList<Layer::MeasureData> &list,
-        unsigned int group, int height)
+        unsigned int group, int labelHeight)
 {
     int sumY = 0;
     unsigned int count = 0;
@@ -122,13 +136,13 @@ void spreadGroup(QList<Layer::MeasureData> &list,
         return;
     }
 
-    int off = sumY / count - (height * (count - 1) / 2);
+    int off = sumY / count - (labelHeight * (count - 1) / 2);
     unsigned int index = 0;
 
     for (QList<Layer::MeasureData>::iterator measure = list.begin();
             measure != list.end(); measure++) {
         if (measure->group == group) {
-            measure->movedY = off + height * index++;
+            measure->movedY = off + labelHeight * index++;
         }
     }
 }
@@ -139,16 +153,17 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 {
     QRect legendRect(rect);
     legendRect.setHeight(legend.size().height());
-    legendRect = legendRect.intersected(rect);
     QRect dataRect(rect);
     dataRect.setTop(legendRect.bottom() + 1);
 
-    QColor legendColor(graph->palette().window().color());
-    painter.fillRect(legendRect, legendColor);
+    legendRect = legendRect.intersected(rect);
+    if (legendRect.isValid()) {
+        painter.fillRect(legendRect, graph->palette().window());
 
-    painter.translate(rect.topLeft());
-    legend.drawContents(&painter, QRect(QPoint(), legendRect.size()));
-    painter.resetTransform();
+        painter.translate(rect.topLeft());
+        legend.drawContents(&painter, QRect(QPoint(), legendRect.size()));
+        painter.resetTransform();
+    }
 
     dataRect.adjust(0, Margin, 0, -Margin);
 
