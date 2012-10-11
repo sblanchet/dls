@@ -1,7 +1,12 @@
 vim700: spelllang=en spell
 
-- Marking.
-    - Persistent markers.
+- Data access
+    - (*) Data access via network
+    - Caching
+    - Threading
+
+- Measuring
+    - Markers
 
 - Context menu
     - Remove Layer
@@ -36,13 +41,11 @@ vim700: spelllang=en spell
         - Title (alias)
         - Scale factor / offset
 
-- View stack using context menu and Alt-Left/Right
-- Value scale drawing.
-- Display combined gaps below scale.
-- Section properties with double click.
-
-- Display units in legend.
+- Widget
+    - View stack using context menu and Alt-Left/Right
+    - Value scale drawing
+    - Display combined gaps below time scale
+    - Section properties with double click.
+    - Display units in legend
 
 - (*) Messages
-- Data caching
-- (*) Data access via network
