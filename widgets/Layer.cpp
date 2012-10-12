@@ -198,8 +198,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
         QPen pen;
         pen.setColor(color);
+
+        painter.save();
         painter.setPen(pen);
-        painter.setClipRect(rect);
+        painter.setClipRect(rect, Qt::IntersectClip);
 
         for (QList<LibDLS::Data *>::const_iterator d = genericData.begin();
                 d != genericData.end(); d++) {
@@ -298,7 +300,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
             }
         }
 
-        painter.setClipping(false);
+        painter.restore();
     }
     else if (minimumData.size() && maximumData.size()) {
         double yv, value;
