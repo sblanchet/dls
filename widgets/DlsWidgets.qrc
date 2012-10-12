@@ -2,6 +2,8 @@
   <qresource prefix="/" >
     <file>images/document-print.svg</file>
     <file>images/document-properties.svg</file>
+    <file>images/edit-redo.svg</file>
+    <file>images/edit-undo.svg</file>
     <file>images/go-next.svg</file>
     <file>images/list-remove.svg</file>
     <file>images/measure.svg</file>

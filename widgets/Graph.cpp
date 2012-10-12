@@ -52,6 +52,8 @@ Graph::Graph(
     interaction(Pan),
     panning(false),
     measuring(false),
+    prevViewAction(this),
+    nextViewAction(this),
     zoomAction(this),
     panAction(this),
     measureAction(this),
@@ -66,7 +68,8 @@ Graph::Graph(
             QApplication::style()->pixelMetric(QStyle::PM_SplitterWidth)),
     splitterSection(NULL),
     movingSection(NULL),
-    startHeight(0)
+    startHeight(0),
+    currentView(views.begin())
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -76,12 +79,26 @@ Graph::Graph(
     setAcceptDrops(true);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+
     COMTime t, diff;
     t.set_now();
     diff.from_dbl_time(2000000000.0);
     scale.setRange(t - diff, t);
-    updateActions();
+    newView();
+
     updateCursor();
+
+    prevViewAction.setText(tr("&Previous view"));
+    prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
+    prevViewAction.setStatusTip(tr("Return to previous view."));
+    prevViewAction.setIcon(QIcon(":/images/edit-undo.svg"));
+    connect(&prevViewAction, SIGNAL(triggered()), this, SLOT(previousView()));
+
+    nextViewAction.setText(tr("&Next view"));
+    nextViewAction.setShortcut(Qt::ALT | Qt::Key_Right);
+    nextViewAction.setStatusTip(tr("Proceed to next view."));
+    nextViewAction.setIcon(QIcon(":/images/edit-redo.svg"));
+    connect(&nextViewAction, SIGNAL(triggered()), this, SLOT(nextView()));
 
     zoomAction.setText(tr("&Zoom"));
     zoomAction.setShortcut(Qt::Key_Z);
@@ -217,6 +234,7 @@ void Graph::updateRange()
 
     if (valid) {
         scale.setRange(start, end);
+        newView();
         update();
     }
 }
@@ -238,6 +256,37 @@ void Graph::loadData()
 void Graph::setRange(const COMTime &start, const COMTime &end)
 {
     scale.setRange(start, end);
+    autoRange = false;
+
+    newView();
+    loadData();
+}
+
+/****************************************************************************/
+
+void Graph::previousView()
+{
+    if (currentView == views.begin()) {
+        return;
+    }
+
+    currentView--;
+    scale.setRange(currentView->start, currentView->end);
+    autoRange = false;
+    updateActions();
+    loadData();
+}
+
+/****************************************************************************/
+
+void Graph::nextView()
+{
+    if (currentView + 1 == views.end()) {
+        return;
+    }
+
+    currentView++;
+    scale.setRange(currentView->start, currentView->end);
     autoRange = false;
     updateActions();
     loadData();
@@ -580,10 +629,20 @@ void Graph::keyPressEvent(QKeyEvent *event)
             setInteraction(Measure);
             break;
         case Qt::Key_Right:
-            pan(0.125);
+            if (event->modifiers() & Qt::AltModifier) {
+                nextView();
+            }
+            else {
+                pan(0.125);
+            }
             break;
         case Qt::Key_Left:
-            pan(-0.125);
+            if (event->modifiers() & Qt::AltModifier) {
+                previousView();
+            }
+            else {
+                pan(-0.125);
+            }
             break;
         case Qt::Key_PageUp:
             pan(1.0);
@@ -750,6 +809,9 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     removeSectionAction.setEnabled(selectedSection);
     sectionPropertiesAction.setEnabled(selectedSection);
 
+    menu.addAction(&prevViewAction);
+    menu.addAction(&nextViewAction);
+    menu.addSeparator();
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
     menu.addAction(&measureAction);
@@ -909,6 +971,8 @@ void Graph::updateCursor()
 
 void Graph::updateActions()
 {
+    prevViewAction.setEnabled(currentView != views.begin());
+    nextViewAction.setEnabled(currentView + 1 != views.end());
     zoomAction.setEnabled(interaction != Zoom);
     panAction.setEnabled(interaction != Pan);
     measureAction.setEnabled(interaction != Measure);
@@ -990,6 +1054,25 @@ void Graph::drawDropRect(QPainter &painter, const QRect &rect)
     painter.setBrush(brush);
 
     painter.drawRect(rect);
+}
+
+/****************************************************************************/
+
+/** Removes remaining views and places the current view at the end.
+ */
+void Graph::newView()
+{
+    if (currentView != views.end()) {
+        // erase all views after the current
+        views.erase(currentView + 1, views.end());
+    }
+
+    View v;
+    v.start = scale.getStart();
+    v.end = scale.getEnd();
+    currentView = views.insert(views.end(), v);
+
+    updateActions();
 }
 
 /****************************************************************************/

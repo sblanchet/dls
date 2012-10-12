@@ -67,6 +67,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         };
 
     public slots:
+        void previousView();
+        void nextView();
         void zoomIn();
         void zoomOut();
         void zoomReset();
@@ -107,6 +109,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool measuring;
         int measurePos;
         COMTime measureTime;
+        QAction prevViewAction;
+        QAction nextViewAction;
         QAction zoomAction;
         QAction panAction;
         QAction measureAction;
@@ -122,6 +126,13 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *movingSection;
         int startHeight;
 
+        struct View {
+            COMTime start;
+            COMTime end;
+        };
+        QList<View> views;
+        QList<View>::iterator currentView;
+
         void updateDragging(QPoint);
         void resetDragging();
         void updateCursor();
@@ -129,6 +140,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateMeasuring();
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
+        void newView();
 
     private slots:
         void interactionSlot();

@@ -42,7 +42,6 @@ vim700: spelllang=en spell
         - Scale factor / offset
 
 - Widget
-    - View stack using context menu and Alt-Left/Right
     - Value scale drawing
     - Display combined gaps below time scale
     - Section properties with double click.
