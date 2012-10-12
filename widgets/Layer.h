@@ -41,6 +41,7 @@ class Layer
 {
     public:
         Layer(Section *, LibDLS::Channel *, const QColor & = QColor());
+        Layer(const Layer &, Section *);
         virtual ~Layer();
 
         LibDLS::Channel *getChannel() const { return channel; };

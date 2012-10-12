@@ -16,7 +16,6 @@ vim700: spelllang=en spell
 
 - Export
     - PNG
-    - (*) PDF
     - (*) CSV
     - (*) Delta-t specification
 
