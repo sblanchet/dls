@@ -191,8 +191,9 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
     drawGaps(painter, rect, xScale);
 
     if (genericData.size()) {
-        double old_value = 0.0;
-        int old_xp = 0, old_yp = 0, dx, dy;
+        double prev_value = 0.0;
+        int prev_xp = 0, prev_yp = 0;
+        double prev_xv = 0.0, prev_yv = 0.0;
         bool first_in_chunk = true;
 
         QPen pen;
@@ -226,19 +227,18 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
                 if (xp >= 0) {
                     if (first_in_chunk) {
-                        painter.drawPoint(rect.left() + xp,
-                                rect.bottom() - yp);
+                        QPointF p(rect.left() + xv, rect.bottom() - yv);
+                        painter.drawPoint(p);
                     }
                     else {
-                        dx = xp - old_xp;
-                        dy = yp - old_yp;
+                        QPointF prev(rect.left() + prev_xv,
+                                rect.bottom() - prev_yv);
+                        QPointF inter(rect.left() + xv,
+                                rect.bottom() - prev_yv);
+                        QPointF cur(rect.left() + xv, rect.bottom() - yv);
 
-                        if ((float) dx * (float) dx
-                                + (float) dy * (float) dy > 0) {
-                            painter.drawLine(rect.left() + old_xp,
-                                    rect.bottom() - old_yp,
-                                    rect.left() + xp, rect.bottom() - yp);
-                        }
+                        painter.drawLine(prev, inter);
+                        painter.drawLine(inter, cur);
                     }
 
                     if (measure) {
@@ -261,13 +261,13 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                                 measure->found = true;
                             }
                         }
-                        else if (xp > measure->x && old_xp
+                        else if (xp > measure->x && prev_xp
                                 < measure->x && !first_in_chunk) {
-                            if (measure->x - old_xp < xp - measure->x) {
-                                measure->minimum = old_value;
-                                measure->maximum = old_value;
-                                measure->minY = old_yp;
-                                measure->maxY = old_yp;
+                            if (measure->x - prev_xp < xp - measure->x) {
+                                measure->minimum = prev_value;
+                                measure->maximum = prev_value;
+                                measure->minY = prev_yp;
+                                measure->maxY = prev_yp;
                             }
                             else {
                                 measure->minimum = value;
@@ -289,9 +289,11 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                     break;
                 }
 
-                old_xp = xp;
-                old_yp = yp;
-                old_value = value;
+                prev_xv = xv;
+                prev_yv = yv;
+                prev_xp = xp;
+                prev_yp = yp;
+                prev_value = value;
                 first_in_chunk = false;
             }
         }
@@ -494,7 +496,7 @@ bool Layer::range_before(
 void Layer::drawGaps(QPainter &painter, const QRect &rect,
         double xScale) const
 {
-    double xp, old_xp;
+    double xp, prev_xp;
     vector<TimeRange> ranges, relevant_chunk_ranges;
     COMTime last_end;
     QColor gapColor(255, 255, 220, 127);
@@ -533,29 +535,29 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
         relevant_chunk_ranges.push_back(*range);
     }
 
-    old_xp = -1;
+    prev_xp = -1;
 
     for (vector<TimeRange>::iterator range = relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
 
-        if (xp > old_xp + 1) {
-            QRect gapRect(rect.left() + (int) (old_xp + 1.5),
+        if (xp > prev_xp + 1) {
+            QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
                      rect.top(),
-                     (int) (xp - old_xp - 1),
+                     (int) (xp - prev_xp - 1),
                      rect.height());
             painter.fillRect(gapRect, gapColor);
         }
 
-        old_xp = (range->end -
+        prev_xp = (range->end -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
     }
 
-    if (rect.width() > old_xp + 1) {
-        QRect gapRect(rect.left() + (int) (old_xp + 1.5),
+    if (rect.width() > prev_xp + 1) {
+        QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
                 rect.top(),
-                (int) (rect.width() - old_xp - 1),
+                (int) (rect.width() - prev_xp - 1),
                 rect.height());
         painter.fillRect(gapRect, gapColor);
     }
