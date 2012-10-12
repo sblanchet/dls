@@ -442,7 +442,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
             }
         }
 
+        QRect col;
+        col.setWidth(1);
         for (i = 0; i < rect.width(); i++) {
+            col.moveLeft(rect.left() + i);
             if (extrema[i].minValid && extrema[i].maxValid) {
                 if (extrema[i].min >= rect.height() || extrema[i].max < 0) {
                     continue;
@@ -454,25 +457,27 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                     extrema[i].max = rect.height() - 1;
                 }
                 if (extrema[i].min != extrema[i].max) {
-                    painter.drawLine(rect.left() + i,
-                            rect.bottom() - extrema[i].min,
-                            rect.left() + i, rect.bottom() - extrema[i].max);
+                    col.setTop(rect.bottom() - extrema[i].max);
+                    col.setHeight(extrema[i].max - extrema[i].min + 1);
                 }
                 else {
-                    painter.drawPoint(rect.left() + i,
-                            rect.bottom() - extrema[i].min);
+                    col.setTop(rect.bottom() - extrema[i].max);
+                    col.setHeight(1);
                 }
+                painter.fillRect(col, color);
             }
             else {
                 if (extrema[i].minValid && extrema[i].min >= 0 &&
                         extrema[i].min < rect.height()) {
-                    painter.drawPoint(rect.left() + i,
-                            rect.bottom() - extrema[i].min);
+                    col.setTop(rect.bottom() - extrema[i].min);
+                    col.setHeight(1);
+                    painter.fillRect(col, color);
                 }
                 if (extrema[i].maxValid && extrema[i].max >= 0 &&
                         extrema[i].max < rect.height()) {
-                    painter.drawPoint(rect.left() + i,
-                            rect.bottom() - extrema[i].max);
+                    col.setTop(rect.bottom() - extrema[i].max);
+                    col.setHeight(1);
+                    painter.fillRect(col, color);
                 }
             }
         }
