@@ -69,6 +69,8 @@ Graph::Graph(
     splitterSection(NULL),
     movingSection(NULL),
     startHeight(0),
+    scrollBar(this),
+    scrollBarNeeded(false),
     currentView(views.begin())
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
@@ -79,6 +81,10 @@ Graph::Graph(
     setAcceptDrops(true);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+    scrollBar.setVisible(false);
+    scrollBar.setCursor(Qt::ArrowCursor);
+    connect(&scrollBar, SIGNAL(valueChanged(int)),
+            this, SLOT(sliderValueChanged(int)));
 
     COMTime t, diff;
     t.set_now();
@@ -183,6 +189,7 @@ Section *Graph::appendSection()
 {
     Section *s = new Section(this);
     sections.append(s);
+    updateScrollBar();
     return s;
 }
 
@@ -200,6 +207,8 @@ Section *Graph::insertSectionBefore(Section *before)
         sections.append(s);
     }
 
+    updateScrollBar();
+
     return s;
 }
 
@@ -208,6 +217,7 @@ Section *Graph::insertSectionBefore(Section *before)
 void Graph::removeSection(Section *section)
 {
     int num = sections.removeAll(section);
+    updateScrollBar();
 
     delete section;
 
@@ -243,10 +253,14 @@ void Graph::updateRange()
 
 void Graph::loadData()
 {
+    int dataWidth = contentsRect().width();
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        (*s)->loadData(scale.getStart(), scale.getEnd(),
-                contentsRect().width());
+        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
     }
     update();
 }
@@ -509,6 +523,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
             h = 0;
         }
         movingSection->setHeight(h);
+        updateScrollBar();
     }
 
     if (zooming) {
@@ -534,15 +549,20 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     updateMeasuring();
 
     Section *sec = NULL;
-    int top = contentsRect().top() + scale.getOuterLength() + 1;
+    int top = contentsRect().top() + scale.getOuterLength() + 1 -
+        scrollBar.value();;
+    QRect splitterRect(contentsRect());
+    splitterRect.setHeight(splitterWidth);
+    if (scrollBarNeeded) {
+        splitterRect.setWidth(contentsRect().width() - scrollBar.width());
+    }
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         if (top > event->pos().y()) {
             break;
         }
-        QRect splitterRect(contentsRect());
-        splitterRect.setTop(top + (*s)->getHeight());
-        splitterRect.setHeight(splitterWidth);
+        splitterRect.moveTop(top + (*s)->getHeight());
         if (splitterRect.contains(event->pos())) {
             sec = *s;
             break;
@@ -665,10 +685,16 @@ void Graph::resizeEvent(QResizeEvent *event)
     Q_UNUSED(event);
 
     scale.setLength(contentsRect().width());
+    updateScrollBar();
+
+    int dataWidth = contentsRect().width();
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
 
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        (*s)->resize(contentsRect().width());
+        (*s)->resize(dataWidth);
     }
 
     loadData();
@@ -691,6 +717,10 @@ void Graph::paintEvent(
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         height += 1 + (*s)->getHeight();
+        if (height > contentsRect().height()) {
+            height = contentsRect().height();
+            break;
+        }
     }
     scaleRect.setHeight(height);
     scale.draw(painter, scaleRect);
@@ -704,14 +734,25 @@ void Graph::paintEvent(
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
     int mp = measuring ? measurePos : -1;
+    QRect dataRect(contentsRect());
+    dataRect.setTop(top);
+    if (scrollBarNeeded) {
+        dataRect.setWidth(contentsRect().width() - scrollBar.width());
+        scrollBar.move(dataRect.right() + 1, top);
+        scrollBar.resize(scrollBar.width(), dataRect.height());
+    }
+
+    painter.setClipRect(dataRect);
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        QRect r(contentsRect().left(), top,
-                contentsRect().width(), (*s)->getHeight());
-        (*s)->draw(painter, r, mp);
+        QRect sectionRect(dataRect);
+        sectionRect.setTop(top - scrollBar.value());
+        sectionRect.setHeight((*s)->getHeight());
+        (*s)->draw(painter, sectionRect, mp);
 
-        QRect splitterRect(contentsRect());
-        splitterRect.setTop(top + (*s)->getHeight());
+        QRect splitterRect(sectionRect);
+        splitterRect.setTop(top + (*s)->getHeight() - scrollBar.value());
         splitterRect.setHeight(splitterWidth);
         painter.fillRect(splitterRect, palette().window());
 
@@ -727,7 +768,7 @@ void Graph::paintEvent(
         style->drawControl(QStyle::CE_Splitter, &styleOption, &painter, this);
 
         if ((*s == dropSection && dropLine < 0) || *s == selectedSection) {
-            drawDropRect(painter, r);
+            drawDropRect(painter, sectionRect);
         }
 
         top += (*s)->getHeight() + splitterWidth;
@@ -739,7 +780,7 @@ void Graph::paintEvent(
         pen.setWidth(5);
         painter.setPen(pen);
 
-        painter.drawLine(5, dropLine, contentsRect().width() - 10, dropLine);
+        painter.drawLine(5, dropLine, dataRect.width() - 10, dropLine);
     }
     else if (dropRemaining >= 0) {
         QRect remRect(contentsRect());
@@ -910,7 +951,8 @@ void Graph::wheelEvent(QWheelEvent *event)
 
 void Graph::updateDragging(QPoint p)
 {
-    int top = contentsRect().top() + scale.getOuterLength() + 1, y = p.y();
+    int top = contentsRect().top() + scale.getOuterLength() + 1 -
+        scrollBar.value(), y = p.y();
 
     resetDragging();
 
@@ -1011,6 +1053,38 @@ void Graph::updateMeasuring()
 
 /****************************************************************************/
 
+/** Updates the scroll bar.
+ */
+void Graph::updateScrollBar()
+{
+    int height = 0;
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        QRect rect(contentsRect().left(), height,
+                contentsRect().width(), (*s)->getHeight());
+        height += (*s)->getHeight() + splitterWidth;
+    }
+
+    int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
+    bool needed = height > displayHeight;
+
+    if (needed) {
+        scrollBar.setMaximum(height - displayHeight);
+        scrollBar.setPageStep(displayHeight);
+    }
+    else {
+        scrollBar.setMaximum(0);
+    }
+
+    if (needed != scrollBarNeeded) {
+        scrollBarNeeded = needed;
+        scrollBar.setVisible(needed);
+        update();
+    }
+}
+
+/****************************************************************************/
+
 Section *Graph::sectionFromPos(const QPoint &pos)
 {
     if (!contentsRect().contains(pos)) {
@@ -1023,7 +1097,8 @@ Section *Graph::sectionFromPos(const QPoint &pos)
         return NULL;
     }
 
-    int top = contentsRect().top() + scale.getOuterLength() + 1;
+    int top = contentsRect().top() + scale.getOuterLength() + 1 -
+        scrollBar.value();
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect rect(contentsRect().left(), top,
@@ -1114,6 +1189,14 @@ void Graph::sectionProperties()
     dialog->exec();
     delete dialog;
     selectedSection = NULL;
+}
+
+/****************************************************************************/
+
+void Graph::sliderValueChanged(int value)
+{
+    Q_UNUSED(value);
+    update();
 }
 
 /****************************************************************************/

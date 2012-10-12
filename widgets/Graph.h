@@ -27,6 +27,7 @@
 
 #include <QFrame>
 #include <QAction>
+#include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
 
 #include "Scale.h"
@@ -125,6 +126,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *splitterSection;
         Section *movingSection;
         int startHeight;
+        QScrollBar scrollBar;
+        bool scrollBarNeeded;
 
         struct View {
             COMTime start;
@@ -138,6 +141,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateCursor();
         void updateActions();
         void updateMeasuring();
+        void updateScrollBar();
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
@@ -146,6 +150,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void interactionSlot();
         void removeSelectedSection();
         void sectionProperties();
+        void sliderValueChanged(int);
 };
 
 /****************************************************************************/

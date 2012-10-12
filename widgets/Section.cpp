@@ -178,13 +178,13 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
     QRect dataRect(rect);
     dataRect.setTop(legendRect.bottom() + 1);
 
-    legendRect = legendRect.intersected(rect);
     if (legendRect.isValid()) {
         painter.fillRect(legendRect, graph->palette().window());
 
+        painter.save();
         painter.translate(rect.topLeft());
-        legend.drawContents(&painter, QRect(QPoint(), legendRect.size()));
-        painter.resetTransform();
+        legend.drawContents(&painter);
+        painter.restore();
     }
 
     dataRect.adjust(0, Margin, 0, -Margin);
@@ -376,7 +376,8 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
             flags = Qt::AlignRight | Qt::AlignVCenter;
         }
 
-        painter.setClipRect(dataRect);
+        painter.save();
+        painter.setClipRect(dataRect, Qt::IntersectClip);
         QRect backRect = rect.adjusted(-2, 0, 2, 0);
         painter.fillRect(backRect, Qt::white);
         painter.drawText(textRect, flags, label);
@@ -384,7 +385,7 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         painter.setPen(linePen);
         painter.drawLine(backRect.bottomLeft(), backRect.bottomRight());
         painter.drawLine(backRect.bottomRight(), backRect.topRight());
-        painter.setClipping(false);
+        painter.restore();
     }
 }
 

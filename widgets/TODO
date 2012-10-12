@@ -19,8 +19,6 @@ vim700: spelllang=en spell
     - (*) CSV
     - (*) Delta-t specification
 
-- (*) Vertical Scrolling
-
 - Section properties / dialog
     - (*) Unit
 
