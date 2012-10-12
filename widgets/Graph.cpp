@@ -99,7 +99,8 @@ Graph::Graph(
     measureAction.setShortcut(Qt::Key_M);
     measureAction.setStatusTip(tr("Set mouse interaction to measuring."));
     measureAction.setIcon(QIcon(":/images/measure.svg"));
-    connect(&measureAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
+    connect(&measureAction, SIGNAL(triggered()),
+            this, SLOT(interactionSlot()));
 
     zoomInAction.setText(tr("Zoom in"));
     zoomInAction.setShortcut(Qt::Key_Plus);
@@ -117,7 +118,8 @@ Graph::Graph(
 
     zoomResetAction.setText(tr("Auto range"));
     zoomResetAction.setShortcut(Qt::Key_Minus);
-    zoomResetAction.setStatusTip(tr("Automatically zoom to the data extent."));
+    zoomResetAction.setStatusTip(
+            tr("Automatically zoom to the data extent."));
     zoomResetAction.setIcon(QIcon(":/images/view-fullscreen.svg"));
     connect(&zoomResetAction, SIGNAL(triggered()), this, SLOT(zoomReset()));
 
@@ -130,6 +132,8 @@ Graph::Graph(
     sectionPropertiesAction.setText(tr("Section properties..."));
     sectionPropertiesAction.setStatusTip(tr("Open the section configuration"
                 " dialog."));
+    sectionPropertiesAction.setIcon(
+            QIcon(":/images/document-properties.svg"));
     connect(&sectionPropertiesAction, SIGNAL(triggered()),
             this, SLOT(sectionProperties()));
 
