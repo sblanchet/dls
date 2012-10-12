@@ -72,6 +72,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void zoomReset();
         void setInteraction(Interaction);
         void pan(double);
+        void print();
 
     protected:
         bool event(QEvent *);
@@ -114,6 +115,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction zoomResetAction;
         QAction removeSectionAction;
         QAction sectionPropertiesAction;
+        QAction printAction;
         Section *selectedSection;
         const int splitterWidth;
         Section *splitterSection;

@@ -59,6 +59,28 @@ Section::Section(
 
 /****************************************************************************/
 
+/** Copy constructor.
+ */
+Section::Section(
+        const Section &o
+        ):
+    graph(o.graph),
+    autoScale(o.autoScale),
+    scaleMin(o.scaleMin),
+    scaleMax(o.scaleMax),
+    height(o.height)
+{
+    for (QList<Layer *>::const_iterator l = o.layers.begin();
+            l != o.layers.end(); l++) {
+        Layer *newLayer = new Layer(**l, this);
+        layers.append(newLayer);
+    }
+
+    updateLegend();
+}
+
+/****************************************************************************/
+
 /** Destructor.
  */
 Section::~Section()

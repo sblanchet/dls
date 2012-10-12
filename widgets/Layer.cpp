@@ -60,6 +60,23 @@ Layer::Layer(
 
 /****************************************************************************/
 
+/** Copy constructor.
+ */
+Layer::Layer(
+        const Layer &o,
+        Section *section
+        ):
+    section(section),
+    channel(o.channel),
+    color(o.color),
+    minimum(0.0),
+    maximum(0.0),
+    extremaValid(false)
+{
+}
+
+/****************************************************************************/
+
 /** Destructor.
  */
 Layer::~Layer()

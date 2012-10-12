@@ -46,6 +46,7 @@ class Section
 {
     public:
         Section(Graph *graph);
+        Section(const Section &);
         virtual ~Section();
 
         Graph *getGraph() { return graph; }

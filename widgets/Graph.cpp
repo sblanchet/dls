@@ -60,6 +60,7 @@ Graph::Graph(
     zoomResetAction(this),
     removeSectionAction(this),
     sectionPropertiesAction(this),
+    printAction(this),
     selectedSection(NULL),
     splitterWidth(
             QApplication::style()->pixelMetric(QStyle::PM_SplitterWidth)),
@@ -128,9 +129,14 @@ Graph::Graph(
 
     sectionPropertiesAction.setText(tr("Section properties..."));
     sectionPropertiesAction.setStatusTip(tr("Open the section configuration"
-                " dialog.."));
+                " dialog."));
     connect(&sectionPropertiesAction, SIGNAL(triggered()),
             this, SLOT(sectionProperties()));
+
+    printAction.setText(tr("Print..."));
+    printAction.setStatusTip(tr("Open the print dialog."));
+    printAction.setIcon(QIcon(":/images/document-print.svg"));
+    connect(&printAction, SIGNAL(triggered()), this, SLOT(print()));
 }
 
 /****************************************************************************/
@@ -287,6 +293,102 @@ void Graph::pan(double fraction)
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() * fraction);
     setRange(getStart() + diff, getEnd() + diff);
+}
+
+/****************************************************************************/
+
+void Graph::print()
+{
+    QPrinter printer;
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOutputFileName("dls-export.pdf");
+
+    QPrintDialog dialog(&printer, this);
+    dialog.exec();
+
+    QPainter painter;
+
+    if (!painter.begin(&printer)) {
+        qWarning("failed to open file, is it writable?");
+        return;
+    }
+
+    // get widget data height
+    int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
+    if (displayHeight <= 0) {
+        qWarning("invalid data height.");
+        return;
+    }
+
+    QRect page(printer.pageRect());
+    page.moveTo(0, 0);
+
+    Scale printScale(this);
+    printScale.setRange(scale.getStart(), scale.getEnd());
+    printScale.setLength(page.width());
+
+    QRect scaleRect(page);
+
+    QList<Section *>::iterator first = sections.begin();
+
+    while (first != sections.end()) {
+
+        // choose sections for current page
+        QList<Section *>::iterator last = first;
+        int heightSum = (*first)->getHeight();
+        unsigned int count = 1;
+        while (heightSum < displayHeight) {
+            QList<Section *>::iterator next = last + 1;
+            if (next == sections.end() ||
+                    heightSum + (*next)->getHeight() > displayHeight) {
+                break;
+            }
+
+            last = next;
+            heightSum += (*last)->getHeight();
+            count++;
+        }
+
+        printScale.draw(painter, scaleRect);
+
+        QPen verLinePen;
+        painter.setPen(verLinePen);
+        painter.drawLine(page.left(),
+                page.top() + printScale.getOuterLength(),
+                page.right(),
+                page.top() + printScale.getOuterLength());
+
+        int top = page.top() + printScale.getOuterLength() + 1;
+        QRect dataRect(page);
+        dataRect.setTop(page.top() + printScale.getOuterLength() + 1);
+        for (QList<Section *>::iterator s = first; s != last + 1; s++) {
+            int height = (*s)->getHeight() * (dataRect.height() - count - 1)
+                / heightSum;
+            QRect r(page.left(), top, page.width(), height);
+
+            Section drawSection(**s);
+            drawSection.setHeight(height);
+            drawSection.resize(page.width());
+            drawSection.loadData(scale.getStart(), scale.getEnd(),
+                page.width());
+            drawSection.draw(painter, r, -1);
+
+            QPen pen;
+            painter.setPen(pen);
+            painter.drawLine(page.left(), top + height,
+                    page.right(), top + height);
+
+            top += height + 1;
+        }
+
+        first = last + 1;
+        if (first != sections.end()) {
+            printer.newPage();
+        }
+    }
+
+    painter.end();
 }
 
 /****************************************************************************/
@@ -654,6 +756,8 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addSeparator();
     menu.addAction(&removeSectionAction);
     menu.addAction(&sectionPropertiesAction);
+    menu.addSeparator();
+    menu.addAction(&printAction);
 
     menu.exec(event->globalPos());
     selectedSection = NULL;
