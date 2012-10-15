@@ -43,10 +43,12 @@ class MainWindow:
     private:
         LibDLS::Directory dir;
         LibDLS::Directory dir2;
+        LibDLS::Directory dir3;
         QtDls::Model model;
 
     private slots:
         void on_toolButtonView1_clicked();
+        void on_toolButtonNewDir_clicked();
 };
 
 /****************************************************************************/
