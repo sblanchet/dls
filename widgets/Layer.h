@@ -87,6 +87,7 @@ class Layer
         double getExtremaValid() const { return extremaValid; }
 
         QString title() const;
+        QString formatValue(double) const;
 
     private:
         Section * const section;

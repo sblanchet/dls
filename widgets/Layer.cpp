@@ -200,6 +200,25 @@ QString Layer::title() const
 
 /****************************************************************************/
 
+QString Layer::formatValue(double value) const
+{
+    QString ret;
+
+    ret.setNum(value);
+
+    if (!unit.isEmpty()) {
+        if (unit != "°") {
+            ret += QString::fromUtf8(" "); // narrow no-break space U+202f
+        }
+
+        ret += unit;
+    }
+
+    return ret;
+}
+
+/****************************************************************************/
+
 int Layer::dataCallback(LibDLS::Data *data, void *cb_data)
 {
     Layer *l = (Layer *) cb_data;
