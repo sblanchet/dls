@@ -352,11 +352,12 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         painter.setFont(font);
 
         if (measure->minimum != measure->maximum) {
-            label = QString().fromUtf8("%1 – %2") // unicode en-dash!
-                .arg(measure->minimum).arg(measure->maximum);
+            label = measure->layer->formatValue(measure->minimum) +
+                QString().fromUtf8(" – ") + // unicode en-dash!
+                measure->layer->formatValue(measure->maximum);
         }
         else {
-            label = QString("%1").arg(measure->minimum);
+            label = measure->layer->formatValue(measure->minimum);
         }
 
         QRect textRect(dataRect);
