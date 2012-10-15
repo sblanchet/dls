@@ -792,17 +792,14 @@ void Graph::paintEvent(
 
     if (zooming) {
         QPen pen;
-        pen.setColor(Qt::red);
+        pen.setColor(Qt::blue);
         painter.setPen(pen);
 
-        painter.drawLine(startPos.x(),
-                contentsRect().top() + scale.getOuterLength() + 1,
-                startPos.x(), contentsRect().bottom());
-        pen.setColor(Qt::yellow);
-        painter.setPen(pen);
-        painter.drawLine(endPos.x(),
-                contentsRect().top() + scale.getOuterLength() + 1,
-                endPos.x(), contentsRect().bottom());
+        QRect zoomRect(startPos.x(), contentsRect().top(),
+                endPos.x() - startPos.x() + 1, contentsRect().height());
+        painter.fillRect(zoomRect, QColor(0, 0, 255, 63));
+        painter.drawLine(zoomRect.topLeft(), zoomRect.bottomLeft());
+        painter.drawLine(zoomRect.topRight(), zoomRect.bottomRight());
     }
 
     if (measuring) {
