@@ -99,15 +99,20 @@ INSTALLS += inst_headers
 HEADERS += \
     $${inst_headers.files} \
     Channel.h \
+    ColorDelegate.h \
+    ColorListEditor.h \
     Dir.h \
     Job.h \
     Node.h \
     Plugin.h \
     SectionDialog.h \
+    SectionModel.h \
     WidgetCollection.h
 
 SOURCES += \
     Channel.cpp \
+    ColorDelegate.cpp \
+    ColorListEditor.cpp \
     Dir.cpp \
     Graph.cpp \
     Job.cpp \
@@ -118,6 +123,7 @@ SOURCES += \
     Scale.cpp \
     Section.cpp \
     SectionDialog.cpp \
+    SectionModel.cpp \
     WidgetCollection.cpp
 
 FORMS = SectionDialog.ui

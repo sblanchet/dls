@@ -44,6 +44,9 @@ class Layer;
  */
 class Section
 {
+    friend class SectionModel;
+    friend class Layer;
+
     public:
         Section(Graph *graph);
         Section(const Section &);
@@ -84,6 +87,7 @@ class Section
         static const QColor colorList[];
 
         void updateLegend();
+        void update();
 };
 
 /****************************************************************************/

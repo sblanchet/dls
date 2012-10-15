@@ -25,8 +25,11 @@
 #ifndef DLS_LAYER_H
 #define DLS_LAYER_H
 
+#include <QColor>
+
 namespace LibDLS {
     class Channel;
+    class Data;
 }
 
 namespace DLS {
@@ -46,8 +49,16 @@ class Layer
 
         LibDLS::Channel *getChannel() const { return channel; };
 
-        void setColor(const QColor &);
+        void setName(const QString &);
+        const QString &getName() const { return name; }
+        void setUnit(const QString &);
+        const QString &getUnit() const { return unit; }
+        void setColor(QColor);
         QColor getColor() const { return color; }
+        void setScale(double);
+        double getScale() const { return scale; }
+        void setOffset(double);
+        double getOffset() const { return offset; }
 
         void loadData(const COMTime &, const COMTime &, int);
 
@@ -75,10 +86,17 @@ class Layer
         double getMaximum() const { return maximum; }
         double getExtremaValid() const { return extremaValid; }
 
+        QString title() const;
+
     private:
         Section * const section;
         LibDLS::Channel * const channel;
+        QString name;
+        QString unit;
         QColor color;
+        double scale;
+        double offset;
+
         QList<LibDLS::Data *> genericData;
         QList<LibDLS::Data *> minimumData;
         QList<LibDLS::Data *> maximumData;

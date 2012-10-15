@@ -22,48 +22,36 @@
  *
  ****************************************************************************/
 
-#ifndef DLS_SECTION_DIALOG_H
-#define DLS_SECTION_DIALOG_H
+#ifndef DLS_COLOR_DELEGATE_H
+#define DLS_COLOR_DELEGATE_H
 
-#include <QDialog>
-
-#include "ui_SectionDialog.h"
-
-#include "ColorDelegate.h"
-
-namespace DLS {
-
-class Section;
-class SectionModel;
+#include <QItemDelegate>
 
 /****************************************************************************/
 
-/** Graph section configuration dialog.
- */
-class SectionDialog:
-    public QDialog,
-    public Ui::SectionDialog
+class ColorDelegate:
+    public QItemDelegate
 {
     Q_OBJECT
 
     public:
-        SectionDialog(Section *, QWidget * = NULL);
-        ~SectionDialog();
+        ColorDelegate(QObject *);
+
+        QWidget *createEditor(QWidget *,
+                const QStyleOptionViewItem &,
+                const QModelIndex &) const;
+
+        void setEditorData(QWidget *, const QModelIndex &) const;
+        void setModelData(QWidget *, QAbstractItemModel *,
+                const QModelIndex &) const;
+
+        void updateEditorGeometry(QWidget *,
+                const QStyleOptionViewItem &, const QModelIndex &) const;
 
     private:
-        Section * const section;
-        SectionModel *model;
-        ColorDelegate colorDelegate;
-
-        SectionDialog();
-
-    private slots:
-        void accept();
-        void scaleValueChanged();
+        ColorDelegate();
 };
 
 /****************************************************************************/
-
-} // namespace
 
 #endif

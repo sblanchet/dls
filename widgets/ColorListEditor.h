@@ -22,44 +22,33 @@
  *
  ****************************************************************************/
 
-#ifndef DLS_SECTION_DIALOG_H
-#define DLS_SECTION_DIALOG_H
+#ifndef DLS_COLOR_LIST_EDITOR_H
+#define DLS_COLOR_LIST_EDITOR_H
 
-#include <QDialog>
+#include <QComboBox>
 
-#include "ui_SectionDialog.h"
-
-#include "ColorDelegate.h"
+class QColor;
+class QWidget;
 
 namespace DLS {
 
-class Section;
-class SectionModel;
-
 /****************************************************************************/
 
-/** Graph section configuration dialog.
- */
-class SectionDialog:
-    public QDialog,
-    public Ui::SectionDialog
+class ColorListEditor:
+    public QComboBox
 {
     Q_OBJECT
+    Q_PROPERTY(QColor color READ color WRITE setColor USER true)
 
     public:
-        SectionDialog(Section *, QWidget * = NULL);
-        ~SectionDialog();
+        ColorListEditor(QWidget *widget = 0);
+
+    public:
+        QColor color() const;
+        void setColor(QColor c);
 
     private:
-        Section * const section;
-        SectionModel *model;
-        ColorDelegate colorDelegate;
-
-        SectionDialog();
-
-    private slots:
-        void accept();
-        void scaleValueChanged();
+        void populateList();
 };
 
 /****************************************************************************/
