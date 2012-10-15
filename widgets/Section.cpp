@@ -498,13 +498,20 @@ void Section::updateLegend()
             html += ", ";
         }
         html += "<span style=\"color: " + (*l)->getColor().name() + ";\">";
-        html += (*l)->getChannel()->name().c_str();
+        html += (*l)->title();
         html += "</span>";
     }
 
     html += "</body></html>";
 
     legend.setHtml(html);
+}
+
+/****************************************************************************/
+
+void Section::update()
+{
+    graph->update();
 }
 
 /****************************************************************************/

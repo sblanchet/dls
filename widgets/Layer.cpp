@@ -47,6 +47,8 @@ Layer::Layer(
     section(section),
     channel(channel),
     color(c),
+    scale(1.0),
+    offset(0.0),
     minimum(0.0),
     maximum(0.0),
     extremaValid(false)
@@ -68,7 +70,11 @@ Layer::Layer(
         ):
     section(section),
     channel(o.channel),
+    name(o.name),
+    unit(o.unit),
     color(o.color),
+    scale(o.scale),
+    offset(o.offset),
     minimum(0.0),
     maximum(0.0),
     extremaValid(false)
@@ -88,12 +94,69 @@ Layer::~Layer()
 
 /****************************************************************************/
 
-void Layer::setColor(const QColor &c)
+void Layer::setName(const QString &n)
 {
-    color = c;
+    if (n != name) {
+        name = n;
+        section->updateLegend();
+    }
+}
 
-    if (!color.isValid()) {
-        color = section->nextColor();
+/****************************************************************************/
+
+void Layer::setUnit(const QString &u)
+{
+    if (u != unit) {
+        unit = u;
+        section->updateLegend();
+    }
+}
+
+/****************************************************************************/
+
+void Layer::setColor(QColor c)
+{
+    if (!c.isValid()) {
+        c = section->nextColor();
+    }
+
+    if (c != color) {
+        color = c;
+        section->updateLegend();
+    }
+}
+
+/****************************************************************************/
+
+void Layer::setScale(double s)
+{
+    if (s != scale) {
+        scale = s;
+
+        bool first = true;
+        updateExtrema(genericData, &first);
+        updateExtrema(minimumData, &first);
+        updateExtrema(maximumData, &first);
+        extremaValid = !first;
+
+        section->update();
+    }
+}
+
+/****************************************************************************/
+
+void Layer::setOffset(double o)
+{
+    if (o != offset) {
+        offset = o;
+
+        bool first = true;
+        updateExtrema(genericData, &first);
+        updateExtrema(minimumData, &first);
+        updateExtrema(maximumData, &first);
+        extremaValid = !first;
+
+        section->update();
     }
 }
 
@@ -113,6 +176,26 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
     updateExtrema(maximumData, &first);
 
     extremaValid = !first;
+}
+
+/****************************************************************************/
+
+QString Layer::title() const
+{
+    QString ret;
+
+    if (!name.isEmpty()) {
+        ret += name;
+    }
+    else {
+        ret += channel->name().c_str();
+    }
+
+    if (!unit.isEmpty()) {
+        ret += " [" + unit + "]";
+    }
+
+    return ret;
 }
 
 /****************************************************************************/
@@ -167,6 +250,9 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
             continue;
         }
 
+        current_min = current_min * scale + offset;
+        current_max = current_max * scale + offset;
+
         if (*first) {
             minimum = current_min;
             maximum = current_max;
@@ -207,7 +293,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 d != genericData.end(); d++) {
 
             for (unsigned int i = 0; i < (*d)->size(); i++) {
-                double value = (*d)->value(i);
+                double value = (*d)->value(i) * scale + offset;
                 COMTime dt = (*d)->time(i) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 double yv = (value -  min) * yScale;
@@ -336,7 +422,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 d != minimumData.end(); d++) {
 
             for (j = 0; j < (*d)->size(); j++) {
-                value = (*d)->value(j);
+                value = (*d)->value(j) * scale + offset;
                 COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - min) * yScale;
@@ -392,7 +478,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 d != maximumData.end(); d++) {
 
             for (j = 0; j < (*d)->size(); j++) {
-                value = (*d)->value(j);
+                value = (*d)->value(j) * scale + offset;
                 COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - min) * yScale;

@@ -24,6 +24,7 @@
 
 #include "SectionDialog.h"
 #include "Section.h"
+#include "SectionModel.h"
 
 using DLS::SectionDialog;
 
@@ -36,18 +37,34 @@ SectionDialog::SectionDialog(
         QWidget *parent
         ):
     QDialog(parent),
-    section(section)
+    section(section),
+    model(new SectionModel(section)),
+    colorDelegate(this)
 {
     setupUi(this);
 
     radioButtonAuto->setChecked(section->getAutoScale());
     radioButtonManual->setChecked(!section->getAutoScale());
 
+    tableViewLayers->setItemDelegateForColumn(3, &colorDelegate);
+
+    tableViewLayers->setModel(model);
+    tableViewLayers->resizeColumnsToContents();
+
     QString num;
     num.setNum(section->getScaleMinimum());
     lineEditMinimum->setText(num);
     num.setNum(section->getScaleMaximum());
     lineEditMaximum->setText(num);
+
+    connect(radioButtonAuto, SIGNAL(toggled(bool)),
+            this, SLOT(scaleValueChanged()));
+    connect(radioButtonManual, SIGNAL(toggled(bool)),
+            this, SLOT(scaleValueChanged()));
+    connect(lineEditMinimum, SIGNAL(textChanged(const QString &)),
+            this, SLOT(scaleValueChanged()));
+    connect(lineEditMaximum, SIGNAL(textChanged(const QString &)),
+            this, SLOT(scaleValueChanged()));
 }
 
 /****************************************************************************/
@@ -60,8 +77,6 @@ SectionDialog::~SectionDialog()
 
 /****************************************************************************/
 
-/** Destructor.
- */
 void SectionDialog::accept()
 {
     bool ok;
@@ -83,6 +98,26 @@ void SectionDialog::accept()
 
     setResult(Accepted);
     close();
+}
+
+/****************************************************************************/
+
+void SectionDialog::scaleValueChanged()
+{
+    bool ok;
+    double min, max;
+
+    min = lineEditMinimum->text().toDouble(&ok);
+    if (ok) {
+        section->setScaleMinimum(min);
+    }
+
+    max = lineEditMaximum->text().toDouble(&ok);
+    if (ok) {
+        section->setScaleMaximum(max);
+    }
+
+    section->setAutoScale(radioButtonAuto->isChecked());
 }
 
 /****************************************************************************/

@@ -23,9 +23,7 @@ vim700: spelllang=en spell
     - (*) Unit
 
 - Layer properties / dialog
-    - (*) Color
-    - (*) Title (alias)
-    - (*) Scale factor / offset
+    - Precision
 
 - Persistence
     - Time range
@@ -43,6 +41,5 @@ vim700: spelllang=en spell
     - Value scale drawing
     - Display combined gaps below time scale
     - Section properties with double click.
-    - Display units in legend
 
 - (*) Messages
