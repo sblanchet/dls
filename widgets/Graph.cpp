@@ -774,6 +774,8 @@ void Graph::paintEvent(
         top += (*s)->getHeight() + splitterWidth;
     }
 
+    painter.setClipping(false);
+
     if (dropLine >= 0) {
         QPen pen;
         pen.setColor(Qt::blue);
