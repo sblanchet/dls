@@ -25,6 +25,7 @@
 using namespace std;
 
 #include <QDebug>
+#include <QFileDialog>
 
 #include "MainWindow.h"
 #include "modeltest.h"
@@ -71,6 +72,27 @@ void MainWindow::on_toolButtonView1_clicked()
     start.set_date(2012, 8, 28, 2, 34);
     end.set_date(2012, 8, 28, 2, 35, 10);
     dlsGraph->setRange(start, end);
+}
+
+/****************************************************************************/
+
+void MainWindow::on_toolButtonNewDir_clicked()
+{
+    QFileDialog dialog(this);
+
+    QString dir = dialog.getExistingDirectory(this, tr("Open data diretory"),
+            "/vol/data/dls_data");
+
+    if (dir.isEmpty()) {
+        return;
+    }
+
+    try {
+        dir3.import(dir.toLocal8Bit().constData());
+        model.addLocalDir(&dir3);
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
 }
 
 /****************************************************************************/
