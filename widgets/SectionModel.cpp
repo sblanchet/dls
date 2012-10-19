@@ -93,11 +93,29 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                     break;
             }
         }
+        else if (role == Qt::EditRole) {
+            switch (index.column()) {
+                case 1:
+                    ret = layer->getName();
+                    break;
+                case 2:
+                    ret = layer->getUnit();
+                    break;
+                case 3:
+                    ret = layer->getColor().rgb();
+                    break;
+                case 4:
+                    ret = layer->getScale();
+                    break;
+                case 5:
+                    ret = layer->getOffset();
+                    break;
+                default:
+                    break;
+            }
+        }
         else if (index.column() == 3 && role == Qt::DecorationRole) {
             ret = layer->getColor();
-        }
-        else if (index.column() == 3 && role == Qt::EditRole) {
-            ret = layer->getColor().rgb();
         }
     }
 
