@@ -677,6 +677,19 @@ int COMTime::day() const
     return local_time.tm_mday;
 }
 
+
+/*****************************************************************************/
+
+int COMTime::day_of_week() const
+{
+    struct timeval tv;
+    struct tm local_time;
+
+    tv = to_tv();
+    local_time = *localtime(&tv.tv_sec);
+    return local_time.tm_wday;
+}
+
 /*****************************************************************************/
 
 bool COMTime::is_leap_year() const
