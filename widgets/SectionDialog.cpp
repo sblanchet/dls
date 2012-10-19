@@ -49,6 +49,13 @@ SectionDialog::SectionDialog(
     tableViewLayers->setItemDelegateForColumn(3, &colorDelegate);
 
     tableViewLayers->setModel(model);
+    tableViewLayers->verticalHeader()->hide();
+    tableViewLayers->horizontalHeader()->setResizeMode(0, QHeaderView::Stretch);
+    tableViewLayers->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
+    tableViewLayers->horizontalHeader()->setResizeMode(2, QHeaderView::ResizeToContents);
+    tableViewLayers->horizontalHeader()->setResizeMode(3, QHeaderView::ResizeToContents);
+    tableViewLayers->horizontalHeader()->setResizeMode(4, QHeaderView::ResizeToContents);
+    tableViewLayers->horizontalHeader()->setResizeMode(5, QHeaderView::ResizeToContents);
     tableViewLayers->resizeColumnsToContents();
 
     QString num;
