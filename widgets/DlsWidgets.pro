@@ -34,7 +34,7 @@ TARGET = DlsWidgets
 VERSION = 0.9.0
 WIN32_LIB_VERSION = 1
 
-CONFIG += designer plugin release
+CONFIG += designer plugin debug
 DEPENDPATH += .
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
