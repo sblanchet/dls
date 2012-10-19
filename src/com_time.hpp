@@ -91,6 +91,7 @@ public:
     int hour() const;
     int min() const;
     int sec() const;
+    int day_of_week() const;
     bool is_leap_year() const;
     int month_days() const;
 
