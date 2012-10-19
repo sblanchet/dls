@@ -65,7 +65,7 @@ int Model::rowCount(const QModelIndex &index) const
     int ret = 0;
 
     if (index.isValid()) {
-        if (index.column() == 0) {
+        if (index.column() == 0 && index.internalPointer()) {
             Node *n = (Node *) index.internalPointer();
             ret = n->rowCount();
         }
