@@ -41,9 +41,7 @@ class MainWindow:
         ~MainWindow();
 
     private:
-        LibDLS::Directory dir;
-        LibDLS::Directory dir2;
-        LibDLS::Directory dir3;
+        QList<LibDLS::Directory *> dirs;
         QtDls::Model model;
 
     private slots:
