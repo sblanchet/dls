@@ -104,11 +104,17 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                 case 3:
                     ret = layer->getColor().rgb();
                     break;
-                case 4:
-                    ret = layer->getScale();
+                case 4: {
+                        QString num;
+                        num.setNum(layer->getScale());
+                        ret = num;
+                    }
                     break;
-                case 5:
-                    ret = layer->getOffset();
+                case 5: {
+                        QString num;
+                        num.setNum(layer->getOffset());
+                        ret = num;
+                    }
                     break;
                 default:
                     break;
