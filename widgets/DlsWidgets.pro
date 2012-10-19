@@ -101,6 +101,7 @@ HEADERS += \
     Channel.h \
     ColorDelegate.h \
     ColorListEditor.h \
+    DatePickerDialog.h \
     Dir.h \
     Job.h \
     Node.h \
@@ -113,6 +114,7 @@ SOURCES += \
     Channel.cpp \
     ColorDelegate.cpp \
     ColorListEditor.cpp \
+    DatePickerDialog.cpp \
     Dir.cpp \
     Graph.cpp \
     Job.cpp \
@@ -126,7 +128,9 @@ SOURCES += \
     SectionModel.cpp \
     WidgetCollection.cpp
 
-FORMS = SectionDialog.ui
+FORMS = \
+    DatePickerDialog.ui \
+    SectionDialog.ui
 
 RESOURCES = DlsWidgets.qrc
 

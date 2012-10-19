@@ -4,26 +4,25 @@ vim700: spelllang=en spell
     - (*) Data access via network
     - Caching
     - Threading
+    - Create update_chunks() method.
 
 - Measuring
     - Markers
 
 - Context menu
-    - Remove Layer
     - Find extrema
     - (*) Export
-    - (*) Goto date/time picker, last hour, day, week
 
 - Export
     - PNG
     - (*) CSV
     - (*) Delta-t specification
 
-- Section properties / dialog
-    - (*) Unit
-
 - Layer properties / dialog
     - Precision
+    - (*) Color picker
+    - Remove Layer
+    - Guess scale from data
 
 - Persistence
     - Time range
@@ -38,8 +37,9 @@ vim700: spelllang=en spell
         - Scale factor / offset
 
 - Widget
-    - Value scale drawing
+    - (*) Value scale drawing
     - Display combined gaps below time scale
+    - Mark gap borders with lines.
     - Section properties with double click.
     - Avoid crash on zooming out infinitely.
 

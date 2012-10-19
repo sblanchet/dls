@@ -118,6 +118,15 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction zoomInAction;
         QAction zoomOutAction;
         QAction zoomResetAction;
+        QAction pickDateAction;
+        QAction gotoTodayAction;
+        QAction gotoYesterdayAction;
+        QAction gotoThisWeekAction;
+        QAction gotoLastWeekAction;
+        QAction gotoThisMonthAction;
+        QAction gotoLastMonthAction;
+        QAction gotoThisYearAction;
+        QAction gotoLastYearAction;
         QAction removeSectionAction;
         QAction sectionPropertiesAction;
         QAction printAction;
@@ -151,6 +160,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void removeSelectedSection();
         void sectionProperties();
         void sliderValueChanged(int);
+        void pickDate();
+        void gotoDate();
 };
 
 /****************************************************************************/
