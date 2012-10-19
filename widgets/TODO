@@ -20,7 +20,6 @@ vim700: spelllang=en spell
 
 - Layer properties / dialog
     - Precision
-    - (*) Color picker
     - Remove Layer
     - Guess scale from data
 

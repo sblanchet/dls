@@ -100,7 +100,6 @@ HEADERS += \
     $${inst_headers.files} \
     Channel.h \
     ColorDelegate.h \
-    ColorListEditor.h \
     DatePickerDialog.h \
     Dir.h \
     Job.h \
@@ -113,7 +112,6 @@ HEADERS += \
 SOURCES += \
     Channel.cpp \
     ColorDelegate.cpp \
-    ColorListEditor.cpp \
     DatePickerDialog.cpp \
     Dir.cpp \
     Graph.cpp \
