@@ -53,8 +53,16 @@ QVariant Job::data(const QModelIndex &index, int role) const
     switch (index.column()) {
         case 0:
             switch (role) {
-                case Qt::DisplayRole:
-                    ret = QString("Job %1").arg(job->id());
+                case Qt::DisplayRole: {
+                        QString text = QString("Job %1").arg(job->id());
+
+                        QString desc(job->preset().description().c_str());
+                        if (!desc.isEmpty()) {
+                            text += ", \"" + desc + "\"";
+                        }
+
+                        ret = text;
+                    }
                     break;
             }
             break;
