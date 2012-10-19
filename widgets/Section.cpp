@@ -353,7 +353,7 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 
         if (measure->minimum != measure->maximum) {
             label = measure->layer->formatValue(measure->minimum) +
-                QString().fromUtf8(" – ") + // unicode en-dash!
+                QString().fromUtf8(" – ") + // unicode en-dash U+2013
                 measure->layer->formatValue(measure->maximum);
         }
         else {

@@ -208,7 +208,7 @@ QString Layer::formatValue(double value) const
 
     if (!unit.isEmpty()) {
         if (unit != "°") {
-            ret += QString::fromUtf8(" "); // narrow no-break space U+202f
+            ret += QChar(0x202f); // narrow no-break space U+202f
         }
 
         ret += unit;
