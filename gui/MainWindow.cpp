@@ -39,20 +39,26 @@ MainWindow::MainWindow(QWidget *parent):
 
     new ModelTest(&model);
 
-    try {
-        dir.import("/vol/projekte/airbus/a4q_airbus-4q-technologie"
-                "/messungen/dls_data");
-        model.addLocalDir(&dir);
-    } catch (LibDLS::DirectoryException &e) {
-        qWarning() << e.msg.c_str();
-    }
+    LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
-        dir2.import("/vol/projekte/airbus/amb_airbus-messbolzen/messungen"
-                "/kalibrierung/dls-data");
-        model.addLocalDir(&dir2);
+        dir->import("/vol/projekte/airbus/a4q_airbus-4q-technologie"
+                "/messungen/dls_data");
+        model.addLocalDir(dir);
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
+        delete dir;
+    }
+
+    LibDLS::Directory *dir2 = new LibDLS::Directory();
+
+    try {
+        dir2->import("/vol/projekte/airbus/amb_airbus-messbolzen/messungen"
+                "/kalibrierung/dls-data");
+        model.addLocalDir(dir2);
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+        delete dir2;
     }
 
     treeView->setModel(&model);
@@ -62,6 +68,12 @@ MainWindow::MainWindow(QWidget *parent):
 
 MainWindow::~MainWindow()
 {
+    model.clear();
+
+    for (QList<LibDLS::Directory *>::iterator dir = dirs.begin();
+            dir != dirs.end(); dir++) {
+        delete *dir;
+    }
 }
 
 /****************************************************************************/
@@ -80,18 +92,21 @@ void MainWindow::on_toolButtonNewDir_clicked()
 {
     QFileDialog dialog(this);
 
-    QString dir = dialog.getExistingDirectory(this, tr("Open data diretory"),
+    QString path = dialog.getExistingDirectory(this, tr("Open data diretory"),
             "/vol/data/dls_data");
 
-    if (dir.isEmpty()) {
+    if (path.isEmpty()) {
         return;
     }
 
+    LibDLS::Directory *dir = new LibDLS::Directory();
+
     try {
-        dir3.import(dir.toLocal8Bit().constData());
-        model.addLocalDir(&dir3);
+        dir->import(path.toLocal8Bit().constData());
+        model.addLocalDir(dir);
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
+        delete dir;
     }
 }
 
