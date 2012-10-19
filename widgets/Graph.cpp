@@ -81,16 +81,11 @@ Graph::Graph(
     setAcceptDrops(true);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+
     scrollBar.setVisible(false);
     scrollBar.setCursor(Qt::ArrowCursor);
     connect(&scrollBar, SIGNAL(valueChanged(int)),
             this, SLOT(sliderValueChanged(int)));
-
-    COMTime t, diff;
-    t.set_now();
-    diff.from_dbl_time(2000000000.0);
-    scale.setRange(t - diff, t);
-    newView();
 
     updateCursor();
 
@@ -164,6 +159,8 @@ Graph::Graph(
     printAction.setStatusTip(tr("Open the print dialog."));
     printAction.setIcon(QIcon(":/images/document-print.svg"));
     connect(&printAction, SIGNAL(triggered()), this, SLOT(print()));
+
+    updateActions();
 }
 
 /****************************************************************************/
@@ -280,7 +277,7 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
 void Graph::previousView()
 {
-    if (currentView == views.begin()) {
+    if (views.empty() || currentView == views.begin()) {
         return;
     }
 
@@ -295,7 +292,7 @@ void Graph::previousView()
 
 void Graph::nextView()
 {
-    if (currentView + 1 == views.end()) {
+    if (views.empty() || currentView + 1 == views.end()) {
         return;
     }
 
@@ -310,6 +307,10 @@ void Graph::nextView()
 
 void Graph::zoomIn()
 {
+    if (getEnd() <= getStart()) {
+        return;
+    }
+
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
     setRange(getStart() + diff, getEnd() - diff);
@@ -319,6 +320,10 @@ void Graph::zoomIn()
 
 void Graph::zoomOut()
 {
+    if (getEnd() <= getStart()) {
+        return;
+    }
+
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 2.0);
     setRange(getStart() - diff, getEnd() + diff);
@@ -357,6 +362,10 @@ void Graph::setInteraction(Interaction i)
 
 void Graph::pan(double fraction)
 {
+    if (getEnd() <= getStart()) {
+        return;
+    }
+
     COMTime diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() * fraction);
     setRange(getStart() + diff, getEnd() + diff);
@@ -1012,12 +1021,19 @@ void Graph::updateCursor()
 
 void Graph::updateActions()
 {
-    prevViewAction.setEnabled(currentView != views.begin());
-    nextViewAction.setEnabled(currentView + 1 != views.end());
+    prevViewAction.setEnabled(!views.empty() && currentView != views.begin());
+    nextViewAction.setEnabled(
+            !views.empty() && currentView + 1 != views.end());
+
     zoomAction.setEnabled(interaction != Zoom);
     panAction.setEnabled(interaction != Pan);
     measureAction.setEnabled(interaction != Measure);
+
+    bool rangeValid = getEnd() > getStart();
+    zoomInAction.setEnabled(rangeValid);
+    zoomOutAction.setEnabled(rangeValid);
     zoomResetAction.setEnabled(!autoRange);
+    printAction.setEnabled(rangeValid);
 }
 
 /****************************************************************************/
@@ -1136,7 +1152,7 @@ void Graph::drawDropRect(QPainter &painter, const QRect &rect)
  */
 void Graph::newView()
 {
-    if (currentView != views.end()) {
+    if (!views.empty() && currentView != views.end()) {
         // erase all views after the current
         views.erase(currentView + 1, views.end());
     }
