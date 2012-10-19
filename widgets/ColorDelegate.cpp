@@ -23,11 +23,9 @@
  ****************************************************************************/
 
 #include <QDebug>
+#include <QColorDialog>
 
 #include "ColorDelegate.h"
-#include "ColorListEditor.h"
-
-using DLS::ColorListEditor;
 
 /****************************************************************************/
 
@@ -42,8 +40,8 @@ QWidget *ColorDelegate::createEditor(QWidget *parent,
         const QStyleOptionViewItem &,
         const QModelIndex &) const
 {
-    ColorListEditor *editor = new ColorListEditor(parent);
-    return editor;
+    QColorDialog *colorDialog = new QColorDialog(parent);
+    return colorDialog;
 }
 
 /****************************************************************************/
@@ -54,8 +52,8 @@ void ColorDelegate::setEditorData(QWidget *editor,
     QColor color;
     color = QColor::fromRgb(index.model()->data(index, Qt::EditRole).toInt());
 
-    ColorListEditor *colorListEditor = static_cast<ColorListEditor *>(editor);
-    colorListEditor->setColor(color);
+    QColorDialog *colorDialog = static_cast<QColorDialog *>(editor);
+    colorDialog->setCurrentColor(color);
 }
 
 /****************************************************************************/
@@ -63,18 +61,17 @@ void ColorDelegate::setEditorData(QWidget *editor,
 void ColorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
         const QModelIndex &index) const
 {
-    ColorListEditor *colorListEditor = static_cast<ColorListEditor *>(editor);
-    QColor color = colorListEditor->color();
+    QColorDialog *colorDialog = static_cast<QColorDialog *>(editor);
+    QColor color = colorDialog->currentColor();
 
     model->setData(index, color.rgb(), Qt::EditRole);
 }
 
 /****************************************************************************/
 
-void ColorDelegate::updateEditorGeometry(QWidget *editor,
-        const QStyleOptionViewItem &option, const QModelIndex &) const
+void ColorDelegate::updateEditorGeometry(QWidget *,
+        const QStyleOptionViewItem &, const QModelIndex &) const
 {
-    editor->setGeometry(option.rect);
 }
 
 /****************************************************************************/
