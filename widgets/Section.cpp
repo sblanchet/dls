@@ -55,6 +55,7 @@ Section::Section(
     scaleMax(100.0),
     height(100)
 {
+    updateLegend();
 }
 
 /****************************************************************************/
@@ -85,6 +86,37 @@ Section::Section(
  */
 Section::~Section()
 {
+    clearLayers();
+}
+
+/****************************************************************************/
+
+/** Assignment constructor.
+ */
+Section &Section::operator=(
+        const Section &o
+        )
+{
+    // graph is const
+    autoScale = o.autoScale;
+    scaleMin = o.scaleMin;
+    scaleMax = o.scaleMax;
+    height = o.height;
+
+    clearLayers();
+
+    for (QList<Layer *>::const_iterator l = o.layers.begin();
+            l != o.layers.end(); l++) {
+        Layer *newLayer = new Layer(**l, this);
+        layers.append(newLayer);
+    }
+
+    updateLegend();
+
+    graph->updateRange();
+    graph->update();
+
+    return *this;
 }
 
 /****************************************************************************/
@@ -513,6 +545,18 @@ void Section::updateLegend()
 void Section::update()
 {
     graph->update();
+}
+
+/****************************************************************************/
+
+void Section::clearLayers()
+{
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        delete *l;
+    }
+
+    layers.clear();
 }
 
 /****************************************************************************/

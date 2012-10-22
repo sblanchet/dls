@@ -52,6 +52,8 @@ class Section
         Section(const Section &);
         virtual ~Section();
 
+        Section &operator=(const Section &);
+
         Graph *getGraph() { return graph; }
 
         bool getAutoScale() const { return autoScale; }
@@ -88,6 +90,7 @@ class Section
 
         void updateLegend();
         void update();
+        void clearLayers();
 };
 
 /****************************************************************************/
