@@ -104,17 +104,11 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                 case 3:
                     ret = layer->getColor().rgb();
                     break;
-                case 4: {
-                        QString num;
-                        num.setNum(layer->getScale());
-                        ret = num;
-                    }
+                case 4: 
+                    ret = QLocale().toString(layer->getScale());
                     break;
-                case 5: {
-                        QString num;
-                        num.setNum(layer->getOffset());
-                        ret = num;
-                    }
+                case 5:
+                    ret = QLocale().toString(layer->getOffset());
                     break;
                 default:
                     break;
@@ -218,13 +212,23 @@ bool SectionModel::setData(const QModelIndex &index, const QVariant &value,
             accepted = true;
             }
             break;
-        case 4:
-            layer->setScale(value.toDouble());
-            accepted = true;
+        case 4: {
+                bool ok;
+                double num = QLocale().toDouble(value.toString(), &ok);
+                if (ok) {
+                    layer->setScale(num);
+                    accepted = true;
+                }
+            }
             break;
-        case 5:
-            layer->setOffset(value.toDouble());
-            accepted = true;
+        case 5: {
+                bool ok;
+                double num = QLocale().toDouble(value.toString(), &ok);
+                if (ok) {
+                    layer->setOffset(num);
+                    accepted = true;
+                }
+            }
             break;
         default:
             break;
