@@ -75,10 +75,13 @@ Layer::Layer(
     color(o.color),
     scale(o.scale),
     offset(o.offset),
-    minimum(0.0),
-    maximum(0.0),
-    extremaValid(false)
+    minimum(o.minimum),
+    maximum(o.maximum),
+    extremaValid(o.extremaValid)
 {
+    copyDataList(genericData, o.genericData);
+    copyDataList(minimumData, o.minimumData);
+    copyDataList(maximumData, o.maximumData);
 }
 
 /****************************************************************************/
@@ -255,6 +258,20 @@ void Layer::clearDataList(QList<LibDLS::Data *> &list)
     }
 
     list.clear();
+}
+
+/****************************************************************************/
+
+void Layer::copyDataList(QList<LibDLS::Data *> &list,
+        const QList<LibDLS::Data *> &other)
+{
+    clearDataList(list);
+
+    for (QList<LibDLS::Data *>::const_iterator d = other.begin();
+            d != other.end(); d++) {
+        LibDLS::Data *data = new LibDLS::Data(**d);
+        list.push_back(data);
+    }
 }
 
 /****************************************************************************/
