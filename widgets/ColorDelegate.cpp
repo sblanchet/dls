@@ -41,6 +41,9 @@ QWidget *ColorDelegate::createEditor(QWidget *parent,
         const QModelIndex &) const
 {
     QColorDialog *colorDialog = new QColorDialog(parent);
+    colorDialog->setFocusPolicy(Qt::StrongFocus);
+    connect(colorDialog, SIGNAL(colorSelected(const QColor &)),
+                this, SLOT(editingFinished()));
     return colorDialog;
 }
 
@@ -72,6 +75,14 @@ void ColorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 void ColorDelegate::updateEditorGeometry(QWidget *,
         const QStyleOptionViewItem &, const QModelIndex &) const
 {
+}
+
+/****************************************************************************/
+
+void ColorDelegate::editingFinished()
+{
+    QColorDialog *colorDialog = dynamic_cast<QColorDialog *>(sender());
+    emit commitData(colorDialog);
 }
 
 /****************************************************************************/
