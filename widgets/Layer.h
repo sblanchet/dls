@@ -115,6 +115,8 @@ class Layer
         static int dataCallback(LibDLS::Data *, void *);
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
+        void copyDataList(QList<LibDLS::Data *> &,
+                const QList<LibDLS::Data *> &);
         void updateExtrema(const QList<LibDLS::Data *> &, bool *);
         void drawGaps(QPainter &, const QRect &, double) const;
 };
