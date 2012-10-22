@@ -23,7 +23,6 @@
  ****************************************************************************/
 
 #include "SectionDialog.h"
-#include "Section.h"
 #include "SectionModel.h"
 
 using DLS::SectionDialog;
@@ -38,7 +37,9 @@ SectionDialog::SectionDialog(
         ):
     QDialog(parent),
     section(section),
-    model(new SectionModel(section)),
+    origSection(*section),
+    workSection(*section),
+    model(new SectionModel(&workSection)),
     colorDelegate(this)
 {
     setupUi(this);
@@ -46,23 +47,27 @@ SectionDialog::SectionDialog(
     radioButtonAuto->setChecked(section->getAutoScale());
     radioButtonManual->setChecked(!section->getAutoScale());
 
-    tableViewLayers->setItemDelegateForColumn(3, &colorDelegate);
-
-    tableViewLayers->setModel(model);
-    tableViewLayers->verticalHeader()->hide();
-    tableViewLayers->horizontalHeader()->setResizeMode(0, QHeaderView::Stretch);
-    tableViewLayers->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
-    tableViewLayers->horizontalHeader()->setResizeMode(2, QHeaderView::ResizeToContents);
-    tableViewLayers->horizontalHeader()->setResizeMode(3, QHeaderView::ResizeToContents);
-    tableViewLayers->horizontalHeader()->setResizeMode(4, QHeaderView::ResizeToContents);
-    tableViewLayers->horizontalHeader()->setResizeMode(5, QHeaderView::ResizeToContents);
-    tableViewLayers->resizeColumnsToContents();
-
     QString num;
     num.setNum(section->getScaleMinimum());
     lineEditMinimum->setText(num);
     num.setNum(section->getScaleMaximum());
     lineEditMaximum->setText(num);
+
+    connect(model,
+            SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
+            this, SLOT(modelDataChanged()));
+
+    tableViewLayers->setItemDelegateForColumn(3, &colorDelegate);
+    tableViewLayers->setModel(model);
+    tableViewLayers->verticalHeader()->hide();
+    QHeaderView *header = tableViewLayers->horizontalHeader();
+    header->setResizeMode(0, QHeaderView::Stretch);
+    header->setResizeMode(1, QHeaderView::Stretch);
+    header->setResizeMode(2, QHeaderView::ResizeToContents);
+    header->setResizeMode(3, QHeaderView::ResizeToContents);
+    header->setResizeMode(4, QHeaderView::ResizeToContents);
+    header->setResizeMode(5, QHeaderView::ResizeToContents);
+    tableViewLayers->resizeColumnsToContents();
 
     connect(radioButtonAuto, SIGNAL(toggled(bool)),
             this, SLOT(scaleValueChanged()));
@@ -80,6 +85,7 @@ SectionDialog::SectionDialog(
  */
 SectionDialog::~SectionDialog()
 {
+    delete model;
 }
 
 /****************************************************************************/
@@ -99,12 +105,21 @@ void SectionDialog::accept()
         return;
     }
 
-    section->setScaleMinimum(min);
-    section->setScaleMaximum(max);
-    section->setAutoScale(radioButtonAuto->isChecked());
+    workSection.setScaleMinimum(min);
+    workSection.setScaleMaximum(max);
+    workSection.setAutoScale(radioButtonAuto->isChecked());
 
-    setResult(Accepted);
-    close();
+    *section = workSection;
+
+    done(Accepted);
+}
+
+/****************************************************************************/
+
+void SectionDialog::reject()
+{
+    *section = origSection;
+    done(Rejected);
 }
 
 /****************************************************************************/
@@ -116,15 +131,40 @@ void SectionDialog::scaleValueChanged()
 
     min = lineEditMinimum->text().toDouble(&ok);
     if (ok) {
-        section->setScaleMinimum(min);
+        workSection.setScaleMinimum(min);
     }
 
     max = lineEditMaximum->text().toDouble(&ok);
     if (ok) {
-        section->setScaleMaximum(max);
+        workSection.setScaleMaximum(max);
     }
 
-    section->setAutoScale(radioButtonAuto->isChecked());
+    workSection.setAutoScale(radioButtonAuto->isChecked());
+
+    if (checkBoxPreview->isChecked()) {
+        *section = workSection;
+    }
+}
+
+/****************************************************************************/
+
+void SectionDialog::on_checkBoxPreview_toggled()
+{
+    if (checkBoxPreview->isChecked()) {
+        *section = workSection;
+    }
+    else {
+        *section = origSection;
+    }
+}
+
+/****************************************************************************/
+
+void SectionDialog::modelDataChanged()
+{
+    if (checkBoxPreview->isChecked()) {
+        *section = workSection;
+    }
 }
 
 /****************************************************************************/
