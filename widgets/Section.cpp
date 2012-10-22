@@ -228,29 +228,7 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
     double minimum = 0.0, maximum = 0.0;
 
     if (autoScale) {
-        bool valid = false;
-        for (QList<Layer *>::const_iterator l = layers.begin();
-                l != layers.end(); l++) {
-            if (!(*l)->getExtremaValid()) {
-                continue;
-            }
-
-            double min = (*l)->getMinimum();
-            double max = (*l)->getMaximum();
-
-            if (valid) {
-                if (min < minimum) {
-                    minimum = min;
-                }
-                if (max > maximum) {
-                    maximum = max;
-                }
-            } else {
-                minimum = min;
-                maximum = max;
-                valid = true;
-            }
-        }
+        extrema(minimum, maximum);
     }
     else {
         minimum = scaleMin;
@@ -512,6 +490,38 @@ QColor Section::nextColor() const
 
 
     return Qt::blue;
+}
+
+/****************************************************************************/
+
+bool Section::extrema(double &minimum, double &maximum)
+{
+    bool valid = false;
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        if (!(*l)->getExtremaValid()) {
+            continue;
+        }
+
+        double min = (*l)->getMinimum();
+        double max = (*l)->getMaximum();
+
+        if (valid) {
+            if (min < minimum) {
+                minimum = min;
+            }
+            if (max > maximum) {
+                maximum = max;
+            }
+        } else {
+            minimum = min;
+            maximum = max;
+            valid = true;
+        }
+    }
+
+    return valid;
 }
 
 /****************************************************************************/
