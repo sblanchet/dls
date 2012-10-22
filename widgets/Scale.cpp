@@ -671,8 +671,8 @@ QString Scale::formatValue(const COMTime &t, QString &prevLabel) const
             prec = 0;
         }
 
-        QString fmt = "\n%0." + QString().setNum(prec) + "lf ms";
-        label += QString().sprintf(fmt.toLatin1().constData(), ms);
+        label += "\n" +
+            QLocale().toString(ms, 'f', prec) + QChar(0x202f) + "ms";
     }
 
     return label;

@@ -207,7 +207,7 @@ QString Layer::formatValue(double value) const
 {
     QString ret;
 
-    ret.setNum(value);
+    ret = QLocale().toString(value);
 
     if (!unit.isEmpty()) {
         if (unit != "°") {

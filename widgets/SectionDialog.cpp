@@ -49,11 +49,8 @@ SectionDialog::SectionDialog(
     radioButtonAuto->setChecked(section->getAutoScale());
     radioButtonManual->setChecked(!section->getAutoScale());
 
-    QString num;
-    num.setNum(section->getScaleMinimum());
-    lineEditMinimum->setText(num);
-    num.setNum(section->getScaleMaximum());
-    lineEditMaximum->setText(num);
+    lineEditMinimum->setText(QLocale().toString(section->getScaleMinimum()));
+    lineEditMaximum->setText(QLocale().toString(section->getScaleMaximum()));
 
     connect(model,
             SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
@@ -101,12 +98,12 @@ void SectionDialog::accept()
     bool ok;
     double min, max;
 
-    min = lineEditMinimum->text().toDouble(&ok);
+    min = QLocale().toDouble(lineEditMinimum->text(), &ok);
     if (!ok) {
         return;
     }
 
-    max = lineEditMaximum->text().toDouble(&ok);
+    max = QLocale().toDouble(lineEditMaximum->text(), &ok);
     if (!ok) {
         return;
     }
@@ -135,12 +132,12 @@ void SectionDialog::scaleValueChanged()
     bool ok;
     double min, max;
 
-    min = lineEditMinimum->text().toDouble(&ok);
+    min = QLocale().toDouble(lineEditMinimum->text(), &ok);
     if (ok) {
         workSection.setScaleMinimum(min);
     }
 
-    max = lineEditMaximum->text().toDouble(&ok);
+    max = QLocale().toDouble(lineEditMaximum->text(), &ok);
     if (ok) {
         workSection.setScaleMaximum(max);
     }
@@ -219,12 +216,8 @@ void SectionDialog::on_pushButtonGuess_clicked()
     }
     double myMax = ceil(norm) * pow(10.0, decade);
 
-    QString num;
-    num.setNum(myMin);
-    lineEditMinimum->setText(num);
-    num.setNum(myMax);
-    lineEditMaximum->setText(num);
-
+    lineEditMinimum->setText(QLocale().toString(myMin));
+    lineEditMaximum->setText(QLocale().toString(myMax));
     radioButtonManual->setChecked(true);
 }
 
