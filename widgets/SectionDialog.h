@@ -65,6 +65,8 @@ class SectionDialog:
         void scaleValueChanged();
         void on_checkBoxPreview_toggled();
         void modelDataChanged();
+        void on_pushButtonGuess_clicked();
+        void manualScaleEdited();
 };
 
 /****************************************************************************/
