@@ -83,6 +83,7 @@ void ColorDelegate::editingFinished()
 {
     QColorDialog *colorDialog = dynamic_cast<QColorDialog *>(sender());
     emit commitData(colorDialog);
+    emit closeEditor(colorDialog);
 }
 
 /****************************************************************************/
