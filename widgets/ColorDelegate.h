@@ -50,6 +50,9 @@ class ColorDelegate:
 
     private:
         ColorDelegate();
+
+    private slots:
+        void editingFinished();
 };
 
 /****************************************************************************/
