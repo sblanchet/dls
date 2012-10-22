@@ -37,6 +37,19 @@ Data::Data()
 
 /*****************************************************************************/
 
+/** Copy constructor.
+*/
+Data::Data(const Data &o)
+{
+    _start_time = o._start_time;
+    _time_per_value = o._time_per_value;
+    _meta_type = o._meta_type;
+    _meta_level = o._meta_level;
+    _data = o._data;
+}
+
+/*****************************************************************************/
+
 /**
    Destruktor
 */

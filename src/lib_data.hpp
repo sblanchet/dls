@@ -44,6 +44,7 @@ namespace LibDLS {
     {
     public:
         Data();
+        Data(const Data &);
         ~Data();
 
         template <class T>
