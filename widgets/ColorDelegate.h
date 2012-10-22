@@ -25,12 +25,12 @@
 #ifndef DLS_COLOR_DELEGATE_H
 #define DLS_COLOR_DELEGATE_H
 
-#include <QItemDelegate>
+#include <QStyledItemDelegate>
 
 /****************************************************************************/
 
 class ColorDelegate:
-    public QItemDelegate
+    public QStyledItemDelegate
 {
     Q_OBJECT
 
