@@ -30,7 +30,7 @@
 /****************************************************************************/
 
 ColorDelegate::ColorDelegate(QObject *parent):
-    QItemDelegate(parent)
+    QStyledItemDelegate(parent)
 {
 }
 
