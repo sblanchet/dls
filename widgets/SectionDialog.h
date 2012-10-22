@@ -30,10 +30,10 @@
 #include "ui_SectionDialog.h"
 
 #include "ColorDelegate.h"
+#include "Section.h"
 
 namespace DLS {
 
-class Section;
 class SectionModel;
 
 /****************************************************************************/
@@ -52,6 +52,8 @@ class SectionDialog:
 
     private:
         Section * const section;
+        const Section origSection;
+        Section workSection;
         SectionModel *model;
         ColorDelegate colorDelegate;
 
@@ -59,7 +61,10 @@ class SectionDialog:
 
     private slots:
         void accept();
+        void reject();
         void scaleValueChanged();
+        void on_checkBoxPreview_toggled();
+        void modelDataChanged();
 };
 
 /****************************************************************************/
