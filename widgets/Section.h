@@ -77,6 +77,8 @@ class Section
 
         enum {Margin = 1};
 
+        bool extrema(double &, double &);
+
     private:
         Graph * const graph;
         QList<Layer *> layers; /**< List of data layers. */
