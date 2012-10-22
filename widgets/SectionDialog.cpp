@@ -22,6 +22,8 @@
  *
  ****************************************************************************/
 
+#include <cmath>
+
 #include "SectionDialog.h"
 #include "SectionModel.h"
 
@@ -77,6 +79,10 @@ SectionDialog::SectionDialog(
             this, SLOT(scaleValueChanged()));
     connect(lineEditMaximum, SIGNAL(textChanged(const QString &)),
             this, SLOT(scaleValueChanged()));
+    connect(lineEditMinimum, SIGNAL(textEdited(const QString &)),
+            this, SLOT(manualScaleEdited()));
+    connect(lineEditMaximum, SIGNAL(textEdited(const QString &)),
+            this, SLOT(manualScaleEdited()));
 }
 
 /****************************************************************************/
@@ -165,6 +171,68 @@ void SectionDialog::modelDataChanged()
     if (checkBoxPreview->isChecked()) {
         *section = workSection;
     }
+}
+
+/****************************************************************************/
+
+void SectionDialog::on_pushButtonGuess_clicked()
+{
+    double min, max, norm;
+
+    if (!workSection.extrema(min, max)) {
+        return;
+    }
+
+    double absMin, absMax;
+    if (min < 0) {
+        absMin = -min;
+    }
+    else {
+        absMin = min;
+    }
+    if (max < 0) {
+        absMax = -max;
+    }
+    else {
+        absMax = max;
+    }
+
+    double minDecade = floor(log10(absMin));
+    double maxDecade = floor(log10(absMax));
+    double decade;
+    if (maxDecade >= minDecade) {
+        decade = maxDecade;
+    }
+    else {
+        decade = minDecade;
+    }
+
+    norm = absMin / pow(10.0, decade); // 1 <= norm < 10
+    if (min < 0) {
+        norm *= -1.0;
+    }
+    double myMin = floor(norm) * pow(10.0, decade);
+
+    norm = absMax / pow(10.0, decade); // 1 <= norm < 10
+    if (max < 0) {
+        norm *= -1.0;
+    }
+    double myMax = ceil(norm) * pow(10.0, decade);
+
+    QString num;
+    num.setNum(myMin);
+    lineEditMinimum->setText(num);
+    num.setNum(myMax);
+    lineEditMaximum->setText(num);
+
+    radioButtonManual->setChecked(true);
+}
+
+/****************************************************************************/
+
+void SectionDialog::manualScaleEdited()
+{
+    radioButtonManual->setChecked(true);
 }
 
 /****************************************************************************/
