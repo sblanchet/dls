@@ -176,7 +176,7 @@ void SectionDialog::on_pushButtonGuess_clicked()
 {
     double min, max, norm;
 
-    if (!workSection.extrema(min, max)) {
+    if (!workSection.extrema(min, max) || max <= min) {
         return;
     }
 
@@ -194,15 +194,7 @@ void SectionDialog::on_pushButtonGuess_clicked()
         absMax = max;
     }
 
-    double minDecade = floor(log10(absMin));
-    double maxDecade = floor(log10(absMax));
-    double decade;
-    if (maxDecade >= minDecade) {
-        decade = maxDecade;
-    }
-    else {
-        decade = minDecade;
-    }
+    double decade = floor(log10(absMax - absMin));
 
     norm = absMin / pow(10.0, decade); // 1 <= norm < 10
     if (min < 0) {
