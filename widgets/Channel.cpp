@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QUrl>
+#include <QIcon>
 
 #include "Channel.h"
 
@@ -59,6 +60,9 @@ QVariant Channel::data(const QModelIndex &index, int role) const
             switch (role) {
                 case Qt::DisplayRole:
                     ret = QString(ch->name().c_str());
+                    break;
+                case Qt::DecorationRole:
+                    ret = QIcon(":/images/utilities-system-monitor.svg");
                     break;
             }
             break;
