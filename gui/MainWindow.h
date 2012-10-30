@@ -43,8 +43,23 @@ class MainWindow:
     private:
         QList<LibDLS::Directory *> dirs;
         QtDls::Model model;
+        bool restore;
+        QStringList recentFiles;
+        QString currentFileName;
+
+        enum { MaxRecentFiles = 10 };
+        QAction *recentFileActions[MaxRecentFiles];
+
+        void closeEvent(QCloseEvent *);
+        void addRecentFile(const QString &);
+        void updateRecentFileActions();
 
     private slots:
+        void on_actionLoad_triggered();
+        void on_actionSave_triggered();
+        void on_actionSaveAs_triggered();
+        void openRecentFile();
+
         void on_toolButtonView1_clicked();
         void on_toolButtonNewDir_clicked();
 };

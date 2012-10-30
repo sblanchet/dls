@@ -26,6 +26,8 @@ using namespace std;
 
 #include <QDebug>
 #include <QFileDialog>
+#include <QSettings>
+#include <QCloseEvent>
 
 #include "MainWindow.h"
 #include "modeltest.h"
@@ -36,6 +38,20 @@ MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent)
 {
     setupUi(this);
+
+    QSettings settings;
+    restore = settings.value("RestoreOnStartup", true).toBool();
+    recentFiles = settings.value("RecentFiles").toStringList();
+
+    for (int i = 0; i < MaxRecentFiles; ++i) {
+        recentFileActions[i] = new QAction(this);
+        recentFileActions[i]->setVisible(false);
+        connect(recentFileActions[i], SIGNAL(triggered()),
+                this, SLOT(openRecentFile()));
+        menuRecentFiles->addAction(recentFileActions[i]);
+    }
+
+    updateRecentFileActions();
 
     new ModelTest(&model);
 
@@ -62,6 +78,17 @@ MainWindow::MainWindow(QWidget *parent):
     }
 
     treeView->setModel(&model);
+
+    if (restore && recentFiles.size() > 0) {
+        QString path = recentFiles.front();
+
+        if (dlsGraph->load(path)) {
+            currentFileName = path;
+        }
+        else {
+            qWarning() << "failed to load" << path;
+        }
+    }
 }
 
 /****************************************************************************/
@@ -73,6 +100,125 @@ MainWindow::~MainWindow()
     for (QList<LibDLS::Directory *>::iterator dir = dirs.begin();
             dir != dirs.end(); dir++) {
         delete *dir;
+    }
+}
+
+/****************************************************************************/
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QSettings settings;
+
+    settings.setValue("RestoreOnStartup", restore);
+    settings.setValue("RecentFiles", recentFiles);
+
+    event->accept();
+}
+
+/****************************************************************************/
+
+void MainWindow::addRecentFile(const QString &path)
+{
+    recentFiles.removeAll(path);
+    recentFiles.prepend(path);
+    updateRecentFileActions();
+}
+
+/****************************************************************************/
+
+void MainWindow::updateRecentFileActions()
+{
+    int numRecentFiles = qMin(recentFiles.size(), (int) MaxRecentFiles);
+
+    for (int i = 0; i < numRecentFiles; ++i) {
+        QString text = tr("&%1 %2").arg(i + 1).arg(recentFiles[i]);
+        recentFileActions[i]->setText(text);
+        recentFileActions[i]->setData(recentFiles[i]);
+        recentFileActions[i]->setVisible(true);
+    }
+
+    for (int j = numRecentFiles; j < MaxRecentFiles; ++j) {
+        recentFileActions[j]->setVisible(false);
+    }
+
+    menuRecentFiles->setEnabled(numRecentFiles > 0);
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionLoad_triggered()
+{
+    QFileDialog dialog(this);
+
+    QString path = dialog.getOpenFileName(this, tr("Open view"));
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    if (dlsGraph->load(path)) {
+        currentFileName = path;
+        addRecentFile(currentFileName);
+    }
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionSave_triggered()
+{
+    QString path;
+
+    if (currentFileName.isEmpty()) {
+        QFileDialog dialog(this);
+
+        path = dialog.getSaveFileName(this, tr("Save view"));
+
+        if (path.isEmpty()) {
+            return;
+        }
+    }
+    else {
+        path = currentFileName;
+    }
+
+    if (dlsGraph->save(path)) {
+        currentFileName = path;
+        addRecentFile(currentFileName);
+    }
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionSaveAs_triggered()
+{
+    QFileDialog dialog(this);
+
+    QString path = dialog.getSaveFileName(this, tr("Save view"));
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    if (dlsGraph->save(path)) {
+        currentFileName = path;
+        addRecentFile(currentFileName);
+    }
+}
+
+/****************************************************************************/
+
+void MainWindow::openRecentFile()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (!action) {
+        return;
+    }
+
+    QString path = action->data().toString();
+
+    if (dlsGraph->load(path)) {
+        currentFileName = path;
+        addRecentFile(currentFileName);
     }
 }
 

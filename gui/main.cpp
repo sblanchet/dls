@@ -32,6 +32,10 @@ int main(int argc, char *argv[])
 {
     QApplication::setStyle("plastique");
 
+    QCoreApplication::setOrganizationName("EtherLab");
+    QCoreApplication::setOrganizationDomain("etherlab.org");
+    QCoreApplication::setApplicationName("dls");
+
     QApplication app(argc, argv);
 
     MainWindow mainWin;
