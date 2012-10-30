@@ -1,5 +1,9 @@
 <RCC>
-  <qresource prefix="/" >
+  <qresource prefix="/">
     <file>images/document-new.svg</file>
+    <file>images/document-open.svg</file>
+    <file>images/document-save-as.svg</file>
+    <file>images/document-save.svg</file>
+    <file>images/system-log-out.svg</file>
   </qresource>
 </RCC>

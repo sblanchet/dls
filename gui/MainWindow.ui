@@ -87,45 +87,68 @@
     </property>
     <widget class="QMenu" name="menuRecentFiles">
      <property name="title">
-      <string>Recent files</string>
+      <string>&amp;Recent files</string>
+     </property>
+     <property name="icon">
+      <iconset resource="dlsgui.qrc">
+       <normaloff>:/images/document-open.svg</normaloff>:/images/document-open.svg</iconset>
      </property>
     </widget>
     <addaction name="actionLoad"/>
+    <addaction name="menuRecentFiles"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
-    <addaction name="menuRecentFiles"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <action name="actionClose">
+   <property name="icon">
+    <iconset resource="dlsgui.qrc">
+     <normaloff>:/images/system-log-out.svg</normaloff>:/images/system-log-out.svg</iconset>
+   </property>
    <property name="text">
-    <string>Close</string>
+    <string>&amp;Close</string>
    </property>
    <property name="toolTip">
     <string>Close the application</string>
    </property>
   </action>
   <action name="actionLoad">
+   <property name="icon">
+    <iconset resource="dlsgui.qrc">
+     <normaloff>:/images/document-open.svg</normaloff>:/images/document-open.svg</iconset>
+   </property>
    <property name="text">
-    <string>Open...</string>
+    <string>&amp;Open...</string>
    </property>
    <property name="toolTip">
     <string>Open a stored view</string>
    </property>
   </action>
   <action name="actionSave">
+   <property name="icon">
+    <iconset resource="dlsgui.qrc">
+     <normaloff>:/images/document-save.svg</normaloff>:/images/document-save.svg</iconset>
+   </property>
    <property name="text">
-    <string>Save</string>
+    <string>&amp;Save</string>
    </property>
    <property name="toolTip">
     <string>Save the current view</string>
    </property>
   </action>
   <action name="actionSaveAs">
+   <property name="icon">
+    <iconset resource="dlsgui.qrc">
+     <normaloff>:/images/document-save-as.svg</normaloff>:/images/document-save-as.svg</iconset>
+   </property>
    <property name="text">
-    <string>Save as...</string>
+    <string>Save &amp;as...</string>
+   </property>
+   <property name="iconText">
+    <string>Save as</string>
    </property>
    <property name="toolTip">
     <string>Save the current view to a different file</string>
