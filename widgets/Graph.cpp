@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <QtGui>
+#include <QDomDocument>
 
 #include "lib_channel.hpp"
 
@@ -231,6 +232,7 @@ Graph::Graph(
  */
 Graph::~Graph()
 {
+    clearSections();
 }
 
 /****************************************************************************/
@@ -240,6 +242,131 @@ Graph::~Graph()
 QSize Graph::sizeHint() const
 {
     return QSize(300, 100);
+}
+
+/****************************************************************************/
+
+/** Loads sections and settings from an XML file.
+ */
+bool Graph::load(const QString &path)
+{
+    clearSections();
+
+    QFile file(path);
+
+    if (!file.open(QFile::ReadOnly)) {
+        qWarning() << tr("Failed to open %1!").arg(path);
+        return false;
+    }
+
+    QDomDocument doc;
+    QString errorMessage;
+    int errorRow, errorColumn;
+
+    if (!doc.setContent(&file, false,
+                &errorMessage, &errorRow, &errorColumn)) {
+        qWarning() << tr("Failed to parse XML, line %2, column %3: %4")
+            .arg(errorRow).arg(errorColumn).arg(errorMessage);
+        return false;
+    }
+
+    QDomElement docElem = doc.documentElement();
+    QDomNodeList children = docElem.childNodes();
+    unsigned int i;
+    qint64 start, end;
+    bool hasStart = false, hasEnd = false;
+
+    for (i = 0; i < children.length(); i++) {
+        QDomNode node = children.item(i);
+        if (!node.isElement()) {
+            continue;
+        }
+
+        QDomElement child = node.toElement();
+
+        if (child.tagName() == "Start") {
+            QString text = child.text();
+            bool ok;
+            start = text.toLongLong(&ok, 10);
+            if (!ok) {
+                qWarning() << "Invalid start time";
+                return false;
+            }
+            hasStart = true;
+        }
+        else if (child.tagName() == "End") {
+            QString text = child.text();
+            bool ok;
+            end = text.toLongLong(&ok, 10);
+            if (!ok) {
+                qWarning() << "Invalid end time";
+                return false;
+            }
+            hasEnd = true;
+        }
+        else if (child.tagName() == "Sections") {
+            loadSections(child);
+        }
+    }
+
+    if (!hasStart || !hasEnd) {
+        qWarning() << "start or end tag missing!";
+        return false;
+    }
+
+    scale.setRange(start, end);
+
+    updateScrollBar();
+    return true;
+}
+
+/****************************************************************************/
+
+/** Saves sections and settings to an XML file.
+ */
+bool Graph::save(const QString &path) const
+{
+    QFile file(path);
+
+    if (!file.open(QFile::WriteOnly)) {
+        qWarning() << tr("Failed to open %1 for writing!").arg(path);
+        return false;
+    }
+
+    QDomDocument doc;
+    QDomElement root = doc.createElement("DlsView");
+    doc.appendChild(root);
+
+    QString num;
+
+    QDomElement startElem = doc.createElement("Start");
+    num.setNum(scale.getStart().to_int64());
+    QDomText text = doc.createTextNode(num);
+    startElem.appendChild(text);
+    root.appendChild(startElem);
+
+    QDomElement endElem = doc.createElement("End");
+    num.setNum(scale.getEnd().to_int64());
+    text = doc.createTextNode(num);
+    endElem.appendChild(text);
+    root.appendChild(endElem);
+
+    QDomElement secElem = doc.createElement("Sections");
+    root.appendChild(secElem);
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        QDomElement e = doc.createElement("Section");
+        secElem.appendChild(e);
+    }
+
+    QByteArray ba = doc.toByteArray(2);
+    if (file.write(ba) != ba.size()) {
+        return false;
+    }
+
+    file.close();
+    return true;
 }
 
 /****************************************************************************/
@@ -1243,6 +1370,56 @@ void Graph::newView()
     currentView = views.insert(views.end(), v);
 
     updateActions();
+}
+
+/****************************************************************************/
+
+/** Clears the list of sections.
+ */
+void Graph::clearSections()
+{
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        delete *s;
+    }
+
+    sections.clear();
+}
+
+/****************************************************************************/
+
+bool Graph::loadSections(const QDomElement &elem)
+{
+    QDomNodeList children = elem.childNodes();
+
+    for (unsigned int i = 0; i < children.length(); i++) {
+        QDomNode node = children.item(i);
+        if (!node.isElement()) {
+            continue;
+        }
+
+        QDomElement child = node.toElement();
+        if (child.tagName() != "Section") {
+            continue;
+        }
+
+        Section *section = new Section(this);
+#if 0
+        try {
+
+            section->load(child);
+        } catch (Section::Exception &e) {
+            delete section;
+            clearSections();
+            qWarning() << tr("Failed to parse section: %1").arg(e.msg);
+            return false;
+        }
+#endif
+
+        sections.append(section);
+    }
+
+    return true;
 }
 
 /****************************************************************************/
