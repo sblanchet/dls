@@ -105,11 +105,23 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                 case 3:
                     ret = layer->getColor().rgb();
                     break;
-                case 4: 
+                case 4:
                     ret = QLocale().toString(layer->getScale());
                     break;
                 case 5:
                     ret = QLocale().toString(layer->getOffset());
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if (role == Qt::ToolTipRole) {
+            switch (index.column()) {
+                case 0:
+                    ret = layer->getChannel()->channel()->name().c_str();
+                    break;
+                case 1:
+                    ret = layer->getName();
                     break;
                 default:
                     break;
