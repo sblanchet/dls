@@ -32,6 +32,8 @@
 
 #include "Scale.h"
 
+class QDomElement;
+
 namespace DLS {
 
 class Section;
@@ -50,6 +52,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         virtual ~Graph();
 
         virtual QSize sizeHint() const;
+
+        bool load(const QString &);
+        bool save(const QString &) const;
 
         Section *appendSection();
         Section *insertSectionBefore(Section *);
@@ -154,6 +159,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
+        void clearSections();
+        bool loadSections(const QDomElement &);
 
     private slots:
         void interactionSlot();
