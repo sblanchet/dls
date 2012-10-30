@@ -17,6 +17,7 @@ namespace LibDLS {
 namespace QtDls {
 
 class Dir;
+class Channel;
 
 class Model:
     public QAbstractItemModel
@@ -27,6 +28,8 @@ class Model:
 
         void addLocalDir(LibDLS::Directory *);
         void clear();
+
+        Channel *getChannel(QUrl);
 
         class Exception
         {

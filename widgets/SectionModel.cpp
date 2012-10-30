@@ -9,6 +9,7 @@
 #include "SectionModel.h"
 #include "Section.h"
 #include "Layer.h"
+#include "Channel.h"
 
 #include "lib_channel.hpp"
 
@@ -72,7 +73,7 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
         if (role == Qt::DisplayRole) {
             switch (index.column()) {
                 case 0:
-                    ret = layer->getChannel()->name().c_str();
+                    ret = layer->getChannel()->channel()->name().c_str();
                     break;
                 case 1:
                     ret = layer->getName();
@@ -189,7 +190,6 @@ bool SectionModel::setData(const QModelIndex &index, const QVariant &value,
     bool accepted = false;
 
     if (role != Qt::EditRole) {
-        qDebug() << "not edit role: " << role;
         return accepted;
     }
 

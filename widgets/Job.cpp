@@ -5,6 +5,7 @@
  ****************************************************************************/
 
 #include <QDebug>
+#include <QUrl>
 
 #include "lib_job.hpp"
 
@@ -35,6 +36,34 @@ Job::Job(
 
 Job::~Job()
 {
+}
+
+/****************************************************************************/
+
+QUrl Job::url() const
+{
+    QUrl u = parent()->url();
+    QString path = u.path();
+    path += QString("/job%1").arg(job->id());
+    u.setPath(path);
+    return u;
+}
+
+/****************************************************************************/
+
+Channel *Job::findChannel(const QString &name)
+{
+    for (QList<Channel *>::iterator c = channels.begin();
+            c != channels.end(); c++) {
+        QString cName((*c)->channel()->name().c_str());
+        if (name != cName) {
+            continue;
+        }
+
+        return (*c);
+    }
+
+    return NULL;
 }
 
 /****************************************************************************/

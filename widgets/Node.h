@@ -23,6 +23,8 @@ class Node
         Node(Node *);
         virtual ~Node();
 
+        virtual QUrl url() const = 0;
+
         virtual int rowCount() const = 0;
         virtual QVariant data(const QModelIndex &, int) const = 0;
         virtual void *child(int) const = 0;

@@ -9,6 +9,7 @@
 using namespace std;
 
 #include <QDebug>
+#include <QUrl>
 
 #include "lib_dir.hpp"
 
@@ -36,6 +37,32 @@ Dir::Dir(
 
 Dir::~Dir()
 {
+}
+
+/****************************************************************************/
+
+QUrl Dir::url() const
+{
+    QUrl u;
+    u.setScheme("file");
+    u.setPath(dir->path().c_str());
+    return u;
+}
+
+/****************************************************************************/
+
+Channel *Dir::findChannel(unsigned int job_id, const QString &name)
+{
+    for (QList<Job *>::iterator j = jobs.begin();
+            j != jobs.end(); j++) {
+        if ((*j)->getJob()->id() != job_id) {
+            continue;
+        }
+
+        return (*j)->findChannel(name);
+    }
+
+    return NULL;
 }
 
 /****************************************************************************/

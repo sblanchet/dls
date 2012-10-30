@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <QtGui>
+#include <QDomElement>
 
 #include <algorithm>
 
@@ -31,9 +32,11 @@
 #include "Section.h"
 #include "Layer.h"
 #include "Graph.h"
+#include "Channel.h"
 
 using DLS::Section;
 using DLS::Layer;
+using QtDls::Channel;
 
 /****************************************************************************/
 
@@ -41,7 +44,7 @@ using DLS::Layer;
  */
 Layer::Layer(
         Section *section,
-        LibDLS::Channel *channel,
+        QtDls::Channel *channel,
         const QColor &c
         ):
     section(section),
@@ -57,7 +60,7 @@ Layer::Layer(
         color = section->nextColor();
     }
 
-    channel->fetch_chunks();
+    channel->channel()->fetch_chunks();
 }
 
 /****************************************************************************/
@@ -93,6 +96,100 @@ Layer::~Layer()
     clearDataList(genericData);
     clearDataList(minimumData);
     clearDataList(maximumData);
+}
+
+/****************************************************************************/
+
+void Layer::load(const QDomElement &e)
+{
+    QDomNodeList children = e.childNodes();
+
+    for (unsigned int i = 0; i < children.length(); i++) {
+        QDomNode node = children.item(i);
+        if (!node.isElement()) {
+            continue;
+        }
+
+        QDomElement child = node.toElement();
+
+        if (child.tagName() == "Name") {
+            QString text = child.text();
+            setName(text);
+        }
+        else if (child.tagName() == "Unit") {
+            QString text = child.text();
+            setUnit(text);
+        }
+        else if (child.tagName() == "Color") {
+            QString text = child.text();
+            QColor c;
+            c.setNamedColor(text);
+            if (!c.isValid()) {
+                throw Exception(QString("Invalid color %1!").arg(text));
+            }
+            setColor(c);
+        }
+        else if (child.tagName() == "Scale") {
+            QString text = child.text();
+            bool ok;
+            double num = text.toDouble(&ok);
+            if (!ok) {
+                QString msg("Invalid value in Scale");
+                throw Exception(msg);
+            }
+            setScale(num);
+        }
+        else if (child.tagName() == "Offset") {
+            QString text = child.text();
+            bool ok;
+            double num = text.toDouble(&ok);
+            if (!ok) {
+                QString msg("Invalid value in Offset");
+                throw Exception(msg);
+            }
+            setOffset(num);
+        }
+    }
+}
+
+/****************************************************************************/
+
+/** Saves settings to an XML element.
+ */
+void Layer::save(QDomElement &e, QDomDocument &doc) const
+{
+    QDomElement layerElem = doc.createElement("Layer");
+    QUrl url = channel->url();
+    layerElem.setAttribute("url", url.toString());
+    e.appendChild(layerElem);
+
+    QDomElement elem = doc.createElement("Name");
+    QDomText text = doc.createTextNode(name);
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
+
+    elem = doc.createElement("Unit");
+    text = doc.createTextNode(unit);
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
+
+    elem = doc.createElement("Color");
+    text = doc.createTextNode(color.name());
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
+
+    elem = doc.createElement("Scale");
+    QString num;
+    num.setNum(scale);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
+
+    elem = doc.createElement("Offset");
+    num.setNum(offset);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
 }
 
 /****************************************************************************/
@@ -171,7 +268,8 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
     clearDataList(minimumData);
     clearDataList(maximumData);
 
-    channel->fetch_data(start, end, min_values, dataCallback, this);
+    channel->channel()->fetch_data(start, end,
+            min_values, dataCallback, this);
 
     bool first = true;
     updateExtrema(genericData, &first);
@@ -191,7 +289,7 @@ QString Layer::title() const
         ret += name;
     }
     else {
-        ret += channel->name().c_str();
+        ret += channel->channel()->name().c_str();
     }
 
     if (!unit.isEmpty()) {
@@ -630,8 +728,9 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
     COMTime last_end;
     QColor gapColor(255, 255, 220, 127);
 
-    for (list<LibDLS::Chunk>::const_iterator c = channel->chunks().begin();
-            c != channel->chunks().end(); c++) {
+    for (list<LibDLS::Chunk>::const_iterator c =
+            channel->channel()->chunks().begin();
+            c != channel->channel()->chunks().end(); c++) {
         TimeRange r;
         r.start = c->start();
         r.end = c->end();
@@ -647,7 +746,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
          range++) {
         if (range->start <= last_end) {
             qWarning() << "WARNING: Chunks overlapping in channel"
-                 << channel->name().c_str();
+                 << channel->channel()->name().c_str();
             return;
         }
         last_end = range->end;

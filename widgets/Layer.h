@@ -32,6 +32,10 @@ namespace LibDLS {
     class Data;
 }
 
+namespace QtDls {
+    class Channel;
+}
+
 namespace DLS {
 
 class Section;
@@ -43,11 +47,14 @@ class Section;
 class Layer
 {
     public:
-        Layer(Section *, LibDLS::Channel *, const QColor & = QColor());
+        Layer(Section *, QtDls::Channel *, const QColor & = QColor());
         Layer(const Layer &, Section *);
         virtual ~Layer();
 
-        LibDLS::Channel *getChannel() const { return channel; };
+        void load(const QDomElement &);
+        void save(QDomElement &, QDomDocument &) const;
+
+        QtDls::Channel *getChannel() const { return channel; };
 
         void setName(const QString &);
         const QString &getName() const { return name; }
@@ -89,9 +96,15 @@ class Layer
         QString title() const;
         QString formatValue(double) const;
 
+        class Exception {
+            public:
+                Exception(const QString &msg):
+                    msg(msg) {}
+                QString msg;
+        };
     private:
         Section * const section;
-        LibDLS::Channel * const channel;
+        QtDls::Channel * const channel;
         QString name;
         QString unit;
         QColor color;

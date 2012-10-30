@@ -7,9 +7,13 @@
 #include <QDebug>
 #include <QStringList>
 #include <QMimeData>
+#include <QUrl>
+
+#include "lib_dir.hpp"
 
 #include "Model.h"
 #include "Dir.h"
+#include "Channel.h"
 
 using namespace QtDls;
 
@@ -54,6 +58,105 @@ void Model::clear()
     }
 
     endRemoveRows();
+}
+
+/****************************************************************************/
+
+struct LocalChannel {
+    QString dirPath;
+    unsigned int jobId;
+    QString channelName;
+};
+
+QtDls::Channel *Model::getChannel(QUrl url)
+{
+    if (!url.scheme().isEmpty() && url.scheme() != "file") {
+        qWarning() << QString("URL scheme \"%1\" is not supported!")
+            .arg(url.scheme());
+        return NULL;
+    }
+
+    // using local file path
+    QString path = url.path();
+
+    /* the jobNNN component can show up multiple times in the URL path. To
+     * determine, which one corresponds to the job directory, we must try, if
+     * there is an existing dir for each one. If no existing directory was
+     * found, we have to search again for each occurrence of jobNNN. */
+
+    QList<LocalChannel> locList;
+    QStringList comp = path.split('/');
+
+    for (int i = 0; i < comp.size(); i++) {
+        if (!comp[i].startsWith("job")) {
+            continue;
+        }
+        QString rem = comp[i].mid(3);
+        LocalChannel loc;
+        bool ok;
+        loc.jobId = rem.toUInt(&ok, 10);
+        if (!ok) {
+            continue;
+        }
+        QStringList dirPathComp = comp.mid(0, i);
+        loc.dirPath = dirPathComp.join("/");
+        QStringList channelNameComp = comp.mid(i + 1);
+        loc.channelName = "/" + channelNameComp.join("/");
+        locList.append(loc);
+    }
+
+    if (locList.empty()) {
+        qWarning() << "Invalid URL:" << url;
+        return NULL;
+    }
+
+    // try to find an existing local dir with matching path
+
+    for (QList<LocalChannel>::iterator loc = locList.begin();
+            loc != locList.end(); loc++) {
+        for (QList<Dir *>::iterator d = dirs.begin(); d != dirs.end(); d++) {
+            QString dirPath = (*d)->getDir()->path().c_str();
+            if (loc->dirPath != dirPath) {
+                continue;
+            }
+
+            QtDls::Channel *ch =
+                (*d)->findChannel(loc->jobId, loc->channelName);
+            if (ch) {
+                return ch;
+            }
+        }
+    }
+
+    // try to create new dirs for every valid combination
+
+    for (QList<LocalChannel>::iterator loc = locList.begin();
+            loc != locList.end(); loc++) {
+        LibDLS::Directory *d = new LibDLS::Directory();
+        try {
+            d->import(loc->dirPath.toUtf8().constData()); // FIXME enc?
+        }
+        catch (LibDLS::DirectoryException &e) {
+            delete d;
+            continue;
+        }
+
+        Dir *dir = new Dir(d);
+        Channel *ch = dir->findChannel(loc->jobId, loc->channelName);
+
+        if (!ch) {
+            delete dir;
+            continue;
+        }
+
+        beginInsertRows(QModelIndex(), dirs.count(), dirs.count());
+        dirs.push_back(dir);
+        endInsertRows();
+
+        return ch;
+    }
+
+    return NULL;
 }
 
 /****************************************************************************/
@@ -210,7 +313,8 @@ QMimeData *Model::mimeData(const QModelIndexList &indexes) const
     foreach (QModelIndex index, indexes) {
         if (index.isValid()) {
             Node *n = (Node *) index.internalPointer();
-            stream << (quint64) n->channel();
+            Channel *c = dynamic_cast<Channel *>(n);
+            stream << (quint64) c;
         }
     }
 
