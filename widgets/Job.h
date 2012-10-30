@@ -25,6 +25,8 @@ class Job:
         Job(Node *, LibDLS::Job *);
         ~Job();
 
+        QUrl url() const;
+        Channel *findChannel(const QString &);
 
         class Exception
         {
@@ -37,6 +39,8 @@ class Job:
         QVariant data(const QModelIndex &, int) const;
         void *child(int) const;
         int row(void *) const;
+
+        LibDLS::Job *getJob() const { return job; }
 
     private:
         LibDLS::Job * const job;

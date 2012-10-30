@@ -17,6 +17,7 @@ namespace LibDLS {
 namespace QtDls {
 
 class Job;
+class Channel;
 
 class Dir:
    public Node
@@ -25,6 +26,8 @@ class Dir:
         Dir(LibDLS::Directory *);
         ~Dir();
 
+        QUrl url() const;
+        Channel *findChannel(unsigned int, const QString &);
 
         class Exception
         {
@@ -37,6 +40,8 @@ class Dir:
         QVariant data(const QModelIndex &, int) const;
         void *child(int) const;
         int row(void *) const;
+
+        LibDLS::Directory *getDir() const { return dir; }
 
     private:
         LibDLS::Directory * const dir;

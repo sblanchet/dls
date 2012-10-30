@@ -25,8 +25,6 @@
 #include <QtGui>
 #include <QDomDocument>
 
-#include "lib_channel.hpp"
-
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
@@ -35,6 +33,7 @@
 
 using DLS::Graph;
 using DLS::Section;
+using QtDls::Model;
 
 #define DROP_TOLERANCE 10
 
@@ -248,7 +247,7 @@ QSize Graph::sizeHint() const
 
 /** Loads sections and settings from an XML file.
  */
-bool Graph::load(const QString &path)
+bool Graph::load(const QString &path, Model *model)
 {
     clearSections();
 
@@ -305,7 +304,7 @@ bool Graph::load(const QString &path)
             hasEnd = true;
         }
         else if (child.tagName() == "Sections") {
-            loadSections(child);
+            loadSections(child, model);
         }
     }
 
@@ -315,6 +314,9 @@ bool Graph::load(const QString &path)
     }
 
     scale.setRange(start, end);
+    autoRange = false;
+    newView();
+    loadData();
 
     updateScrollBar();
     return true;
@@ -356,8 +358,7 @@ bool Graph::save(const QString &path) const
 
     for (QList<Section *>::const_iterator s = sections.begin();
             s != sections.end(); s++) {
-        QDomElement e = doc.createElement("Section");
-        secElem.appendChild(e);
+        (*s)->save(secElem, doc);
     }
 
     QByteArray ba = doc.toByteArray(2);
@@ -1140,7 +1141,7 @@ void Graph::dropEvent(QDropEvent *event)
     quint64 addr;
     while (!stream.atEnd()) {
         stream >> addr;
-        LibDLS::Channel *ch = (LibDLS::Channel *) addr;
+        QtDls::Channel *ch = (QtDls::Channel *) addr;
         s->appendLayer(ch);
     }
 
@@ -1388,7 +1389,7 @@ void Graph::clearSections()
 
 /****************************************************************************/
 
-bool Graph::loadSections(const QDomElement &elem)
+bool Graph::loadSections(const QDomElement &elem, Model *model)
 {
     QDomNodeList children = elem.childNodes();
 
@@ -1404,17 +1405,15 @@ bool Graph::loadSections(const QDomElement &elem)
         }
 
         Section *section = new Section(this);
-#if 0
-        try {
 
-            section->load(child);
+        try {
+            section->load(child, model);
         } catch (Section::Exception &e) {
             delete section;
             clearSections();
             qWarning() << tr("Failed to parse section: %1").arg(e.msg);
             return false;
         }
-#endif
 
         sections.append(section);
     }

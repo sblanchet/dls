@@ -34,6 +34,10 @@
 
 class QDomElement;
 
+namespace QtDls {
+    class Model;
+}
+
 namespace DLS {
 
 class Section;
@@ -53,7 +57,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         virtual QSize sizeHint() const;
 
-        bool load(const QString &);
+        bool load(const QString &, QtDls::Model *);
         bool save(const QString &) const;
 
         Section *appendSection();
@@ -160,7 +164,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
         void clearSections();
-        bool loadSections(const QDomElement &);
+        bool loadSections(const QDomElement &, QtDls::Model *);
 
     private slots:
         void interactionSlot();

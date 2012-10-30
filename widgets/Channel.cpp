@@ -5,6 +5,7 @@
  ****************************************************************************/
 
 #include <QDebug>
+#include <QUrl>
 
 #include "Channel.h"
 
@@ -27,6 +28,17 @@ Channel::Channel(
 
 Channel::~Channel()
 {
+}
+
+/****************************************************************************/
+
+QUrl Channel::url() const
+{
+    QUrl u = parent()->url();
+    QString path = u.path();
+    path += ch->name().c_str();
+    u.setPath(path);
+    return u;
 }
 
 /****************************************************************************/

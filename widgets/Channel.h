@@ -23,6 +23,7 @@ class Channel:
         Channel(Node *, LibDLS::Channel *);
         ~Channel();
 
+        QUrl url() const;
 
         class Exception
         {
@@ -36,6 +37,7 @@ class Channel:
         void *child(int) const;
         int row(void *) const;
         Qt::ItemFlags flags() const;
+
         LibDLS::Channel *channel() const;
 
     private:

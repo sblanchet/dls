@@ -29,7 +29,11 @@
 
 #include "../src/com_time.hpp"
 
-namespace LibDLS {
+class QDomElement;
+class QDomDocument;
+
+namespace QtDls {
+    class Model;
     class Channel;
 }
 
@@ -54,6 +58,9 @@ class Section
 
         Section &operator=(const Section &);
 
+        void load(const QDomElement &, QtDls::Model *);
+        void save(QDomElement &, QDomDocument &) const;
+
         Graph *getGraph() { return graph; }
 
         bool getAutoScale() const { return autoScale; }
@@ -68,7 +75,7 @@ class Section
         void resize(int);
         void draw(QPainter &, const QRect &, int);
 
-        Layer *appendLayer(LibDLS::Channel *);
+        Layer *appendLayer(QtDls::Channel *);
 
         void getRange(bool &, COMTime &, COMTime &);
         void loadData(const COMTime &, const COMTime &, int);
@@ -78,6 +85,13 @@ class Section
         enum {Margin = 1};
 
         bool extrema(double &, double &);
+
+        class Exception {
+            public:
+                Exception(const QString &msg):
+                    msg(msg) {}
+                QString msg;
+        };
 
     private:
         Graph * const graph;
@@ -93,6 +107,7 @@ class Section
         void updateLegend();
         void update();
         void clearLayers();
+        void loadLayers(const QDomElement &, QtDls::Model *);
 };
 
 /****************************************************************************/

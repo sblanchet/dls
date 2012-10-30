@@ -23,15 +23,20 @@
  ****************************************************************************/
 
 #include <QtGui>
+#include <QDomElement>
 
 #include "lib_channel.hpp"
 
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
+#include "Model.h"
+#include "Channel.h"
 
 using DLS::Section;
 using DLS::Layer;
+using QtDls::Model;
+using QtDls::Channel;
 
 /****************************************************************************/
 
@@ -117,6 +122,102 @@ Section &Section::operator=(
     graph->update();
 
     return *this;
+}
+
+/****************************************************************************/
+
+void Section::load(const QDomElement &e, Model *model)
+{
+    QDomNodeList children = e.childNodes();
+
+    for (unsigned int i = 0; i < children.length(); i++) {
+        QDomNode node = children.item(i);
+        if (!node.isElement()) {
+            continue;
+        }
+
+        QDomElement child = node.toElement();
+
+        if (child.tagName() == "AutoScale") {
+            QString text = child.text();
+            setAutoScale(text == "yes");
+        }
+        else if (child.tagName() == "ScaleMinimum") {
+            QString text = child.text();
+            bool ok;
+            double num = text.toDouble(&ok);
+            if (!ok) {
+                QString msg("Invalid value in ScaleMinimum");
+                throw Exception(msg);
+            }
+           setScaleMinimum(num);
+        }
+        else if (child.tagName() == "ScaleMaximum") {
+            QString text = child.text();
+            bool ok;
+            double num = text.toDouble(&ok);
+            if (!ok) {
+                QString msg("Invalid value in ScaleMaximum");
+                throw Exception(msg);
+            }
+            setScaleMaximum(num);
+        }
+        else if (child.tagName() == "Height") {
+            QString text = child.text();
+            bool ok;
+            unsigned int num = text.toInt(&ok);
+            if (!ok) {
+                QString msg("Invalid value in Height");
+                throw Exception(msg);
+            }
+            setHeight(num);
+        }
+        else if (child.tagName() == "Layers") {
+            loadLayers(child, model);
+        }
+    }
+}
+
+/****************************************************************************/
+
+/** Saves settings and layers to an XML element.
+ */
+void Section::save(QDomElement &e, QDomDocument &doc) const
+{
+    QDomElement secElem = doc.createElement("Section");
+    e.appendChild(secElem);
+
+    QDomElement elem = doc.createElement("AutoScale");
+    QDomText text = doc.createTextNode(autoScale ? "yes" : "no");
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    elem = doc.createElement("ScaleMinimum");
+    QString num;
+    num.setNum(scaleMin);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    elem = doc.createElement("ScaleMaximum");
+    num.setNum(scaleMax);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    elem = doc.createElement("Height");
+    num.setNum(height);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    QDomElement layersElem = doc.createElement("Layers");
+    secElem.appendChild(layersElem);
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        (*l)->save(layersElem, doc);
+    }
 }
 
 /****************************************************************************/
@@ -402,7 +503,7 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
 
 /****************************************************************************/
 
-Layer *Section::appendLayer(LibDLS::Channel *ch)
+Layer *Section::appendLayer(QtDls::Channel *ch)
 {
     Layer *l = new Layer(this, ch);
     layers.append(l);
@@ -417,7 +518,7 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 {
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        LibDLS::Channel *ch = (*l)->getChannel();
+        LibDLS::Channel *ch = (*l)->getChannel()->channel();
         if (valid) {
             COMTime t = ch->start();
             if (t < start) {
@@ -567,6 +668,55 @@ void Section::clearLayers()
     }
 
     layers.clear();
+}
+
+/****************************************************************************/
+
+void Section::loadLayers(const QDomElement &elem, Model *model)
+{
+    QDomNodeList children = elem.childNodes();
+
+    for (unsigned int i = 0; i < children.length(); i++) {
+        QDomNode node = children.item(i);
+        if (!node.isElement()) {
+            continue;
+        }
+
+        QDomElement child = node.toElement();
+        if (child.tagName() != "Layer") {
+            continue;
+        }
+
+        if (!child.hasAttribute("url")) {
+            throw Exception("Missing url attribute!");
+        }
+
+        QUrl url = child.attribute("url");
+        if (!url.isValid()) {
+            throw Exception("Invalid URL!");
+        }
+
+        QtDls::Channel *ch = model->getChannel(url);
+        if (!ch) {
+            throw Exception(QString("Failed to get channel %1!")
+                    .arg(url.toString()));
+        }
+
+        Layer *layer = new Layer(this, ch);
+
+        try {
+            layer->load(child);
+        } catch (Layer::Exception &e) {
+            delete layer;
+            clearLayers();
+            QString msg(QString("Failed to parse section: %1").arg(e.msg));
+            throw Exception(msg);
+        }
+
+        layers.append(layer);
+    }
+
+    updateLegend();
 }
 
 /****************************************************************************/
