@@ -60,6 +60,10 @@ win32 {
     CONFIG(debug, debug|release): TARGET = $$join(TARGET,,d)
 }
 
+unix {
+    LIBS += ../src/libcomdls.a
+}
+
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target
 
