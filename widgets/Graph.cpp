@@ -760,7 +760,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
 
     Section *sec = NULL;
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
-        scrollBar.value();;
+        scrollBar.value();
     QRect splitterRect(contentsRect());
     splitterRect.setHeight(splitterWidth);
     if (scrollBarNeeded) {
@@ -923,10 +923,10 @@ void Graph::paintEvent(
     QPainter painter(this);
 
     QRect scaleRect(contentsRect());
-    int height = scale.getOuterLength();
+    int height = scale.getOuterLength() + 1;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        height += 1 + (*s)->getHeight();
+        height += (*s)->getHeight() + splitterWidth;
         if (height > contentsRect().height()) {
             height = contentsRect().height();
             break;
