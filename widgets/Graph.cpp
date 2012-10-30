@@ -28,6 +28,7 @@
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
+#include "Model.h"
 #include "SectionDialog.h"
 #include "DatePickerDialog.h"
 
@@ -46,6 +47,7 @@ Graph::Graph(
         ): QFrame(parent),
     scale(this),
     autoRange(true),
+    dropModel(NULL),
     dropSection(NULL),
     dropLine(-1),
     dropRemaining(-1),
@@ -232,6 +234,15 @@ Graph::Graph(
 Graph::~Graph()
 {
     clearSections();
+}
+
+/****************************************************************************/
+
+/** Sets the model used for drop operations.
+ */
+void Graph::setDropModel(QtDls::Model *model)
+{
+    dropModel = model;
 }
 
 /****************************************************************************/
@@ -1090,7 +1101,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
 
 void Graph::dragEnterEvent(QDragEnterEvent *event)
 {
-    if (!event->mimeData()->hasFormat("application/dls_channel")) {
+    if (!dropModel || !event->mimeData()->hasFormat("text/uri-list")) {
         return;
     }
 
@@ -1119,6 +1130,10 @@ void Graph::dragMoveEvent(QDragMoveEvent *event)
 
 void Graph::dropEvent(QDropEvent *event)
 {
+    if (!dropModel) {
+        return;
+    }
+
     Section *s = NULL;
 
     updateDragging(event->pos());
@@ -1136,13 +1151,21 @@ void Graph::dropEvent(QDropEvent *event)
         s = appendSection();
     }
 
-    QByteArray ba = event->mimeData()->data("application/dls_channel");
-    QDataStream stream(&ba, QIODevice::ReadOnly);
-    quint64 addr;
-    while (!stream.atEnd()) {
-        stream >> addr;
-        QtDls::Channel *ch = (QtDls::Channel *) addr;
-        s->appendLayer(ch);
+    QList<QUrl> urls = event->mimeData()->urls();
+    for (QList<QUrl>::iterator url = urls.begin(); url != urls.end(); url++) {
+        if (!url->isValid()) {
+            qWarning() << "Not a valid URL:" << *url;
+            continue;
+        }
+
+        QtDls::Channel *ch = dropModel->getChannel(*url);
+        if (ch) {
+            s->appendLayer(ch);
+        }
+        else {
+            qWarning() << QString("Failed to get channel %1!")
+                .arg(url->toString());
+        }
     }
 
     resetDragging();

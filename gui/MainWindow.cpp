@@ -55,6 +55,8 @@ MainWindow::MainWindow(QWidget *parent):
 
     new ModelTest(&model);
 
+    dlsGraph->setDropModel(&model);
+
     LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
@@ -82,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent):
     if (restore && recentFiles.size() > 0) {
         QString path = recentFiles.front();
 
-        if (dlsGraph->load(path)) {
+        if (dlsGraph->load(path, &model)) {
             currentFileName = path;
         }
         else {
@@ -156,7 +158,7 @@ void MainWindow::on_actionLoad_triggered()
         return;
     }
 
-    if (dlsGraph->load(path)) {
+    if (dlsGraph->load(path, &model)) {
         currentFileName = path;
         addRecentFile(currentFileName);
     }
@@ -216,7 +218,7 @@ void MainWindow::openRecentFile()
 
     QString path = action->data().toString();
 
-    if (dlsGraph->load(path)) {
+    if (dlsGraph->load(path, &model)) {
         currentFileName = path;
         addRecentFile(currentFileName);
     }
