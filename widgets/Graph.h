@@ -55,6 +55,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Graph(QWidget *parent = 0);
         virtual ~Graph();
 
+        void setDropModel(QtDls::Model *);
+
         virtual QSize sizeHint() const;
 
         bool load(const QString &, QtDls::Model *);
@@ -106,6 +108,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Scale scale;
         QList<Section *> sections; /**< List of data sections. */
         bool autoRange;
+        QtDls::Model *dropModel;
         Section *dropSection;
         int dropLine;
         int dropRemaining;
