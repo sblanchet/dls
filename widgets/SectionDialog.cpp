@@ -24,6 +24,9 @@
 
 #include <cmath>
 
+#include <QMenu>
+#include <QDebug>
+
 #include "SectionDialog.h"
 #include "SectionModel.h"
 
@@ -80,6 +83,9 @@ SectionDialog::SectionDialog(
             this, SLOT(manualScaleEdited()));
     connect(lineEditMaximum, SIGNAL(textEdited(const QString &)),
             this, SLOT(manualScaleEdited()));
+    connect(tableViewLayers,
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            this, SLOT(tableContextMenu(const QPoint &)));
 }
 
 /****************************************************************************/
@@ -218,6 +224,44 @@ void SectionDialog::on_pushButtonGuess_clicked()
 void SectionDialog::manualScaleEdited()
 {
     radioButtonManual->setChecked(true);
+}
+
+/****************************************************************************/
+
+void SectionDialog::tableContextMenu(const QPoint &pos)
+{
+    QModelIndexList indexes =
+        tableViewLayers->selectionModel()->selectedRows();
+
+    QMenu menu(this);
+
+    QAction removeAction(this);
+    removeAction.setText(tr("Remove %n layer(s)", "", indexes.size()));
+    removeAction.setIcon(QIcon(":/images/list-remove.svg"));
+    removeAction.setEnabled(indexes.size() > 0);
+    connect(&removeAction, SIGNAL(triggered()), this, SLOT(removeLayers()));
+    menu.addAction(&removeAction);
+
+    menu.exec(tableViewLayers->mapToGlobal(pos));
+}
+
+/****************************************************************************/
+
+void SectionDialog::removeLayers()
+{
+    QModelIndexList indexes =
+        tableViewLayers->selectionModel()->selectedRows();
+    QList<int> rowList;
+
+    foreach (QModelIndex index, indexes) {
+        rowList << index.row();
+    }
+
+    qSort(rowList);
+
+    for (int i = 0; i < rowList.size(); i++) {
+        model->removeRow(rowList[i] - i);
+    }
 }
 
 /****************************************************************************/

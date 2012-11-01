@@ -27,6 +27,7 @@ class SectionModel:
         QVariant headerData(int, Qt::Orientation, int) const;
         Qt::ItemFlags flags(const QModelIndex &) const;
         bool setData(const QModelIndex &, const QVariant &, int);
+        bool removeRows(int, int, const QModelIndex &);
 
     private:
         Section * const section;

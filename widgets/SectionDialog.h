@@ -67,6 +67,8 @@ class SectionDialog:
         void modelDataChanged();
         void on_pushButtonGuess_clicked();
         void manualScaleEdited();
+        void tableContextMenu(const QPoint &);
+        void removeLayers();
 };
 
 /****************************************************************************/
