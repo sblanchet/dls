@@ -7,12 +7,15 @@ vim700: spelllang=en spell
     - Create update_jobs() method.
     - Create update_channels() method.
     - Create update_chunks() method.
+    - Display non-existing channels in model
+    - Sort channels in model
 
 - Measuring
     - Markers
 
 - Context menu
     - Find extrema
+    - Last hour
     - (*) Export
 
 - Export
@@ -35,5 +38,7 @@ vim700: spelllang=en spell
     - Section properties with double click.
     - Avoid crash on zooming out infinitely.
     - File mask for saving/loading
+    - Fix drawing extrema with negative scaling.
+    - Fix NaN for scale guessing.
 
 - (*) Messages
