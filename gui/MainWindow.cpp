@@ -42,6 +42,20 @@ MainWindow::MainWindow(QWidget *parent):
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
     recentFiles = settings.value("RecentFiles").toStringList();
+    if (settings.contains("WindowHeight") &&
+            settings.contains("WindowWidth")) {
+        resize(settings.value("WindowWidth").toInt(),
+                settings.value("WindowHeight").toInt());
+    }
+    if (settings.value("WindowMaximized", false).toBool()) {
+        setWindowState(windowState() | Qt::WindowMaximized);
+    }
+    if (settings.contains("SplitterSizes")) {
+        QVariantList vl(settings.value("SplitterSizes").toList());
+        QList<int> list;
+        list << vl[0].toInt() << vl[1].toInt();
+        splitter->setSizes(list);
+    }
 
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActions[i] = new QAction(this);
@@ -113,6 +127,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     settings.setValue("RestoreOnStartup", restore);
     settings.setValue("RecentFiles", recentFiles);
+    settings.setValue("WindowWidth", width());
+    settings.setValue("WindowHeight", height());
+    settings.setValue("WindowMaximized", isMaximized());
+    QVariantList list;
+    list << splitter->sizes()[0] << splitter->sizes()[1];
+    settings.setValue("SplitterSizes", list);
 
     event->accept();
 }
