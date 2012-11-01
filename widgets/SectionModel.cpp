@@ -184,7 +184,7 @@ Qt::ItemFlags SectionModel::flags(const QModelIndex &index) const
     Qt::ItemFlags f;
 
     if (index.isValid()) {
-        f |= Qt::ItemIsEnabled;
+        f |= Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 
         if (index.column() > 0) {
             f |= Qt::ItemIsEditable;
@@ -250,6 +250,30 @@ bool SectionModel::setData(const QModelIndex &index, const QVariant &value,
         emit dataChanged(index, index);
     }
     return accepted;
+}
+
+/****************************************************************************/
+
+bool SectionModel::removeRows(int row, int count,
+        const QModelIndex &parent)
+{
+    if (parent.isValid()) {
+        return false;
+    }
+
+    if (count <= 0 || row < 0 || row + count > section->layers.size()) {
+        return false;
+    }
+
+    beginRemoveRows(QModelIndex(), row, row + count - 1);
+
+    for (int i = 0; i < count; i++) {
+        delete section->layers[row];
+        section->layers.removeAt(row);
+    }
+
+    endRemoveRows();
+    return true;
 }
 
 /****************************************************************************/

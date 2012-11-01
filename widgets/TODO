@@ -22,11 +22,11 @@ vim700: spelllang=en spell
 
 - Layer properties / dialog
     - Precision
-    - Remove Layer
 
 - Persistence
     - Sections
         - Markers
+    - Preview
 
 - Widget
     - (*) Value scale drawing
