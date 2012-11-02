@@ -186,7 +186,7 @@ void SectionDialog::on_pushButtonGuess_clicked()
         return;
     }
 
-    double absMin, absMax;
+    double absMin, absMax, diff = max - min;
     if (min < 0) {
         absMin = -min;
     }
@@ -200,7 +200,7 @@ void SectionDialog::on_pushButtonGuess_clicked()
         absMax = max;
     }
 
-    double decade = floor(log10(absMax - absMin));
+    double decade = floor(log10(diff));
 
     norm = absMin / pow(10.0, decade); // 1 <= norm < 10
     if (min < 0) {
