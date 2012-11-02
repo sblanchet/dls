@@ -147,7 +147,6 @@ Graph::Graph(
     connect(&zoomOutAction, SIGNAL(triggered()), this, SLOT(zoomOut()));
 
     zoomResetAction.setText(tr("Auto range"));
-    zoomResetAction.setShortcut(Qt::Key_Minus);
     zoomResetAction.setStatusTip(
             tr("Automatically zoom to the data extent."));
     zoomResetAction.setIcon(QIcon(":/images/view-fullscreen.svg"));
