@@ -69,6 +69,7 @@ SectionDialog::SectionDialog(
     header->setResizeMode(3, QHeaderView::ResizeToContents);
     header->setResizeMode(4, QHeaderView::ResizeToContents);
     header->setResizeMode(5, QHeaderView::ResizeToContents);
+    header->setResizeMode(6, QHeaderView::ResizeToContents);
     tableViewLayers->resizeColumnsToContents();
 
     connect(radioButtonAuto, SIGNAL(toggled(bool)),

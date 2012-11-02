@@ -24,9 +24,6 @@ vim700: spelllang=en spell
     - (*) CSV
     - (*) Delta-t specification
 
-- Layer properties / dialog
-    - Precision
-
 - Persistence
     - Sections
         - Markers
