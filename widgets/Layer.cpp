@@ -415,8 +415,14 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
             continue;
         }
 
-        current_min = current_min * scale + offset;
-        current_max = current_max * scale + offset;
+        if (scale >= 0.0) {
+            current_min = current_min * scale + offset;
+            current_max = current_max * scale + offset;
+        }
+        else {
+            current_min = current_max * scale + offset;
+            current_max = current_min * scale + offset;
+        }
 
         if (*first) {
             minimum = current_min;
@@ -583,8 +589,18 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
         pen.setColor(color);
         painter.setPen(pen);
 
-        for (QList<LibDLS::Data *>::const_iterator d = minimumData.begin();
-                d != minimumData.end(); d++) {
+        const QList<LibDLS::Data *> *minData, *maxData;
+        if (scale >= 0.0) {
+            minData = &minimumData;
+            maxData = &maximumData;
+        }
+        else {
+            minData = &maximumData;
+            maxData = &minimumData;
+        }
+
+        for (QList<LibDLS::Data *>::const_iterator d = minData->begin();
+                d != minData->end(); d++) {
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j) * scale + offset;
@@ -639,8 +655,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
             }
         }
 
-        for (QList<LibDLS::Data *>::const_iterator d = maximumData.begin();
-                d != maximumData.end(); d++) {
+        for (QList<LibDLS::Data *>::const_iterator d = maxData->begin();
+                d != maxData->end(); d++) {
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j) * scale + offset;
