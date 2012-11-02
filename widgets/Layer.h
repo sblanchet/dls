@@ -66,6 +66,8 @@ class Layer
         double getScale() const { return scale; }
         void setOffset(double);
         double getOffset() const { return offset; }
+        void setPrecision(int);
+        int getPrecision() const { return precision; }
 
         void loadData(const COMTime &, const COMTime &, int);
 
@@ -110,6 +112,7 @@ class Layer
         QColor color;
         double scale;
         double offset;
+        int precision;
 
         QList<LibDLS::Data *> genericData;
         QList<LibDLS::Data *> minimumData;

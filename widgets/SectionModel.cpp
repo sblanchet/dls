@@ -55,7 +55,7 @@ int SectionModel::rowCount(const QModelIndex &index) const
 int SectionModel::columnCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
-    return 6;
+    return 7;
 }
 
 /****************************************************************************/
@@ -90,6 +90,9 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                 case 5:
                     ret = layer->getOffset();
                     break;
+                case 6:
+                    ret = layer->getPrecision();
+                    break;
                 default:
                     break;
             }
@@ -110,6 +113,9 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
                     break;
                 case 5:
                     ret = QLocale().toString(layer->getOffset());
+                    break;
+                case 6:
+                    ret = QLocale().toString(layer->getPrecision());
                     break;
                 default:
                     break;
@@ -166,6 +172,9 @@ QVariant SectionModel::headerData(
                 break;
             case 5:
                 ret = tr("Offset");
+                break;
+            case 6:
+                ret = tr("Precision");
                 break;
             default:
                 break;
@@ -238,6 +247,15 @@ bool SectionModel::setData(const QModelIndex &index, const QVariant &value,
                 double num = QLocale().toDouble(value.toString(), &ok);
                 if (ok) {
                     layer->setOffset(num);
+                    accepted = true;
+                }
+            }
+            break;
+        case 6: {
+                bool ok;
+                int num = QLocale().toInt(value.toString(), &ok);
+                if (ok) {
+                    layer->setPrecision(num);
                     accepted = true;
                 }
             }

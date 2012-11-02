@@ -52,6 +52,7 @@ Layer::Layer(
     color(c),
     scale(1.0),
     offset(0.0),
+    precision(-1),
     minimum(0.0),
     maximum(0.0),
     extremaValid(false)
@@ -78,6 +79,7 @@ Layer::Layer(
     color(o.color),
     scale(o.scale),
     offset(o.offset),
+    precision(o.precision),
     minimum(o.minimum),
     maximum(o.maximum),
     extremaValid(o.extremaValid)
@@ -149,6 +151,16 @@ void Layer::load(const QDomElement &e)
             }
             setOffset(num);
         }
+        else if (child.tagName() == "Precision") {
+            QString text = child.text();
+            bool ok;
+            int num = text.toInt(&ok);
+            if (!ok) {
+                QString msg("Invalid value in Precision");
+                throw Exception(msg);
+            }
+            setPrecision(num);
+        }
     }
 }
 
@@ -187,6 +199,12 @@ void Layer::save(QDomElement &e, QDomDocument &doc) const
 
     elem = doc.createElement("Offset");
     num.setNum(offset);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    layerElem.appendChild(elem);
+
+    elem = doc.createElement("Precision");
+    num.setNum(precision);
     text = doc.createTextNode(num);
     elem.appendChild(text);
     layerElem.appendChild(elem);
@@ -262,6 +280,19 @@ void Layer::setOffset(double o)
 
 /****************************************************************************/
 
+void Layer::setPrecision(int p)
+{
+    if (p < -1) {
+        p = -1;
+    }
+
+    if (p != precision) {
+        precision = p;
+    }
+}
+
+/****************************************************************************/
+
 void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
 {
     clearDataList(genericData);
@@ -305,7 +336,7 @@ QString Layer::formatValue(double value) const
 {
     QString ret;
 
-    ret = QLocale().toString(value);
+    ret = QLocale().toString(value, 'f', precision);
 
     if (!unit.isEmpty()) {
         if (unit != "°") {
