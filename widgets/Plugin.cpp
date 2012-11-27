@@ -134,7 +134,7 @@ QString Plugin::domXml() const
  */
 QString Plugin::includeFile() const
 {
-    return widgetClassName + ".h";
+    return "DlsWidgets/" + widgetClassName + ".h";
 }
 
 /****************************************************************************/
