@@ -78,6 +78,17 @@ class QDESIGNER_WIDGET_EXPORT Graph:
             Measure
         };
 
+        enum NamedRange {
+            Today,
+            Yesterday,
+            ThisWeek,
+            LastWeek,
+            ThisMonth,
+            LastMonth,
+            ThisYear,
+            LastYear
+        };
+
     public slots:
         void previousView();
         void nextView();
@@ -85,6 +96,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void zoomOut();
         void zoomReset();
         void setInteraction(Interaction);
+        void setNamedRange(NamedRange);
         void pan(double);
         void print();
 
@@ -175,7 +187,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void sectionProperties();
         void sliderValueChanged(int);
         void pickDate();
-        void gotoDate();
 };
 
 /****************************************************************************/
