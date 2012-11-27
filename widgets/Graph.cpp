@@ -160,49 +160,50 @@ Graph::Graph(
     gotoTodayAction.setText(tr("Today"));
     gotoTodayAction.setStatusTip(
             tr("Set the date range to today."));
-    connect(&gotoTodayAction, SIGNAL(triggered()), this, SLOT(gotoDate()));
+    connect(&gotoTodayAction, SIGNAL(triggered()),
+            this, SLOT(setNamedRange(Today)));
 
     gotoYesterdayAction.setText(tr("Yesterday"));
     gotoYesterdayAction.setStatusTip(
             tr("Set the date range to yesterday."));
     connect(&gotoYesterdayAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(Yesterday)));
 
     gotoThisWeekAction.setText(tr("This week"));
     gotoThisWeekAction.setStatusTip(
             tr("Set the date range to this week."));
     connect(&gotoThisWeekAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(ThisWeek)));
 
     gotoLastWeekAction.setText(tr("Last week"));
     gotoLastWeekAction.setStatusTip(
             tr("Set the date range to last week."));
     connect(&gotoLastWeekAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(LastWeek)));
 
     gotoThisMonthAction.setText(tr("This month"));
     gotoThisMonthAction.setStatusTip(
             tr("Set the date range to this month."));
     connect(&gotoThisMonthAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(ThisMonth)));
 
     gotoLastMonthAction.setText(tr("Last month"));
     gotoLastMonthAction.setStatusTip(
             tr("Set the date range to last month."));
     connect(&gotoLastMonthAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(LastMonth)));
 
     gotoThisYearAction.setText(tr("This year"));
     gotoThisYearAction.setStatusTip(
             tr("Set the date range to this year."));
     connect(&gotoThisYearAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(ThisYear)));
 
     gotoLastYearAction.setText(tr("Last year"));
     gotoLastYearAction.setStatusTip(
             tr("Set the date range to last year."));
     connect(&gotoLastYearAction, SIGNAL(triggered()),
-            this, SLOT(gotoDate()));
+            this, SLOT(setNamedRange(LastYear)));
 
     removeSectionAction.setText(tr("Remove section"));
     removeSectionAction.setStatusTip(tr("Remove the selected section."));
@@ -282,7 +283,7 @@ bool Graph::load(const QString &path, Model *model)
     QDomElement docElem = doc.documentElement();
     QDomNodeList children = docElem.childNodes();
     unsigned int i;
-    qint64 start, end;
+    int64_t start, end;
     bool hasStart = false, hasEnd = false;
 
     for (i = 0; i < children.length(); i++) {
@@ -556,6 +557,61 @@ void Graph::setInteraction(Interaction i)
     updateActions();
     updateCursor();
     update();
+}
+
+/****************************************************************************/
+
+void Graph::setNamedRange(NamedRange r)
+{
+    COMTime now, start, end;
+    int day;
+
+    now.set_now();
+
+    switch (r) {
+        case Today:
+            start.set_date(now.year(), now.month(), now.day());
+            end.set_date(now.year(), now.month(), now.day() + 1);
+            setRange(start, end);
+            break;
+        case Yesterday:
+            start.set_date(now.year(), now.month(), now.day() - 1);
+            end.set_date(now.year(), now.month(), now.day());
+            setRange(start, end);
+            break;
+        case ThisWeek:
+            day = now.day() - now.day_of_week() + 1;
+            start.set_date(now.year(), now.month(), day);
+            end.set_date(now.year(), now.month(), day + 7);
+            setRange(start, end);
+            break;
+        case LastWeek:
+            day = now.day() - now.day_of_week() + 1;
+            start.set_date(now.year(), now.month(), day - 7);
+            end.set_date(now.year(), now.month(), day);
+            setRange(start, end);
+            break;
+        case ThisMonth:
+            start.set_date(now.year(), now.month(), 1);
+            end.set_date(now.year(), now.month() + 1, 1);
+            setRange(start, end);
+            break;
+        case LastMonth:
+            start.set_date(now.year(), now.month() - 1, 1);
+            end.set_date(now.year(), now.month(), 1);
+            setRange(start, end);
+            break;
+        case ThisYear:
+            start.set_date(now.year(), 1, 1);
+            end.set_date(now.year() + 1, 1, 1);
+            setRange(start, end);
+            break;
+        case LastYear:
+            start.set_date(now.year() - 1, 1, 1);
+            end.set_date(now.year(), 1, 1);
+            setRange(start, end);
+            break;
+    }
 }
 
 /****************************************************************************/
@@ -1502,58 +1558,6 @@ void Graph::pickDate()
         setRange(dialog->getStart(), dialog->getEnd());
     }
     delete dialog;
-}
-
-/****************************************************************************/
-
-void Graph::gotoDate()
-{
-    COMTime now, start, end;
-
-    now.set_now();
-
-    if (sender() == &gotoTodayAction) {
-        start.set_date(now.year(), now.month(), now.day());
-        end.set_date(now.year(), now.month(), now.day() + 1);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoYesterdayAction) {
-        start.set_date(now.year(), now.month(), now.day() - 1);
-        end.set_date(now.year(), now.month(), now.day());
-        setRange(start, end);
-    }
-    else if (sender() == &gotoThisWeekAction) {
-        int day = now.day() - now.day_of_week() + 1;
-        start.set_date(now.year(), now.month(), day);
-        end.set_date(now.year(), now.month(), day + 7);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoLastWeekAction) {
-        int day = now.day() - now.day_of_week() + 1;
-        start.set_date(now.year(), now.month(), day - 7);
-        end.set_date(now.year(), now.month(), day);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoThisMonthAction) {
-        start.set_date(now.year(), now.month(), 1);
-        end.set_date(now.year(), now.month() + 1, 1);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoLastMonthAction) {
-        start.set_date(now.year(), now.month() - 1, 1);
-        end.set_date(now.year(), now.month(), 1);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoThisYearAction) {
-        start.set_date(now.year(), 1, 1);
-        end.set_date(now.year() + 1, 1, 1);
-        setRange(start, end);
-    }
-    else if (sender() == &gotoLastYearAction) {
-        start.set_date(now.year() - 1, 1, 1);
-        end.set_date(now.year(), 1, 1);
-        setRange(start, end);
-    }
 }
 
 /****************************************************************************/
