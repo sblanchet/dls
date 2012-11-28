@@ -28,7 +28,6 @@
 #include <list>
 using namespace std;
 
-#include "lib_globals.hpp"
 #include "com_exception.hpp"
 #include "com_time.hpp"
 

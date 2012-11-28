@@ -19,6 +19,9 @@
  *
  *****************************************************************************/
 
+#include <sstream>
+using namespace std;
+
 #include "lib_export.hpp"
 using namespace LibDLS;
 
