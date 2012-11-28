@@ -53,7 +53,7 @@ unix {
 }
 
 unix {
-    INCLUDEPATH += . ../src
+    INCLUDEPATH += . $$PWD/../src
 }
 win32 {
     INCLUDEPATH += .
@@ -61,7 +61,7 @@ win32 {
 }
 
 unix {
-    LIBS += ../src/libcomdls.a
+    LIBS += -L$$OUT_PWD/../src/.libs -ldls
 }
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer

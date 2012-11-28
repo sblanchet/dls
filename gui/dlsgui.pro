@@ -31,13 +31,14 @@ INCLUDEPATH += ../widgets ../src
 CONFIG += debug
 
 unix {
-    LIBS += -L../widgets -lDlsWidgets
-    LIBS += ../src/libdls.a ../src/libcomdls.a
+    LIBS += -L$$PWD/../widgets -lDlsWidgets
+    LIBS += -L$$PWD/../src/.libs -ldls
     LIBS += -lfftw3 -lm -lz
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"$$OUT_PWD/../src/.libs"
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"$$OUT_PWD/../widgets"
 }
 win32 {
-    LIBS += -L"..\release"
+    LIBS += -L"$$OUT_PWD\..\widgets\release"
 }
 
 HEADERS += MainWindow.h
