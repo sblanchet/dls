@@ -161,49 +161,49 @@ Graph::Graph(
     gotoTodayAction.setStatusTip(
             tr("Set the date range to today."));
     connect(&gotoTodayAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(Today)));
+            this, SLOT(gotoDate()));
 
     gotoYesterdayAction.setText(tr("Yesterday"));
     gotoYesterdayAction.setStatusTip(
             tr("Set the date range to yesterday."));
     connect(&gotoYesterdayAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(Yesterday)));
+            this, SLOT(gotoDate()));
 
     gotoThisWeekAction.setText(tr("This week"));
     gotoThisWeekAction.setStatusTip(
             tr("Set the date range to this week."));
     connect(&gotoThisWeekAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(ThisWeek)));
+            this, SLOT(gotoDate()));
 
     gotoLastWeekAction.setText(tr("Last week"));
     gotoLastWeekAction.setStatusTip(
             tr("Set the date range to last week."));
     connect(&gotoLastWeekAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(LastWeek)));
+            this, SLOT(gotoDate()));
 
     gotoThisMonthAction.setText(tr("This month"));
     gotoThisMonthAction.setStatusTip(
             tr("Set the date range to this month."));
     connect(&gotoThisMonthAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(ThisMonth)));
+            this, SLOT(gotoDate()));
 
     gotoLastMonthAction.setText(tr("Last month"));
     gotoLastMonthAction.setStatusTip(
             tr("Set the date range to last month."));
     connect(&gotoLastMonthAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(LastMonth)));
+            this, SLOT(gotoDate()));
 
     gotoThisYearAction.setText(tr("This year"));
     gotoThisYearAction.setStatusTip(
             tr("Set the date range to this year."));
     connect(&gotoThisYearAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(ThisYear)));
+            this, SLOT(gotoDate()));
 
     gotoLastYearAction.setText(tr("Last year"));
     gotoLastYearAction.setStatusTip(
             tr("Set the date range to last year."));
     connect(&gotoLastYearAction, SIGNAL(triggered()),
-            this, SLOT(setNamedRange(LastYear)));
+            this, SLOT(gotoDate()));
 
     removeSectionAction.setText(tr("Remove section"));
     removeSectionAction.setStatusTip(tr("Remove the selected section."));
@@ -1558,6 +1558,36 @@ void Graph::pickDate()
         setRange(dialog->getStart(), dialog->getEnd());
     }
     delete dialog;
+}
+
+/****************************************************************************/
+
+void Graph::gotoDate()
+{
+    if (sender() == &gotoTodayAction) {
+        setNamedRange(Today);
+    }
+    else if (sender() == &gotoYesterdayAction) {
+        setNamedRange(Yesterday);
+    }
+    else if (sender() == &gotoThisWeekAction) {
+        setNamedRange(ThisWeek);
+    }
+    else if (sender() == &gotoLastWeekAction) {
+        setNamedRange(LastWeek);
+    }
+    else if (sender() == &gotoThisMonthAction) {
+        setNamedRange(ThisMonth);
+    }
+    else if (sender() == &gotoLastMonthAction) {
+        setNamedRange(LastMonth);
+    }
+    else if (sender() == &gotoThisYearAction) {
+        setNamedRange(ThisYear);
+    }
+    else if (sender() == &gotoLastYearAction) {
+        setNamedRange(LastYear);
+    }
 }
 
 /****************************************************************************/

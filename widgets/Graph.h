@@ -187,6 +187,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void sectionProperties();
         void sliderValueChanged(int);
         void pickDate();
+        void gotoDate();
 };
 
 /****************************************************************************/
