@@ -25,10 +25,11 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
 AC_PROG_CXX
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
+AC_LIB_PREFIX
 
 # workaround for automake >= 1.12
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -71,7 +72,7 @@ AC_SUBST(FLTK_LDFLAGS)
 # FFTW3
 #------------------------------------------------------------------------------
 
-AC_MSG_CHECKING(FFTW3 path)
+AC_MSG_CHECKING(FFTW3)
 
 AC_ARG_WITH([fftw3-dir],
     AC_HELP_STRING(
@@ -82,39 +83,48 @@ AC_ARG_WITH([fftw3-dir],
             AC_MSG_ERROR([FFTW3 not installed in $withval])
     ],
     [
-	if test -r /usr/local/include/fftw3.h; then
-	    withval=/usr/local
-	elif test -r /usr/include/fftw3.h; then
+	    if test -r /usr/local/include/fftw3.h; then
+	        withval=/usr/local
+	    elif test -r /usr/include/fftw3.h; then
             withval=/usr
         else
             AC_MSG_ERROR([FFTW3 not installed in /usr/local or /usr!])
         fi
     ])
 
-AC_SUBST(FFTW3_DIR,[$withval])
-AC_MSG_RESULT($FFTW3_DIR)
+AC_SUBST(FFTW3_CFLAGS,[-I$withval/include])
+AC_SUBST(FFTW3_LDFLAGS,[-L$withval/$acl_libdirstem])
+AC_SUBST(FFTW3_LIBS,[-lfftw3])
+AC_MSG_RESULT([$withval])
 
 #------------------------------------------------------------------------------
 # ZLib
 #------------------------------------------------------------------------------
 
+AC_MSG_CHECKING(for ZLib)
+
 AC_ARG_WITH([zlib-dir],
     AC_HELP_STRING(
         [--with-zlib-dir=<zlib-dir>],
-        [ZLib directory [[/usr]]]),
+        [ZLib directory [[/usr/local:/usr]]]),
     [
-	    ZLIB_DIR=$withval
+        test -r "$withval"/include/zlib.h ||\
+            AC_MSG_ERROR([ZLib not installed in $withval])
     ],
     [
-        ZLIB_DIR="/usr"
+	    if test -r /usr/local/include/zlib.h; then
+	        withval=/usr/local
+	    elif test -r /usr/include/zlib.h; then
+            withval=/usr
+        else
+            AC_MSG_ERROR([ZLib not installed in /usr/local or /usr!])
+        fi
     ])
 
-AC_MSG_CHECKING(for ZLib)
-test -r "${ZLIB_DIR}/include/zlib.h" ||
-    AC_MSG_ERROR([ZLib header not found in ${ZLIB_DIR}])
-
-AC_SUBST(ZLIB_DIR)
-AC_MSG_RESULT(${ZLIB_DIR})
+AC_SUBST(ZLIB_CFLAGS, [-I$withval/include])
+AC_SUBST(ZLIB_LDFLAGS, [-L$withval/$acl_libdirstem])
+AC_SUBST(ZLIB_LIBS, [-lz])
+AC_MSG_RESULT([$withval])
 
 #------------------------------------------------------------------------------
 

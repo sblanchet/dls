@@ -25,10 +25,12 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 using namespace std;
 
 #include "lib_dir.hpp"

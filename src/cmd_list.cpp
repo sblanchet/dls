@@ -20,8 +20,10 @@
  *****************************************************************************/
 
 #include <unistd.h>
+#include <stdlib.h> // getenv()
 
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 #include "lib_dir.hpp"

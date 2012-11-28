@@ -24,14 +24,15 @@
 
 /*****************************************************************************/
 
-#include "com_globals.hpp"
+#include "lib_globals.hpp"
 #include "com_exception.hpp"
 #include "com_time.hpp"
-#include "com_ring_buffer_t.hpp"
-#include "com_xml_tag.hpp"
-#include "com_compression_t.hpp"
-
 #include "lib_data.hpp"
+
+template <class TYPE, class SIZE> class COMRingBufferT;
+typedef class COMRingBufferT<char, unsigned int> COMRingBuffer;
+class COMXMLTag;
+template <class T> class COMCompressionT;
 
 namespace LibDLS
 {

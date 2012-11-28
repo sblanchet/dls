@@ -29,10 +29,10 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "com_xml_parser.hpp"
 #include "lib_chunk.hpp"
 #include "lib_job.hpp"
 #include "lib_channel.hpp"
+#include "com_xml_parser.hpp"
 using namespace LibDLS;
 
 /*****************************************************************************/
