@@ -26,105 +26,147 @@ AM_CPPFLAGS = -Wall
 #------------------------------------------------------------------------------
 
 bin_PROGRAMS = dlsd dls_ctl dls_view dls
-noinst_LIBRARIES = libcomdls.a libdls.a
+lib_LTLIBRARIES = libdls.la
 
 #------------------------------------------------------------------------------
 
-libcomdls_a_CPPFLAGS = -I@FFTW3_DIR@/include -I@ZLIB_DIR@/include
+libdls_la_CPPFLAGS = @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
+libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
 
-libcomdls_a_SOURCES = \
-	com_globals.cpp com_globals.hpp \
+libdls_la_SOURCES = \
+	com_base64.cpp \
+	com_channel_preset.cpp \
+	com_file.cpp \
+	com_globals.cpp \
+	com_job_preset.cpp \
+	com_time.cpp \
+	com_xml_parser.cpp \
+	com_xml_tag.cpp \
+	com_zlib.cpp \
+	lib_channel.cpp \
+	lib_chunk.cpp \
+	lib_data.cpp \
+	lib_dir.cpp \
+	lib_export.cpp \
+	lib_job.cpp \
+	mdct.cpp
+
+include_HEADERS = \
 	com_exception.hpp \
-	com_compression_t.hpp \
-	com_index_t.hpp \
-	com_mdct_t.hpp \
-	com_quant_t.hpp \
-	com_ring_buffer_t.hpp \
-	com_time.cpp com_time.hpp \
-	com_file.cpp com_file.hpp \
-	com_zlib.cpp com_zlib.hpp \
-	com_base64.cpp com_base64.hpp \
-	com_xml_tag.cpp com_xml_tag.hpp \
-	com_xml_parser.cpp com_xml_parser.hpp \
-	com_channel_preset.cpp com_channel_preset.hpp \
-	com_job_preset.cpp com_job_preset.hpp \
-	mdct.cpp mdct.hpp
+	com_time.hpp \
+	lib_channel.hpp \
+	lib_chunk.hpp \
+	lib_data.hpp \
+	lib_dir.hpp \
+	lib_export.hpp \
+	lib_globals.hpp \
+	lib_job.hpp
 
 #------------------------------------------------------------------------------
 
-# define this to make the objects be stored under libdls_a-*.o
-libdls_a_CPPFLAGS =
-
-libdls_a_SOURCES = \
-	lib_dir.cpp lib_dir.hpp \
-	lib_job.cpp lib_job.hpp \
-	lib_channel.cpp lib_channel.hpp \
-	lib_chunk.cpp lib_chunk.hpp \
-	lib_data.cpp lib_data.hpp \
-	lib_export.cpp lib_export.hpp
-
-#------------------------------------------------------------------------------
-
-dlsd_CPPFLAGS = -DREVISION=\"$(REV)\"
-dlsd_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dlsd_LDADD = libcomdls.a -lfftw3 -lm -lz
+dlsd_CPPFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dlsd_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
+dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm
 
 dlsd_SOURCES = \
-	dls_globals.hpp \
-	dls_job_preset.cpp dls_job_preset.hpp \
-	dls_logger.cpp dls_logger.hpp \
-	dls_job.cpp dls_job.hpp \
-	dls_saver_t.hpp \
-	dls_saver_gen_t.hpp \
-	dls_saver_meta_t.hpp \
-	dls_proc_logger.cpp dls_proc_logger.hpp \
-	dls_proc_mother.cpp dls_proc_mother.hpp \
-	dls_main.cpp
+	dls_job.cpp \
+	dls_job_preset.cpp \
+	dls_logger.cpp \
+	dls_main.cpp \
+	dls_proc_logger.cpp \
+	dls_proc_mother.cpp
 
 #------------------------------------------------------------------------------
 
 dls_ctl_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
-dls_ctl_LDADD = libcomdls.a @FLTK_LDFLAGS@
+dls_ctl_LDFLAGS =
+dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls
 
 install-exec-hook:
 	chmod +s $(DESTDIR)$(bindir)/dls_ctl
 
 dls_ctl_SOURCES = \
-	fl_grid.cpp fl_grid.hpp \
-	ctl_globals.hpp \
-	ctl_dialog_msg.cpp ctl_dialog_msg.hpp \
-	ctl_job_preset.cpp ctl_job_preset.hpp \
-	ctl_dialog_job_edit.cpp ctl_dialog_job_edit.hpp \
-	ctl_dialog_job.cpp ctl_dialog_job.hpp \
-	ctl_dialog_channels.cpp ctl_dialog_channels.hpp \
-	ctl_dialog_channel.cpp ctl_dialog_channel.hpp \
-	ctl_dialog_main.cpp ctl_dialog_main.hpp \
-	ctl_main.cpp
+	ctl_dialog_channel.cpp \
+	ctl_dialog_channels.cpp \
+	ctl_dialog_job.cpp \
+	ctl_dialog_job_edit.cpp \
+	ctl_dialog_main.cpp \
+	ctl_dialog_msg.cpp \
+	ctl_job_preset.cpp \
+	ctl_main.cpp \
+	fl_grid.cpp
 
 #------------------------------------------------------------------------------
 
-dls_view_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
-dls_view_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dls_view_LDADD = libdls.a libcomdls.a @FLTK_LDFLAGS@ -lfftw3 -lm -lz
+dls_view_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
+	@FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dls_view_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
+dls_view_LDADD = @FLTK_LDFLAGS@ -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
 
 dls_view_SOURCES = \
-	fl_grid.cpp fl_grid.hpp \
-	fl_track_bar.cpp fl_track_bar.hpp \
-	view_globals.hpp \
-	view_channel.cpp view_channel.hpp \
-	view_view_data.cpp view_view_data.hpp \
-	view_view_msg.cpp view_view_msg.hpp \
-	view_dialog_main.cpp view_dialog_main.hpp \
-	view_dialog_export.cpp view_dialog_export.hpp \
-	view_main.cpp
+	fl_grid.cpp \
+	fl_track_bar.cpp \
+	view_channel.cpp \
+	view_dialog_export.cpp \
+	view_dialog_main.cpp \
+	view_main.cpp \
+	view_view_data.cpp \
+	view_view_msg.cpp
 
 #------------------------------------------------------------------------------
 
-dls_CPPFLAGS = -DREVISION=\"$(REV)\"
-dls_LDFLAGS = -L@FFTW3_DIR@/lib -L@ZLIB_DIR@/lib
-dls_LDADD = libdls.a libcomdls.a -lfftw3 -lm -lz
+dls_CPPFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dls_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
+dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
 
 dls_SOURCES = \
-	cmd_list.cpp cmd_export.cpp cmd_main.cpp
+	cmd_export.cpp \
+	cmd_list.cpp \
+	cmd_main.cpp
+
+#------------------------------------------------------------------------------
+
+noinst_HEADERS = \
+	com_base64.hpp \
+	com_channel_preset.hpp \
+	com_compression_t.hpp \
+	com_file.hpp \
+	com_globals.hpp \
+	com_index_t.hpp \
+	com_job_preset.hpp \
+	com_mdct_t.hpp \
+	com_quant_t.hpp \
+	com_ring_buffer_t.hpp \
+	com_xml_parser.hpp \
+	com_xml_tag.hpp \
+	com_zlib.hpp \
+	ctl_dialog_channel.hpp \
+	ctl_dialog_channels.hpp \
+	ctl_dialog_job.hpp \
+	ctl_dialog_job_edit.hpp \
+	ctl_dialog_main.hpp \
+	ctl_dialog_msg.hpp \
+	ctl_globals.hpp \
+	ctl_job_preset.hpp \
+	dls_globals.hpp \
+	dls_job.hpp \
+	dls_job_preset.hpp \
+	dls_logger.hpp \
+	dls_proc_logger.hpp \
+	dls_proc_mother.hpp \
+	dls_saver_gen_t.hpp \
+	dls_saver_meta_t.hpp \
+	dls_saver_t.hpp \
+	fl_grid.hpp \
+	fl_grid.hpp \
+	fl_track_bar.hpp \
+	mdct.hpp \
+	view_channel.hpp \
+	view_dialog_export.hpp \
+	view_dialog_main.hpp \
+	view_globals.hpp \
+	view_view_data.hpp \
+	view_view_msg.hpp
 
 #------------------------------------------------------------------------------
