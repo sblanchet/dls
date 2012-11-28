@@ -55,6 +55,8 @@ libdls_la_SOURCES = \
 include_HEADERS = \
 	com_exception.hpp \
 	com_time.hpp \
+	com_job_preset.hpp \
+	com_channel_preset.hpp \
 	lib_channel.hpp \
 	lib_chunk.hpp \
 	lib_data.hpp \
@@ -129,12 +131,10 @@ dls_SOURCES = \
 
 noinst_HEADERS = \
 	com_base64.hpp \
-	com_channel_preset.hpp \
 	com_compression_t.hpp \
 	com_file.hpp \
 	com_globals.hpp \
 	com_index_t.hpp \
-	com_job_preset.hpp \
 	com_mdct_t.hpp \
 	com_quant_t.hpp \
 	com_ring_buffer_t.hpp \
