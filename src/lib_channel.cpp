@@ -29,6 +29,7 @@ using namespace std;
 
 /*****************************************************************************/
 
+#include "com_globals.hpp"
 #include "lib_chunk.hpp"
 #include "lib_job.hpp"
 #include "lib_channel.hpp"

@@ -28,7 +28,7 @@
 #include <vector>
 using namespace std;
 
-#include "com_globals.hpp"
+#include "lib_globals.hpp"
 #include "com_time.hpp"
 
 
