@@ -23,6 +23,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <sstream>
 #include <fstream>
@@ -66,6 +69,8 @@ void CTLJobPreset::write(const string &dls_dir)
     fstream file;
     COMXMLTag tag;
     vector<COMChannelPreset>::iterator channel_i;
+    int fd;
+    char *tmp_file_name;
 
     // Verzeichnisnamen konstruieren
     dir_name << dls_dir << "/job" << _id;
@@ -83,14 +88,36 @@ void CTLJobPreset::write(const string &dls_dir)
     // Dateinamen konstruieren
     file_name = dir_name.str() + "/job.xml";
 
+    try {
+        tmp_file_name = new char[strlen(file_name.c_str()) + 7];
+    }
+    catch (...) {
+        err << "Failed to allocate memory for file name!";
+        throw ECOMJobPreset(err.str());
+    }
+
+    sprintf(tmp_file_name, "%s.XXXXXX", file_name.c_str());
+
+    fd = mkstemp(tmp_file_name);
+    if (fd == -1) {
+        err << "Could not create \"" << tmp_file_name
+            << "\": " << strerror(errno);
+        delete [] tmp_file_name;
+        throw ECOMJobPreset(err.str());
+    }
+
     // Datei öffnen
-    file.open(file_name.c_str(), ios::out);
+    file.open(tmp_file_name, ios::out);
+    close(fd);
 
     if (!file.is_open())
     {
-        err << "Could not write file \"" << file_name << "\"";
+        err << "Could not attach to file \"" << tmp_file_name << "\"";
+        delete [] tmp_file_name;
         throw ECOMJobPreset(err.str());
     }
+
+    file.exceptions(fstream::failbit | fstream::badbit);
 
     try
     {
@@ -154,16 +181,30 @@ void CTLJobPreset::write(const string &dls_dir)
     catch (ECOMChannelPreset &e)
     {
         file.close();
-        err << "Could not write: " << e.msg;
+        unlink(tmp_file_name);
+        delete [] tmp_file_name;
+        err << "Failed to write: " << e.msg;
         throw ECOMJobPreset(err.str());
     }
-    catch (...)
+    catch (ios_base::failure &e)
     {
-        file.close();
-        throw ECOMJobPreset("Could not write!");
+        // file.close() throws exception
+        unlink(tmp_file_name);
+        delete [] tmp_file_name;
+        err << "Failed to write: " << e.what();
+        throw ECOMJobPreset(err.str());
     }
 
     file.close();
+
+    if (rename(tmp_file_name, file_name.c_str()) == -1) {
+        delete [] tmp_file_name;
+        err << "Failed to rename " << tmp_file_name << " to "
+            << file_name << ": " << strerror(errno);
+        throw ECOMJobPreset(err.str());
+    }
+
+    delete [] tmp_file_name;
 }
 
 /*****************************************************************************/
