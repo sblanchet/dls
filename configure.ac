@@ -24,6 +24,7 @@ AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_CXX
 AC_PROG_RANLIB
 AC_PREFIX_DEFAULT([/opt/etherlab])
