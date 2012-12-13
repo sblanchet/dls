@@ -24,15 +24,15 @@ AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
+# automake >= 1.12 needs AM_PROG_AR, older versions don't know it
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
-
-# workaround for automake >= 1.12
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 #------------------------------------------------------------------------------
 # FLTK
