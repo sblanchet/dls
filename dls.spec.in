@@ -1,6 +1,6 @@
 #
 # $Id$
-# 
+#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the
@@ -30,7 +30,15 @@ Group: EtherLab
 Url: http://etherlab.org/en/dls
 Source: http://etherlab.org/download/dls/%{name}-%{version}.tar.bz2
 BuildRoot: %_tmppath/%name-%version-root
-BuildRequires: gcc-c++ fltk-devel fftw3-devel
+BuildRequires: fftw3-devel
+BuildRequires: fltk-devel
+BuildRequires: fontconfig-devel
+BuildRequires: gcc-c++
+BuildRequires: libXext-devel
+BuildRequires: libXft-devel
+BuildRequires: libXinerama-devel
+BuildRequires: libfltk1
+BuildRequires: xorg-x11-proto-devel
 
 %description
 DLS is a process data logging service, capable of capturing high-frequency
@@ -68,6 +76,8 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_datadir}/applications/*.desktop
 
 %changelog
+* Thu Jan 8 2013 fp@igh-essen.com
+- Added some BuildRequires
 * Thu Jan 26 2012 fp@igh-essen.com
 - Used macro dirs
 - Added .desktop files
