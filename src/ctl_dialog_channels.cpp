@@ -392,24 +392,11 @@ void CTLDialogChannels::_thread_function()
 
                                     type = tag->att("typ")->to_str();
 
-                                    if (type.rfind("_LIST") != string::npos) {
-                                        // ignore vector channels
-                                        continue;
-                                    }
-                                    if (type.rfind("_MATRIX") != string::npos) {
-                                        // ignore matrix channels
-                                        continue;
-                                    }
+                                    channel.type =
+                                        dls_str_to_channel_type(type);
 
-                                    channel.type = dls_str_to_channel_type(type);
-
-                                    if (channel.type == DLS_TUNKNOWN)
-                                    {
-                                        _error = "Unknown channel type \""
-                                            + tag->att("typ")->to_str()
-                                            + "\"!";
-                                        exit_thread = true;
-                                        break;
+                                    if (channel.type == DLS_TUNKNOWN) {
+                                        continue;
                                     }
 
                                     _channels.push_back(channel);
