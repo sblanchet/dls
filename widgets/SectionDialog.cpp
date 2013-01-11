@@ -55,6 +55,8 @@ SectionDialog::SectionDialog(
     lineEditMinimum->setText(QLocale().toString(section->getScaleMinimum()));
     lineEditMaximum->setText(QLocale().toString(section->getScaleMaximum()));
 
+    checkBoxShowScale->setChecked(section->getShowScale());
+
     connect(model,
             SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(modelDataChanged()));
@@ -84,6 +86,8 @@ SectionDialog::SectionDialog(
             this, SLOT(manualScaleEdited()));
     connect(lineEditMaximum, SIGNAL(textEdited(const QString &)),
             this, SLOT(manualScaleEdited()));
+    connect(checkBoxShowScale, SIGNAL(toggled(bool)),
+            this, SLOT(scaleValueChanged()));
     connect(tableViewLayers,
             SIGNAL(customContextMenuRequested(const QPoint &)),
             this, SLOT(tableContextMenu(const QPoint &)));
@@ -118,6 +122,7 @@ void SectionDialog::accept()
     workSection.setScaleMinimum(min);
     workSection.setScaleMaximum(max);
     workSection.setAutoScale(radioButtonAuto->isChecked());
+    workSection.setShowScale(checkBoxShowScale->isChecked());
 
     *section = workSection;
 
@@ -150,6 +155,7 @@ void SectionDialog::scaleValueChanged()
     }
 
     workSection.setAutoScale(radioButtonAuto->isChecked());
+    workSection.setShowScale(checkBoxShowScale->isChecked());
 
     if (checkBoxPreview->isChecked()) {
         *section = workSection;
@@ -183,7 +189,7 @@ void SectionDialog::on_pushButtonGuess_clicked()
 {
     double min, max, norm;
 
-    if (!workSection.extrema(min, max) || max <= min) {
+    if (!workSection.getExtrema(min, max) || max <= min) {
         return;
     }
 

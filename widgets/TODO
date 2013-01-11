@@ -18,6 +18,7 @@ vim700: spelllang=en spell
     - Find extrema
     - Last hour
     - (*) Export
+    - Use value for all layers.
 
 - Export
     - PNG
@@ -30,7 +31,6 @@ vim700: spelllang=en spell
     - Preview
 
 - Widget
-    - (*) Value scale drawing
     - Display combined gaps below time scale
     - Mark gap borders with lines.
     - Section properties with double click.
@@ -38,5 +38,6 @@ vim700: spelllang=en spell
     - File mask for saving/loading
     - Draw headers in pixmaps.
     - Draw section data in pixmap.
+    - Value scale printing.
 
 - (*) Messages

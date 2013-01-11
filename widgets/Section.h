@@ -29,6 +29,8 @@
 
 #include "../src/com_time.hpp"
 
+#include "ValueScale.h"
+
 class QDomElement;
 class QDomDocument;
 
@@ -65,6 +67,8 @@ class Section
 
         bool getAutoScale() const { return autoScale; }
         void setAutoScale(bool);
+        bool getShowScale() const { return showScale; }
+        void setShowScale(bool);
         double getScaleMinimum() const { return scaleMin; }
         void setScaleMinimum(double);
         double getScaleMaximum() const { return scaleMax; }
@@ -73,7 +77,8 @@ class Section
         void setHeight(int);
 
         void resize(int);
-        void draw(QPainter &, const QRect &, int);
+        int getScaleWidth() const { return scale.getWidth(); }
+        void draw(QPainter &, const QRect &, int, int);
 
         Layer *appendLayer(QtDls::Channel *);
 
@@ -84,7 +89,7 @@ class Section
 
         enum {Margin = 1};
 
-        bool extrema(double &, double &);
+        bool getExtrema(double &, double &);
 
         class Exception {
             public:
@@ -95,16 +100,23 @@ class Section
 
     private:
         Graph * const graph;
+        ValueScale scale;
         QList<Layer *> layers; /**< List of data layers. */
         bool autoScale;
+        bool showScale;
         double scaleMin;
         double scaleMax;
         int height;
         QTextDocument legend;
+        double minimum;
+        double maximum;
+        bool extremaValid;
 
         static const QColor colorList[];
 
         void updateLegend();
+        void updateScale();
+        void updateExtrema();
         void update();
         void clearLayers();
         void loadLayers(const QDomElement &, QtDls::Model *);

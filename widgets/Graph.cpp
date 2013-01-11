@@ -83,6 +83,7 @@ Graph::Graph(
     startHeight(0),
     scrollBar(this),
     scrollBarNeeded(false),
+    scaleWidth(0),
     currentView(views.begin())
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
@@ -460,6 +461,7 @@ void Graph::loadData()
             s != sections.end(); s++) {
         (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
     }
+
     update();
 }
 
@@ -704,7 +706,7 @@ void Graph::print()
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
                 page.width());
-            drawSection.draw(painter, r, -1);
+            drawSection.draw(painter, r, -1, 0); // FIXME
 
             QPen pen;
             painter.setPen(pen);
@@ -979,6 +981,8 @@ void Graph::paintEvent(
 
     QRect scaleRect(contentsRect());
     int height = scale.getOuterLength() + 1;
+    bool drawValueScale = false;
+    scaleWidth = 0;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         height += (*s)->getHeight() + splitterWidth;
@@ -986,7 +990,16 @@ void Graph::paintEvent(
             height = contentsRect().height();
             break;
         }
+        if ((*s)->getShowScale()) {
+            drawValueScale = true;
+            int w = (*s)->getScaleWidth();
+            if (w > scaleWidth) {
+                scaleWidth = w;
+            }
+        }
     }
+
+    scaleRect.setLeft(scaleWidth);
     scaleRect.setHeight(height);
     scale.draw(painter, scaleRect);
 
@@ -1014,7 +1027,7 @@ void Graph::paintEvent(
         QRect sectionRect(dataRect);
         sectionRect.setTop(top - scrollBar.value());
         sectionRect.setHeight((*s)->getHeight());
-        (*s)->draw(painter, sectionRect, mp);
+        (*s)->draw(painter, sectionRect, mp, scaleWidth);
 
         QRect splitterRect(sectionRect);
         splitterRect.setTop(top + (*s)->getHeight() - scrollBar.value());
@@ -1334,6 +1347,8 @@ void Graph::updateMeasuring()
     }
 
     QRect measureRect(contentsRect());
+    measureRect.setLeft(contentsRect().left() + scaleWidth);
+
     COMTime range = getEnd() - getStart();
 
     if (range <= 0.0 || !measureRect.isValid() ||

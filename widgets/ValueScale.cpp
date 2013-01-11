@@ -1,0 +1,220 @@
+/*****************************************************************************
+ *
+ * $Id$
+ *
+ * Copyright (C) 2009 - 2013  Florian Pose <fp@igh-essen.com>
+ *
+ * This file is part of the DLS widget library.
+ *
+ * The DLS widget library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * The DLS widget library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the DLS widget library. If not, see
+ * <http://www.gnu.org/licenses/>.
+ *
+ ****************************************************************************/
+
+#include <QtGui>
+#include <math.h>
+
+#include "ValueScale.h"
+
+using DLS::ValueScale;
+
+/****************************************************************************/
+
+/** Constructor.
+ */
+ValueScale::ValueScale(QWidget *p):
+    parent(p),
+    min(0.0),
+    max(0.0),
+    length(0),
+    width(0),
+    majorStep(0.0),
+    minorDiv(2),
+    decade(0)
+{
+}
+
+/****************************************************************************/
+
+/** Sets the scale value minimum (#min).
+ */
+void ValueScale::setMin(double min)
+{
+    ValueScale::min = min;
+}
+
+/****************************************************************************/
+
+/** Sets the scale value maximum (#max).
+ *
+ * If the value changes, this re-calculates the scale layout.
+ */
+void ValueScale::setMax(double max)
+{
+    ValueScale::max = max;
+}
+
+/****************************************************************************/
+
+/** Sets the scale #length in pixel.
+ *
+ * If the value changes, this re-calculates the scale layout.
+ */
+void ValueScale::setLength(int length)
+{
+    ValueScale::length = length;
+}
+
+/****************************************************************************/
+
+/** Calculates the scale's layout.
+ */
+void ValueScale::update()
+{
+    double rawMajorStep;
+    QFontMetrics fm = parent->fontMetrics();
+
+    if (!length || getRange() <= 0.0) {
+        width = 0;
+        majorStep = 0.0;
+        minorDiv = 2;
+        decade = 0;
+        return;
+    }
+
+    rawMajorStep = (fm.height() + 30) * getRange() / length;
+
+    decade = (int) floor(log10(rawMajorStep));
+    rawMajorStep /= pow(10.0, decade); // 1 <= rawStep < 10
+
+    if (rawMajorStep > 5.0) {
+        rawMajorStep = 1.0;
+        minorDiv = 2;
+        decade++;
+    } else if (rawMajorStep > 2.0) {
+        rawMajorStep = 5.0;
+        minorDiv = 5;
+    } else {
+        rawMajorStep = 2.0;
+        minorDiv = 2;
+    }
+
+    majorStep = rawMajorStep * pow(10.0, decade);
+
+    {
+        double value;
+        int w, wMax = 0;
+        value = ceil(min / majorStep) * majorStep;
+        while (value <= max) {
+            w = fm.width(formatValue(value));
+            if (w > wMax) wMax = w;
+            value += majorStep;
+        }
+        width = wMax + 4;
+    }
+}
+
+/****************************************************************************/
+
+/** Draws the scale into the given QRect with the given QPainter.
+ */
+void ValueScale::draw(QPainter &painter, const QRect &rect,
+        int minWidth) const
+{
+    double value, factor, minorValue;
+    QPen pen = painter.pen();
+    QRect textRect;
+    int l, p, lineOffset, effWidth = width;
+    unsigned int minorIndex;
+    bool drawLabel;
+
+    l = rect.height();
+
+    if (!majorStep || !l || !getRange())
+        return;
+
+    if (minWidth > effWidth) {
+        effWidth = minWidth;
+    }
+
+    factor = l / getRange();
+
+    textRect.setLeft(rect.left() + 2);
+    textRect.setWidth(effWidth - 4);
+    textRect.setHeight((int) (majorStep * factor) - 4);
+
+    pen.setStyle(Qt::DashLine);
+    QColor minorColor = parent->palette().window().color().dark(110);
+    QColor majorColor = parent->palette().window().color().dark(150);
+    QColor gridColor;
+
+    value = floor(min / majorStep) * majorStep;
+    minorIndex = 0;
+
+    while (value <= max) {
+        if (minorIndex) { // minor step, short tick
+            minorValue = value + minorIndex * majorStep / minorDiv;
+            if (++minorIndex == minorDiv) {
+                minorIndex = 0;
+                value += majorStep;
+            }
+            if (minorValue < min || minorValue >= max)
+                continue;
+            p = (int) ((minorValue - min) * factor);
+            lineOffset = effWidth;
+            drawLabel = false;
+            gridColor = minorColor;
+        } else { // major step, long tick
+            minorIndex++;
+            if (value < min || value >= max)
+                continue;
+            p = (int) ((value - min) * factor);
+            lineOffset = 0;
+            drawLabel = true;
+            gridColor = majorColor;
+        }
+
+        pen.setColor(gridColor);
+        painter.setPen(pen);
+        painter.drawLine(rect.left() + lineOffset, rect.bottom() - p,
+                rect.right(), rect.bottom() - p);
+        if (drawLabel) {
+            textRect.moveBottom(rect.bottom() - p);
+            pen.setColor(Qt::black);
+            painter.setPen(pen);
+            painter.drawText(textRect, Qt::AlignRight | Qt::AlignBottom,
+                    formatValue(value));
+        }
+    }
+}
+
+/****************************************************************************/
+
+/** Formats a numeric value.
+ */
+QString ValueScale::formatValue(double value) const
+{
+    QString str, fmt;
+
+    if (decade < 0) {
+        fmt.sprintf("%%.%ilf", -decade);
+        str.sprintf(fmt.toLatin1().constData(), value);
+    }
+    else
+        str.setNum(value);
+
+    return str;
+}
+
+/****************************************************************************/
