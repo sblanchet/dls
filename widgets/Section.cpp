@@ -55,10 +55,15 @@ Section::Section(
         Graph *graph
         ):
     graph(graph),
+    scale(graph),
     autoScale(true),
+    showScale(true),
     scaleMin(0.0),
     scaleMax(100.0),
-    height(100)
+    height(100),
+    minimum(0.0),
+    maximum(0.0),
+    extremaValid(false)
 {
     updateLegend();
 }
@@ -71,10 +76,15 @@ Section::Section(
         const Section &o
         ):
     graph(o.graph),
+    scale(o.graph),
     autoScale(o.autoScale),
+    showScale(o.showScale),
     scaleMin(o.scaleMin),
     scaleMax(o.scaleMax),
-    height(o.height)
+    height(o.height),
+    minimum(o.minimum),
+    maximum(o.maximum),
+    extremaValid(o.extremaValid)
 {
     for (QList<Layer *>::const_iterator l = o.layers.begin();
             l != o.layers.end(); l++) {
@@ -83,6 +93,7 @@ Section::Section(
     }
 
     updateLegend();
+    updateScale();
 }
 
 /****************************************************************************/
@@ -104,9 +115,13 @@ Section &Section::operator=(
 {
     // graph is const
     autoScale = o.autoScale;
+    showScale = o.showScale;
     scaleMin = o.scaleMin;
     scaleMax = o.scaleMax;
     height = o.height;
+    minimum = o.minimum;
+    maximum = o.maximum;
+    extremaValid = o.extremaValid;
 
     clearLayers();
 
@@ -117,6 +132,7 @@ Section &Section::operator=(
     }
 
     updateLegend();
+    updateScale();
 
     graph->updateRange();
     graph->update();
@@ -141,6 +157,10 @@ void Section::load(const QDomElement &e, Model *model)
         if (child.tagName() == "AutoScale") {
             QString text = child.text();
             setAutoScale(text == "yes");
+        }
+        else if (child.tagName() == "ShowScale") {
+            QString text = child.text();
+            setShowScale(text == "yes");
         }
         else if (child.tagName() == "ScaleMinimum") {
             QString text = child.text();
@@ -176,6 +196,9 @@ void Section::load(const QDomElement &e, Model *model)
             loadLayers(child, model);
         }
     }
+
+    updateLegend();
+    updateScale();
 }
 
 /****************************************************************************/
@@ -189,6 +212,11 @@ void Section::save(QDomElement &e, QDomDocument &doc) const
 
     QDomElement elem = doc.createElement("AutoScale");
     QDomText text = doc.createTextNode(autoScale ? "yes" : "no");
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    elem = doc.createElement("ShowScale");
+    text = doc.createTextNode(showScale ? "yes" : "no");
     elem.appendChild(text);
     secElem.appendChild(elem);
 
@@ -226,7 +254,21 @@ void Section::setAutoScale(bool a)
 {
     if (a != autoScale) {
         autoScale = a;
+        if (autoScale) {
+            updateExtrema();
+        }
+        updateScale();
         graph->update();
+    }
+}
+
+/****************************************************************************/
+
+void Section::setShowScale(bool s)
+{
+    if (s != showScale) {
+        showScale = s;
+        graph->update(); // FIXME notify graph on scale change?
     }
 }
 
@@ -236,7 +278,10 @@ void Section::setScaleMinimum(double min)
 {
     if (min != scaleMin) {
         scaleMin = min;
-        graph->update();
+        if (!autoScale) {
+            updateScale();
+            graph->update();
+        }
     }
 }
 
@@ -246,7 +291,10 @@ void Section::setScaleMaximum(double max)
 {
     if (max != scaleMax) {
         scaleMax = max;
-        graph->update();
+        if (!autoScale) {
+            updateScale();
+            graph->update();
+        }
     }
 }
 
@@ -260,6 +308,7 @@ void Section::setHeight(int h)
 
     if (h != height) {
         height = h;
+        updateScale();
         graph->update();
     }
 }
@@ -304,11 +353,15 @@ void spreadGroup(QList<Layer::MeasureData> &list,
 
 /****************************************************************************/
 
-void Section::draw(QPainter &painter, const QRect &rect, int measureX)
+void Section::draw(QPainter &painter, const QRect &rect, int measureX,
+        int scaleWidth)
 {
     QRect legendRect(rect);
     legendRect.setHeight(legend.size().height());
+    QRect scaleRect(rect);
+    scaleRect.setTop(legendRect.bottom() + 1);
     QRect dataRect(rect);
+    dataRect.setLeft(rect.left() + scaleWidth);
     dataRect.setTop(legendRect.bottom() + 1);
 
     if (legendRect.isValid()) {
@@ -326,26 +379,16 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
         return;
     }
 
-    double minimum = 0.0, maximum = 0.0;
-
-    if (autoScale) {
-        extrema(minimum, maximum);
-    }
-    else {
-        minimum = scaleMin;
-        maximum = scaleMax;
-    }
-
-    if (minimum > maximum) {
-        return;
+    if (showScale) {
+        scale.draw(painter, scaleRect, scaleWidth);
     }
 
     double xScale = (dataRect.width() - 1) /
         (graph->getEnd() - graph->getStart()).to_dbl_time();
 
     double yScale;
-    if (minimum < maximum) {
-        yScale = (dataRect.height() - 1) / (maximum - minimum);
+    if (scale.getMin() < scale.getMax()) {
+        yScale = (dataRect.height() - 1) / scale.getRange();
     }
     else {
         yScale = 0.0;
@@ -374,7 +417,8 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX)
             measure = NULL;
         }
 
-        (*l)->draw(painter, dataRect, xScale, yScale, minimum, measure);
+        (*l)->draw(painter, dataRect, xScale, yScale, scale.getMin(),
+                measure);
 
         if (measure && measureData.found &&
                 totalLabelHeight + fm.height() <= dataRect.height()) {
@@ -546,6 +590,11 @@ void Section::loadData(const COMTime &start, const COMTime &end,
             l != layers.end(); l++) {
         (*l)->loadData(start, end, min_values);
     }
+
+    if (autoScale) {
+        updateExtrema();
+        updateScale();
+    }
 }
 
 /****************************************************************************/
@@ -595,34 +644,14 @@ QColor Section::nextColor() const
 
 /****************************************************************************/
 
-bool Section::extrema(double &minimum, double &maximum)
+bool Section::getExtrema(double &min, double &max)
 {
-    bool valid = false;
+    updateExtrema();
 
-    for (QList<Layer *>::const_iterator l = layers.begin();
-            l != layers.end(); l++) {
-        if (!(*l)->getExtremaValid()) {
-            continue;
-        }
+    min = minimum;
+    max = maximum;
 
-        double min = (*l)->getMinimum();
-        double max = (*l)->getMaximum();
-
-        if (valid) {
-            if (min < minimum) {
-                minimum = min;
-            }
-            if (max > maximum) {
-                maximum = max;
-            }
-        } else {
-            minimum = min;
-            maximum = max;
-            valid = true;
-        }
-    }
-
-    return valid;
+    return extremaValid;
 }
 
 /****************************************************************************/
@@ -649,6 +678,60 @@ void Section::updateLegend()
     html += "</body></html>";
 
     legend.setHtml(html);
+}
+
+/****************************************************************************/
+
+void Section::updateScale()
+{
+    double min, max;
+
+    if (autoScale) {
+        // use extrema of loaded data
+        min = minimum;
+        max = maximum;
+    }
+    else {
+        min = scaleMin;
+        max = scaleMax;
+    }
+
+    scale.setMin(min);
+    scale.setMax(max);
+    scale.setLength(height - legend.size().height());
+    scale.update();
+}
+
+/****************************************************************************/
+
+void Section::updateExtrema()
+{
+    minimum = 0.0;
+    maximum = 0.0;
+    extremaValid = false;
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        if (!(*l)->getExtremaValid()) {
+            continue;
+        }
+
+        double min = (*l)->getMinimum();
+        double max = (*l)->getMaximum();
+
+        if (extremaValid) {
+            if (min < minimum) {
+                minimum = min;
+            }
+            if (max > maximum) {
+                maximum = max;
+            }
+        } else {
+            minimum = min;
+            maximum = max;
+            extremaValid = true;
+        }
+    }
 }
 
 /****************************************************************************/
@@ -715,8 +798,6 @@ void Section::loadLayers(const QDomElement &elem, Model *model)
 
         layers.append(layer);
     }
-
-    updateLegend();
 }
 
 /****************************************************************************/

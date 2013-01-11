@@ -161,6 +161,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int startHeight;
         QScrollBar scrollBar;
         bool scrollBarNeeded;
+        int scaleWidth;
 
         struct View {
             COMTime start;

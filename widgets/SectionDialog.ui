@@ -82,6 +82,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="checkBoxShowScale">
+          <property name="text">
+           <string>Show Scale</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>

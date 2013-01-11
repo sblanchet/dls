@@ -111,6 +111,7 @@ HEADERS += \
     Plugin.h \
     SectionDialog.h \
     SectionModel.h \
+    ValueScale.h \
     WidgetCollection.h
 
 SOURCES += \
@@ -128,6 +129,7 @@ SOURCES += \
     Section.cpp \
     SectionDialog.cpp \
     SectionModel.cpp \
+    ValueScale.cpp \
     WidgetCollection.cpp
 
 FORMS = \
