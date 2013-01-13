@@ -452,7 +452,7 @@ void Graph::updateRange()
 
 void Graph::loadData()
 {
-    int dataWidth = contentsRect().width();
+    int dataWidth = contentsRect().width() - scaleWidth;
     if (scrollBarNeeded) {
         dataWidth -= scrollBar.width();
     }
@@ -798,11 +798,15 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     if (panning) {
-        int w = contentsRect().width();
+        int dataWidth = contentsRect().width() - scaleWidth;
         COMTime range = getEnd() - getStart();
 
-        if (range > 0.0 && w > 0) {
-            double xScale = range.to_dbl_time() / w;
+        if (scrollBarNeeded) {
+            dataWidth -= scrollBar.width();
+        }
+
+        if (range > 0.0 && dataWidth > 0) {
+            double xScale = range.to_dbl_time() / dataWidth;
 
             COMTime diff;
             diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
@@ -853,8 +857,12 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
     bool wasZooming = zooming;
     bool wasPanning = panning;
-    int w = contentsRect().width();
+    int dataWidth = contentsRect().width() - scaleWidth;
     COMTime range = getEnd() - getStart();
+
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
 
     zooming = false;
     panning = false;
@@ -862,18 +870,18 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
     updateCursor();
     update();
 
-    if (startPos.x() == endPos.x() || w <= 0 || range <= 0.0) {
+    if (startPos.x() == endPos.x() || dataWidth <= 0 || range <= 0.0) {
         return;
     }
 
-    double xScale = range.to_dbl_time() / w;
+    double xScale = range.to_dbl_time() / dataWidth;
 
     if (wasZooming) {
         COMTime diff;
-        diff.from_dbl_time((startPos.x() - contentsRect().left()) * xScale);
+        int offset = contentsRect().left() + scaleWidth;
+        diff.from_dbl_time((startPos.x() - offset) * xScale);
         COMTime newStart = getStart() + diff;
-        diff.from_dbl_time(
-                (event->pos().x() - contentsRect().left()) * xScale);
+        diff.from_dbl_time((event->pos().x() - offset) * xScale);
         COMTime newEnd = getStart() + diff;
         setRange(newStart, newEnd);
     }
@@ -981,7 +989,6 @@ void Graph::paintEvent(
 
     QRect scaleRect(contentsRect());
     int height = scale.getOuterLength() + 1;
-    bool drawValueScale = false;
     scaleWidth = 0;
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
@@ -991,7 +998,6 @@ void Graph::paintEvent(
             break;
         }
         if ((*s)->getShowScale()) {
-            drawValueScale = true;
             int w = (*s)->getScaleWidth();
             if (w > scaleWidth) {
                 scaleWidth = w;
