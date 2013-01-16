@@ -30,7 +30,13 @@ using namespace std;
 #include <QCloseEvent>
 
 #include "MainWindow.h"
+#include "SettingsDialog.h"
+
+#define MODELTEST 0
+
+#if MODELTEST
 #include "modeltest.h"
+#endif
 
 /****************************************************************************/
 
@@ -67,31 +73,11 @@ MainWindow::MainWindow(QWidget *parent):
 
     updateRecentFileActions();
 
+#if MODELTEST
     new ModelTest(&model);
+#endif
 
     dlsGraph->setDropModel(&model);
-
-    LibDLS::Directory *dir = new LibDLS::Directory();
-
-    try {
-        dir->import("/vol/projekte/airbus/a4q_airbus-4q-technologie"
-                "/messungen/dls_data");
-        model.addLocalDir(dir);
-    } catch (LibDLS::DirectoryException &e) {
-        qWarning() << e.msg.c_str();
-        delete dir;
-    }
-
-    LibDLS::Directory *dir2 = new LibDLS::Directory();
-
-    try {
-        dir2->import("/vol/projekte/airbus/amb_airbus-messbolzen/messungen"
-                "/kalibrierung/dls-data");
-        model.addLocalDir(dir2);
-    } catch (LibDLS::DirectoryException &e) {
-        qWarning() << e.msg.c_str();
-        delete dir2;
-    }
 
     treeView->setModel(&model);
 
@@ -186,6 +172,23 @@ void MainWindow::on_actionLoad_triggered()
 
 /****************************************************************************/
 
+void MainWindow::openRecentFile()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (!action) {
+        return;
+    }
+
+    QString path = action->data().toString();
+
+    if (dlsGraph->load(path, &model)) {
+        currentFileName = path;
+        addRecentFile(currentFileName);
+    }
+}
+
+/****************************************************************************/
+
 void MainWindow::on_actionSave_triggered()
 {
     QString path;
@@ -229,29 +232,11 @@ void MainWindow::on_actionSaveAs_triggered()
 
 /****************************************************************************/
 
-void MainWindow::openRecentFile()
+void MainWindow::on_actionSettings_triggered()
 {
-    QAction *action = qobject_cast<QAction *>(sender());
-    if (!action) {
-        return;
-    }
+    SettingsDialog dialog(restore, this);
 
-    QString path = action->data().toString();
-
-    if (dlsGraph->load(path, &model)) {
-        currentFileName = path;
-        addRecentFile(currentFileName);
-    }
-}
-
-/****************************************************************************/
-
-void MainWindow::on_toolButtonView1_clicked()
-{
-    COMTime start, end;
-    start.set_date(2012, 8, 28, 2, 34);
-    end.set_date(2012, 8, 28, 2, 35, 10);
-    dlsGraph->setRange(start, end);
+    dialog.exec();
 }
 
 /****************************************************************************/
