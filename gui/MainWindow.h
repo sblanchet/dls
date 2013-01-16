@@ -25,8 +25,9 @@
 
 #include "ui_MainWindow.h"
 
-#include "Model.h"
 #include "lib_dir.hpp"
+
+#include "DlsWidgets/Model.h"
 
 /****************************************************************************/
 
@@ -56,11 +57,11 @@ class MainWindow:
 
     private slots:
         void on_actionLoad_triggered();
+        void openRecentFile();
         void on_actionSave_triggered();
         void on_actionSaveAs_triggered();
-        void openRecentFile();
+        void on_actionSettings_triggered();
 
-        void on_toolButtonView1_clicked();
         void on_toolButtonNewDir_clicked();
 };
 

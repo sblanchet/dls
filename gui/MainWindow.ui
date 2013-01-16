@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>DLS</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -24,13 +24,6 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="DLS::Graph" name="dlsGraph"/>
-        </item>
-        <item>
-         <widget class="QToolButton" name="toolButtonView1">
-          <property name="text">
-           <string>1</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
@@ -78,7 +71,7 @@
      <x>0</x>
      <y>0</y>
      <width>1032</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -101,7 +94,14 @@
     <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionSettings"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuOptions"/>
   </widget>
   <action name="actionClose">
    <property name="icon">
@@ -154,12 +154,17 @@
     <string>Save the current view to a different file</string>
    </property>
   </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>DLS::Graph</class>
    <extends>QFrame</extends>
-   <header>Graph.h</header>
+   <header>DlsWidgets/Graph.h</header>
   </customwidget>
  </customwidgets>
  <resources>

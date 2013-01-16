@@ -41,13 +41,14 @@ win32 {
     LIBS += -L"$$OUT_PWD\..\widgets\release"
 }
 
-HEADERS += MainWindow.h
-SOURCES += main.cpp MainWindow.cpp
+HEADERS += MainWindow.h SettingsDialog.h
+SOURCES += main.cpp MainWindow.cpp SettingsDialog.cpp
 FORMS += MainWindow.ui
+FORMS += SettingsDialog.ui
 
 RESOURCES += dlsgui.qrc
 
-HEADERS += modeltest.h
-SOURCES += modeltest.cpp
+#HEADERS += modeltest.h
+#SOURCES += modeltest.cpp
 
 #-----------------------------------------------------------------------------

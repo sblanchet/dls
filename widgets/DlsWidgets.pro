@@ -54,6 +54,7 @@ unix {
 
 unix {
     INCLUDEPATH += . $$PWD/../src
+    INCLUDEPATH += $$PWD/DlsWidgets
 }
 win32 {
     INCLUDEPATH += .
@@ -92,11 +93,11 @@ win32 {
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
 win32:inst_headers.path = "$${PREFIX}\include\DlsWidgets"
 inst_headers.files = \
-    Graph.h \
-    Layer.h \
-    Model.h \
-    Scale.h \
-    Section.h
+    DlsWidgets/Graph.h \
+    DlsWidgets/Layer.h \
+    DlsWidgets/Model.h \
+    DlsWidgets/Scale.h \
+    DlsWidgets/Section.h
 
 INSTALLS += inst_headers
 
