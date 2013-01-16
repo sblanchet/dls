@@ -27,6 +27,8 @@
 
 #include "ValueScale.h"
 
+#define MIN_LINE_DIST 10
+
 using DLS::ValueScale;
 
 /****************************************************************************/
@@ -82,7 +84,7 @@ void ValueScale::setLength(int length)
  */
 void ValueScale::update()
 {
-    double rawMajorStep;
+    double rawMajorStep, effMajorStep, dist;
     QFontMetrics fm = parent->fontMetrics();
 
     if (!length || getRange() <= 0.0) {
@@ -93,24 +95,32 @@ void ValueScale::update()
         return;
     }
 
-    rawMajorStep = (fm.height() + 30) * getRange() / length;
+    rawMajorStep = (fm.height() * 1.5 + 4) * getRange() / length;
 
     decade = (int) floor(log10(rawMajorStep));
     rawMajorStep /= pow(10.0, decade); // 1 <= rawStep < 10
 
     if (rawMajorStep > 5.0) {
-        rawMajorStep = 1.0;
-        minorDiv = 2;
+        effMajorStep = 1.0;
         decade++;
     } else if (rawMajorStep > 2.0) {
-        rawMajorStep = 5.0;
-        minorDiv = 5;
+        effMajorStep = 5.0;
     } else {
-        rawMajorStep = 2.0;
-        minorDiv = 2;
+        effMajorStep = 2.0;
     }
 
-    majorStep = rawMajorStep * pow(10.0, decade);
+    majorStep = effMajorStep * pow(10.0, decade);
+    dist = majorStep * length / getRange();
+
+    if (dist / 5 >= MIN_LINE_DIST) {
+        minorDiv = 5;
+    }
+    else if (dist / 2 >= MIN_LINE_DIST) {
+        minorDiv = 2;
+    }
+    else {
+        minorDiv = 1;
+    }
 
     {
         double value;
@@ -118,7 +128,9 @@ void ValueScale::update()
         value = ceil(min / majorStep) * majorStep;
         while (value <= max) {
             w = fm.width(formatValue(value));
-            if (w > wMax) wMax = w;
+            if (w > wMax) {
+                wMax = w;
+            }
             value += majorStep;
         }
         width = wMax + 4;
@@ -138,6 +150,7 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
     int l, p, lineOffset, effWidth = width;
     unsigned int minorIndex;
     bool drawLabel;
+    QFontMetrics fm = parent->fontMetrics();
 
     l = rect.height();
 
@@ -152,7 +165,7 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
 
     textRect.setLeft(rect.left() + 2);
     textRect.setWidth(effWidth - 4);
-    textRect.setHeight((int) (majorStep * factor) - 4);
+    textRect.setHeight(fm.height());
 
     pen.setStyle(Qt::DashLine);
     QColor minorColor = parent->palette().window().color().dark(110);
@@ -169,16 +182,27 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 minorIndex = 0;
                 value += majorStep;
             }
-            if (minorValue < min || minorValue >= max)
+
+            if (minorValue < min || minorValue >= max) {
                 continue;
+            }
+
             p = (int) ((minorValue - min) * factor);
             lineOffset = effWidth;
             drawLabel = false;
             gridColor = minorColor;
         } else { // major step, long tick
-            minorIndex++;
-            if (value < min || value >= max)
+            if (minorDiv > 1) {
+                minorIndex++;
+            }
+            else {
+                value += majorStep;
+            }
+
+            if (value < min || value >= max) {
                 continue;
+            }
+
             p = (int) ((value - min) * factor);
             lineOffset = 0;
             drawLabel = true;
@@ -191,10 +215,13 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 rect.right(), rect.bottom() - p);
         if (drawLabel) {
             textRect.moveBottom(rect.bottom() - p);
-            pen.setColor(Qt::black);
-            painter.setPen(pen);
-            painter.drawText(textRect, Qt::AlignRight | Qt::AlignBottom,
-                    formatValue(value));
+
+            if (rect.contains(textRect)) {
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                painter.drawText(textRect, Qt::AlignRight | Qt::AlignBottom,
+                        formatValue(value));
+            }
         }
     }
 }
