@@ -184,10 +184,6 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 value += majorStep;
             }
 
-            if (stepValue < min || stepValue >= max) {
-                continue;
-            }
-
             lineOffset = effWidth;
             drawLabel = false;
             gridColor = minorColor;
@@ -201,18 +197,19 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 value += majorStep;
             }
 
-            if (stepValue < min || stepValue >= max) {
-                continue;
-            }
-
             lineOffset = 0;
             drawLabel = true;
             gridColor = majorColor;
         }
 
+        if (stepValue < min || stepValue >= max) {
+            continue;
+        }
+
+        p = (int) ((stepValue - min) * factor);
+
         pen.setColor(gridColor);
         painter.setPen(pen);
-        p = (int) ((stepValue - min) * factor);
         painter.drawLine(rect.left() + lineOffset, rect.bottom() - p,
                 rect.right(), rect.bottom() - p);
         if (drawLabel) {
