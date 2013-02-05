@@ -144,7 +144,7 @@ void ValueScale::update()
 void ValueScale::draw(QPainter &painter, const QRect &rect,
         int minWidth) const
 {
-    double value, factor, minorValue;
+    double value, factor, stepValue;
     QPen pen = painter.pen();
     QRect textRect;
     int l, p, lineOffset, effWidth = width;
@@ -177,21 +177,23 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
 
     while (value <= max) {
         if (minorIndex) { // minor step, short tick
-            minorValue = value + minorIndex * majorStep / minorDiv;
+            stepValue = value + minorIndex * majorStep / minorDiv;
+
             if (++minorIndex == minorDiv) {
                 minorIndex = 0;
                 value += majorStep;
             }
 
-            if (minorValue < min || minorValue >= max) {
+            if (stepValue < min || stepValue >= max) {
                 continue;
             }
 
-            p = (int) ((minorValue - min) * factor);
             lineOffset = effWidth;
             drawLabel = false;
             gridColor = minorColor;
         } else { // major step, long tick
+            stepValue = value;
+
             if (minorDiv > 1) {
                 minorIndex++;
             }
@@ -199,11 +201,10 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 value += majorStep;
             }
 
-            if (value < min || value >= max) {
+            if (stepValue < min || stepValue >= max) {
                 continue;
             }
 
-            p = (int) ((value - min) * factor);
             lineOffset = 0;
             drawLabel = true;
             gridColor = majorColor;
@@ -211,6 +212,7 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
 
         pen.setColor(gridColor);
         painter.setPen(pen);
+        p = (int) ((stepValue - min) * factor);
         painter.drawLine(rect.left() + lineOffset, rect.bottom() - p,
                 rect.right(), rect.bottom() - p);
         if (drawLabel) {
@@ -220,7 +222,7 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
                 pen.setColor(Qt::black);
                 painter.setPen(pen);
                 painter.drawText(textRect, Qt::AlignRight | Qt::AlignBottom,
-                        formatValue(value));
+                        formatValue(stepValue));
             }
         }
     }
