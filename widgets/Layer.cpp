@@ -60,8 +60,6 @@ Layer::Layer(
     if (!color.isValid()) {
         color = section->nextColor();
     }
-
-    channel->channel()->fetch_chunks();
 }
 
 /****************************************************************************/
@@ -299,6 +297,7 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
     clearDataList(minimumData);
     clearDataList(maximumData);
 
+    channel->channel()->fetch_chunks();
     channel->channel()->fetch_data(start, end,
             min_values, dataCallback, this);
 
