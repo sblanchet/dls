@@ -210,29 +210,6 @@ int export_main(int argc, char *argv[])
         exit(1);
     }
 
-    // create info file
-    info_file_name << dls_export_dir << "/dls_export_info";
-    info_file.open(info_file_name.str().c_str(), ios::trunc);
-
-    if (!info_file.is_open()) {
-        cerr << "ERROR: Failed to write \""
-             << info_file_name.str() << "\"!" << endl;
-        exit(1);
-    }
-
-    info_file << endl
-              << "This is a DLS export directory." << endl << endl
-              << "Exported on: "
-              << now.to_rfc811_time() << endl << endl
-              << "Exported range from: "
-              << start_time.to_real_time() << endl
-              << "                 to: "
-              << end_time.to_real_time() << endl
-              << "           duration: "
-              << start_time.diff_str_to(end_time) << endl << endl;
-
-    info_file.close();
-
     if (start_time < channels_start) start_time = channels_start;
     if (end_time > channels_end) end_time = channels_end;
 
@@ -284,6 +261,29 @@ int export_main(int argc, char *argv[])
         }
     }
 
+    // create info file
+    info_file_name << dls_export_dir << "/dls_export_info";
+    info_file.open(info_file_name.str().c_str(), ios::trunc);
+
+    if (!info_file.is_open()) {
+        cerr << "ERROR: Failed to write \""
+             << info_file_name.str() << "\"!" << endl;
+        exit(1);
+    }
+
+    info_file << endl
+              << "This is a DLS export directory." << endl << endl
+              << "Exported on: "
+              << now.to_rfc811_time() << endl << endl
+              << "Exported range from: "
+              << start_time.to_real_time() << endl
+              << "                 to: "
+              << end_time.to_real_time() << endl
+              << "           duration: "
+              << start_time.diff_str_to(end_time) << endl << endl;
+
+    info_file.close();
+
     cout << endl << "Export finished." << endl;
     return 0;
 }
@@ -306,7 +306,8 @@ int export_data_callback(Data *data, void *cb_data)
     if (!quiet) {
         // display progress
         diff_time = (data->end_time() - info->start).to_dbl();
-        percentage = info->channel_percentage + diff_time * info->channel_factor;
+        percentage = info->channel_percentage +
+            diff_time * info->channel_factor;
         draw_progress(percentage + 0.5);
     }
 
