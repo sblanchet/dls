@@ -25,8 +25,6 @@
 #include <QtGui>
 #include <QDomElement>
 
-#include "lib_channel.hpp"
-
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
@@ -560,22 +558,22 @@ Layer *Section::appendLayer(QtDls::Channel *ch)
 
 void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 {
+    COMTime s, e;
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        LibDLS::Channel *ch = (*l)->getChannel()->channel();
+        (*l)->getChannel()->getRange(s, e);
         if (valid) {
-            COMTime t = ch->start();
-            if (t < start) {
-                start = t;
+            if (s < start) {
+                start = s;
             }
-            t = ch->end();
-            if (t > end) {
-                end = t;
+            if (e > end) {
+                end = e;
             }
         }
         else {
-            start = ch->start();
-            end = ch->end();
+            start = s;
+            end = e;
             valid = true;
         }
     }

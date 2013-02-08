@@ -55,6 +55,9 @@ Graph::Graph(
     interaction(Pan),
     panning(false),
     measuring(false),
+    measurePos(0),
+    measureTime(0.0),
+    thread(this),
     prevViewAction(this),
     nextViewAction(this),
     loadDataAction(this),
@@ -102,6 +105,9 @@ Graph::Graph(
             this, SLOT(sliderValueChanged(int)));
 
     updateCursor();
+
+    connect(&thread, SIGNAL(started()), this, SLOT(loadDataThreaded()));
+    connect(&thread, SIGNAL(finished()), this, SLOT(update()));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -504,17 +510,11 @@ void Graph::nextView()
 
 void Graph::loadData()
 {
-    int dataWidth = contentsRect().width() - scaleWidth;
-    if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
+    if (thread.isRunning()) {
+        return;
     }
 
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
-    }
-
-    update();
+    thread.start();
 }
 
 /****************************************************************************/
@@ -1627,6 +1627,23 @@ void Graph::gotoDate()
     else if (sender() == &gotoLastYearAction) {
         setNamedRange(LastYear);
     }
+}
+
+/****************************************************************************/
+
+void Graph::loadDataThreaded()
+{
+    int dataWidth = contentsRect().width() - scaleWidth;
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
+    }
+
+    thread.quit();
 }
 
 /****************************************************************************/

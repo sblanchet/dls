@@ -26,6 +26,7 @@
 #define DLS_LAYER_H
 
 #include <QColor>
+#include <QMutex>
 
 namespace LibDLS {
     class Channel;
@@ -89,7 +90,7 @@ class Layer
         };
 
         void draw(QPainter &, const QRect &, double, double, double,
-                MeasureData * = NULL) const;
+                MeasureData * = NULL);
 
         double getMinimum() const { return minimum; }
         double getMaximum() const { return maximum; }
@@ -114,6 +115,7 @@ class Layer
         double offset;
         int precision;
 
+        QMutex dataMutex;
         QList<LibDLS::Data *> genericData;
         QList<LibDLS::Data *> minimumData;
         QList<LibDLS::Data *> maximumData;
@@ -121,19 +123,13 @@ class Layer
         double maximum;
         bool extremaValid;
 
-        struct TimeRange
-        {
-            COMTime start;
-            COMTime end;
-        };
-        static bool range_before(const TimeRange &, const TimeRange &);
-
         static int dataCallback(LibDLS::Data *, void *);
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
         void copyDataList(QList<LibDLS::Data *> &,
                 const QList<LibDLS::Data *> &);
-        void updateExtrema(const QList<LibDLS::Data *> &, bool *);
+        void updateExtrema();
+        void updateExtremaList(const QList<LibDLS::Data *> &, bool *);
         void drawGaps(QPainter &, const QRect &, double) const;
 };
 

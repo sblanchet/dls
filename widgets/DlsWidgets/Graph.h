@@ -26,6 +26,7 @@
 #define DLS_GRAPH_H
 
 #include <QFrame>
+#include <QThread>
 #include <QAction>
 #include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
@@ -134,6 +135,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool measuring;
         int measurePos;
         COMTime measureTime;
+        QThread thread;
         QAction prevViewAction;
         QAction nextViewAction;
         QAction loadDataAction;
@@ -190,6 +192,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void sliderValueChanged(int);
         void pickDate();
         void gotoDate();
+        void loadDataThreaded();
 };
 
 /****************************************************************************/

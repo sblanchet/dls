@@ -73,7 +73,7 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
         if (role == Qt::DisplayRole) {
             switch (index.column()) {
                 case 0:
-                    ret = layer->getChannel()->channel()->name().c_str();
+                    ret = layer->getChannel()->name();
                     break;
                 case 1:
                     ret = layer->getName();
@@ -124,7 +124,7 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::ToolTipRole) {
             switch (index.column()) {
                 case 0:
-                    ret = layer->getChannel()->channel()->name().c_str();
+                    ret = layer->getChannel()->name();
                     break;
                 case 1:
                     ret = layer->getName();
