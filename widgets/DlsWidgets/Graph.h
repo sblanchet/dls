@@ -67,7 +67,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void removeSection(Section *);
 
         void updateRange();
-        void loadData();
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
@@ -92,6 +91,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     public slots:
         void previousView();
         void nextView();
+        void loadData();
         void zoomIn();
         void zoomOut();
         void zoomReset();
@@ -136,6 +136,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         COMTime measureTime;
         QAction prevViewAction;
         QAction nextViewAction;
+        QAction loadDataAction;
         QAction zoomAction;
         QAction panAction;
         QAction measureAction;
