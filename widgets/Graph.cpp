@@ -57,6 +57,7 @@ Graph::Graph(
     measuring(false),
     prevViewAction(this),
     nextViewAction(this),
+    loadDataAction(this),
     zoomAction(this),
     panAction(this),
     measureAction(this),
@@ -113,6 +114,12 @@ Graph::Graph(
     nextViewAction.setStatusTip(tr("Proceed to next view."));
     nextViewAction.setIcon(QIcon(":/images/edit-redo.svg"));
     connect(&nextViewAction, SIGNAL(triggered()), this, SLOT(nextView()));
+
+    loadDataAction.setText(tr("&Update"));
+    loadDataAction.setShortcut(Qt::Key_F5);
+    loadDataAction.setStatusTip(tr("Update displayed data."));
+    loadDataAction.setIcon(QIcon(":/images/view-refresh.svg"));
+    connect(&loadDataAction, SIGNAL(triggered()), this, SLOT(loadData()));
 
     zoomAction.setText(tr("&Zoom"));
     zoomAction.setShortcut(Qt::Key_Z);
@@ -331,6 +338,7 @@ bool Graph::load(const QString &path, Model *model)
     loadData();
 
     updateScrollBar();
+    updateActions();
     return true;
 }
 
@@ -389,6 +397,7 @@ Section *Graph::appendSection()
     Section *s = new Section(this);
     sections.append(s);
     updateScrollBar();
+    updateActions();
     return s;
 }
 
@@ -407,6 +416,7 @@ Section *Graph::insertSectionBefore(Section *before)
     }
 
     updateScrollBar();
+    updateActions();
 
     return s;
 }
@@ -417,6 +427,7 @@ void Graph::removeSection(Section *section)
 {
     int num = sections.removeAll(section);
     updateScrollBar();
+    updateActions();
 
     delete section;
 
@@ -446,23 +457,6 @@ void Graph::updateRange()
         newView();
         update();
     }
-}
-
-/****************************************************************************/
-
-void Graph::loadData()
-{
-    int dataWidth = contentsRect().width() - scaleWidth;
-    if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
-    }
-
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
-    }
-
-    update();
 }
 
 /****************************************************************************/
@@ -504,6 +498,23 @@ void Graph::nextView()
     autoRange = false;
     updateActions();
     loadData();
+}
+
+/****************************************************************************/
+
+void Graph::loadData()
+{
+    int dataWidth = contentsRect().width() - scaleWidth;
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
+    }
+
+    update();
 }
 
 /****************************************************************************/
@@ -908,11 +919,24 @@ void Graph::leaveEvent(QEvent *event)
 void Graph::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
-        case Qt::Key_Plus:
-            zoomIn();
+        case Qt::Key_Left:
+            if (event->modifiers() & Qt::AltModifier) {
+                previousView();
+            }
+            else {
+                pan(-0.125);
+            }
             break;
-        case Qt::Key_Minus:
-            zoomOut();
+        case Qt::Key_Right:
+            if (event->modifiers() & Qt::AltModifier) {
+                nextView();
+            }
+            else {
+                pan(0.125);
+            }
+            break;
+        case Qt::Key_F5:
+            loadData();
             break;
         case Qt::Key_Z:
             setInteraction(Zoom);
@@ -923,27 +947,17 @@ void Graph::keyPressEvent(QKeyEvent *event)
         case Qt::Key_M:
             setInteraction(Measure);
             break;
-        case Qt::Key_Right:
-            if (event->modifiers() & Qt::AltModifier) {
-                nextView();
-            }
-            else {
-                pan(0.125);
-            }
+        case Qt::Key_Plus:
+            zoomIn();
             break;
-        case Qt::Key_Left:
-            if (event->modifiers() & Qt::AltModifier) {
-                previousView();
-            }
-            else {
-                pan(-0.125);
-            }
+        case Qt::Key_Minus:
+            zoomOut();
             break;
         case Qt::Key_PageUp:
             pan(1.0);
             break;
         case Qt::Key_PageDown:
-            pan(-1);
+            pan(-1.0);
             break;
         default:
             QWidget::keyPressEvent(event);
@@ -1137,6 +1151,8 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(&prevViewAction);
     menu.addAction(&nextViewAction);
     menu.addSeparator();
+    menu.addAction(&loadDataAction);
+    menu.addSeparator();
     menu.addAction(&zoomAction);
     menu.addAction(&panAction);
     menu.addAction(&measureAction);
@@ -1326,15 +1342,17 @@ void Graph::updateCursor()
 
 void Graph::updateActions()
 {
+    bool rangeValid = getEnd() > getStart();
+
     prevViewAction.setEnabled(!views.empty() && currentView != views.begin());
     nextViewAction.setEnabled(
             !views.empty() && currentView + 1 != views.end());
+    loadDataAction.setEnabled(!sections.empty() && rangeValid);
 
     zoomAction.setEnabled(interaction != Zoom);
     panAction.setEnabled(interaction != Pan);
     measureAction.setEnabled(interaction != Measure);
 
-    bool rangeValid = getEnd() > getStart();
     zoomInAction.setEnabled(rangeValid);
     zoomOutAction.setEnabled(rangeValid);
     zoomResetAction.setEnabled(!autoRange);

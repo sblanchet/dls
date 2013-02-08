@@ -11,5 +11,6 @@
     <file>images/system-search.svg</file>
     <file>images/utilities-system-monitor.svg</file>
     <file>images/view-fullscreen.svg</file>
+    <file>images/view-refresh.svg</file>
   </qresource>
 </RCC>
