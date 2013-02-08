@@ -55,7 +55,7 @@ Channel *Job::findChannel(const QString &name)
 {
     for (QList<Channel *>::iterator c = channels.begin();
             c != channels.end(); c++) {
-        QString cName((*c)->channel()->name().c_str());
+        QString cName((*c)->name());
         if (name != cName) {
             continue;
         }

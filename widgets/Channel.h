@@ -5,6 +5,9 @@
  ****************************************************************************/
 
 #include <QList>
+#include <QMutex>
+
+#include "lib_channel.hpp"
 
 #include "Node.h"
 
@@ -24,6 +27,7 @@ class Channel:
         ~Channel();
 
         QUrl url() const;
+        QString name() const;
 
         class Exception
         {
@@ -32,16 +36,28 @@ class Channel:
                 QString msg;
         };
 
+        void fetchData(COMTime, COMTime, unsigned int, LibDLS::DataCallback,
+                void *);
+
+        struct TimeRange
+        {
+            COMTime start;
+            COMTime end;
+        };
+        vector<TimeRange> chunkRanges();
+        void getRange(COMTime &, COMTime &);
+
         int rowCount() const;
         QVariant data(const QModelIndex &, int) const;
         void *child(int) const;
         int row(void *) const;
         Qt::ItemFlags flags() const;
 
-        LibDLS::Channel *channel() const;
-
     private:
         LibDLS::Channel * const ch;
+        QMutex mutex;
+
+        static bool range_before(const TimeRange &, const TimeRange &);
 
         Channel();
 };

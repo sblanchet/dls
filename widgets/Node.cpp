@@ -30,13 +30,6 @@ Qt::ItemFlags Node::flags() const
 
 /****************************************************************************/
 
-LibDLS::Channel *Node::channel() const
-{
-    return NULL;
-}
-
-/****************************************************************************/
-
 Node *Node::parent() const
 {
     return parentNode;

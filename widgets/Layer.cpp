@@ -82,9 +82,11 @@ Layer::Layer(
     maximum(o.maximum),
     extremaValid(o.extremaValid)
 {
+    dataMutex.lock();
     copyDataList(genericData, o.genericData);
     copyDataList(minimumData, o.minimumData);
     copyDataList(maximumData, o.maximumData);
+    dataMutex.unlock();
 }
 
 /****************************************************************************/
@@ -93,9 +95,11 @@ Layer::Layer(
  */
 Layer::~Layer()
 {
+    dataMutex.lock();
     clearDataList(genericData);
     clearDataList(minimumData);
     clearDataList(maximumData);
+    dataMutex.unlock();
 }
 
 /****************************************************************************/
@@ -248,13 +252,9 @@ void Layer::setScale(double s)
 {
     if (s != scale) {
         scale = s;
-
-        bool first = true;
-        updateExtrema(genericData, &first);
-        updateExtrema(minimumData, &first);
-        updateExtrema(maximumData, &first);
-        extremaValid = !first;
-
+        dataMutex.lock();
+        updateExtrema();
+        dataMutex.unlock();
         section->update();
     }
 }
@@ -265,13 +265,9 @@ void Layer::setOffset(double o)
 {
     if (o != offset) {
         offset = o;
-
-        bool first = true;
-        updateExtrema(genericData, &first);
-        updateExtrema(minimumData, &first);
-        updateExtrema(maximumData, &first);
-        extremaValid = !first;
-
+        dataMutex.lock();
+        updateExtrema();
+        dataMutex.unlock();
         section->update();
     }
 }
@@ -293,20 +289,17 @@ void Layer::setPrecision(int p)
 
 void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
 {
+    dataMutex.lock();
+
     clearDataList(genericData);
     clearDataList(minimumData);
     clearDataList(maximumData);
 
-    channel->channel()->fetch_chunks();
-    channel->channel()->fetch_data(start, end,
-            min_values, dataCallback, this);
+    channel->fetchData(start, end, min_values, dataCallback, this);
 
-    bool first = true;
-    updateExtrema(genericData, &first);
-    updateExtrema(minimumData, &first);
-    updateExtrema(maximumData, &first);
+    updateExtrema();
 
-    extremaValid = !first;
+    dataMutex.unlock();
 }
 
 /****************************************************************************/
@@ -319,7 +312,7 @@ QString Layer::title() const
         ret += name;
     }
     else {
-        ret += channel->channel()->name().c_str();
+        ret += channel->name();
     }
 
     if (!unit.isEmpty()) {
@@ -404,7 +397,20 @@ void Layer::copyDataList(QList<LibDLS::Data *> &list,
 
 /****************************************************************************/
 
-void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
+void Layer::updateExtrema()
+{
+    bool first = true;
+
+    updateExtremaList(genericData, &first);
+    updateExtremaList(minimumData, &first);
+    updateExtremaList(maximumData, &first);
+
+    extremaValid = !first;
+}
+
+/****************************************************************************/
+
+void Layer::updateExtremaList(const QList<LibDLS::Data *> &list, bool *first)
 {
     for (QList<LibDLS::Data *>::const_iterator d = list.begin();
             d != list.end(); d++) {
@@ -442,9 +448,11 @@ void Layer::updateExtrema(const QList<LibDLS::Data *> &list, bool *first)
 /****************************************************************************/
 
 void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
-        double yScale, double min, MeasureData *measure) const
+        double yScale, double min, MeasureData *measure)
 {
     drawGaps(painter, rect, xScale);
+
+    dataMutex.lock();
 
     if (genericData.size()) {
         double prev_value = 0.0;
@@ -752,16 +760,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
         delete [] extrema;
     }
-}
 
-/****************************************************************************/
-
-bool Layer::range_before(
-        const Layer::TimeRange &range1,
-        const Layer::TimeRange &range2
-        )
-{
-    return range1.start < range2.start;
+    dataMutex.unlock();
 }
 
 /****************************************************************************/
@@ -770,35 +770,26 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
         double xScale) const
 {
     double xp, prev_xp;
-    vector<TimeRange> ranges, relevant_chunk_ranges;
+    vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
     COMTime last_end;
     QColor gapColor(255, 255, 220, 127);
 
-    for (list<LibDLS::Chunk>::const_iterator c =
-            channel->channel()->chunks().begin();
-            c != channel->channel()->chunks().end(); c++) {
-        TimeRange r;
-        r.start = c->start();
-        r.end = c->end();
-        ranges.push_back(r);
-    }
-
-    sort(ranges.begin(), ranges.end(), range_before);
+    ranges = channel->chunkRanges();
 
     // check if chunks overlap
     last_end.set_null();
-    for (vector<TimeRange>::iterator range = ranges.begin();
+    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
          range != ranges.end();
          range++) {
         if (range->start <= last_end) {
             qWarning() << "WARNING: Chunks overlapping in channel"
-                 << channel->channel()->name().c_str();
+                 << channel->name();
             return;
         }
         last_end = range->end;
     }
 
-    for (vector<TimeRange>::iterator range = ranges.begin();
+    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
          range != ranges.end(); range++) {
         if (range->end < section->getGraph()->getStart()) {
             continue;
@@ -811,7 +802,8 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
 
     prev_xp = -1;
 
-    for (vector<TimeRange>::iterator range = relevant_chunk_ranges.begin();
+    for (vector<Channel::TimeRange>::iterator range =
+            relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;

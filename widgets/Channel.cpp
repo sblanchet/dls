@@ -10,8 +10,6 @@
 
 #include "Channel.h"
 
-#include "lib_channel.hpp"
-
 using namespace QtDls;
 
 /*****************************************************************************/
@@ -40,6 +38,55 @@ QUrl Channel::url() const
     path += ch->name().c_str();
     u.setPath(path);
     return u;
+}
+
+/****************************************************************************/
+
+QString Channel::name() const
+{
+    return ch->name().c_str();
+}
+
+/****************************************************************************/
+
+void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
+        LibDLS::DataCallback callback, void *priv)
+{
+    mutex.lock();
+    ch->fetch_chunks();
+    ch->fetch_data(start, end, min_values, callback, priv);
+    mutex.unlock();
+}
+
+/****************************************************************************/
+
+vector<Channel::TimeRange> Channel::chunkRanges()
+{
+    vector<TimeRange> ranges;
+
+    mutex.lock();
+    for (list<LibDLS::Chunk>::const_iterator c = ch->chunks().begin();
+            c != ch->chunks().end(); c++) {
+        TimeRange r;
+        r.start = c->start();
+        r.end = c->end();
+        ranges.push_back(r);
+    }
+    mutex.unlock();
+
+    sort(ranges.begin(), ranges.end(), range_before);
+
+    return ranges;
+}
+
+/****************************************************************************/
+
+void Channel::getRange(COMTime &start, COMTime &end)
+{
+    mutex.lock();
+    start = ch->start();
+    end = ch->end();
+    mutex.unlock();
 }
 
 /****************************************************************************/
@@ -99,9 +146,12 @@ Qt::ItemFlags Channel::flags() const
 
 /****************************************************************************/
 
-LibDLS::Channel *Channel::channel() const
+bool Channel::range_before(
+        const TimeRange &range1,
+        const TimeRange &range2
+        )
 {
-    return ch;
+    return range1.start < range2.start;
 }
 
 /****************************************************************************/
