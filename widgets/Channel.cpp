@@ -66,7 +66,6 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 {
     vector<TimeRange> ranges;
 
-    mutex.lock();
     for (list<LibDLS::Chunk>::const_iterator c = ch->chunks().begin();
             c != ch->chunks().end(); c++) {
         TimeRange r;
@@ -74,7 +73,6 @@ vector<Channel::TimeRange> Channel::chunkRanges()
         r.end = c->end();
         ranges.push_back(r);
     }
-    mutex.unlock();
 
     sort(ranges.begin(), ranges.end(), range_before);
 
@@ -85,10 +83,8 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 
 void Channel::getRange(COMTime &start, COMTime &end)
 {
-    mutex.lock();
     start = ch->start();
     end = ch->end();
-    mutex.unlock();
 }
 
 /****************************************************************************/
