@@ -8,6 +8,8 @@
 #include <QUrl>
 #include <QIcon>
 
+#include <algorithm>
+
 #include "Channel.h"
 
 using namespace QtDls;
