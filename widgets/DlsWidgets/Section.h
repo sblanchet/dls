@@ -42,6 +42,7 @@ namespace QtDls {
 namespace DLS {
 
 class Graph;
+class GraphWorker;
 class Layer;
 
 /****************************************************************************/
@@ -83,7 +84,7 @@ class Section
         Layer *appendLayer(QtDls::Channel *);
 
         void getRange(bool &, COMTime &, COMTime &);
-        void loadData(const COMTime &, const COMTime &, int);
+        void loadData(const COMTime &, const COMTime &, int, GraphWorker *);
 
         QColor nextColor() const;
 

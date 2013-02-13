@@ -40,6 +40,7 @@ namespace QtDls {
 namespace DLS {
 
 class Section;
+class GraphWorker;
 
 /****************************************************************************/
 
@@ -70,7 +71,7 @@ class Layer
         void setPrecision(int);
         int getPrecision() const { return precision; }
 
-        void loadData(const COMTime &, const COMTime &, int);
+        void loadData(const COMTime &, const COMTime &, int, GraphWorker *);
 
         struct MeasureData {
             const Layer *layer;
@@ -123,7 +124,6 @@ class Layer
         double maximum;
         bool extremaValid;
 
-        static int dataCallback(LibDLS::Data *, void *);
         void newData(LibDLS::Data *);
         void clearDataList(QList<LibDLS::Data *> &);
         void copyDataList(QList<LibDLS::Data *> &,

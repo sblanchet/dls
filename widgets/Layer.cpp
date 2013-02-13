@@ -25,8 +25,6 @@
 #include <QtGui>
 #include <QDomElement>
 
-#include <algorithm>
-
 #include "lib_channel.hpp"
 
 #include "Section.h"
@@ -287,19 +285,21 @@ void Layer::setPrecision(int p)
 
 /****************************************************************************/
 
-void Layer::loadData(const COMTime &start, const COMTime &end, int min_values)
+void Layer::loadData(const COMTime &start, const COMTime &end, int width,
+        GraphWorker *worker)
 {
+    worker->clearData();
+    channel->fetchData(start, end, width, GraphWorker::dataCallback, worker);
+
     dataMutex.lock();
-
-    clearDataList(genericData);
-    clearDataList(minimumData);
-    clearDataList(maximumData);
-
-    channel->fetchData(start, end, min_values, dataCallback, this);
-
+    // FIXME implement transferDataList
+    copyDataList(genericData, worker->genData());
+    copyDataList(minimumData, worker->minData());
+    copyDataList(maximumData, worker->maxData());
     updateExtrema();
-
     dataMutex.unlock();
+
+    section->update();
 }
 
 /****************************************************************************/
@@ -339,34 +339,6 @@ QString Layer::formatValue(double value) const
     }
 
     return ret;
-}
-
-/****************************************************************************/
-
-int Layer::dataCallback(LibDLS::Data *data, void *cb_data)
-{
-    Layer *l = (Layer *) cb_data;
-    l->newData(data);
-    return 1; // adopt object
-}
-
-/****************************************************************************/
-
-void Layer::newData(LibDLS::Data *data)
-{
-    switch (data->meta_type()) {
-        case DLSMetaGen:
-            genericData.push_back(data);
-            break;
-        case DLSMetaMin:
-            minimumData.push_back(data);
-            break;
-        case DLSMetaMax:
-            maximumData.push_back(data);
-            break;
-        default:
-            break;
-    }
 }
 
 /****************************************************************************/

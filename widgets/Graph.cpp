@@ -25,6 +25,8 @@
 #include <QtGui>
 #include <QDomDocument>
 
+#include "lib_channel.hpp"
+
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
@@ -33,6 +35,7 @@
 #include "DatePickerDialog.h"
 
 using DLS::Graph;
+using DLS::GraphWorker;
 using DLS::Section;
 using QtDls::Model;
 
@@ -58,6 +61,9 @@ Graph::Graph(
     measurePos(0),
     measureTime(0.0),
     thread(this),
+    worker(this),
+    reloadPending(false),
+    pendingWidth(0),
     prevViewAction(this),
     nextViewAction(this),
     loadDataAction(this),
@@ -106,8 +112,8 @@ Graph::Graph(
 
     updateCursor();
 
-    connect(&thread, SIGNAL(started()), this, SLOT(loadDataThreaded()));
-    connect(&thread, SIGNAL(finished()), this, SLOT(update()));
+    connect(&thread, SIGNAL(started()), &worker, SLOT(doWork()));
+    connect(&thread, SIGNAL(finished()), this, SLOT(dataThreadFinished()));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -247,6 +253,7 @@ Graph::Graph(
  */
 Graph::~Graph()
 {
+    thread.wait();
     clearSections();
 }
 
@@ -510,10 +517,18 @@ void Graph::nextView()
 
 void Graph::loadData()
 {
+    int dataWidth = contentsRect().width() - scaleWidth;
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
+
     if (thread.isRunning()) {
+        reloadPending = true;
+        pendingWidth = dataWidth;
         return;
     }
 
+    worker.width = dataWidth;
     thread.start();
 }
 
@@ -716,7 +731,7 @@ void Graph::print()
             drawSection.setHeight(height);
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
-                page.width());
+                page.width(), &worker);
             drawSection.draw(painter, r, -1, 0); // FIXME
 
             QPen pen;
@@ -1631,19 +1646,91 @@ void Graph::gotoDate()
 
 /****************************************************************************/
 
-void Graph::loadDataThreaded()
+void Graph::dataThreadFinished()
 {
-    int dataWidth = contentsRect().width() - scaleWidth;
-    if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
+    if (reloadPending) {
+        reloadPending = false;
+        worker.width = pendingWidth;
+        thread.start();
+    }
+}
+
+/****************************************************************************/
+
+GraphWorker::GraphWorker(Graph *graph):
+    graph(graph)
+{
+    moveToThread(&graph->thread);
+}
+
+/****************************************************************************/
+
+GraphWorker::~GraphWorker()
+{
+    clearData();
+}
+
+/****************************************************************************/
+
+void GraphWorker::clearData()
+{
+    clearDataList(genericData);
+    clearDataList(minimumData);
+    clearDataList(maximumData);
+}
+
+/****************************************************************************/
+
+void GraphWorker::doWork()
+{
+    // FIXME lock sections
+    for (QList<Section *>::iterator s = graph->sections.begin();
+            s != graph->sections.end(); s++) {
+        (*s)->loadData(graph->scale.getStart(), graph->scale.getEnd(),
+                width, this);
     }
 
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        (*s)->loadData(scale.getStart(), scale.getEnd(), dataWidth);
+    graph->thread.quit();
+}
+
+/****************************************************************************/
+
+int GraphWorker::dataCallback(LibDLS::Data *data, void *cb_data)
+{
+    GraphWorker *worker = (GraphWorker *) cb_data;
+    worker->newData(data);
+    return 1; // adopt object
+}
+
+/****************************************************************************/
+
+void GraphWorker::newData(LibDLS::Data *data)
+{
+    switch (data->meta_type()) {
+        case DLSMetaGen:
+            genericData.push_back(data);
+            break;
+        case DLSMetaMin:
+            minimumData.push_back(data);
+            break;
+        case DLSMetaMax:
+            maximumData.push_back(data);
+            break;
+        default:
+            break;
+    }
+}
+
+/****************************************************************************/
+
+void GraphWorker::clearDataList(QList<LibDLS::Data *> &list)
+{
+    for (QList<LibDLS::Data *>::iterator d = list.begin();
+            d != list.end(); d++) {
+        delete *d;
     }
 
-    thread.quit();
+    list.clear();
 }
 
 /****************************************************************************/
