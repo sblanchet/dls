@@ -582,11 +582,11 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 /****************************************************************************/
 
 void Section::loadData(const COMTime &start, const COMTime &end,
-        int min_values)
+        int width, GraphWorker *worker)
 {
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->loadData(start, end, min_values);
+        (*l)->loadData(start, end, width, worker);
     }
 
     if (autoScale) {

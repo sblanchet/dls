@@ -35,6 +35,10 @@
 
 class QDomElement;
 
+namespace LibDLS {
+    class Data;
+}
+
 namespace QtDls {
     class Model;
 }
@@ -42,6 +46,42 @@ namespace QtDls {
 namespace DLS {
 
 class Section;
+class Graph;
+
+/****************************************************************************/
+
+/** Working class hero.
+ */
+class GraphWorker:
+    public QObject {
+    Q_OBJECT
+
+    public:
+        GraphWorker(Graph *);
+        ~GraphWorker();
+
+        void clearData();
+
+        static int dataCallback(LibDLS::Data *, void *);
+
+        int width;
+
+        const QList<LibDLS::Data *> &genData() const { return genericData; }
+        const QList<LibDLS::Data *> &minData() const { return minimumData; }
+        const QList<LibDLS::Data *> &maxData() const { return maximumData; }
+
+    public slots:
+        void doWork();
+
+    private:
+        Graph * const graph;
+        QList<LibDLS::Data *> genericData;
+        QList<LibDLS::Data *> minimumData;
+        QList<LibDLS::Data *> maximumData;
+
+        void newData(LibDLS::Data *);
+        static void clearDataList(QList<LibDLS::Data *> &);
+};
 
 /****************************************************************************/
 
@@ -51,6 +91,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     public QFrame
 {
     Q_OBJECT
+
+    friend class GraphWorker;
 
     public:
         Graph(QWidget *parent = 0);
@@ -135,7 +177,12 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool measuring;
         int measurePos;
         COMTime measureTime;
+
         QThread thread;
+        GraphWorker worker;
+        bool reloadPending;
+        int pendingWidth;
+
         QAction prevViewAction;
         QAction nextViewAction;
         QAction loadDataAction;
@@ -192,7 +239,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void sliderValueChanged(int);
         void pickDate();
         void gotoDate();
-        void loadDataThreaded();
+        void dataThreadFinished();
 };
 
 /****************************************************************************/
