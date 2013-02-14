@@ -27,6 +27,7 @@
 
 #include <QFrame>
 #include <QThread>
+#include <QSvgRenderer>
 #include <QAction>
 #include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
@@ -93,6 +94,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     Q_OBJECT
 
     friend class GraphWorker;
+    friend class Section; // FIXME
 
     public:
         Graph(QWidget *parent = 0);
@@ -182,6 +184,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         GraphWorker worker;
         bool reloadPending;
         int pendingWidth;
+        QSvgRenderer busySvg;
 
         QAction prevViewAction;
         QAction nextViewAction;

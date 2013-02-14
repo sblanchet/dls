@@ -99,6 +99,8 @@ class Section
                 QString msg;
         };
 
+        void setBusy(bool);
+
     private:
         Graph * const graph;
         ValueScale scale;
@@ -112,6 +114,7 @@ class Section
         double minimum;
         double maximum;
         bool extremaValid;
+        bool busy;
 
         static const QColor colorList[];
 

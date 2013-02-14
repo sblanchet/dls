@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012 - 2013  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -64,6 +64,7 @@ Graph::Graph(
     worker(this),
     reloadPending(false),
     pendingWidth(0),
+    busySvg(QString(":/images/view-refresh.svg"), this),
     prevViewAction(this),
     nextViewAction(this),
     loadDataAction(this),
@@ -521,6 +522,13 @@ void Graph::loadData()
     if (scrollBarNeeded) {
         dataWidth -= scrollBar.width();
     }
+
+    // mark all sections as busy
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->setBusy(true);
+    }
+    update(); // FIXME update busy rect only
 
     if (thread.isRunning()) {
         reloadPending = true;
@@ -1688,6 +1696,11 @@ void GraphWorker::doWork()
             s != graph->sections.end(); s++) {
         (*s)->loadData(graph->scale.getStart(), graph->scale.getEnd(),
                 width, this);
+
+        if (!graph->reloadPending) {
+            (*s)->setBusy(false);
+            graph->update(); // FIXME update only busy rect
+        }
     }
 
     graph->thread.quit();
