@@ -38,6 +38,7 @@ CONFIG += designer plugin debug
 DEPENDPATH += .
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
+QT += svg
 
 isEmpty(PREFIX) {
     unix:PREFIX = /vol/opt/etherlab

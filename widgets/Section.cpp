@@ -61,7 +61,8 @@ Section::Section(
     height(100),
     minimum(0.0),
     maximum(0.0),
-    extremaValid(false)
+    extremaValid(false),
+    busy(false)
 {
     updateLegend();
 }
@@ -369,6 +370,13 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
         painter.translate(rect.topLeft());
         legend.drawContents(&painter);
         painter.restore();
+
+        if (busy) {
+            QRect busyRect(legendRect);
+            busyRect.setWidth(legendRect.height());
+            busyRect.moveRight(legendRect.right());
+            graph->busySvg.render(&painter, busyRect);
+        }
     }
 
     dataRect.adjust(0, Margin, 0, -Margin);
@@ -650,6 +658,14 @@ bool Section::getExtrema(double &min, double &max)
     max = maximum;
 
     return extremaValid;
+}
+
+/****************************************************************************/
+
+void Section::setBusy(bool b)
+{
+    busy = b;
+    // TODO update legend only
 }
 
 /****************************************************************************/
