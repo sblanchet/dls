@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+# Copyright (C) 2012 - 2013  Florian Pose <fp@igh-essen.com>
 #
 # This file is part of the data logging service (DLS).
 #
@@ -29,6 +29,7 @@ DEPENDPATH += .
 
 INCLUDEPATH += ../widgets ../src
 CONFIG += debug
+QT += svg
 
 unix {
     LIBS += -L$$PWD/../widgets -lDlsWidgets
