@@ -81,7 +81,7 @@ namespace LibDLS {
         COMTime start() const;
         COMTime end() const;
 
-	bool operator<(const Channel &) const;
+        bool operator<(const Channel &) const;
 
     private:
         string _path; /**< channel directory path */
