@@ -87,6 +87,10 @@ namespace LibDLS
             };
             Type type;
             string text;
+
+            bool operator<(const Message &other) const {
+                return time < other.time;
+            }
         };
 
         list<Message> load_msg(COMTime, COMTime) const;
