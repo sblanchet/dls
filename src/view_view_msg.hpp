@@ -57,7 +57,11 @@ private:
     Fl_Track_Bar *_track_bar; /**< Vertikale Scroll-Leiste */
 
     // Daten
-    list<ViewMSRMessage> _messages; /**< Liste der geladenen Nachrichten */
+    struct Message {
+        Job::Message message;
+        int level;
+    };
+    list<Message> _messages; /**< Liste der geladenen Nachrichten */
     COMTime _range_start; /**< Startzeit der anzuzeigenden Zeitspanne */
     COMTime _range_end; /**< Endzeit der anzuzeigenden Zeitspanne */
     int _level_count; /**< Aktuelle Anzahl der anzuzeigenden Ebenen */
