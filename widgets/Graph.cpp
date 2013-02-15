@@ -40,6 +40,28 @@ using DLS::Section;
 using QtDls::Model;
 
 #define DROP_TOLERANCE 10
+#define MSG_AREA_HEIGHT 55
+#define MSG_ROW_HEIGHT 16
+
+/****************************************************************************/
+
+QColor Graph::messageColor[] = {
+    Qt::blue,
+    Qt::darkYellow,
+    Qt::red,
+    Qt::red,
+    Qt::black
+};
+
+/****************************************************************************/
+
+QString Graph::messagePixmap[] = {
+    ":/images/dialog-information.svg",
+    ":/images/dialog-warning.svg",
+    ":/images/dialog-error.svg",
+    ":/images/dialog-error.svg",
+    ":/images/dialog-information.svg"
+};
 
 /****************************************************************************/
 
@@ -83,8 +105,9 @@ Graph::Graph(
     gotoLastMonthAction(this),
     gotoThisYearAction(this),
     gotoLastYearAction(this),
-    removeSectionAction(this),
     sectionPropertiesAction(this),
+    removeSectionAction(this),
+    messagesAction(this),
     printAction(this),
     selectedSection(NULL),
     splitterWidth(
@@ -95,7 +118,8 @@ Graph::Graph(
     scrollBar(this),
     scrollBarNeeded(false),
     scaleWidth(0),
-    currentView(views.begin())
+    currentView(views.begin()),
+    showMessages(false)
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -228,12 +252,6 @@ Graph::Graph(
     connect(&gotoLastYearAction, SIGNAL(triggered()),
             this, SLOT(gotoDate()));
 
-    removeSectionAction.setText(tr("Remove section"));
-    removeSectionAction.setStatusTip(tr("Remove the selected section."));
-    removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
-    connect(&removeSectionAction, SIGNAL(triggered()),
-            this, SLOT(removeSelectedSection()));
-
     sectionPropertiesAction.setText(tr("Section properties..."));
     sectionPropertiesAction.setStatusTip(tr("Open the section configuration"
                 " dialog."));
@@ -241,6 +259,19 @@ Graph::Graph(
             QIcon(":/images/document-properties.svg"));
     connect(&sectionPropertiesAction, SIGNAL(triggered()),
             this, SLOT(sectionProperties()));
+
+    removeSectionAction.setText(tr("Remove section"));
+    removeSectionAction.setStatusTip(tr("Remove the selected section."));
+    removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
+    connect(&removeSectionAction, SIGNAL(triggered()),
+            this, SLOT(removeSelectedSection()));
+
+    messagesAction.setText(tr("Show Messages"));
+    messagesAction.setStatusTip(tr("Show process messages."));
+    messagesAction.setIcon(QIcon(":/images/messages.svg"));
+    messagesAction.setCheckable(true);
+    connect(&messagesAction, SIGNAL(changed()),
+            this, SLOT(showMessagesChanged()));
 
     printAction.setText(tr("Print..."));
     printAction.setStatusTip(tr("Open the print dialog."));
@@ -308,7 +339,7 @@ bool Graph::load(const QString &path, Model *model)
     QDomNodeList children = docElem.childNodes();
     unsigned int i;
     int64_t start, end;
-    bool hasStart = false, hasEnd = false;
+    bool hasStart = false, hasEnd = false, val;
 
     for (i = 0; i < children.length(); i++) {
         QDomNode node = children.item(i);
@@ -337,6 +368,16 @@ bool Graph::load(const QString &path, Model *model)
                 return false;
             }
             hasEnd = true;
+        }
+        else if (child.tagName() == "ShowMessages") {
+            QString text = child.text();
+            bool ok;
+            val = text.toInt(&ok, 10) != 0;
+            if (!ok) {
+                qWarning() << "Invalid value for ShowMessages";
+                return false;
+            }
+            setShowMessages(val);
         }
         else if (child.tagName() == "Sections") {
             loadSections(child, model);
@@ -388,6 +429,12 @@ bool Graph::save(const QString &path) const
     text = doc.createTextNode(num);
     endElem.appendChild(text);
     root.appendChild(endElem);
+
+    QDomElement msgElem = doc.createElement("ShowMessages");
+    num.setNum(showMessages);
+    text = doc.createTextNode(num);
+    msgElem.appendChild(text);
+    root.appendChild(msgElem);
 
     QDomElement secElem = doc.createElement("Sections");
     root.appendChild(secElem);
@@ -707,6 +754,8 @@ void Graph::print()
 
     QRect scaleRect(page);
 
+    set<LibDLS::Job *> jobSet;
+
     QList<Section *>::iterator first = sections.begin();
 
     while (first != sections.end()) {
@@ -748,7 +797,7 @@ void Graph::print()
             drawSection.setHeight(height);
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
-                page.width(), &worker);
+                page.width(), &worker, jobSet);
             drawSection.draw(painter, r, -1, 0); // FIXME
 
             QPen pen;
@@ -766,6 +815,21 @@ void Graph::print()
     }
 
     painter.end();
+}
+
+/****************************************************************************/
+
+/** Set whether to display messages.
+ */
+void Graph::setShowMessages(
+        bool show
+        )
+{
+    if (show != showMessages) {
+        showMessages = show;
+        messagesAction.setChecked(show);
+        update();
+    }
 }
 
 /****************************************************************************/
@@ -843,10 +907,6 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     if (panning) {
         int dataWidth = contentsRect().width() - scaleWidth;
         COMTime range = getEnd() - getStart();
-
-        if (scrollBarNeeded) {
-            dataWidth -= scrollBar.width();
-        }
 
         if (range > 0.0 && dataWidth > 0) {
             double xScale = range.to_dbl_time() / dataWidth;
@@ -1051,6 +1111,10 @@ void Graph::paintEvent(
         }
     }
 
+    if (showMessages) {
+        height = contentsRect().height();
+    }
+
     scaleRect.setLeft(scaleWidth);
     scaleRect.setHeight(height);
     scale.draw(painter, scaleRect);
@@ -1066,6 +1130,10 @@ void Graph::paintEvent(
     int mp = measuring ? measurePos : -1;
     QRect dataRect(contentsRect());
     dataRect.setTop(top);
+    if (showMessages) {
+        dataRect.setHeight(contentsRect().height() -
+                top - MSG_AREA_HEIGHT - 1);
+    }
     if (scrollBarNeeded) {
         dataRect.setWidth(contentsRect().width() - scrollBar.width());
         scrollBar.move(dataRect.right() + 1, top);
@@ -1105,6 +1173,123 @@ void Graph::paintEvent(
     }
 
     painter.setClipping(false);
+
+    if (showMessages) {
+        QRect msgRect(contentsRect());
+        msgRect.setLeft(contentsRect().left() + scaleWidth);
+        msgRect.setTop(dataRect.bottom() + 2);
+        msgRect.setHeight(MSG_AREA_HEIGHT);
+        QFontMetrics fm(painter.font());
+        int rows = 0, textAreaHeight = msgRect.height() - 5;
+        int rowHeight = MSG_ROW_HEIGHT;
+        if (fm.height() > MSG_ROW_HEIGHT) {
+            rowHeight = fm.height();
+        }
+        if (textAreaHeight > 0) {
+            rows = textAreaHeight / rowHeight;
+        }
+        int *feed = NULL;
+        if (rows > 0) {
+            feed = new int[rows];
+        }
+        for (int i = 0; i < rows; i++) {
+            feed[i] = 0;
+        }
+
+        painter.setPen(verLinePen);
+        painter.drawLine(msgRect.left(), msgRect.top() - 1,
+                msgRect.right(), msgRect.top() - 1);
+
+        int dataWidth = contentsRect().width() - scaleWidth;
+        COMTime range = getEnd() - getStart();
+
+        if (range > 0.0 && dataWidth > 0) {
+            double xScale = dataWidth / range.to_dbl_time();
+            LibDLS::Job::Message::Type types[dataWidth];
+            for (int i = 0; i < dataWidth; i++) {
+                types[i] = LibDLS::Job::Message::Unknown;
+            }
+
+            msgMutex.lock();
+
+            for (QList<LibDLS::Job::Message>::const_iterator msg =
+                    messages.begin(); msg != messages.end(); msg++) {
+                COMTime dt = msg->time - getStart();
+                double xv = dt.to_dbl_time() * xScale;
+                if (xv < 0) {
+                    continue;
+                }
+                int xc = (int) (xv + 0.5);
+                if (xc >= dataWidth) {
+                    break;
+                }
+                if (msg->type > types[xc]) {
+                    types[xc] = msg->type;
+                }
+
+                for (int i = 0; i < rows; i++) {
+                    if (feed[i] > xc - 8) {
+                        continue;
+                    }
+
+                    if (xc + 8 > msgRect.width()) {
+                        break;
+                    }
+
+                    if (msg->type != LibDLS::Job::Message::Unknown) {
+                        QRect pixRect;
+                        pixRect.setLeft(msgRect.left() + xc - 8);
+                        pixRect.setTop(msgRect.top() + 5 + i * rowHeight);
+                        pixRect.setWidth(MSG_ROW_HEIGHT);
+                        pixRect.setHeight(MSG_ROW_HEIGHT);
+                        QSvgRenderer svg(messagePixmap[msg->type]);
+                        svg.render(&painter, pixRect);
+                    }
+
+                    QString label(msg->text.c_str());
+                    QSize s = fm.size(0, label);
+                    if (xc + 10 + s.width() <= msgRect.width()) {
+                        QRect textRect(msgRect);
+                        textRect.setLeft(msgRect.left() + xc + 10);
+                        textRect.setTop(msgRect.top() + 5 +
+                                i * rowHeight);
+                        textRect.setWidth(s.width());
+                        textRect.setHeight(rowHeight);
+                        painter.fillRect(textRect, Qt::white);
+                        if (msg->type != LibDLS::Job::Message::Unknown) {
+                            painter.setPen(messageColor[msg->type]);
+                        }
+                        else {
+                            painter.setPen(Qt::magenta);
+                        }
+
+                        QColor color = messageColor[types[i]];
+                        painter.drawText(textRect,
+                                Qt::AlignLeft | Qt::AlignVCenter, label);
+                    }
+                    feed[i] = xc + 10 + s.width() + 2;
+                    break;
+                }
+            }
+
+            msgMutex.unlock();
+
+            for (int i = 0; i < dataWidth; i++) {
+                if (types[i] == LibDLS::Job::Message::Unknown) {
+                    continue;
+                }
+
+                QColor color = messageColor[types[i]];
+                painter.setPen(color);
+                painter.drawLine(msgRect.left() + i, msgRect.top(),
+                        msgRect.left() + i, msgRect.top() + 3);
+            }
+        }
+
+        if (feed) {
+            delete [] feed;
+        }
+    }
 
     if (dropLine >= 0) {
         QPen pen;
@@ -1196,8 +1381,9 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     QAction *gotoMenuAction = menu.addMenu(&gotoMenu);
     gotoMenuAction->setText(tr("Go to date"));
     menu.addSeparator();
-    menu.addAction(&removeSectionAction);
     menu.addAction(&sectionPropertiesAction);
+    menu.addAction(&removeSectionAction);
+    menu.addAction(&messagesAction);
     menu.addSeparator();
     menu.addAction(&printAction);
 
@@ -1438,6 +1624,9 @@ void Graph::updateScrollBar()
     }
 
     int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
+    if (showMessages) {
+        displayHeight -= MSG_AREA_HEIGHT + 1;
+    }
     bool needed = height > displayHeight;
 
     if (needed) {
@@ -1665,6 +1854,8 @@ void Graph::gotoDate()
 
 void Graph::dataThreadFinished()
 {
+    update();
+
     if (reloadPending) {
         reloadPending = false;
         worker.width = pendingWidth;
@@ -1678,6 +1869,13 @@ void Graph::updateSection(Section *section)
 {
     section->update();
     updateRange();
+}
+
+/****************************************************************************/
+
+void Graph::showMessagesChanged()
+{
+    setShowMessages(messagesAction.isChecked());
 }
 
 /****************************************************************************/
@@ -1708,11 +1906,15 @@ void GraphWorker::clearData()
 
 void GraphWorker::doWork()
 {
+    set<LibDLS::Job *> jobSet;
+
+    messages.clear();
+
     // FIXME lock sections
     for (QList<Section *>::iterator s = graph->sections.begin();
             s != graph->sections.end(); s++) {
         (*s)->loadData(graph->scale.getStart(), graph->scale.getEnd(),
-                width, this);
+                width, this, jobSet);
 
         if (!graph->reloadPending) {
             (*s)->setBusy(false);
@@ -1720,6 +1922,21 @@ void GraphWorker::doWork()
 
         emit notifySection(*s);
     }
+
+    for (set<LibDLS::Job *>::const_iterator job = jobSet.begin();
+            job != jobSet.end(); job++) {
+        list<LibDLS::Job::Message> msgs =
+            (*job)->load_msg(graph->getStart(), graph->getEnd());
+        for (list<LibDLS::Job::Message>::const_iterator msg = msgs.begin();
+                msg != msgs.end(); msg++) {
+            messages.append(*msg);
+        }
+    }
+
+    qStableSort(messages);
+    graph->msgMutex.lock();
+    graph->messages = messages;
+    graph->msgMutex.unlock();
 
     graph->thread.quit();
 }

@@ -591,12 +591,12 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 /****************************************************************************/
 
 void Section::loadData(const COMTime &start, const COMTime &end,
-        int width, GraphWorker *worker)
+        int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
     // FIXME lock layers
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->loadData(start, end, width, worker);
+        (*l)->loadData(start, end, width, worker, jobSet);
     }
 }
 

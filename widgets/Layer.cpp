@@ -286,7 +286,7 @@ void Layer::setPrecision(int p)
 /****************************************************************************/
 
 void Layer::loadData(const COMTime &start, const COMTime &end, int width,
-        GraphWorker *worker)
+        GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
     worker->clearData();
     channel->fetchData(start, end, width, GraphWorker::dataCallback, worker);
@@ -298,6 +298,8 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int width,
     copyDataList(maximumData, worker->maxData());
     updateExtrema();
     dataMutex.unlock();
+
+    jobSet.insert(channel->job());
 }
 
 /****************************************************************************/

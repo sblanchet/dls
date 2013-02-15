@@ -25,6 +25,8 @@
 #ifndef DLS_SECTION_H
 #define DLS_SECTION_H
 
+#include <set>
+
 #include <QTextDocument>
 
 #include "../src/com_time.hpp"
@@ -33,6 +35,10 @@
 
 class QDomElement;
 class QDomDocument;
+
+namespace LibDLS {
+    class Job;
+}
 
 namespace QtDls {
     class Model;
@@ -84,7 +90,8 @@ class Section
         Layer *appendLayer(QtDls::Channel *);
 
         void getRange(bool &, COMTime &, COMTime &);
-        void loadData(const COMTime &, const COMTime &, int, GraphWorker *);
+        void loadData(const COMTime &, const COMTime &, int, GraphWorker *,
+                std::set<LibDLS::Job *> &);
 
         QColor nextColor() const;
 

@@ -71,7 +71,8 @@ class Layer
         void setPrecision(int);
         int getPrecision() const { return precision; }
 
-        void loadData(const COMTime &, const COMTime &, int, GraphWorker *);
+        void loadData(const COMTime &, const COMTime &, int, GraphWorker *,
+                std::set<LibDLS::Job *> &);
 
         struct MeasureData {
             const Layer *layer;
