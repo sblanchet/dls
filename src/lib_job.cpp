@@ -267,14 +267,25 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
         chunk_times.pop_back();
     }
 
+#if DEBUG
+    cerr << start << " - " << end << endl;
+    for (chunk_time_i = chunk_times.begin();
+         chunk_time_i != chunk_times.end();
+         chunk_time_i++) {
+        cerr << *chunk_time_i << " = "
+            << COMTime(*chunk_time_i).to_real_time() << endl;
+    }
+#endif
+
     // Alle Chunks entfernen, dessen Nachfolger noch vor dem Start sind
     while (chunk_times.size() > 1) {
-        if (COMTime(*(chunk_times.begin()++)) > start) break;
+        if (COMTime(*(++chunk_times.begin())) > start) {
+            break;
+        }
         chunk_times.pop_front();
     }
 
 #if DEBUG
-    cerr << start << " - " << end << endl;
     for (chunk_time_i = chunk_times.begin();
          chunk_time_i != chunk_times.end();
          chunk_time_i++) {
