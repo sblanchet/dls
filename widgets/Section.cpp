@@ -592,14 +592,10 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 void Section::loadData(const COMTime &start, const COMTime &end,
         int width, GraphWorker *worker)
 {
+    // FIXME lock layers
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         (*l)->loadData(start, end, width, worker);
-    }
-
-    if (autoScale) {
-        updateExtrema();
-        updateScale();
     }
 }
 
@@ -666,6 +662,18 @@ void Section::setBusy(bool b)
 {
     busy = b;
     // TODO update legend only
+}
+
+/****************************************************************************/
+
+void Section::update()
+{
+    if (autoScale) {
+        updateExtrema();
+        updateScale();
+    }
+
+    graph->update(); // FIXME update section only
 }
 
 /****************************************************************************/
@@ -746,13 +754,6 @@ void Section::updateExtrema()
             extremaValid = true;
         }
     }
-}
-
-/****************************************************************************/
-
-void Section::update()
-{
-    graph->update();
 }
 
 /****************************************************************************/
