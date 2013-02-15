@@ -27,10 +27,13 @@
 
 #include <QFrame>
 #include <QThread>
+#include <QMutex>
 #include <QSvgRenderer>
 #include <QAction>
 #include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
+
+#include "lib_job.hpp"
 
 #include "Scale.h"
 
@@ -82,6 +85,7 @@ class GraphWorker:
         QList<LibDLS::Data *> genericData;
         QList<LibDLS::Data *> minimumData;
         QList<LibDLS::Data *> maximumData;
+        QList<LibDLS::Job::Message> messages;
 
         void newData(LibDLS::Data *);
         static void clearDataList(QList<LibDLS::Data *> &);
@@ -147,6 +151,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setNamedRange(NamedRange);
         void pan(double);
         void print();
+        void setShowMessages(bool);
 
     protected:
         bool event(QEvent *);
@@ -207,8 +212,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction gotoLastMonthAction;
         QAction gotoThisYearAction;
         QAction gotoLastYearAction;
-        QAction removeSectionAction;
         QAction sectionPropertiesAction;
+        QAction removeSectionAction;
+        QAction messagesAction;
         QAction printAction;
         Section *selectedSection;
         const int splitterWidth;
@@ -225,6 +231,13 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         };
         QList<View> views;
         QList<View>::iterator currentView;
+
+        // Message display
+        bool showMessages;
+        QList<LibDLS::Job::Message> messages;
+        QMutex msgMutex;
+        static QColor messageColor[];
+        static QString messagePixmap[];
 
         void updateDragging(QPoint);
         void resetDragging();
@@ -247,6 +260,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void gotoDate();
         void dataThreadFinished();
         void updateSection(Section *section);
+        void showMessagesChanged();
 };
 
 /****************************************************************************/

@@ -28,6 +28,7 @@ class Channel:
 
         QUrl url() const;
         QString name() const;
+        LibDLS::Job *job() const { return ch->getJob(); }
 
         class Exception
         {
