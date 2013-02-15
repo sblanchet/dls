@@ -1263,7 +1263,7 @@ void Graph::paintEvent(
                             painter.setPen(Qt::magenta);
                         }
 
-                        QColor color = messageColor[types[i]];
+                        painter.setPen(messageColor[types[i]]);
                         painter.drawText(textRect,
                                 Qt::AlignLeft | Qt::AlignVCenter, label);
                     }
@@ -1279,8 +1279,7 @@ void Graph::paintEvent(
                     continue;
                 }
 
-                QColor color = messageColor[types[i]];
-                painter.setPen(color);
+                painter.setPen(messageColor[types[i]]);
                 painter.drawLine(msgRect.left() + i, msgRect.top(),
                         msgRect.left() + i, msgRect.top() + 3);
             }
