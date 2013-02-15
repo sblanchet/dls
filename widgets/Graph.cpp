@@ -469,8 +469,15 @@ void Graph::updateRange()
     }
 
     if (valid) {
+        bool scaleChanged =
+            scale.getStart() != start || scale.getEnd() != end;
         scale.setRange(start, end);
         newView();
+        if (scaleChanged) {
+            // FIXME avoid infinite loop: 1) Fetch chunks from all
+            // channels, 2) Update range, 3) load data
+            loadData();
+        }
         update();
     }
 }
@@ -1670,6 +1677,7 @@ void Graph::dataThreadFinished()
 void Graph::updateSection(Section *section)
 {
     section->update();
+    updateRange();
 }
 
 /****************************************************************************/

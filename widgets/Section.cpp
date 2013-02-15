@@ -558,7 +558,6 @@ Layer *Section::appendLayer(QtDls::Channel *ch)
     Layer *l = new Layer(this, ch);
     layers.append(l);
     updateLegend();
-    graph->updateRange();
     return l;
 }
 
