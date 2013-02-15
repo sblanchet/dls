@@ -298,8 +298,6 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int width,
     copyDataList(maximumData, worker->maxData());
     updateExtrema();
     dataMutex.unlock();
-
-    section->update();
 }
 
 /****************************************************************************/

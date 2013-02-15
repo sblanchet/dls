@@ -74,6 +74,9 @@ class GraphWorker:
     public slots:
         void doWork();
 
+    signals:
+        void notifySection(Section *section);
+
     private:
         Graph * const graph;
         QList<LibDLS::Data *> genericData;
@@ -243,6 +246,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void pickDate();
         void gotoDate();
         void dataThreadFinished();
+        void updateSection(Section *section);
 };
 
 /****************************************************************************/

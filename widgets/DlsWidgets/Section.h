@@ -100,6 +100,7 @@ class Section
         };
 
         void setBusy(bool);
+        void update();
 
     private:
         Graph * const graph;
@@ -121,7 +122,6 @@ class Section
         void updateLegend();
         void updateScale();
         void updateExtrema();
-        void update();
         void clearLayers();
         void loadLayers(const QDomElement &, QtDls::Model *);
 };

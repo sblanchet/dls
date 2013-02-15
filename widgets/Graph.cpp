@@ -115,6 +115,8 @@ Graph::Graph(
 
     connect(&thread, SIGNAL(started()), &worker, SLOT(doWork()));
     connect(&thread, SIGNAL(finished()), this, SLOT(dataThreadFinished()));
+    connect(&worker, SIGNAL(notifySection(Section *)),
+            this, SLOT(updateSection(Section *)));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -1665,6 +1667,13 @@ void Graph::dataThreadFinished()
 
 /****************************************************************************/
 
+void Graph::updateSection(Section *section)
+{
+    section->update();
+}
+
+/****************************************************************************/
+
 GraphWorker::GraphWorker(Graph *graph):
     graph(graph)
 {
@@ -1699,8 +1708,9 @@ void GraphWorker::doWork()
 
         if (!graph->reloadPending) {
             (*s)->setBusy(false);
-            graph->update(); // FIXME update only busy rect
         }
+
+        emit notifySection(*s);
     }
 
     graph->thread.quit();
