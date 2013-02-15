@@ -42,9 +42,10 @@ using namespace LibDLS;
    Constructor.
 */
 
-Channel::Channel()
+Channel::Channel(Job *job):
+    _job(job),
+    _dir_index(0)
 {
-    _dir_index = 0;
 }
 
 /*****************************************************************************/

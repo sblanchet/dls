@@ -99,7 +99,7 @@ void Job::fetch_channels()
     struct dirent *dir_ent;
     string channel_dir_name;
     int channel_index;
-    Channel channel;
+    Channel channel(this);
 
     str.exceptions(ios::failbit | ios::badbit);
 

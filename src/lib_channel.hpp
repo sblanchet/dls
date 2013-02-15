@@ -60,8 +60,10 @@ namespace LibDLS {
     class Channel
     {
     public:
-        Channel();
+        Channel(Job *);
         ~Channel();
+
+        Job *getJob() const { return _job; }
 
         void import(const string &, unsigned int);
         void fetch_chunks();
@@ -84,6 +86,7 @@ namespace LibDLS {
         bool operator<(const Channel &) const;
 
     private:
+        Job * const _job; /**< Parent job. */
         string _path; /**< channel directory path */
         unsigned int _dir_index; /**< index of the channel directory */
 
@@ -94,6 +97,8 @@ namespace LibDLS {
         list<Chunk> _chunks; /**< list of chunks */
         COMTime _range_start; /**< start of channel data range */
         COMTime _range_end; /**< end of channel data range */
+
+        Channel();
     };
 }
 
