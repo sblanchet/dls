@@ -45,7 +45,7 @@ class Channel:
             COMTime end;
         };
         vector<TimeRange> chunkRanges();
-        void getRange(COMTime &, COMTime &);
+        bool getRange(COMTime &, COMTime &);
 
         int rowCount() const;
         QVariant data(const QModelIndex &, int) const;

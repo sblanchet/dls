@@ -570,7 +570,9 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        (*l)->getChannel()->getRange(s, e);
+        if (!(*l)->getChannel()->getRange(s, e)) {
+            continue;
+        }
         if (valid) {
             if (s < start) {
                 start = s;

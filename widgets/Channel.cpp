@@ -81,10 +81,16 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 
 /****************************************************************************/
 
-void Channel::getRange(COMTime &start, COMTime &end)
+bool Channel::getRange(COMTime &start, COMTime &end)
 {
-    start = ch->start();
-    end = ch->end();
+    if (ch->chunks().empty()) {
+        return false;
+    }
+    else {
+        start = ch->start();
+        end = ch->end();
+        return true;
+    }
 }
 
 /****************************************************************************/
