@@ -73,6 +73,24 @@ namespace LibDLS
 
         bool operator<(const Job &) const;
 
+        struct Message
+        {
+            COMTime time;
+            enum Type {
+                Unknown = -1,
+                Info,
+                Warning,
+                Error,
+                Critical,
+                Broadcast,
+                TypeCount
+            };
+            Type type;
+            string text;
+        };
+
+        list<Message> load_msg(COMTime, COMTime) const;
+
     private:
         string _path; /**< DLS job directory path */
         unsigned int _id; /**< Job index. */

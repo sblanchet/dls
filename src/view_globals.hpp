@@ -39,30 +39,4 @@ extern const char *view_version_str;
 
 /*****************************************************************************/
 
-#define MSG_COUNT 5
-
-#define MSG_UNKNOWN   -1
-#define MSG_INFO      0
-#define MSG_WARNING   1
-#define MSG_ERROR     2
-#define MSG_CRITICAL  3
-#define MSG_BROADCAST 4
-
-/*****************************************************************************/
-
-/**
-   MSR-Nachricht mit Zeit, Typ, Text und Ebene der Anzeige
-*/
-
-struct ViewMSRMessage
-{
-    COMTime time;
-    int type;
-    string text;
-
-    int level;
-};
-
-/*****************************************************************************/
-
 #endif
