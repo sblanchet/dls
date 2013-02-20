@@ -798,7 +798,7 @@ void Graph::print()
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
                 page.width(), &worker, jobSet);
-            drawSection.draw(painter, r, -1, 0); // FIXME
+            drawSection.draw(painter, r, -1, scaleWidth);
 
             QPen pen;
             painter.setPen(pen);
