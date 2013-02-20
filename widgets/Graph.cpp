@@ -752,7 +752,7 @@ void Graph::print()
     printScale.setRange(scale.getStart(), scale.getEnd());
     printScale.setLength(page.width());
 
-    QRect scaleRect(page);
+    QRect timeScaleRect(page);
 
     set<LibDLS::Job *> jobSet;
 
@@ -776,7 +776,7 @@ void Graph::print()
             count++;
         }
 
-        printScale.draw(painter, scaleRect);
+        printScale.draw(painter, timeScaleRect);
 
         QPen verLinePen;
         painter.setPen(verLinePen);
@@ -1093,7 +1093,7 @@ void Graph::paintEvent(
 
     QPainter painter(this);
 
-    QRect scaleRect(contentsRect());
+    QRect timeScaleRect(contentsRect());
     int height = scale.getOuterLength() + 1;
     scaleWidth = 0;
     for (QList<Section *>::iterator s = sections.begin();
@@ -1115,9 +1115,9 @@ void Graph::paintEvent(
         height = contentsRect().height();
     }
 
-    scaleRect.setLeft(scaleWidth);
-    scaleRect.setHeight(height);
-    scale.draw(painter, scaleRect);
+    timeScaleRect.setLeft(scaleWidth);
+    timeScaleRect.setHeight(height);
+    scale.draw(painter, timeScaleRect);
 
     QPen verLinePen;
     painter.setPen(verLinePen);
@@ -1651,9 +1651,9 @@ Section *Graph::sectionFromPos(const QPoint &pos)
         return NULL;
     }
 
-    QRect scaleRect(contentsRect());
-    scaleRect.setHeight(scale.getOuterLength());
-    if (scaleRect.contains(pos)) {
+    QRect timeScaleRect(contentsRect());
+    timeScaleRect.setHeight(scale.getOuterLength());
+    if (timeScaleRect.contains(pos)) {
         return NULL;
     }
 
