@@ -1742,7 +1742,8 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
         feed = new int[rows];
     }
     for (int i = 0; i < rows; i++) {
-        feed[i] = 0;
+        // allow icon drawing before time scale start
+        feed[i] = -scaleWidth;
     }
 
     int dataWidth = contentsRect().width() - scaleWidth;
@@ -1789,18 +1790,24 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                     pixRect.setHeight(MSG_ROW_HEIGHT);
                     QSvgRenderer svg(messagePixmap[msg->type]);
                     svg.render(&painter, pixRect);
+                    feed[i] = xc + MSG_ROW_HEIGHT / 2 + 2;
                 }
 
-                QString label(msg->text.c_str());
-                QSize s = fm.size(0, label);
-                if (xc + MSG_ROW_HEIGHT + 2 + s.width() <= rect.width()) {
+                if (xc + MSG_ROW_HEIGHT / 2 + 2 <= rect.width()) {
+                    QString label(msg->text.c_str());
                     QRect textRect(rect);
-                    textRect.setLeft(rect.left() + xc + MSG_ROW_HEIGHT + 2);
+                    textRect.setLeft(
+                            rect.left() + xc + MSG_ROW_HEIGHT / 2 + 2);
                     textRect.setTop(rect.top() + MSG_LINES_HEIGHT + 2 +
                             i * rowHeight);
-                    textRect.setWidth(s.width());
                     textRect.setHeight(rowHeight);
-                    painter.fillRect(textRect, Qt::white);
+                    label = fm.elidedText(label, Qt::ElideRight,
+                            textRect.width(), Qt::AlignLeft);
+                    QRect bound = fm.boundingRect(textRect,
+                            Qt::AlignLeft | Qt::AlignVCenter, label);
+                    QRect back = bound.adjusted(-1, -1, 1, 1);
+                    back = back.intersected(textRect);
+                    painter.fillRect(back, Qt::white);
                     if (msg->type != LibDLS::Job::Message::Unknown) {
                         painter.setPen(messageColor[msg->type]);
                     }
@@ -1808,11 +1815,11 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                         painter.setPen(Qt::magenta);
                     }
 
-                    painter.setPen(messageColor[types[i]]);
+                    painter.setPen(messageColor[msg->type]);
                     painter.drawText(textRect,
                             Qt::AlignLeft | Qt::AlignVCenter, label);
+                    feed[i] = xc + MSG_ROW_HEIGHT / 2 + 2 + bound.width() + 2;
                 }
-                feed[i] = xc + MSG_ROW_HEIGHT + 2 + s.width() + 2;
                 break;
             }
         }
