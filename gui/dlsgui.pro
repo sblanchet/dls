@@ -35,11 +35,12 @@ unix {
     LIBS += -L$$PWD/../widgets -lDlsWidgets
     LIBS += -L$$PWD/../src/.libs -ldls
     LIBS += -lfftw3 -lm -lz
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"$$OUT_PWD/../src/.libs"
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"$$OUT_PWD/../widgets"
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../src/.libs"
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
 }
 win32 {
-    LIBS += -L"$$OUT_PWD\..\widgets\release"
+    LIBS += -L"..\src\.libs"
+    LIBS += -L"..\widgets\release"
 }
 
 HEADERS += MainWindow.h SettingsDialog.h
