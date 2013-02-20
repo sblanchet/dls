@@ -40,8 +40,8 @@ using DLS::Section;
 using QtDls::Model;
 
 #define DROP_TOLERANCE 10
-#define MSG_AREA_HEIGHT 55
 #define MSG_ROW_HEIGHT 16
+#define MSG_LINES_HEIGHT 3
 
 /****************************************************************************/
 
@@ -119,7 +119,10 @@ Graph::Graph(
     scrollBarNeeded(false),
     scaleWidth(0),
     currentView(views.begin()),
-    showMessages(false)
+    showMessages(false),
+    messageAreaHeight(55),
+    mouseOverMsgSplitter(false),
+    movingMsgSplitter(false)
 {
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -379,6 +382,16 @@ bool Graph::load(const QString &path, Model *model)
             }
             setShowMessages(val);
         }
+        else if (child.tagName() == "MessageAreaHeight") {
+            QString text = child.text();
+            bool ok;
+            int num = text.toInt(&ok, 10);
+            if (!ok) {
+                qWarning() << "Invalid value for MessageAreaHeight";
+                return false;
+            }
+            messageAreaHeight = num;
+        }
         else if (child.tagName() == "Sections") {
             loadSections(child, model);
         }
@@ -435,6 +448,12 @@ bool Graph::save(const QString &path) const
     text = doc.createTextNode(num);
     msgElem.appendChild(text);
     root.appendChild(msgElem);
+
+    QDomElement msgHeightElem = doc.createElement("MessageAreaHeight");
+    num.setNum(messageAreaHeight);
+    text = doc.createTextNode(num);
+    msgHeightElem.appendChild(text);
+    root.appendChild(msgHeightElem);
 
     QDomElement secElem = doc.createElement("Sections");
     root.appendChild(secElem);
@@ -868,7 +887,11 @@ void Graph::mousePressEvent(QMouseEvent *event)
     dragEnd = getEnd();
 
     if (event->button() & Qt::LeftButton) {
-        if (splitterSection) {
+        if (mouseOverMsgSplitter) {
+            movingMsgSplitter = true;
+            startHeight = messageAreaHeight;
+        }
+        else if (splitterSection) {
             movingSection = splitterSection;
             startHeight = splitterSection->getHeight();
         }
@@ -890,6 +913,18 @@ void Graph::mousePressEvent(QMouseEvent *event)
 void Graph::mouseMoveEvent(QMouseEvent *event)
 {
     endPos = event->pos();
+
+    if (movingMsgSplitter) {
+        int dh = endPos.y() - startPos.y();
+        messageAreaHeight = startHeight - dh;
+        if (messageAreaHeight < MSG_LINES_HEIGHT) {
+            messageAreaHeight = MSG_LINES_HEIGHT;
+        }
+        if (dh) {
+            update();
+        }
+        updateScrollBar();
+    }
 
     if (movingSection) {
         int dh = endPos.y() - startPos.y();
@@ -922,6 +957,18 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     updateMeasuring();
+
+    QRect msgSplitterRect(contentsRect());
+    msgSplitterRect.setTop(
+            contentsRect().bottom() + 1 - messageAreaHeight - splitterWidth);
+    msgSplitterRect.setHeight(splitterWidth);
+
+    bool last = mouseOverMsgSplitter;
+    mouseOverMsgSplitter =
+        msgSplitterRect.contains(event->pos()) && showMessages;
+    if (mouseOverMsgSplitter != last) {
+        update(msgSplitterRect);
+    }
 
     Section *sec = NULL;
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
@@ -968,6 +1015,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
         dataWidth -= scrollBar.width();
     }
 
+    movingMsgSplitter = false;
     zooming = false;
     panning = false;
     movingSection = NULL;
@@ -1132,8 +1180,8 @@ void Graph::paintEvent(
     QRect dataRect(contentsRect());
     dataRect.setTop(top);
     if (showMessages) {
-        dataRect.setHeight(contentsRect().height() -
-                top - MSG_AREA_HEIGHT - 1);
+        dataRect.setBottom(contentsRect().bottom() -
+                messageAreaHeight - splitterWidth);
     }
     if (scrollBarNeeded) {
         dataRect.setWidth(contentsRect().width() - scrollBar.width());
@@ -1178,8 +1226,30 @@ void Graph::paintEvent(
     if (showMessages) {
         QRect msgRect(contentsRect());
         msgRect.setLeft(contentsRect().left() + scaleWidth);
-        msgRect.setTop(dataRect.bottom() + 2);
-        msgRect.setHeight(MSG_AREA_HEIGHT);
+        msgRect.setTop(dataRect.bottom() + 1 + splitterWidth);
+        msgRect.setHeight(messageAreaHeight);
+
+        painter.drawLine(msgRect.left(), msgRect.top() - 1,
+                msgRect.right(), msgRect.top() - 1);
+
+        QRect msgSplitterRect(contentsRect());
+        msgSplitterRect.setTop(contentsRect().bottom() + 1 -
+                messageAreaHeight - splitterWidth);
+        msgSplitterRect.setHeight(splitterWidth);
+
+        painter.fillRect(msgSplitterRect, palette().window());
+
+        QStyleOption styleOption;
+        styleOption.initFrom(this);
+        styleOption.rect = msgSplitterRect;
+        QStyle::State state = QStyle::State_MouseOver;
+        styleOption.state &= ~state;
+        if (mouseOverMsgSplitter) {
+            styleOption.state |= state;
+        }
+        QStyle *style = QApplication::style();
+        style->drawControl(QStyle::CE_Splitter, &styleOption, &painter, this);
+
         drawMessages(painter, msgRect);
     }
 
@@ -1438,6 +1508,9 @@ void Graph::updateCursor()
     else if (panning) {
         cur = Qt::ClosedHandCursor;
     }
+    else if (mouseOverMsgSplitter) {
+        cur = Qt::SizeVerCursor;
+    }
     else if (splitterSection) {
         cur = Qt::SizeVerCursor;
     }
@@ -1517,7 +1590,7 @@ void Graph::updateScrollBar()
 
     int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
     if (showMessages) {
-        displayHeight -= MSG_AREA_HEIGHT + 1;
+        displayHeight -= messageAreaHeight + splitterWidth;
     }
     bool needed = height > displayHeight;
 
@@ -1672,11 +1745,6 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
         feed[i] = 0;
     }
 
-    QPen verLinePen;
-    painter.setPen(verLinePen);
-    painter.drawLine(rect.left(), rect.top() - 1,
-            rect.right(), rect.top() - 1);
-
     int dataWidth = contentsRect().width() - scaleWidth;
     COMTime range = getEnd() - getStart();
 
@@ -1705,17 +1773,17 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
             }
 
             for (int i = 0; i < rows; i++) {
-                if (feed[i] > xc - 8) {
+                if (feed[i] > xc - MSG_ROW_HEIGHT / 2) {
                     continue;
                 }
 
-                if (xc + 8 > rect.width()) {
+                if (xc + MSG_ROW_HEIGHT / 2 > rect.width()) {
                     break;
                 }
 
                 if (msg->type != LibDLS::Job::Message::Unknown) {
                     QRect pixRect;
-                    pixRect.setLeft(rect.left() + xc - 8);
+                    pixRect.setLeft(rect.left() + xc - MSG_ROW_HEIGHT / 2);
                     pixRect.setTop(rect.top() + 5 + i * rowHeight);
                     pixRect.setWidth(MSG_ROW_HEIGHT);
                     pixRect.setHeight(MSG_ROW_HEIGHT);
@@ -1725,10 +1793,10 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
                 QString label(msg->text.c_str());
                 QSize s = fm.size(0, label);
-                if (xc + 10 + s.width() <= rect.width()) {
+                if (xc + MSG_ROW_HEIGHT + 2 + s.width() <= rect.width()) {
                     QRect textRect(rect);
-                    textRect.setLeft(rect.left() + xc + 10);
-                    textRect.setTop(rect.top() + 5 +
+                    textRect.setLeft(rect.left() + xc + MSG_ROW_HEIGHT + 2);
+                    textRect.setTop(rect.top() + MSG_LINES_HEIGHT + 2 +
                             i * rowHeight);
                     textRect.setWidth(s.width());
                     textRect.setHeight(rowHeight);
@@ -1744,7 +1812,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                     painter.drawText(textRect,
                             Qt::AlignLeft | Qt::AlignVCenter, label);
                 }
-                feed[i] = xc + 10 + s.width() + 2;
+                feed[i] = xc + MSG_ROW_HEIGHT + 2 + s.width() + 2;
                 break;
             }
         }
@@ -1758,7 +1826,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
             painter.setPen(messageColor[types[i]]);
             painter.drawLine(rect.left() + i, rect.top(),
-                    rect.left() + i, rect.top() + 3);
+                    rect.left() + i, rect.top() + MSG_LINES_HEIGHT);
         }
     }
 

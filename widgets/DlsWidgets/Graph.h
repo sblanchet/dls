@@ -234,6 +234,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         // Message display
         bool showMessages;
+        int messageAreaHeight;
+        bool mouseOverMsgSplitter;
+        bool movingMsgSplitter;
         QList<LibDLS::Job::Message> messages;
         QMutex msgMutex;
         static QColor messageColor[];
