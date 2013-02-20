@@ -753,6 +753,7 @@ void Graph::print()
     printScale.setLength(page.width());
 
     QRect timeScaleRect(page);
+    timeScaleRect.setLeft(scaleWidth);
 
     set<LibDLS::Job *> jobSet;
 
