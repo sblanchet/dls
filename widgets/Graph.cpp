@@ -33,6 +33,7 @@
 #include "Model.h"
 #include "SectionDialog.h"
 #include "DatePickerDialog.h"
+#include "ExportDialog.h"
 
 using DLS::Graph;
 using DLS::GraphWorker;
@@ -109,6 +110,7 @@ Graph::Graph(
     removeSectionAction(this),
     messagesAction(this),
     printAction(this),
+    exportAction(this),
     selectedSection(NULL),
     splitterWidth(
             QApplication::style()->pixelMetric(QStyle::PM_SplitterWidth)),
@@ -280,6 +282,11 @@ Graph::Graph(
     printAction.setStatusTip(tr("Open the print dialog."));
     printAction.setIcon(QIcon(":/images/document-print.svg"));
     connect(&printAction, SIGNAL(triggered()), this, SLOT(print()));
+
+    exportAction.setText(tr("Export..."));
+    exportAction.setStatusTip(tr("Open the export dialog."));
+    exportAction.setIcon(QIcon(":/images/document-save.svg"));
+    connect(&exportAction, SIGNAL(triggered()), this, SLOT(showExport()));
 
     updateActions();
 }
@@ -557,6 +564,20 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
     newView();
     loadData();
+}
+
+/****************************************************************************/
+
+unsigned int Graph::signalCount() const
+{
+    unsigned int count = 0;
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        count += (*s)->signalCount();
+    }
+
+    return count;
 }
 
 /****************************************************************************/
@@ -1348,6 +1369,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(&messagesAction);
     menu.addSeparator();
     menu.addAction(&printAction);
+    menu.addAction(&exportAction);
 
     gotoMenu.addAction(&pickDateAction);
     gotoMenu.addSeparator();
@@ -1540,6 +1562,7 @@ void Graph::updateActions()
     zoomOutAction.setEnabled(rangeValid);
     zoomResetAction.setEnabled(!autoRange);
     printAction.setEnabled(rangeValid);
+    exportAction.setEnabled(rangeValid);
 }
 
 /****************************************************************************/
@@ -1959,6 +1982,15 @@ void Graph::updateSection(Section *section)
 void Graph::showMessagesChanged()
 {
     setShowMessages(messagesAction.isChecked());
+}
+
+/****************************************************************************/
+
+void Graph::showExport()
+{
+    ExportDialog *dialog = new ExportDialog(this);
+    dialog->exec();
+    delete dialog;
 }
 
 /****************************************************************************/

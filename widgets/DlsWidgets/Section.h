@@ -109,6 +109,8 @@ class Section
         void setBusy(bool);
         void update();
 
+        unsigned int signalCount() const { return layers.size(); };
+
     private:
         Graph * const graph;
         ValueScale scale;
