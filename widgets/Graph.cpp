@@ -1180,115 +1180,7 @@ void Graph::paintEvent(
         msgRect.setLeft(contentsRect().left() + scaleWidth);
         msgRect.setTop(dataRect.bottom() + 2);
         msgRect.setHeight(MSG_AREA_HEIGHT);
-        QFontMetrics fm(painter.font());
-        int rows = 0, textAreaHeight = msgRect.height() - 5;
-        int rowHeight = MSG_ROW_HEIGHT;
-        if (fm.height() > MSG_ROW_HEIGHT) {
-            rowHeight = fm.height();
-        }
-        if (textAreaHeight > 0) {
-            rows = textAreaHeight / rowHeight;
-        }
-        int *feed = NULL;
-        if (rows > 0) {
-            feed = new int[rows];
-        }
-        for (int i = 0; i < rows; i++) {
-            feed[i] = 0;
-        }
-
-        painter.setPen(verLinePen);
-        painter.drawLine(msgRect.left(), msgRect.top() - 1,
-                msgRect.right(), msgRect.top() - 1);
-
-        int dataWidth = contentsRect().width() - scaleWidth;
-        COMTime range = getEnd() - getStart();
-
-        if (range > 0.0 && dataWidth > 0) {
-            double xScale = dataWidth / range.to_dbl_time();
-            LibDLS::Job::Message::Type types[dataWidth];
-            for (int i = 0; i < dataWidth; i++) {
-                types[i] = LibDLS::Job::Message::Unknown;
-            }
-
-            msgMutex.lock();
-
-            for (QList<LibDLS::Job::Message>::const_iterator msg =
-                    messages.begin(); msg != messages.end(); msg++) {
-                COMTime dt = msg->time - getStart();
-                double xv = dt.to_dbl_time() * xScale;
-                if (xv < 0) {
-                    continue;
-                }
-                int xc = (int) (xv + 0.5);
-                if (xc >= dataWidth) {
-                    break;
-                }
-                if (msg->type > types[xc]) {
-                    types[xc] = msg->type;
-                }
-
-                for (int i = 0; i < rows; i++) {
-                    if (feed[i] > xc - 8) {
-                        continue;
-                    }
-
-                    if (xc + 8 > msgRect.width()) {
-                        break;
-                    }
-
-                    if (msg->type != LibDLS::Job::Message::Unknown) {
-                        QRect pixRect;
-                        pixRect.setLeft(msgRect.left() + xc - 8);
-                        pixRect.setTop(msgRect.top() + 5 + i * rowHeight);
-                        pixRect.setWidth(MSG_ROW_HEIGHT);
-                        pixRect.setHeight(MSG_ROW_HEIGHT);
-                        QSvgRenderer svg(messagePixmap[msg->type]);
-                        svg.render(&painter, pixRect);
-                    }
-
-                    QString label(msg->text.c_str());
-                    QSize s = fm.size(0, label);
-                    if (xc + 10 + s.width() <= msgRect.width()) {
-                        QRect textRect(msgRect);
-                        textRect.setLeft(msgRect.left() + xc + 10);
-                        textRect.setTop(msgRect.top() + 5 +
-                                i * rowHeight);
-                        textRect.setWidth(s.width());
-                        textRect.setHeight(rowHeight);
-                        painter.fillRect(textRect, Qt::white);
-                        if (msg->type != LibDLS::Job::Message::Unknown) {
-                            painter.setPen(messageColor[msg->type]);
-                        }
-                        else {
-                            painter.setPen(Qt::magenta);
-                        }
-
-                        painter.setPen(messageColor[types[i]]);
-                        painter.drawText(textRect,
-                                Qt::AlignLeft | Qt::AlignVCenter, label);
-                    }
-                    feed[i] = xc + 10 + s.width() + 2;
-                    break;
-                }
-            }
-
-            msgMutex.unlock();
-
-            for (int i = 0; i < dataWidth; i++) {
-                if (types[i] == LibDLS::Job::Message::Unknown) {
-                    continue;
-                }
-
-                painter.setPen(messageColor[types[i]]);
-                painter.drawLine(msgRect.left() + i, msgRect.top(),
-                        msgRect.left() + i, msgRect.top() + 3);
-            }
-        }
-
-        if (feed) {
-            delete [] feed;
-        }
+        drawMessages(painter, msgRect);
     }
 
     if (dropLine >= 0) {
@@ -1757,6 +1649,122 @@ bool Graph::loadSections(const QDomElement &elem, Model *model)
     }
 
     return true;
+}
+
+/****************************************************************************/
+
+void Graph::drawMessages(QPainter &painter, const QRect &rect)
+{
+    QFontMetrics fm(painter.font());
+    int rows = 0, textAreaHeight = rect.height() - 5;
+    int rowHeight = MSG_ROW_HEIGHT;
+    if (fm.height() > MSG_ROW_HEIGHT) {
+        rowHeight = fm.height();
+    }
+    if (textAreaHeight > 0) {
+        rows = textAreaHeight / rowHeight;
+    }
+    int *feed = NULL;
+    if (rows > 0) {
+        feed = new int[rows];
+    }
+    for (int i = 0; i < rows; i++) {
+        feed[i] = 0;
+    }
+
+    QPen verLinePen;
+    painter.setPen(verLinePen);
+    painter.drawLine(rect.left(), rect.top() - 1,
+            rect.right(), rect.top() - 1);
+
+    int dataWidth = contentsRect().width() - scaleWidth;
+    COMTime range = getEnd() - getStart();
+
+    if (range > 0.0 && dataWidth > 0) {
+        double xScale = dataWidth / range.to_dbl_time();
+        LibDLS::Job::Message::Type types[dataWidth];
+        for (int i = 0; i < dataWidth; i++) {
+            types[i] = LibDLS::Job::Message::Unknown;
+        }
+
+        msgMutex.lock();
+
+        for (QList<LibDLS::Job::Message>::const_iterator msg =
+                messages.begin(); msg != messages.end(); msg++) {
+            COMTime dt = msg->time - getStart();
+            double xv = dt.to_dbl_time() * xScale;
+            if (xv < 0) {
+                continue;
+            }
+            int xc = (int) (xv + 0.5);
+            if (xc >= dataWidth) {
+                break;
+            }
+            if (msg->type > types[xc]) {
+                types[xc] = msg->type;
+            }
+
+            for (int i = 0; i < rows; i++) {
+                if (feed[i] > xc - 8) {
+                    continue;
+                }
+
+                if (xc + 8 > rect.width()) {
+                    break;
+                }
+
+                if (msg->type != LibDLS::Job::Message::Unknown) {
+                    QRect pixRect;
+                    pixRect.setLeft(rect.left() + xc - 8);
+                    pixRect.setTop(rect.top() + 5 + i * rowHeight);
+                    pixRect.setWidth(MSG_ROW_HEIGHT);
+                    pixRect.setHeight(MSG_ROW_HEIGHT);
+                    QSvgRenderer svg(messagePixmap[msg->type]);
+                    svg.render(&painter, pixRect);
+                }
+
+                QString label(msg->text.c_str());
+                QSize s = fm.size(0, label);
+                if (xc + 10 + s.width() <= rect.width()) {
+                    QRect textRect(rect);
+                    textRect.setLeft(rect.left() + xc + 10);
+                    textRect.setTop(rect.top() + 5 +
+                            i * rowHeight);
+                    textRect.setWidth(s.width());
+                    textRect.setHeight(rowHeight);
+                    painter.fillRect(textRect, Qt::white);
+                    if (msg->type != LibDLS::Job::Message::Unknown) {
+                        painter.setPen(messageColor[msg->type]);
+                    }
+                    else {
+                        painter.setPen(Qt::magenta);
+                    }
+
+                    painter.setPen(messageColor[types[i]]);
+                    painter.drawText(textRect,
+                            Qt::AlignLeft | Qt::AlignVCenter, label);
+                }
+                feed[i] = xc + 10 + s.width() + 2;
+                break;
+            }
+        }
+
+        msgMutex.unlock();
+
+        for (int i = 0; i < dataWidth; i++) {
+            if (types[i] == LibDLS::Job::Message::Unknown) {
+                continue;
+            }
+
+            painter.setPen(messageColor[types[i]]);
+            painter.drawLine(rect.left() + i, rect.top(),
+                    rect.left() + i, rect.top() + 3);
+        }
+    }
+
+    if (feed) {
+        delete [] feed;
+    }
 }
 
 /****************************************************************************/
