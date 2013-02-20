@@ -1099,16 +1099,16 @@ void Graph::paintEvent(
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         height += (*s)->getHeight() + splitterWidth;
-        if (height > contentsRect().height()) {
-            height = contentsRect().height();
-            break;
-        }
         if ((*s)->getShowScale()) {
             int w = (*s)->getScaleWidth();
             if (w > scaleWidth) {
                 scaleWidth = w;
             }
         }
+    }
+
+    if (height > contentsRect().height()) {
+        height = contentsRect().height();
     }
 
     if (showMessages) {
