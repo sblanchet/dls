@@ -721,7 +721,7 @@ void Section::updateScale()
 
     scale.setMin(min);
     scale.setMax(max);
-    scale.setLength(height - legend.size().height());
+    scale.setHeight(height - legend.size().height());
     scale.update();
 }
 

@@ -39,7 +39,7 @@ ValueScale::ValueScale(QWidget *p):
     parent(p),
     min(0.0),
     max(0.0),
-    length(0),
+    height(0),
     width(0),
     majorStep(0.0),
     minorDiv(2),
@@ -69,13 +69,13 @@ void ValueScale::setMax(double max)
 
 /****************************************************************************/
 
-/** Sets the scale #length in pixel.
+/** Sets the scale #height in pixel.
  *
  * If the value changes, this re-calculates the scale layout.
  */
-void ValueScale::setLength(int length)
+void ValueScale::setHeight(int height)
 {
-    ValueScale::length = length;
+    ValueScale::height = height;
 }
 
 /****************************************************************************/
@@ -87,7 +87,7 @@ void ValueScale::update()
     double rawMajorStep, effMajorStep, dist;
     QFontMetrics fm = parent->fontMetrics();
 
-    if (!length || getRange() <= 0.0) {
+    if (!height || getRange() <= 0.0) {
         width = 0;
         majorStep = 0.0;
         minorDiv = 2;
@@ -95,7 +95,7 @@ void ValueScale::update()
         return;
     }
 
-    rawMajorStep = (fm.height() * 1.5 + 4) * getRange() / length;
+    rawMajorStep = (fm.height() * 1.5 + 4) * getRange() / height;
 
     decade = (int) floor(log10(rawMajorStep));
     rawMajorStep /= pow(10.0, decade); // 1 <= rawStep < 10
@@ -110,7 +110,7 @@ void ValueScale::update()
     }
 
     majorStep = effMajorStep * pow(10.0, decade);
-    dist = majorStep * length / getRange();
+    dist = majorStep * height / getRange();
 
     if (dist / 5 >= MIN_LINE_DIST) {
         minorDiv = 5;

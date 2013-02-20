@@ -42,8 +42,8 @@ class ValueScale
         void setMin(double);
         double getMax() const { return max; };
         void setMax(double);
-        int getLength() const { return length; };
-        void setLength(int);
+        int getHeight() const { return height; };
+        void setHeight(int);
 
         void update();
 
@@ -56,7 +56,7 @@ class ValueScale
         const QWidget * const parent; /**< Parent widget. */
         double min; /**< Minimum value. */
         double max; /**< Maximum value. */
-        int length; /**< Scale length in pixel. */
+        int height; /**< Scale height in pixel. */
 
         int width; /**< Space for the numbering in pixel. */
         double majorStep; /**< The major division (long ticks). */
