@@ -250,6 +250,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void newView();
         void clearSections();
         bool loadSections(const QDomElement &, QtDls::Model *);
+        void drawMessages(QPainter &, const QRect &);
 
     private slots:
         void interactionSlot();
