@@ -370,9 +370,9 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.text = xml.tag()->att("text")->to_str();
                 }
                 catch (ECOMXMLTag &e) {
-                    cerr << "WARNUNG: Kein Text-Attribut im Message-Tag:"
-                         << e.msg << " Tag: " << e.tag << endl;
-                    msg.text = "??? Kein Text";
+                    cerr << "Message element: " << e.msg
+                        << " Tag: " << e.tag << endl;
+                    msg.text = string();
                 }
 
                 if (xml.tag()->title() == "info") {
@@ -391,7 +391,8 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.type = Message::Broadcast;
                 }
                 else {
-                    cerr << "unknown type " << xml.tag()->title() << endl;
+                    cerr << "Unknown message type "
+                        << xml.tag()->title() << endl;
                     msg.type = Message::Unknown;
                 }
 
