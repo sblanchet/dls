@@ -122,6 +122,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
+        unsigned int signalCount() const;
 
         enum Interaction {
             Zoom,
@@ -216,6 +217,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction removeSectionAction;
         QAction messagesAction;
         QAction printAction;
+        QAction exportAction;
         Section *selectedSection;
         const int splitterWidth;
         Section *splitterSection;
@@ -265,6 +267,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void dataThreadFinished();
         void updateSection(Section *section);
         void showMessagesChanged();
+        void showExport();
 };
 
 /****************************************************************************/
