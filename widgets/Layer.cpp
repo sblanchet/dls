@@ -289,7 +289,8 @@ void Layer::loadData(const COMTime &start, const COMTime &end, int width,
         GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
     worker->clearData();
-    channel->fetchData(start, end, width, GraphWorker::dataCallback, worker);
+    channel->fetchData(start, end, width,
+            GraphWorker::dataCallback, worker, 1);
 
     dataMutex.lock();
     // FIXME implement transferDataList

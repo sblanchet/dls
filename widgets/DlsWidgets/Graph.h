@@ -45,6 +45,7 @@ namespace LibDLS {
 
 namespace QtDls {
     class Model;
+    class Channel;
 }
 
 namespace DLS {
@@ -79,6 +80,7 @@ class GraphWorker:
 
     signals:
         void notifySection(Section *section);
+        void finished();
 
     private:
         Graph * const graph;
@@ -122,7 +124,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
-        unsigned int signalCount() const;
+        QSet<QtDls::Channel *> channels() const;
 
         enum Interaction {
             Zoom,
@@ -191,6 +193,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         QThread thread;
         GraphWorker worker;
+        bool workerBusy;
         bool reloadPending;
         int pendingWidth;
         QSvgRenderer busySvg;
@@ -264,7 +267,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void sliderValueChanged(int);
         void pickDate();
         void gotoDate();
-        void dataThreadFinished();
+        void workerFinished();
         void updateSection(Section *section);
         void showMessagesChanged();
         void showExport();

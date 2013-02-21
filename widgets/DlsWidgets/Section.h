@@ -109,7 +109,7 @@ class Section
         void setBusy(bool);
         void update();
 
-        unsigned int signalCount() const { return layers.size(); };
+        QSet<QtDls::Channel *> channels() const;
 
     private:
         Graph * const graph;

@@ -679,6 +679,20 @@ void Section::update()
 
 /****************************************************************************/
 
+QSet<Channel *> Section::channels() const
+{
+    QSet<Channel *> channels;
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        channels += (*l)->getChannel();
+    }
+
+    return channels;
+}
+
+/****************************************************************************/
+
 void Section::updateLegend()
 {
     QString html = "<html><head><meta http-equiv=\"Content-Type\" "

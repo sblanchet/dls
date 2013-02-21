@@ -23,26 +23,42 @@
  ****************************************************************************/
 
 #include <QDebug>
+#include <QMessageBox>
+#include <QFileDialog>
 
 #include "ExportDialog.h"
 #include "Graph.h"
+#include "Channel.h"
+
+#include "lib_export.hpp"
 
 using DLS::ExportDialog;
+using DLS::ExportWorker;
+using QtDls::Channel;
 
 /****************************************************************************/
 
 /** Constructor.
  */
 ExportDialog::ExportDialog(
-        Graph *graph
+        Graph *graph,
+        QThread *thread,
+        QSet<Channel *> channels
         ):
     QDialog(graph),
-    graph(graph)
+    graph(graph),
+    worker(channels, graph->getStart(), graph->getEnd()),
+    now(COMTime::now())
 {
     setupUi(this);
 
+    worker.moveToThread(thread);
+
+    connect(&worker, SIGNAL(updateProgress()), this, SLOT(updateProgress()));
+    connect(&worker, SIGNAL(finished()), this, SLOT(workerFinished()));
+
     QString num;
-    num.setNum(graph->signalCount());
+    num.setNum(channels.size());
     labelNumber->setText(num);
 
     labelBegin->setText(graph->getStart().to_real_time().c_str());
@@ -50,6 +66,27 @@ ExportDialog::ExportDialog(
 
     labelDuration->setText(
             graph->getStart().diff_str_to(graph->getEnd()).c_str());
+
+    char *env;
+    QString envExport, envExportFormat;
+
+    if ((env = getenv("DLS_EXPORT"))) {
+        envExport = env;
+    }
+    else {
+        envExport = ".";
+    }
+
+    if ((env = getenv("DLS_EXPORT_FMT"))) {
+        envExportFormat = env;
+    }
+    else {
+        envExportFormat = "dls-export-%Y-%m-%d-%H-%M-%S";
+    }
+
+    dir.setPath(envExport + "/" + now.format_time(
+                envExportFormat.toLocal8Bit().constData()).c_str());
+    labelDir->setText(QDir::cleanPath(dir.path()));
 }
 
 /****************************************************************************/
@@ -64,7 +101,62 @@ ExportDialog::~ExportDialog()
 
 void ExportDialog::accept()
 {
-    done(Accepted);
+    // create unique directory
+    if (!dir.mkpath(dir.absolutePath())) {
+        QMessageBox box(this);
+        box.setIcon(QMessageBox::Critical);
+        box.setText(tr("Failed to create export directory %1.")
+                .arg(dir.absolutePath()));
+        box.exec();
+        return;
+    }
+
+    // create info file
+    QString path = dir.filePath("dls_export_info.txt");
+    QFile infoFile(path);
+    if (!infoFile.open(QIODevice::WriteOnly)) {
+        QMessageBox box(this);
+        box.setIcon(QMessageBox::Critical);
+        box.setText(tr("Failed to open %1.").arg(path));
+        box.exec();
+        return;
+    }
+
+    infoFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+
+    QTextStream str(&infoFile);
+
+    str << "\n"
+        << "This is a DLS export directory.\n\n"
+        << "Exported on: " << now.to_rfc811_time().c_str() << "\n\n"
+        << "Exported range from: "
+        << graph->getStart().to_real_time().c_str() << "\n"
+        << "                 to: "
+        << graph->getEnd().to_real_time().c_str() << "\n"
+        << "           duration: "
+        << graph->getStart().diff_str_to(graph->getEnd()).c_str() << "\n\n";
+
+    infoFile.close();
+
+    worker.setDirectory(dir);
+    worker.setDecimation(spinBoxDecimation->value());
+
+    if (checkBoxAscii->isChecked()) {
+        LibDLS::ExportAscii *exp = new LibDLS::ExportAscii();
+        worker.addExporter(exp);
+    }
+
+    if (checkBoxMatlab->isChecked()) {
+        LibDLS::ExportMat4 *exp = new LibDLS::ExportMat4();
+        worker.addExporter(exp);
+    }
+
+    buttonBox->setEnabled(false);
+    pushButtonDir->setEnabled(false);
+    checkBoxAscii->setEnabled(false);
+    checkBoxMatlab->setEnabled(false);
+
+    QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
 }
 
 /****************************************************************************/
@@ -72,6 +164,141 @@ void ExportDialog::accept()
 void ExportDialog::reject()
 {
     done(Rejected);
+}
+
+/****************************************************************************/
+
+void ExportDialog::updateProgress()
+{
+    progressBar->setValue(worker.progress());
+}
+
+/****************************************************************************/
+
+void ExportDialog::workerFinished()
+{
+    buttonBox->setEnabled(true);
+    pushButtonDir->setEnabled(true);
+    checkBoxAscii->setEnabled(true);
+    checkBoxMatlab->setEnabled(true);
+
+    if (worker.progress() >= 100.0) {
+        done(Accepted);
+    }
+}
+
+/****************************************************************************/
+
+void ExportDialog::on_pushButtonDir_clicked()
+{
+    QFileDialog dialog(this);
+
+    QString path = QFileDialog::getSaveFileName(this, tr("Target Directory"),
+            dir.path(), QString(), NULL, QFileDialog::ShowDirsOnly);
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    dir.setPath(path);
+    labelDir->setText(QDir::cleanPath(dir.path()));
+}
+
+/****************************************************************************/
+
+ExportWorker::ExportWorker(
+        QSet<Channel *> channels,
+        COMTime start,
+        COMTime end
+        ):
+    start(start),
+    end(end),
+    decimation(1),
+    channels(channels),
+    totalProgress(0.0),
+    channelProgress(0.0)
+{
+}
+
+/****************************************************************************/
+
+ExportWorker::~ExportWorker()
+{
+    for (QList<LibDLS::Export *>::const_iterator exp = exporters.begin();
+            exp != exporters.end(); exp++) {
+        delete *exp;
+    }
+}
+
+/****************************************************************************/
+
+void ExportWorker::addExporter(LibDLS::Export *exporter)
+{
+    exporters += exporter;
+}
+
+/****************************************************************************/
+
+void ExportWorker::doWork()
+{
+    totalProgress = 0.0;
+    channelProgress = 0.0;
+    bool beginSuccessful;
+
+    for (QSet<Channel *>::const_iterator channel = channels.begin();
+            channel != channels.end(); channel++) {
+
+        beginSuccessful = true;
+
+        for (QList<LibDLS::Export *>::const_iterator exp = exporters.begin();
+                exp != exporters.end(); exp++) {
+            if (!(*channel)->beginExport(*exp, dir.path())) {
+                beginSuccessful = false;
+                break;
+            }
+        }
+
+        if (!beginSuccessful) {
+            break;
+        }
+
+        (*channel)->fetchData(start, end, 0, dataCallback, this, decimation);
+
+        for (QList<LibDLS::Export *>::const_iterator exp = exporters.begin();
+                exp != exporters.end(); exp++) {
+            (*exp)->end();
+        }
+
+        channelProgress += 100.0 / channels.size();
+        totalProgress = channelProgress;
+        emit updateProgress();
+    }
+
+    emit finished();
+}
+
+/****************************************************************************/
+
+int ExportWorker::dataCallback(LibDLS::Data *data, void *priv)
+{
+    ((ExportWorker *) priv)->newData(data);
+    return 0; // not adopted
+}
+
+/****************************************************************************/
+
+void ExportWorker::newData(LibDLS::Data *data)
+{
+    for (QList<LibDLS::Export *>::const_iterator exp = exporters.begin();
+            exp != exporters.end(); exp++) {
+        (*exp)->data(data);
+    }
+
+    // display progress
+    double diff_time = (data->end_time() - start).to_dbl();
+    totalProgress = channelProgress +
+        diff_time * 100.0 / channels.size() / (end - start).to_dbl();
+    emit updateProgress();
 }
 
 /****************************************************************************/
