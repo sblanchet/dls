@@ -15,6 +15,7 @@
 
 namespace LibDLS {
     class Channel;
+    class Export;
 }
 
 namespace QtDls {
@@ -38,7 +39,8 @@ class Channel:
         };
 
         void fetchData(COMTime, COMTime, unsigned int, LibDLS::DataCallback,
-                void *);
+                void *, unsigned int);
+        bool beginExport(LibDLS::Export *, const QString &);
 
         struct TimeRange
         {

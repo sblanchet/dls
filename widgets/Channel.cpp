@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#include "lib_export.hpp"
+
 #include "Channel.h"
 
 using namespace QtDls;
@@ -52,12 +54,31 @@ QString Channel::name() const
 /****************************************************************************/
 
 void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
-        LibDLS::DataCallback callback, void *priv)
+        LibDLS::DataCallback callback, void *priv, unsigned int decimation)
 {
     mutex.lock();
     ch->fetch_chunks();
-    ch->fetch_data(start, end, min_values, callback, priv);
+    ch->fetch_data(start, end, min_values, callback, priv, decimation);
     mutex.unlock();
+}
+
+/****************************************************************************/
+
+bool Channel::beginExport(LibDLS::Export *exporter, const QString &path)
+{
+    mutex.lock();
+
+    try {
+        exporter->begin(*ch, path.toLocal8Bit().constData());
+    }
+    catch (LibDLS::ExportException &e) {
+        mutex.unlock();
+        qDebug() << "export begin failed: " << e.msg.c_str();
+        return false;
+    }
+
+    mutex.unlock();
+    return true;
 }
 
 /****************************************************************************/

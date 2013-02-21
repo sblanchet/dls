@@ -85,6 +85,7 @@ Graph::Graph(
     measureTime(0.0),
     thread(this),
     worker(this),
+    workerBusy(false),
     reloadPending(false),
     pendingWidth(0),
     busySvg(QString(":/images/view-refresh.svg"), this),
@@ -142,10 +143,10 @@ Graph::Graph(
 
     updateCursor();
 
-    connect(&thread, SIGNAL(started()), &worker, SLOT(doWork()));
-    connect(&thread, SIGNAL(finished()), this, SLOT(dataThreadFinished()));
+    thread.start();
     connect(&worker, SIGNAL(notifySection(Section *)),
             this, SLOT(updateSection(Section *)));
+    connect(&worker, SIGNAL(finished()), this, SLOT(workerFinished()));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -297,6 +298,7 @@ Graph::Graph(
  */
 Graph::~Graph()
 {
+    thread.quit();
     thread.wait();
     clearSections();
 }
@@ -568,16 +570,16 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
 /****************************************************************************/
 
-unsigned int Graph::signalCount() const
+QSet<QtDls::Channel *> Graph::channels() const
 {
-    unsigned int count = 0;
+    QSet<QtDls::Channel *> channels;
 
     for (QList<Section *>::const_iterator s = sections.begin();
             s != sections.end(); s++) {
-        count += (*s)->signalCount();
+        channels += (*s)->channels();
     }
 
-    return count;
+    return channels;
 }
 
 /****************************************************************************/
@@ -626,14 +628,15 @@ void Graph::loadData()
     }
     update(); // FIXME update busy rect only
 
-    if (thread.isRunning()) {
+    if (workerBusy) {
         reloadPending = true;
         pendingWidth = dataWidth;
-        return;
     }
-
-    worker.width = dataWidth;
-    thread.start();
+    else {
+        worker.width = dataWidth;
+        workerBusy = true;
+        QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
+    }
 }
 
 /****************************************************************************/
@@ -1958,14 +1961,17 @@ void Graph::gotoDate()
 
 /****************************************************************************/
 
-void Graph::dataThreadFinished()
+void Graph::workerFinished()
 {
     update();
 
     if (reloadPending) {
         reloadPending = false;
         worker.width = pendingWidth;
-        thread.start();
+        QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
+    }
+    else {
+        workerBusy = false;
     }
 }
 
@@ -1988,7 +1994,7 @@ void Graph::showMessagesChanged()
 
 void Graph::showExport()
 {
-    ExportDialog *dialog = new ExportDialog(this);
+    ExportDialog *dialog = new ExportDialog(this, &thread, channels());
     dialog->exec();
     delete dialog;
 }
@@ -2053,7 +2059,7 @@ void GraphWorker::doWork()
     graph->messages = messages;
     graph->msgMutex.unlock();
 
-    graph->thread.quit();
+    emit finished();
 }
 
 /****************************************************************************/
