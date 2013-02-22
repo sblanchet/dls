@@ -56,28 +56,31 @@ QString Channel::name() const
 void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
         LibDLS::DataCallback callback, void *priv, unsigned int decimation)
 {
-    mutex.lock();
+    rwlock.lockForWrite();
     ch->fetch_chunks();
+    rwlock.unlock();
+
+    rwlock.lockForRead();
     ch->fetch_data(start, end, min_values, callback, priv, decimation);
-    mutex.unlock();
+    rwlock.unlock();
 }
 
 /****************************************************************************/
 
 bool Channel::beginExport(LibDLS::Export *exporter, const QString &path)
 {
-    mutex.lock();
+    rwlock.lockForRead();
 
     try {
         exporter->begin(*ch, path.toLocal8Bit().constData());
     }
     catch (LibDLS::ExportException &e) {
-        mutex.unlock();
+        rwlock.unlock();
         qDebug() << "export begin failed: " << e.msg.c_str();
         return false;
     }
 
-    mutex.unlock();
+    rwlock.unlock();
     return true;
 }
 
@@ -87,15 +90,25 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 {
     vector<TimeRange> ranges;
 
-    for (list<LibDLS::Chunk>::const_iterator c = ch->chunks().begin();
-            c != ch->chunks().end(); c++) {
-        TimeRange r;
-        r.start = c->start();
-        r.end = c->end();
-        ranges.push_back(r);
-    }
+    if (rwlock.tryLockForRead()) {
+        for (list<LibDLS::Chunk>::const_iterator c = ch->chunks().begin();
+                c != ch->chunks().end(); c++) {
+            TimeRange r;
+            r.start = c->start();
+            r.end = c->end();
+            ranges.push_back(r);
+        }
 
-    sort(ranges.begin(), ranges.end(), range_before);
+        rwlock.unlock();
+
+        sort(ranges.begin(), ranges.end(), range_before);
+
+        lastRanges = ranges;
+    }
+    else {
+        /* FIXME workaround for unnecessary locking. */
+        ranges = lastRanges;
+    }
 
     return ranges;
 }
@@ -104,14 +117,22 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 
 bool Channel::getRange(COMTime &start, COMTime &end)
 {
+    bool ret;
+
+    rwlock.lockForRead();
+
     if (ch->chunks().empty()) {
-        return false;
+        ret = false;
     }
     else {
         start = ch->start();
         end = ch->end();
-        return true;
+        ret = true;
     }
+
+    rwlock.unlock();
+
+    return ret;
 }
 
 /****************************************************************************/

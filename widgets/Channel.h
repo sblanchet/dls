@@ -5,7 +5,7 @@
  ****************************************************************************/
 
 #include <QList>
-#include <QMutex>
+#include <QReadWriteLock>
 
 #include "lib_channel.hpp"
 
@@ -58,7 +58,8 @@ class Channel:
 
     private:
         LibDLS::Channel * const ch;
-        QMutex mutex;
+        QReadWriteLock rwlock;
+        vector<TimeRange> lastRanges;
 
         static bool range_before(const TimeRange &, const TimeRange &);
 
