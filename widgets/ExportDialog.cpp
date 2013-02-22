@@ -122,8 +122,6 @@ void ExportDialog::accept()
         return;
     }
 
-    infoFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
-
     QTextStream str(&infoFile);
 
     str << "\n"
