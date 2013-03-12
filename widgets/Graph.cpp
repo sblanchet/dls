@@ -350,7 +350,7 @@ bool Graph::load(const QString &path, Model *model)
     QDomElement docElem = doc.documentElement();
     QDomNodeList children = docElem.childNodes();
     unsigned int i;
-    int64_t start, end;
+    int64_t start = 0LL, end = 0LL;
     bool hasStart = false, hasEnd = false, val;
 
     for (i = 0; i < children.length(); i++) {
