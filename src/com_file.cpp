@@ -115,7 +115,7 @@ void COMFile::open_read_write(const char *filename)
     COMFile::close();
 
     // Prüfen, ob die Datei bereits existiert
-    if (lstat(filename, &stat_buf) == -1)
+    if (stat(filename, &stat_buf) == -1)
     {
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
@@ -172,7 +172,7 @@ void COMFile::open_read_append(const char *filename)
     COMFile::close();
 
     // Prüfen, ob die Datei bereits existiert
-    if (lstat(filename, &stat_buf) == -1)
+    if (stat(filename, &stat_buf) == -1)
     {
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
@@ -224,10 +224,12 @@ void COMFile::close()
     bool error = false;
 
     if (_mode != fomClosed) {
+#if _BSD_SOURCE || _XOPEN_SOURCE || _POSIX_C_SOURCE >= 200112L
         if (fsync(_fd) == -1) {
             error = true;
             err << "Could not sync pending data (" << strerror(errno) << ").";
         }
+#endif
 
         do {
             if (::close(_fd) == 0) break;
@@ -502,7 +504,7 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
 uint64_t COMFile::calc_size()
 {
     stringstream err;
-    uint64_t size;
+    off_t size;
 
     if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
     {
