@@ -27,9 +27,13 @@ doku/dls_doku_en.log
 doku/dls_doku_en.out
 doku/dls_doku_en.pdf
 doku/dls_doku_en.toc
+gui/Makefile.Debug
+gui/Makefile.Release
 gui/dlsgui
 gui/moc_*.cpp
 gui/qrc_*.cpp
+gui/debug
+gui/release
 gui/ui_*.h
 libtool
 m4/libtool.m4
