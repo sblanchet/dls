@@ -19,7 +19,7 @@ namespace QtDls {
 class Dir;
 class Channel;
 
-class Model:
+class Q_DECL_EXPORT Model:
     public QAbstractItemModel
 {
     public:
