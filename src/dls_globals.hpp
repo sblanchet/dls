@@ -91,5 +91,19 @@ extern unsigned int wait_before_restart;
 
 /*****************************************************************************/
 
+enum DLSLogType
+{
+    DLSInfo,
+    DLSError,
+    DLSWarning,
+    DLSDebug
+};
+
+stringstream &msg();
+
+void log(DLSLogType);
+
+/*****************************************************************************/
+
 #endif
 

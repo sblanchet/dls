@@ -25,7 +25,20 @@ AM_CPPFLAGS = -Wall
 
 #------------------------------------------------------------------------------
 
-bin_PROGRAMS = dlsd dls_ctl dls_view dls
+bin_PROGRAMS =
+
+if ENABLE_DAEMON
+bin_PROGRAMS += dlsd
+endif
+
+if ENABLE_FLTK
+bin_PROGRAMS += dls_ctl dls_view
+endif
+
+if ENABLE_TOOL
+bin_PROGRAMS += dls
+endif
+
 lib_LTLIBRARIES = libdls.la
 
 #------------------------------------------------------------------------------
@@ -72,6 +85,7 @@ dlsd_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
 dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm
 
 dlsd_SOURCES = \
+	dls_globals.cpp \
 	dls_job.cpp \
 	dls_job_preset.cpp \
 	dls_logger.cpp \

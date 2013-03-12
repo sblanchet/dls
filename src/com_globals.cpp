@@ -19,7 +19,6 @@
  *
  *****************************************************************************/
 
-#include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -37,8 +36,6 @@ const char *dls_format_strings[DLS_FORMAT_COUNT] =
     "MDCT/ZLib/Base64",
     "Quant/ZLib/Base64"
 };
-
-static stringstream _msg;
 
 bool is_daemon = false;
 
@@ -143,40 +140,6 @@ string convert_to_bin(const void *data,
     }
 
     return ret;
-}
-
-/*****************************************************************************/
-
-stringstream &msg()
-{
-    return _msg;
-}
-
-/*****************************************************************************/
-
-void log(DLSLogType type)
-{
-    string msg;
-
-    if      (type == DLSError) msg = "ERROR: ";
-    else if (type == DLSInfo) msg = "INFO: ";
-    else if (type == DLSWarning) msg = "WARNING: ";
-    else if (type == DLSDebug) msg = "DEBUG: ";
-    else msg = "UNKNOWN: ";
-
-    msg += _msg.str();
-
-    if (type != DLSDebug) {
-        // Nachricht an den syslogd weiterreichen
-        syslog(LOG_INFO, "%s", msg.c_str());
-    }
-
-    // Wenn Verbindung zu einem Terminal besteht, die Meldung hier
-    // ebenfalls ausgeben!
-    if (!is_daemon) cout << setw(10) << getpid() << " " << msg << endl;
-
-    // Nachricht entfernen
-    _msg.str("");
 }
 
 /*****************************************************************************/
