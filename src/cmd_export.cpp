@@ -19,7 +19,10 @@
  *
  *****************************************************************************/
 
+#ifdef __unix__
 #include <sys/ioctl.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -93,6 +96,7 @@ int export_main(int argc, char *argv[])
     unsigned int current_channel, total_channels;
     stringstream info_file_name;
     ofstream info_file;
+    int ret;
 
     now.set_now();
 
@@ -203,8 +207,14 @@ int export_main(int argc, char *argv[])
 
     cout << "Exporting to \"" << dls_export_dir << "\" ..." << endl;
 
+#ifdef __unix__
+    ret = mkdir(dls_export_dir.c_str(), 0755);
+#else
+    ret = mkdir(dls_export_dir.c_str());
+#endif
+
     // create unique directory
-    if (mkdir(dls_export_dir.c_str(), 0755)) {
+    if (ret) {
         cerr << "ERROR: Failed to create export directory: ";
         cerr << strerror(errno) << endl;
         exit(1);
@@ -666,7 +676,7 @@ int terminal_width()
     else
         return 50;
 #else
-    return 50
+    return 50;
 #endif
 }
 
