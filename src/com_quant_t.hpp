@@ -168,7 +168,7 @@ void COMQuantT<T>::quantize(const T *input, unsigned int input_length)
     unsigned int i, data_size = 0;
     int *quant, offset;
     double max_error, error;
-    double scale;
+    double scale = 0.0;
     unsigned char bits, use_bits, start, end;
 
 
@@ -261,11 +261,13 @@ void COMQuantT<T>::quantize(const T *input, unsigned int input_length)
         // Maximale Anzahl Bits zum Quantisieren verwenden
         use_bits = MDCT_MAX_BYTES * 8 - 1;
 
+#ifdef QUANT_DEBUG
         // Warnung ausgeben!
         msg() << "MDCT - Could not reach maximal error of " << _accuracy;
         msg() << ". Quantizing with " << (int) bits
               << " bits. Error is " << max_error;
         log(DLSWarning);
+#endif
     }
 
 #ifdef QUANT_DEBUG
@@ -533,7 +535,7 @@ void COMQuantT<T>::dequantize(const char *input,
     {
         for (i = 0; i < length; i++)
         {
-            if (input[current_byte] & (1 << current_bit - 1))
+            if (input[current_byte] & (1 << (current_bit - 1)))
                 quant[i] |= 1 << (b - 1);
 
             if (--current_bit == 0)
