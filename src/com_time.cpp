@@ -537,9 +537,11 @@ string COMTime::to_real_time() const
     struct tm local_time;
     char str[100];
     string ret;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     strftime(str, sizeof(str), "%d.%m.%Y %H:%M:%S", &local_time);
     ret = str;
     sprintf(str, ".%06u", (unsigned int) tv.tv_usec);
@@ -554,9 +556,11 @@ string COMTime::format_time(const char *fmt) const
     struct tm local_time;
     char str[100];
     string ret;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     strftime(str, sizeof(str), fmt, &local_time);
     return str;
 }
@@ -611,9 +615,11 @@ int COMTime::year() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_year + 1900;
 }
 
@@ -623,9 +629,11 @@ int COMTime::month() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_mon + 1;
 }
 
@@ -635,9 +643,11 @@ int COMTime::hour() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_hour;
 }
 
@@ -647,9 +657,11 @@ int COMTime::min() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_min;
 }
 
@@ -659,9 +671,11 @@ int COMTime::sec() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_sec;
 }
 
@@ -671,9 +685,11 @@ int COMTime::day() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_mday;
 }
 
@@ -684,9 +700,11 @@ int COMTime::day_of_week() const
 {
     struct timeval tv;
     struct tm local_time;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     return local_time.tm_wday;
 }
 
