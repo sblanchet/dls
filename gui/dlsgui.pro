@@ -28,10 +28,10 @@ TARGET = dlsgui
 DEPENDPATH += .
 
 INCLUDEPATH += ../widgets ../src
-CONFIG += debug
 QT += svg
 
 unix {
+    CONFIG += debug
     LIBS += -L$$PWD/../widgets -lDlsWidgets
     LIBS += -L$$PWD/../src/.libs -ldls
     LIBS += -lfftw3 -lm -lz
@@ -39,8 +39,10 @@ unix {
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
 }
 win32 {
-    LIBS += -L"..\src\.libs"
-    LIBS += -L"..\widgets\release"
+    CONFIG += release
+    LIBS += -L$$PWD/../widgets/release -lDlsWidgets0
+    LIBS += -L$$PWD/../src/.libs -ldls
+    LIBS += -lfftw3 -lm -lz
 }
 
 HEADERS += MainWindow.h SettingsDialog.h
