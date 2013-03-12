@@ -34,7 +34,7 @@ TARGET = DlsWidgets
 VERSION = 0.9.0
 WIN32_LIB_VERSION = 1
 
-CONFIG += designer plugin debug
+CONFIG += designer plugin dll
 DEPENDPATH += .
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
@@ -42,7 +42,7 @@ QT += svg
 
 isEmpty(PREFIX) {
     unix:PREFIX = /vol/opt/etherlab
-    win32:PREFIX = "c:\msys\1.0\local"
+    win32:PREFIX = "c:/msys/1.0/local"
 }
 
 LIBEXT=""
@@ -53,18 +53,15 @@ unix {
     }
 }
 
-unix {
-    INCLUDEPATH += . $$PWD/../src
-    INCLUDEPATH += $$PWD/DlsWidgets
-}
+INCLUDEPATH += . $$PWD/../src
+INCLUDEPATH += $$PWD/DlsWidgets
+
 win32 {
-    INCLUDEPATH += .
-    CONFIG(debug, debug|release): TARGET = $$join(TARGET,,d)
+    #CONFIG(debug, debug|release): TARGET = $$join(TARGET,,d)
+    QMAKE_LFLAGS += -shared
 }
 
-unix {
-    LIBS += -L$$OUT_PWD/../src/.libs -ldls
-}
+LIBS += -L$$OUT_PWD/../src/.libs -ldls -lfftw3 -lz
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target
@@ -76,23 +73,23 @@ unix {
     INSTALLS += libraries
 }
 win32 {
-    libraries.path = "$${PREFIX}\lib"
-    CONFIG(release, debug|release):libraries.files = \
-        "release\libDlsWidgets$${WIN32_LIB_VERSION}.a"
-    CONFIG(debug, debug|release):libraries.files = \
-        "debug\libdDlsWidgets$${WIN32_LIB_VERSION}.a"
+    #libraries.path = "$${PREFIX}/lib"
+    #CONFIG(release, debug|release):libraries.files = \
+    #    "release/libDlsWidgets$${WIN32_LIB_VERSION}.a"
+    #CONFIG(debug, debug|release):libraries.files = \
+    #    "debug/libdDlsWidgets$${WIN32_LIB_VERSION}.a"
 
-    dlls.path = "$${PREFIX}\bin"
-    CONFIG(release, debug|release):dlls.files = \
-        "release\DlsWidgets$${WIN32_LIB_VERSION}.dll"
-    CONFIG(debug, debug|release):dlls.files = \
-        "debug\dDlsWidgets$${WIN32_LIB_VERSION}.dll"
+    #dlls.path = "$${PREFIX}/bin"
+    #CONFIG(release, debug|release):dlls.files = \
+    #    "release/DlsWidgets$${WIN32_LIB_VERSION}.dll"
+    #CONFIG(debug, debug|release):dlls.files = \
+    #    "debug/dDlsWidgets$${WIN32_LIB_VERSION}.dll"
 
-    INSTALLS += dlls libraries
+    #INSTALLS += dlls libraries
 }
 
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
-win32:inst_headers.path = "$${PREFIX}\include\DlsWidgets"
+win32:inst_headers.path = "$${PREFIX}/include/DlsWidgets"
 inst_headers.files = \
     DlsWidgets/Graph.h \
     DlsWidgets/Layer.h \
