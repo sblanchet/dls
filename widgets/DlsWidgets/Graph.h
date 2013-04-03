@@ -32,6 +32,7 @@
 #include <QAction>
 #include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
+#include <QReadWriteLock>
 
 #include "lib_job.hpp"
 
@@ -175,6 +176,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
     private:
         Scale scale;
         QList<Section *> sections; /**< List of data sections. */
+        QReadWriteLock rwLockSections;
         bool autoRange;
         QtDls::Model *dropModel;
         Section *dropSection;

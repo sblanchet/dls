@@ -486,7 +486,9 @@ bool Graph::save(const QString &path) const
 Section *Graph::appendSection()
 {
     Section *s = new Section(this);
+    rwLockSections.lockForWrite();
     sections.append(s);
+    rwLockSections.unlock();
     updateScrollBar();
     updateActions();
     return s;
@@ -496,6 +498,8 @@ Section *Graph::appendSection()
 
 Section *Graph::insertSectionBefore(Section *before)
 {
+    rwLockSections.lockForWrite();
+
     int index = sections.indexOf(before);
     Section *s = new Section(this);
 
@@ -505,6 +509,8 @@ Section *Graph::insertSectionBefore(Section *before)
     else {
         sections.append(s);
     }
+
+    rwLockSections.unlock();
 
     updateScrollBar();
     updateActions();
@@ -516,7 +522,12 @@ Section *Graph::insertSectionBefore(Section *before)
 
 void Graph::removeSection(Section *section)
 {
+    rwLockSections.lockForWrite();
+
     int num = sections.removeAll(section);
+
+    rwLockSections.unlock();
+
     updateScrollBar();
     updateActions();
 
@@ -1447,6 +1458,9 @@ void Graph::dropEvent(QDropEvent *event)
     }
 
     QList<QUrl> urls = event->mimeData()->urls();
+
+    rwLockSections.lockForWrite();
+
     for (QList<QUrl>::iterator url = urls.begin(); url != urls.end(); url++) {
         if (!url->isValid()) {
             qWarning() << "Not a valid URL:" << *url;
@@ -1462,6 +1476,8 @@ void Graph::dropEvent(QDropEvent *event)
                 .arg(url->toString());
         }
     }
+
+    rwLockSections.unlock();
 
     resetDragging();
     event->acceptProposedAction();
@@ -1708,12 +1724,16 @@ void Graph::newView()
  */
 void Graph::clearSections()
 {
+    rwLockSections.lockForWrite();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         delete *s;
     }
 
     sections.clear();
+
+    rwLockSections.unlock();
 }
 
 /****************************************************************************/
@@ -1744,7 +1764,9 @@ bool Graph::loadSections(const QDomElement &elem, Model *model)
             return false;
         }
 
+        rwLockSections.lockForWrite();
         sections.append(section);
+        rwLockSections.unlock();
     }
 
     return true;
@@ -2021,6 +2043,7 @@ void GraphWorker::clearData()
     clearDataList(genericData);
     clearDataList(minimumData);
     clearDataList(maximumData);
+    messages.clear();
 }
 
 /****************************************************************************/
@@ -2031,7 +2054,8 @@ void GraphWorker::doWork()
 
     messages.clear();
 
-    // FIXME lock sections
+    graph->rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = graph->sections.begin();
             s != graph->sections.end(); s++) {
         (*s)->loadData(graph->scale.getStart(), graph->scale.getEnd(),
@@ -2043,6 +2067,8 @@ void GraphWorker::doWork()
 
         emit notifySection(*s);
     }
+
+    graph->rwLockSections.unlock();
 
     for (set<LibDLS::Job *>::const_iterator job = jobSet.begin();
             job != jobSet.end(); job++) {
