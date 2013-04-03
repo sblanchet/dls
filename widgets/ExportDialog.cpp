@@ -48,7 +48,9 @@ ExportDialog::ExportDialog(
     QDialog(graph),
     graph(graph),
     worker(channels, graph->getStart(), graph->getEnd()),
-    now(COMTime::now())
+    dirCreated(false),
+    now(COMTime::now()),
+    workerBusy(false)
 {
     setupUi(this);
 
@@ -101,6 +103,8 @@ ExportDialog::~ExportDialog()
 
 void ExportDialog::accept()
 {
+    dirCreated = !dir.exists();
+
     // create unique directory
     if (!dir.mkpath(dir.absolutePath())) {
         QMessageBox box(this);
@@ -149,11 +153,13 @@ void ExportDialog::accept()
         worker.addExporter(exp);
     }
 
-    buttonBox->setEnabled(false);
+    QPushButton *ok = buttonBox->button(QDialogButtonBox::Ok);
+    ok->setEnabled(false);
     pushButtonDir->setEnabled(false);
     checkBoxAscii->setEnabled(false);
     checkBoxMatlab->setEnabled(false);
 
+    workerBusy = true;
     QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
 }
 
@@ -161,7 +167,42 @@ void ExportDialog::accept()
 
 void ExportDialog::reject()
 {
-    done(Rejected);
+    if (workerBusy) {
+        worker.cancel();
+    }
+    else {
+        done(Rejected);
+    }
+}
+
+/****************************************************************************/
+
+bool ExportDialog::removeRecursive(const QString &dirName)
+{
+    bool result = true;
+    QDir dir(dirName);
+
+    if (dir.exists(dirName)) {
+        Q_FOREACH(QFileInfo info, dir.entryInfoList(
+                    QDir::NoDotAndDotDot | QDir::System
+                    | QDir::Hidden  | QDir::AllDirs
+                    | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                result = removeRecursive(info.absoluteFilePath());
+            }
+            else {
+                result = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!result) {
+                return result;
+            }
+        }
+
+        result = dir.rmdir(dirName);
+    }
+
+    return result;
 }
 
 /****************************************************************************/
@@ -175,12 +216,20 @@ void ExportDialog::updateProgress()
 
 void ExportDialog::workerFinished()
 {
-    buttonBox->setEnabled(true);
-    pushButtonDir->setEnabled(true);
-    checkBoxAscii->setEnabled(true);
-    checkBoxMatlab->setEnabled(true);
+    workerBusy = false;
 
-    if (worker.progress() >= 100.0) {
+    if (worker.cancelled() || !worker.successful()) {
+        if (dirCreated) {
+            removeRecursive(dir.absolutePath());
+        }
+    }
+
+    if (worker.cancelled()) {
+        done(Rejected);
+        return;
+    }
+
+    if (worker.successful()) {
         done(Accepted);
     }
 }
@@ -214,7 +263,9 @@ ExportWorker::ExportWorker(
     decimation(1),
     channels(channels),
     totalProgress(0.0),
-    channelProgress(0.0)
+    channelProgress(0.0),
+    cancelRequested(false),
+    success(false)
 {
 }
 
@@ -243,8 +294,11 @@ void ExportWorker::doWork()
     channelProgress = 0.0;
     bool beginSuccessful;
 
-    for (QSet<Channel *>::const_iterator channel = channels.begin();
-            channel != channels.end(); channel++) {
+    success = false;
+
+    QSet<Channel *>::const_iterator channel;
+
+    for (channel = channels.begin(); channel != channels.end(); channel++) {
 
         beginSuccessful = true;
 
@@ -256,11 +310,15 @@ void ExportWorker::doWork()
             }
         }
 
-        if (!beginSuccessful) {
+        if (!beginSuccessful || cancelRequested) {
             break;
         }
 
         (*channel)->fetchData(start, end, 0, dataCallback, this, decimation);
+
+        if (cancelRequested) {
+            break;
+        }
 
         for (QList<LibDLS::Export *>::const_iterator exp = exporters.begin();
                 exp != exporters.end(); exp++) {
@@ -270,6 +328,14 @@ void ExportWorker::doWork()
         channelProgress += 100.0 / channels.size();
         totalProgress = channelProgress;
         emit updateProgress();
+
+        if (cancelRequested) {
+            break;
+        }
+    }
+
+    if (channel == channels.end()) {
+        success = true;
     }
 
     emit finished();

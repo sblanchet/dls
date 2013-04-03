@@ -68,6 +68,10 @@ class ExportWorker:
 
         double progress() const { return totalProgress; }
 
+        void cancel() { cancelRequested = true; }
+        bool cancelled() const { return cancelRequested; }
+        bool successful() const { return success; }
+
     public slots:
         void doWork();
 
@@ -84,6 +88,8 @@ class ExportWorker:
         double channelProgress;
         QList<LibDLS::Export *> exporters;
         QDir dir;
+        bool cancelRequested;
+        bool success;
 
         static int dataCallback(LibDLS::Data *, void *);
         void newData(LibDLS::Data *);
@@ -107,9 +113,12 @@ class ExportDialog:
         Graph * const graph;
         ExportWorker worker;
         QDir dir;
+        bool dirCreated;
         COMTime now;
+        bool workerBusy;
 
         ExportDialog();
+        static bool removeRecursive(const QString &);
 
     private slots:
         void accept();
