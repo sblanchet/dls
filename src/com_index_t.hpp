@@ -130,7 +130,7 @@ void COMIndexT<REC>::open_read(const string &file_name)
     stringstream err;
 
     try {
-        _file.open_read(file_name.c_str());
+        _file.open_read(file_name.c_str(), COMFile::Binary);
         _size = _file.calc_size();
         _file.seek(0);
     }
@@ -174,7 +174,7 @@ void COMIndexT<REC>::open_read_write(const string &file_name)
 
     try
     {
-        _file.open_read_write(file_name.c_str());
+        _file.open_read_write(file_name.c_str(), COMFile::Binary);
         _size = _file.calc_size();
         _file.seek(0);
     }
@@ -221,7 +221,7 @@ void COMIndexT<REC>::open_read_append(const string &file_name)
 
     try
     {
-        _file.open_read_append(file_name.c_str());
+        _file.open_read_append(file_name.c_str(), COMFile::Binary);
         _size = _file.calc_size();
         _file.seek(0);
     }
