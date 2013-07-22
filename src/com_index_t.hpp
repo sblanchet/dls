@@ -73,9 +73,11 @@ public:
     void change_record(unsigned int, const REC *);
 
     unsigned int record_count() const;
+    uint64_t file_size() const { return _size; };
 
 private:
     COMFile _file;
+    uint64_t _size;
     unsigned int _record_count;
     unsigned int _position;
 };
@@ -126,37 +128,31 @@ template <class REC>
 void COMIndexT<REC>::open_read(const string &file_name)
 {
     stringstream err;
-    uint64_t size;
 
-    try
-    {
+    try {
         _file.open_read(file_name.c_str());
-        size = _file.calc_size();
+        _size = _file.calc_size();
         _file.seek(0);
     }
-    catch (ECOMFile &e)
-    {
+    catch (ECOMFile &e) {
         throw ECOMIndexT(e.msg);
     }
 
-    if (size % sizeof(REC) != 0)
-    {
-        err << "Index file \"" << file_name << "\" size (" << size << ")"
+    if (_size % sizeof(REC)) {
+        err << "Index file \"" << file_name << "\" size (" << _size << ")"
             << " is no multiple of record size (" << sizeof(REC) << ")!";
 
-        try
-        {
+        try {
             close();
         }
-        catch (ECOMFile &e)
-        {
+        catch (ECOMFile &e) {
             err << " - closing: " << e.msg;
         }
 
         throw ECOMIndexT(err.str());
     }
 
-    _record_count = size / sizeof(REC);
+    _record_count = _size / sizeof(REC);
     _position = 0;
 }
 
@@ -175,12 +171,11 @@ template <class REC>
 void COMIndexT<REC>::open_read_write(const string &file_name)
 {
     stringstream err;
-    uint64_t size;
 
     try
     {
         _file.open_read_write(file_name.c_str());
-        size = _file.calc_size();
+        _size = _file.calc_size();
         _file.seek(0);
     }
     catch (ECOMFile &e)
@@ -188,7 +183,7 @@ void COMIndexT<REC>::open_read_write(const string &file_name)
         throw ECOMIndexT(e.msg);
     }
 
-    if (size % sizeof(REC) != 0)
+    if (_size % sizeof(REC))
     {
         err << "Illegal size of index file \"" << file_name << "\"";
 
@@ -204,7 +199,7 @@ void COMIndexT<REC>::open_read_write(const string &file_name)
         throw ECOMIndexT(err.str());
     }
 
-    _record_count = size / sizeof(REC);
+    _record_count = _size / sizeof(REC);
     _position = 0;
 }
 
@@ -223,12 +218,11 @@ template <class REC>
 void COMIndexT<REC>::open_read_append(const string &file_name)
 {
     stringstream err;
-    uint64_t size;
 
     try
     {
         _file.open_read_append(file_name.c_str());
-        size = _file.calc_size();
+        _size = _file.calc_size();
         _file.seek(0);
     }
     catch (ECOMFile &e)
@@ -236,7 +230,7 @@ void COMIndexT<REC>::open_read_append(const string &file_name)
         throw ECOMIndexT(e.msg);
     }
 
-    if (size % sizeof(REC) != 0)
+    if (_size % sizeof(REC) != 0)
     {
         err << "Illegal size of index file \"" << file_name << "\"";
 
@@ -252,7 +246,7 @@ void COMIndexT<REC>::open_read_append(const string &file_name)
         throw ECOMIndexT(err.str());
     }
 
-    _record_count = size / sizeof(REC);
+    _record_count = _size / sizeof(REC);
     _position = 0;
 }
 
@@ -354,13 +348,12 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 
     try {
         _file.read((char *) &index_record, sizeof(REC), &bytes_read);
-        _position += bytes_read;
     }
     catch (ECOMFile &e) {
         stringstream err;
         err << "Read of length " << sizeof(REC) << " at index " << index
-            << " (position " << _position << ") failed (record count is "
-            << _record_count << "): " << e.msg;
+            << " (position " << _position << ") failed (record count = "
+            << _record_count << ", file size = " << _size << "): " << e.msg;
 
         try
         {
@@ -378,8 +371,8 @@ REC COMIndexT<REC>::operator[](unsigned int index)
         stringstream err;
         err << "Read of length " << sizeof(REC) << " at index " << index
             << " (position " << _position
-            << ") aborted due do unexpected EOF (record count is "
-            << _record_count << ").";
+            << ") aborted due do unexpected EOF (record count = "
+            << _record_count << ", file size = " << _size << ").";
 
         try
         {
@@ -392,6 +385,8 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 
         throw ECOMIndexT(err.str());
     }
+
+    _position += bytes_read;
 
     return index_record;
 }
