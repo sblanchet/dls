@@ -556,7 +556,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
             extrema = new struct extrema[rect.width()];
         }
         catch (...) {
-            qWarning() << "ERROR: Failed to allocate drawing memory!";
+            QString msg;
+            QTextStream str(&msg);
+            str << "ERROR: Failed to allocate drawing memory!";
+            dls_log(msg.toUtf8().constData());
             return;
         }
 
@@ -755,8 +758,11 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
          range != ranges.end();
          range++) {
         if (range->start <= last_end) {
-            qWarning() << "WARNING: Chunks overlapping in channel"
+            QString msg;
+            QTextStream str(&msg);
+            str << "WARNING: Chunks overlapping in channel"
                  << channel->name();
+            dls_log(msg.toUtf8().constData());
             return;
         }
         last_end = range->end;
