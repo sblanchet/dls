@@ -81,7 +81,9 @@ void Job::import(const string &dls_path, /**< DLS directory path */
         _preset.import(dls_path, job_id);
     }
     catch (ECOMJobPreset &e) {
-        cout << "WARNING: " << e.msg << endl;
+		stringstream err;
+        err << "WARNING: " << e.msg;
+		dls_log(err.str());
         return;
     }
 }
@@ -106,8 +108,9 @@ void Job::fetch_channels()
     _channels.clear();
 
     if (!(dir = opendir(_path.c_str()))) {
-        cerr << "ERROR: Failed to open job directory \"" << _path << "\"."
-             << endl;
+		stringstream err;
+        err << "ERROR: Failed to open job directory \"" << _path << "\".";
+		dls_log(err.str());
         return;
     }
 
@@ -130,7 +133,9 @@ void Job::fetch_channels()
             channel.import(_path + "/" + channel_dir_name, channel_index);
         }
         catch (ChannelException &e) {
-            cerr << "WARNING: " << e.msg << endl;
+			stringstream err;
+            err << "WARNING: " << e.msg;
+			dls_log(err.str());
             continue;
         }
 
@@ -225,8 +230,10 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 
     // Das Message-Verzeichnis öffnen
     if (!(dir = opendir(msg_dir.str().c_str()))) {
-        cerr << "ERROR: Failed to open message directory \""
-             << msg_dir.str() << "\"." << endl;
+		stringstream err;
+        err << "ERROR: Failed to open message directory \""
+             << msg_dir.str() << "\".";
+		dls_log(err.str());
         return ret;
     }
 
@@ -330,8 +337,9 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     ring.write_info(&write_ptr, &write_len);
 
                     if (!write_len) {
-                        cerr << "FEHLER: Ringpuffer zum Lesen"
-                             << " der Messages voll!" << endl;
+						stringstream err;
+                        err << "ERROR: Message ringbuffer full!";
+						dls_log(err.str());
                         return ret;
                     }
 
@@ -340,9 +348,11 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     file.read(write_ptr, write_len, &write_len);
 
                     if (!write_len) {
-                        cerr << "Warning: Message file "
+						stringstream err;
+                        err << "Warning: Message file "
                             << (msg_chunk_dir.str() + "/messages").c_str()
-                            << " inconsistent!" << endl;
+                            << " inconsistent!";
+						dls_log(err.str());
                         skip = true;
                         break;
                     }
@@ -370,8 +380,10 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.text = xml.tag()->att("text")->to_str();
                 }
                 catch (ECOMXMLTag &e) {
-                    cerr << "Message element: " << e.msg
-                        << " Tag: " << e.tag << endl;
+					stringstream err;
+                    err << "Message element: " << e.msg
+                        << " Tag: " << e.tag;
+					dls_log(err.str());
                     msg.text = string();
                 }
 
@@ -391,8 +403,10 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.type = Message::Broadcast;
                 }
                 else {
-                    cerr << "Unknown message type "
-                        << xml.tag()->title() << endl;
+					stringstream err;
+                    err << "Unknown message type "
+                        << xml.tag()->title();
+					dls_log(err.str());
                     msg.type = Message::Unknown;
                 }
 
@@ -400,15 +414,21 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
             }
         }
         catch (ECOMIndexT &e) {
-            cerr << "FEHLER im Message-Index: " << e.msg << endl;
+			stringstream err;
+            err << "FEHLER im Message-Index: " << e.msg;
+			dls_log(err.str());
             return ret;
         }
         catch (ECOMFile &e) {
-            cerr << "FEHLER in der Message-Datei: " << e.msg << endl;
+			stringstream err;
+            err << "FEHLER in der Message-Datei: " << e.msg;
+			dls_log(err.str());
             return ret;
         }
         catch (ECOMXMLParser &e) {
-            cerr << "FEHLER beim Parsen: " << e.msg << endl;
+			stringstream err;
+            err << "FEHLER beim Parsen: " << e.msg;
+			dls_log(err.str());
             return ret;
         }
     }

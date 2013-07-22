@@ -59,6 +59,7 @@ libdls_la_SOURCES = \
 	com_zlib.cpp \
 	lib_channel.cpp \
 	lib_chunk.cpp \
+	lib_common.cpp \
 	lib_data.cpp \
 	lib_dir.cpp \
 	lib_export.cpp \
