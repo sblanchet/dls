@@ -437,9 +437,15 @@ void COMFile::seek(unsigned int position)
         throw ECOMFile("File not open.");
     }
 
-    if (lseek(_fd, position, SEEK_SET) == (off_t) - 1)
-    {
-        err << "Position could not be reached! Seek: " << strerror(errno);
+    off_t ret = lseek(_fd, position, SEEK_SET);
+
+    if (ret == (off_t) -1) {
+        err << "Seek position " << position << " error: " << strerror(errno);
+        throw ECOMFile(err.str());
+    }
+    else if (ret != (off_t) position) {
+        err << "Position could not be reached (" << ret << "/" << position
+            << ")! Seek: " << strerror(errno);
         throw ECOMFile(err.str());
     }
 }
@@ -459,36 +465,45 @@ void COMFile::seek(unsigned int position)
 
 void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
 {
-    stringstream err;
-    unsigned int bytes = 0;
+    unsigned int bytes = 0, to_read = length;
     int read_ret;
 
-    if (_mode == fomClosed)
-    {
+    if (!to_read) {
+        return;
+    }
+
+    if (_mode == fomClosed) {
         throw ECOMFile("File not open.");
     }
 
-    if (length > 0)
-    {
-        while (1)
-        {
-            if ((read_ret = ::read(_fd, target, length)) == -1)
-            {
-                if (errno != EINTR)
-                {
-                    err << "Read error: " << strerror(errno);
-                    throw ECOMFile(err.str());
-                }
+    while (to_read > 0) {
+        read_ret = ::read(_fd, target, to_read);
+
+        if (read_ret == -1) {
+            stringstream err;
+
+            if (errno == EINTR) {
+                continue;
             }
-            else
-            {
-                bytes = read_ret;
-                break;
-            }
+
+            err << "Read error: " << strerror(errno);
+            throw ECOMFile(err.str());
+        }
+        else if (read_ret == 0) {
+            stringstream err;
+            err << "EOF";
+            throw ECOMFile(err.str());
+        }
+        else {
+            bytes += read_ret;
+            target += read_ret;
+            to_read -= read_ret;
         }
     }
 
-    if (bytes_read) *bytes_read = bytes;
+    if (bytes_read) {
+        *bytes_read = bytes;
+    }
 
     return;
 }
