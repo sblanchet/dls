@@ -100,8 +100,10 @@ dls_ctl_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
 dls_ctl_LDFLAGS =
 dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls
 
+if ENABLE_FLTK
 install-exec-hook:
 	chmod +s $(DESTDIR)$(bindir)/dls_ctl
+endif
 
 dls_ctl_SOURCES = \
 	ctl_dialog_channel.cpp \
