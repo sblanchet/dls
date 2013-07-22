@@ -490,9 +490,8 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
             throw ECOMFile(err.str());
         }
         else if (read_ret == 0) {
-            stringstream err;
-            err << "EOF";
-            throw ECOMFile(err.str());
+            // EOF
+            break;
         }
         else {
             bytes += read_ret;
