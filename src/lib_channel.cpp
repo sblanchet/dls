@@ -162,7 +162,9 @@ void Channel::fetch_chunks()
             chunk.import(path() + "/" + dir_ent_name, _type);
         }
         catch (ChunkException &e) {
-            cerr << "WARNING: Failed import chunk: " << e.msg << endl;
+			stringstream err;
+            err << "WARNING: Failed import chunk: " << e.msg;
+			dls_log(err.str());
             continue;
         }
 
@@ -171,7 +173,9 @@ void Channel::fetch_chunks()
             chunk.fetch_range();
         }
         catch (ChunkException &e) {
-            cerr << "WARNING: Failed to fetch chunk range: " << e.msg << endl;
+			stringstream err;
+            err << "WARNING: Failed to fetch chunk range: " << e.msg;
+			dls_log(err.str());
             continue;
         }
 

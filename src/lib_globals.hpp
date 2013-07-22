@@ -19,8 +19,8 @@
  *
  *****************************************************************************/
 
-#ifndef LibGlobalsHpp
-#define LibGlobalsHpp
+#ifndef DlsLibGlobalsHpp
+#define DlsLibGlobalsHpp
 
 /*****************************************************************************/
 
@@ -62,6 +62,14 @@ enum DLSMetaType
     DLSMetaMin = 2,
     DLSMetaMax = 4
 };
+
+/*****************************************************************************/
+
+typedef void (*DlsLoggingCallback)(const char *, void *);
+
+void dls_set_logging_callback(DlsLoggingCallback, void *);
+
+void dls_log(const string &);
 
 /*****************************************************************************/
 

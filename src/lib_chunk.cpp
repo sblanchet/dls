@@ -309,7 +309,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 new COMCompressionT_MDCT<double>(_mdct_block_size, 0);
         }
         else {
-            cout << "ERROR: MDCT only for floating point types!" << endl;
+			stringstream err;
+            err << "ERROR: MDCT only for floating point types!";
+			dls_log(err.str());
             return;
         }
     }
@@ -323,13 +325,17 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 new COMCompressionT_Quant<double>(0.0);
         }
         else {
-            cout << "ERROR: Quant only for floating point types!" << endl;
+			stringstream err;
+            err << "ERROR: Quant only for floating point types!";
+			dls_log(err.str());
             return;
         }
     }
     else {
-        cout << "ERROR: Unknown compression type index: "
-             << _format_index << endl;
+		stringstream err;
+        err << "ERROR: Unknown compression type index: "
+             << _format_index;
+		dls_log(err.str());
         return;
     }
 
@@ -350,9 +356,11 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
         try {
             global_index_record = global_index[i];
         } catch (ECOMIndexT &e) {
-            cout << "ERROR: Failed read record " << i
+			stringstream err;
+            err << "ERROR: Failed read record " << i
                  << " from global index \"";
-            cout << global_index_file_name << "\". Reason: " << e.msg << endl;
+            err << global_index_file_name << "\". Reason: " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -379,13 +387,17 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             index.open_read(data_file_name.str() + ".idx");
             data_file.open_read(data_file_name.str().c_str());
         } catch (ECOMIndexT &e) {
-            cout << "ERROR: Failed to open index \"";
-            cout << data_file_name.str() << ".idx\": " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: Failed to open index \"";
+            err << data_file_name.str() << ".idx\": " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         } catch (ECOMFile &e) {
-            cout << "ERROR: Failed to open data file \"";
-            cout << data_file_name.str() << "\": " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: Failed to open data file \"";
+            err << data_file_name.str() << "\": " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -395,7 +407,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             try {
                 index_record = index[j];
             } catch (ECOMIndexT &e) {
-                cout << "ERROR: Could not read from index: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: Could not read from index: " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -411,7 +425,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             try {
                 data_file.seek(index_record.position);
             } catch (ECOMFile &e) {
-                cout << "ERROR: Could not seek in data file!" << endl;
+				stringstream err;
+                err << "ERROR: Could not seek in data file!";
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -426,16 +442,20 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 try {
                     data_file.read(write_ptr, write_len, &write_len);
                 } catch (ECOMFile &e) {
-                    cout << "ERROR: Could not read from data file: "
-                         << e.msg << endl;
+					stringstream err;
+                    err << "ERROR: Could not read from data file: "
+                         << e.msg;
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
 
                 if (!write_len) {
-                    cout << "ERROR: EOF in \"" << data_file_name.str()
+					stringstream err;
+                    err << "ERROR: EOF in \"" << data_file_name.str()
                          << "\" after searching position "
-                         << index_record.position << "!" << endl;
+                         << index_record.position << "!";
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
@@ -447,7 +467,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 } catch (ECOMXMLParserEOF &e) {
                     continue;
                 } catch (ECOMXMLParser &e) {
-                    cout << "parsing error: " << e.msg << endl;
+					stringstream err;
+                    err << "parsing error: " << e.msg;
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
@@ -459,8 +481,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                                           comp, data, cb, cb_data,
                                           decimation, decimationCounter);
                     } catch (ECOMXMLTag &e) {
-                        cout << "ERROR: Could not read block: "
-                             << e.msg << endl;
+						stringstream err;
+                        err << "ERROR: Could not read block: " << e.msg;
+						dls_log(err.str());
                         delete comp;
                         return;
                     }
@@ -483,7 +506,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             must_read_again = false;
         }
         catch (ECOMXMLParser &e) {
-            cout << "ERROR: While parsing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: While parsing: " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -499,7 +524,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 data_file.read(write_ptr, write_len, &write_len);
             }
             catch (ECOMFile &e) {
-                cout << "ERROR: Could not read data file: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: Could not read data file: " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -516,7 +543,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 must_read_again = false;
             }
             catch (ECOMXMLParser &e) {
-                cout << "ERROR: While parsing: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: While parsing: " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -532,7 +561,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                                   decimation, decimationCounter);
             }
             catch (ECOMXMLTag &e) {
-                cout << "ERROR: Failed to read block!" << endl;
+				stringstream err;
+                err << "ERROR: Failed to read block!";
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -573,7 +604,9 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         try {
             comp->uncompress(block_data, strlen(block_data), block_size);
         } catch (ECOMCompression &e) {
-            cout << "ERROR while uncompressing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR while uncompressing: " << e.msg;
+			dls_log(err.str());
             return;
         }
 
@@ -593,7 +626,9 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         try {
             comp->flush_uncompress(block_data, strlen(block_data));
         } catch (ECOMCompression &e) {
-            cout << "ERROR while uncompressing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR while uncompressing: " << e.msg;
+			dls_log(err.str());
             return;
         }
 

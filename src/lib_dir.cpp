@@ -81,8 +81,10 @@ void Directory::import(const string &path)
             job.import(_path, job_id);
         }
         catch (JobException &e) {
-            cerr << "WARNING: Failed to import job "
-                 << job_id << ": " << e.msg << endl;
+			stringstream err;
+            err << "WARNING: Failed to import job "
+                 << job_id << ": " << e.msg;
+			dls_log(err.str());
             continue;
         }
 
