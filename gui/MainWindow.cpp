@@ -45,7 +45,8 @@ MainWindow::MainWindow(QWidget *parent):
 {
     setupUi(this);
 
-    dls_set_logging_callback(loggingCallback, this);
+    connect(dlsGraph, SIGNAL(logMessage(const QString &)),
+            this, SLOT(loggingCallback(const QString &)));
 
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
@@ -122,6 +123,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     list << splitter->sizes()[0] << splitter->sizes()[1];
     settings.setValue("SplitterSizes", list);
 
+    logWindow.close();
     event->accept();
 }
 
@@ -156,10 +158,9 @@ void MainWindow::updateRecentFileActions()
 
 /****************************************************************************/
 
-void MainWindow::loggingCallback(const char *msg, void *data)
+void MainWindow::loggingCallback(const QString &msg)
 {
-    MainWindow *wnd = (MainWindow *) data;
-    wnd->logWindow.log(msg);
+    logWindow.log(msg);
 }
 
 /****************************************************************************/

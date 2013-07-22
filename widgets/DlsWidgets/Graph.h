@@ -144,6 +144,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
             LastYear
         };
 
+    signals:
+        void logMessage(const QString &);
+
     public slots:
         void previousView();
         void nextView();
@@ -249,6 +252,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         static QColor messageColor[];
         static QString messagePixmap[];
 
+        QMutex loggingMutex;
+
         void updateDragging(QPoint);
         void resetDragging();
         void updateCursor();
@@ -261,6 +266,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void clearSections();
         bool loadSections(const QDomElement &, QtDls::Model *);
         void drawMessages(QPainter &, const QRect &);
+        static void staticLoggingCallback(const char *, void *);
+        void loggingCallback(const char *);
 
     private slots:
         void interactionSlot();

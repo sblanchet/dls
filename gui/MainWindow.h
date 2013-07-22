@@ -57,7 +57,6 @@ class MainWindow:
         void addRecentFile(const QString &);
         void updateRecentFileActions();
 
-        static void loggingCallback(const char *, void *);
 
     private slots:
         void on_actionLoad_triggered();
@@ -68,6 +67,8 @@ class MainWindow:
         void on_actionLogWindow_triggered();
 
         void on_toolButtonNewDir_clicked();
+
+        void loggingCallback(const QString &);
 };
 
 /****************************************************************************/
