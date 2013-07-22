@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent):
 {
     setupUi(this);
 
+    dls_set_logging_callback(loggingCallback, this);
+
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
     recentFiles = settings.value("RecentFiles").toStringList();
@@ -154,6 +156,14 @@ void MainWindow::updateRecentFileActions()
 
 /****************************************************************************/
 
+void MainWindow::loggingCallback(const char *msg, void *data)
+{
+    MainWindow *wnd = (MainWindow *) data;
+    wnd->logWindow.log(msg);
+}
+
+/****************************************************************************/
+
 void MainWindow::on_actionLoad_triggered()
 {
     QFileDialog dialog(this);
@@ -237,6 +247,13 @@ void MainWindow::on_actionSettings_triggered()
     SettingsDialog dialog(restore, this);
 
     dialog.exec();
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionLogWindow_triggered()
+{
+    logWindow.show();
 }
 
 /****************************************************************************/

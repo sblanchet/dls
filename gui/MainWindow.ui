@@ -71,7 +71,7 @@
      <x>0</x>
      <y>0</y>
      <width>1032</width>
-     <height>23</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -100,8 +100,15 @@
     </property>
     <addaction name="actionSettings"/>
    </widget>
+   <widget class="QMenu" name="menuWindows">
+    <property name="title">
+     <string>Windows</string>
+    </property>
+    <addaction name="actionLogWindow"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
+   <addaction name="menuWindows"/>
   </widget>
   <action name="actionClose">
    <property name="icon">
@@ -157,6 +164,11 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionLogWindow">
+   <property name="text">
+    <string>Log Window</string>
    </property>
   </action>
  </widget>

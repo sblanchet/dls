@@ -45,10 +45,11 @@ win32 {
     LIBS += -lfftw3 -lm -lz
 }
 
-HEADERS += MainWindow.h SettingsDialog.h
-SOURCES += main.cpp MainWindow.cpp SettingsDialog.cpp
+HEADERS += MainWindow.h SettingsDialog.h LogWindow.h
+SOURCES += main.cpp MainWindow.cpp SettingsDialog.cpp LogWindow.cpp
 FORMS += MainWindow.ui
 FORMS += SettingsDialog.ui
+FORMS += LogWindow.ui
 
 RESOURCES += dlsgui.qrc
 

@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2013  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the data logging service (DLS).
  *
@@ -21,53 +21,29 @@
  *
  ****************************************************************************/
 
-#include <QMainWindow>
+#include <QWidget>
 
-#include "ui_MainWindow.h"
-#include "LogWindow.h"
-
-#include "lib_dir.hpp"
-
-#include "DlsWidgets/Model.h"
+#include "ui_LogWindow.h"
 
 /****************************************************************************/
 
-class MainWindow:
-    public QMainWindow,
-    public Ui::MainWindow
+class LogWindow:
+    public QWidget,
+    public Ui::LogWindow
 {
     Q_OBJECT
 
     public:
-        MainWindow(QWidget * = 0);
-        ~MainWindow();
+        LogWindow(QWidget * = 0);
+        ~LogWindow();
+
+        void log(const QString &);
 
     private:
-        QList<LibDLS::Directory *> dirs;
-        QtDls::Model model;
-        bool restore;
-        QStringList recentFiles;
-        QString currentFileName;
-        LogWindow logWindow;
-
-        enum { MaxRecentFiles = 10 };
-        QAction *recentFileActions[MaxRecentFiles];
-
-        void closeEvent(QCloseEvent *);
-        void addRecentFile(const QString &);
-        void updateRecentFileActions();
-
-        static void loggingCallback(const char *, void *);
 
     private slots:
-        void on_actionLoad_triggered();
-        void openRecentFile();
-        void on_actionSave_triggered();
-        void on_actionSaveAs_triggered();
-        void on_actionSettings_triggered();
-        void on_actionLogWindow_triggered();
-
-        void on_toolButtonNewDir_clicked();
+        void on_pushButtonClose_clicked();
+        void on_pushButtonClear_clicked();
 };
 
 /****************************************************************************/

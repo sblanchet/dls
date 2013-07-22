@@ -2054,6 +2054,11 @@ void GraphWorker::doWork()
 
     messages.clear();
 
+    QString str;
+    QTextStream s(&str);
+    s << __func__;
+    qDebug() << str;
+
     graph->rwLockSections.lockForRead();
 
     for (QList<Section *>::iterator s = graph->sections.begin();
@@ -2101,6 +2106,12 @@ int GraphWorker::dataCallback(LibDLS::Data *data, void *cb_data)
 
 void GraphWorker::newData(LibDLS::Data *data)
 {
+    QString str;
+    QTextStream s(&str);
+    s << __func__ << " " << data->start_time().to_rfc811_time().c_str()
+        << " " << data->meta_type() << " " << data->meta_level();
+    dls_log(str.toUtf8().constData());
+
     switch (data->meta_type()) {
         case DLSMetaGen:
             genericData.push_back(data);
