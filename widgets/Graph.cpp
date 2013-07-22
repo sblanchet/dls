@@ -2073,11 +2073,6 @@ void GraphWorker::doWork()
 
     messages.clear();
 
-    QString str;
-    QTextStream s(&str);
-    s << __func__;
-    qDebug() << str;
-
     graph->rwLockSections.lockForRead();
 
     for (QList<Section *>::iterator s = graph->sections.begin();
