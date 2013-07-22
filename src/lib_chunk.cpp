@@ -383,20 +383,21 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                        << "/data" << global_index_record.start_time
                        << "_" << dls_meta_type_str(meta_type);
 
+        string indexPath = data_file_name.str() + ".idx";
         try {
-            index.open_read(data_file_name.str() + ".idx");
+            index.open_read(indexPath);
             data_file.open_read(data_file_name.str().c_str());
         } catch (ECOMIndexT &e) {
 			stringstream err;
             err << "ERROR: Failed to open index \"";
-            err << data_file_name.str() << ".idx\": " << e.msg;
+            err << indexPath << "\": " << e.msg;
 			dls_log(err.str());
             delete comp;
             return;
         } catch (ECOMFile &e) {
 			stringstream err;
             err << "ERROR: Failed to open data file \"";
-            err << data_file_name.str() << "\": " << e.msg;
+            err << indexPath << "\": " << e.msg;
 			dls_log(err.str());
             delete comp;
             return;
@@ -408,7 +409,8 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 index_record = index[j];
             } catch (ECOMIndexT &e) {
 				stringstream err;
-                err << "ERROR: Could not read from index: " << e.msg;
+                err << "ERROR: Could not read from index \"" << indexPath
+                    << "\": " << e.msg;
 				dls_log(err.str());
                 delete comp;
                 return;
@@ -687,19 +689,28 @@ void Chunk::fetch_range()
         throw ChunkException(err.str());
     }
 
+    // Ersten und letzten Record lesen, um die Zeitspanne zu bestimmen
     try
     {
-        // Ersten und letzten Record lesen, um die Zeitspanne zu bestimmen
         first_global_index_record = global_index[0];
-        last_global_index_record
-            = global_index[global_index.record_count() - 1];
     }
     catch (ECOMIndexT &e)
     {
-        err << "Could not read first and last"
-            << " record from global index file \""
-            << global_index_file_name << "\", record count = "
-            << global_index.record_count() << "!";
+        err << "Could not read first record of global index file \""
+            << global_index_file_name << "\": " << e.msg;
+        throw ChunkException(err.str());
+    }
+
+    unsigned int rec_idx = global_index.record_count() - 1;
+    try
+    {
+        last_global_index_record = global_index[rec_idx];
+    }
+    catch (ECOMIndexT &e)
+    {
+        err << "Could not read last record (" << rec_idx
+            << ") of global index file \"" << global_index_file_name
+            << "\": " << e.msg;
         throw ChunkException(err.str());
     }
 
@@ -729,15 +740,19 @@ void Chunk::fetch_range()
             throw ChunkException(err.str());
         }
 
+        unsigned int rec_idx = index.record_count() - 1;
         try
         {
             // Letzten Record lesen
-            index_record = index[index.record_count() - 1];
+            index_record = index[rec_idx];
         }
         catch (ECOMIndexT &e)
         {
-            err << "Could not read from index file \""
-                << index_file_name.str() << "\": " << e.msg;
+            stringstream err;
+            err << "Could not read last (" << rec_idx
+                << ") record from index file \""
+                << index_file_name.str() << "\" (logging in progress): "
+                << e.msg;
             throw ChunkException(err.str());
         }
 
