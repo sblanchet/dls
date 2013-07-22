@@ -320,9 +320,7 @@ inline unsigned int COMIndexT<REC>::record_count() const
 template <class REC>
 REC COMIndexT<REC>::operator[](unsigned int index)
 {
-    stringstream err;
     REC index_record;
-    unsigned int bytes_read;
 
     if (!_file.open())
     {
@@ -331,39 +329,47 @@ REC COMIndexT<REC>::operator[](unsigned int index)
 
     if (index >= _record_count)
     {
-        throw ECOMIndexT("Index out of range!");
+        stringstream err;
+
+        err << "Index out of range (" << index << "/"
+            << _record_count << ")!";
+        throw ECOMIndexT(err.str());
     }
 
-    try
+    unsigned int target_pos = index * sizeof(REC);
+    if (_position != target_pos)
     {
-        if (_position != index * sizeof(REC))
-        {
-            _file.seek(index * sizeof(REC));
+        try {
+            _file.seek(target_pos);
+            _position = target_pos;
         }
-
-        _file.read((char *) &index_record, sizeof(REC), &bytes_read);
-        _position = (index + 1) * sizeof(REC);
-
-        if (bytes_read != sizeof(REC))
-        {
-            err << "Did not read enough bytes (" << bytes_read << "/"
-                << sizeof(REC) << ")!";
-
-            try
-            {
-                _file.close();
-            }
-            catch (ECOMFile &e)
-            {
-                err << " - close: " << e.msg;
-            }
-
+        catch (ECOMFile &e) {
+            stringstream err;
+            err << "Seek to index " << index
+                << " (position " << target_pos << ") failed: " << e.msg;
             throw ECOMIndexT(err.str());
         }
     }
-    catch (ECOMFile &e)
-    {
-        err << "File I/O error: " << e.msg;
+
+    try {
+        _file.read((char *) &index_record, sizeof(REC));
+        _position = (index + 1) * sizeof(REC);
+    }
+    catch (ECOMFile &e) {
+        stringstream err;
+        err << "Read of length " << sizeof(REC) << " at index " << index
+            << " (position " << _position << ") failed (record count is "
+            << _record_count << "): " << e.msg;
+
+        try
+        {
+            _file.close();
+        }
+        catch (ECOMFile &e)
+        {
+            err << " - close: " << e.msg;
+        }
+
         throw ECOMIndexT(err.str());
     }
 
