@@ -342,10 +342,12 @@ REC COMIndexT<REC>::operator[](unsigned int index)
         }
 
         _file.read((char *) &index_record, sizeof(REC), &bytes_read);
+        _position = (index + 1) * sizeof(REC);
 
         if (bytes_read != sizeof(REC))
         {
-            err << "Did not read enough bytes!";
+            err << "Did not read enough bytes (" << bytes_read << "/"
+                << sizeof(REC) << ")!";
 
             try
             {
@@ -361,10 +363,9 @@ REC COMIndexT<REC>::operator[](unsigned int index)
     }
     catch (ECOMFile &e)
     {
-        throw ECOMIndexT(e.msg);
+        err << "File I/O error: " << e.msg;
+        throw ECOMIndexT(err.str());
     }
-
-    _position = (index + 1) * sizeof(REC);
 
     return index_record;
 }
