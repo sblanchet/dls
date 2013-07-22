@@ -321,6 +321,7 @@ template <class REC>
 REC COMIndexT<REC>::operator[](unsigned int index)
 {
     REC index_record;
+    unsigned int bytes_read;
 
     if (!_file.open())
     {
@@ -352,14 +353,33 @@ REC COMIndexT<REC>::operator[](unsigned int index)
     }
 
     try {
-        _file.read((char *) &index_record, sizeof(REC));
-        _position = (index + 1) * sizeof(REC);
+        _file.read((char *) &index_record, sizeof(REC), &bytes_read);
+        _position += bytes_read;
     }
     catch (ECOMFile &e) {
         stringstream err;
         err << "Read of length " << sizeof(REC) << " at index " << index
             << " (position " << _position << ") failed (record count is "
             << _record_count << "): " << e.msg;
+
+        try
+        {
+            _file.close();
+        }
+        catch (ECOMFile &e)
+        {
+            err << " - close: " << e.msg;
+        }
+
+        throw ECOMIndexT(err.str());
+    }
+
+    if (bytes_read != sizeof(REC)) {
+        stringstream err;
+        err << "Read of length " << sizeof(REC) << " at index " << index
+            << " (position " << _position
+            << ") aborted due do unexpected EOF (record count is "
+            << _record_count << ").";
 
         try
         {
