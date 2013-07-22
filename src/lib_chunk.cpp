@@ -698,7 +698,8 @@ void Chunk::fetch_range()
     {
         err << "Could not read first and last"
             << " record from global index file \""
-            << global_index_file_name << "\"!";
+            << global_index_file_name << "\", record count = "
+            << global_index.record_count() << "!";
         throw ChunkException(err.str());
     }
 
