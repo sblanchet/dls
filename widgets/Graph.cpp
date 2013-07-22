@@ -127,6 +127,8 @@ Graph::Graph(
     mouseOverMsgSplitter(false),
     movingMsgSplitter(false)
 {
+    dls_set_logging_callback(staticLoggingCallback, this);
+
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
@@ -1892,6 +1894,23 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
 /****************************************************************************/
 
+void Graph::staticLoggingCallback(const char *msg, void *data)
+{
+    Graph *g = (Graph *) data;
+    g->loggingCallback(msg);
+}
+
+/****************************************************************************/
+
+void Graph::loggingCallback(const char *msg)
+{
+    loggingMutex.lock();
+    emit logMessage(QString(msg));
+    loggingMutex.unlock();
+}
+
+/****************************************************************************/
+
 void Graph::interactionSlot()
 {
     if (sender() == &zoomAction) {
@@ -2106,12 +2125,6 @@ int GraphWorker::dataCallback(LibDLS::Data *data, void *cb_data)
 
 void GraphWorker::newData(LibDLS::Data *data)
 {
-    QString str;
-    QTextStream s(&str);
-    s << __func__ << " " << data->start_time().to_rfc811_time().c_str()
-        << " " << data->meta_type() << " " << data->meta_level();
-    dls_log(str.toUtf8().constData());
-
     switch (data->meta_type()) {
         case DLSMetaGen:
             genericData.push_back(data);
