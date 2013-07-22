@@ -76,13 +76,20 @@ COMFile::~COMFile()
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read(const char *filename)
+void COMFile::open_read(const char *filename, OpenFlag f)
 {
     stringstream err;
+    int flags = O_RDONLY;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
-    if ((_fd = ::open(filename, O_RDONLY)) == -1)
+    if ((_fd = ::open(filename, flags)) == -1)
     {
         err << "Could not open file";
         err << " \"" << filename << "\"";
@@ -107,10 +114,17 @@ void COMFile::open_read(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read_write(const char *filename)
+void COMFile::open_read_write(const char *filename, OpenFlag f)
 {
     stringstream err;
     struct stat stat_buf;
+    int flags = O_RDWR;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
@@ -120,7 +134,7 @@ void COMFile::open_read_write(const char *filename)
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
             // Datei neu erstellen
-            if ((_fd = ::open(filename, O_RDWR | O_CREAT, 0644)) == -1)
+            if ((_fd = ::open(filename, flags | O_CREAT, 0644)) == -1)
             {
                 err << "Could not create file";
                 err << " \"" << filename << "\"";
@@ -138,7 +152,7 @@ void COMFile::open_read_write(const char *filename)
     else // Datei existiert
     {
         // Existierende Datei zum Schreiben öffnen
-        if ((_fd = ::open(filename, O_RDWR)) == -1)
+        if ((_fd = ::open(filename, flags)) == -1)
         {
             err << "Could not open file";
             err << " \"" << filename << "\"";
@@ -164,10 +178,17 @@ void COMFile::open_read_write(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read_append(const char *filename)
+void COMFile::open_read_append(const char *filename, OpenFlag f)
 {
     stringstream err;
     struct stat stat_buf;
+    int flags = O_RDWR | O_APPEND;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
@@ -177,7 +198,7 @@ void COMFile::open_read_append(const char *filename)
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
             // Datei neu erstellen
-            if ((_fd = ::open(filename, O_RDWR | O_CREAT | O_APPEND, 0644))
+            if ((_fd = ::open(filename, flags | O_CREAT, 0644))
                 == -1)
             {
                 err << "Could not create file";
@@ -196,7 +217,7 @@ void COMFile::open_read_append(const char *filename)
     else // Datei existiert
     {
         // Existierende Datei zum Schreiben öffnen und leeren
-        if ((_fd = ::open(filename, O_RDWR | O_APPEND)) == -1)
+        if ((_fd = ::open(filename, flags)) == -1)
         {
             err << "Could not open file";
             err << " \"" << filename << "\"";
