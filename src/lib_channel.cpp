@@ -95,7 +95,7 @@ void Channel::import(
         _unit = xml.tag()->att("unit")->to_str();
 
         if ((_type = dls_str_to_channel_type(xml.tag()->att("type")->to_str()))
-            == TUNKNOWN) {
+            == DLS_TUNKNOWN) {
             stringstream err;
             file.close();
             err << "Unknown channel type \""

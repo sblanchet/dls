@@ -198,56 +198,56 @@ void LibDLS::Chunk::_fetch_level_data_wrapper(COMTime start,
                                               ) const
 {
     switch (_type) {
-        case TCHAR:
+        case DLS_TCHAR:
             _fetch_level_data<char>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
                                     decimation, decimationCounter);
             break;
-        case TUCHAR:
+        case DLS_TUCHAR:
             _fetch_level_data<unsigned char>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
                                              decimationCounter);
             break;
-        case TSHORT:
+        case DLS_TSHORT:
             _fetch_level_data<short>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
                                      decimation, decimationCounter);
             break;
-        case TUSHORT:
+        case DLS_TUSHORT:
             _fetch_level_data<unsigned short>(start, end, meta_type, level,
                                               time_per_value, ring, data,
                                               cb, cb_data, decimation,
                                               decimationCounter);
             break;
-        case TINT:
+        case DLS_TINT:
             _fetch_level_data<int>(start, end, meta_type, level,
                                    time_per_value, ring, data, cb, cb_data,
                                    decimation, decimationCounter);
             break;
-        case TUINT:
+        case DLS_TUINT:
             _fetch_level_data<unsigned int>(start, end, meta_type, level,
                                             time_per_value, ring, data,
                                             cb, cb_data, decimation,
                                             decimationCounter);
             break;
-        case TLINT:
+        case DLS_TLINT:
             _fetch_level_data<long>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
                                     decimation, decimationCounter);
             break;
-        case TULINT:
+        case DLS_TULINT:
             _fetch_level_data<unsigned long>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
                                              decimationCounter);
             break;
-        case TFLT:
+        case DLS_TFLT:
             _fetch_level_data<float>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
                                      decimation, decimationCounter);
             break;
-        case TDBL:
+        case DLS_TDBL:
             _fetch_level_data<double>(start, end, meta_type, level,
                                       time_per_value, ring, data, cb, cb_data,
                                       decimation, decimationCounter);

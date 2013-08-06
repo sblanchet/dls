@@ -752,7 +752,7 @@ void DLSProcLogger::_process_tag()
 
                         real_channel.type = dls_str_to_channel_type(type);
 
-                        if (real_channel.type == TUNKNOWN) {
+                        if (real_channel.type == DLS_TUNKNOWN) {
                             _exit = true;
                             _exit_code = E_DLS_ERROR_RESTART;
                             msg() << "Receiving MSR channel:"

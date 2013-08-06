@@ -134,34 +134,34 @@ void DLSLogger::create_gen_saver()
     {
         switch (_real_channel.type)
         {
-            case TCHAR:
+            case DLS_TCHAR:
                 _gen_saver = new DLSSaverGenT<char>(this);
                 break;
-            case TUCHAR:
+            case DLS_TUCHAR:
                 _gen_saver = new DLSSaverGenT<unsigned char>(this);
                 break;
-            case TSHORT:
+            case DLS_TSHORT:
                 _gen_saver = new DLSSaverGenT<short int>(this);
                 break;
-            case TUSHORT:
+            case DLS_TUSHORT:
                 _gen_saver = new DLSSaverGenT<unsigned short int>(this);
                 break;
-            case TINT:
+            case DLS_TINT:
                 _gen_saver = new DLSSaverGenT<int>(this);
                 break;
-            case TUINT:
+            case DLS_TUINT:
                 _gen_saver = new DLSSaverGenT<unsigned int>(this);
                 break;
-            case TLINT:
+            case DLS_TLINT:
                 _gen_saver = new DLSSaverGenT<long>(this);
                 break;
-            case TULINT:
+            case DLS_TULINT:
                 _gen_saver = new DLSSaverGenT<unsigned long>(this);
                 break;
-            case TFLT:
+            case DLS_TFLT:
                 _gen_saver = new DLSSaverGenT<float>(this);
                 break;
-            case TDBL:
+            case DLS_TDBL:
                 _gen_saver = new DLSSaverGenT<double>(this);
                 break;
 
@@ -244,8 +244,8 @@ void DLSLogger::check_presettings(const COMChannelPreset *channel) const
     }
 
     if (channel->format_index == DLS_FORMAT_MDCT
-            && _real_channel.type != TFLT
-            && _real_channel.type != TDBL) {
+            && _real_channel.type != DLS_TFLT
+            && _real_channel.type != DLS_TDBL) {
         err << "MDCT compression only for floating point channels!";
         throw EDLSLogger(err.str());
     }

@@ -458,7 +458,7 @@ bool CTLDialogChannel::_save_channels()
                 channel_i = _channels->begin();
                 while (channel_i != _channels->end())
                 {
-                    if ((*channel_i)->type == TUNKNOWN)
+                    if ((*channel_i)->type == DLS_TUNKNOWN)
                     {
                         msg_win->str() << "Kanal \"" << (*channel_i)->name
                                        << "\" hat keine Typinformation!";
@@ -466,8 +466,8 @@ bool CTLDialogChannel::_save_channels()
                         return false;
                     }
 
-                    if ((*channel_i)->type != TFLT
-                        && (*channel_i)->type != TDBL)
+                    if ((*channel_i)->type != DLS_TFLT
+                        && (*channel_i)->type != DLS_TDBL)
                     {
                         msg_win->str() << "Kanal \"" << (*channel_i)->name
                                        << "\" hat keinen Gleitkommatyp!";
@@ -537,7 +537,7 @@ bool CTLDialogChannel::_save_channels()
                 channel_i = _channels->begin();
                 while (channel_i != _channels->end())
                 {
-                    if ((*channel_i)->type == TUNKNOWN)
+                    if ((*channel_i)->type == DLS_TUNKNOWN)
                     {
                         msg_win->str() << "Kanal \"" << (*channel_i)->name
                                        << "\" hat keine Typinformation!";
@@ -546,8 +546,8 @@ bool CTLDialogChannel::_save_channels()
                     }
 
                     // Quantisierung nur für Fließkommatypen
-                    if ((*channel_i)->type != TFLT
-                        && (*channel_i)->type != TDBL)
+                    if ((*channel_i)->type != DLS_TFLT
+                        && (*channel_i)->type != DLS_TDBL)
                     {
                         msg_win->str() << "Kanal \"" << (*channel_i)->name
                                        << "\" hat keinen Gleitkommatyp!";
