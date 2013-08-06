@@ -26,17 +26,17 @@
 
 enum COMChannelType
 {
-    TUNKNOWN,
-    TCHAR,
-    TUCHAR,
-    TSHORT,
-    TUSHORT,
-    TINT,
-    TUINT,
-    TLINT,
-    TULINT,
-    TFLT,
-    TDBL
+    DLS_TUNKNOWN,
+    DLS_TCHAR,
+    DLS_TUCHAR,
+    DLS_TSHORT,
+    DLS_TUSHORT,
+    DLS_TINT,
+    DLS_TUINT,
+    DLS_TLINT,
+    DLS_TULINT,
+    DLS_TFLT,
+    DLS_TDBL
 };
 
 /*

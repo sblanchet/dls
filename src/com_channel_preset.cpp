@@ -134,7 +134,7 @@ void COMChannelPreset::read_from_tag(const COMXMLTag *tag)
         }
         else
         {
-            type = TUNKNOWN;
+            type = DLS_TUNKNOWN;
         }
     }
     catch (ECOMXMLTag &e)
@@ -184,7 +184,7 @@ void COMChannelPreset::write_to_tag(COMXMLTag *tag) const
         tag->push_att("accuracy", accuracy);
     }
 
-    if (type != TUNKNOWN)
+    if (type != DLS_TUNKNOWN)
     {
         tag->push_att("type", dls_channel_type_to_str(type));
     }
@@ -206,7 +206,7 @@ void COMChannelPreset::clear()
     format_index = DLS_FORMAT_INVALID;
     mdct_block_size = 0;
     accuracy = 0.0;
-    type = TUNKNOWN;
+    type = DLS_TUNKNOWN;
 }
 
 /*****************************************************************************/
