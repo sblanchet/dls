@@ -95,7 +95,8 @@ inst_headers.files = \
     DlsWidgets/Layer.h \
     DlsWidgets/Model.h \
     DlsWidgets/Scale.h \
-    DlsWidgets/Section.h
+    DlsWidgets/Section.h \
+    DlsWidgets/ValueScale.h
 
 INSTALLS += inst_headers
 
@@ -111,7 +112,6 @@ HEADERS += \
     Plugin.h \
     SectionDialog.h \
     SectionModel.h \
-    ValueScale.h \
     WidgetCollection.h
 
 SOURCES += \
