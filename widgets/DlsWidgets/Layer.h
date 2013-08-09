@@ -46,7 +46,7 @@ class GraphWorker;
 
 /** Graph section layer.
  */
-class Layer
+class Q_DECL_EXPORT Layer
 {
     public:
         Layer(Section *, QtDls::Channel *, const QColor & = QColor());

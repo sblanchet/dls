@@ -55,7 +55,7 @@ class Layer;
 
 /** Graph section.
  */
-class Section
+class Q_DECL_EXPORT Section
 {
     friend class SectionModel;
     friend class Layer;
