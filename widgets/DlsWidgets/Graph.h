@@ -120,6 +120,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *appendSection();
         Section *insertSectionBefore(Section *);
         void removeSection(Section *);
+        void clearSections();
 
         void updateRange();
         void setRange(const COMTime &, const COMTime &);
@@ -263,7 +264,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
-        void clearSections();
         bool loadSections(const QDomElement &, QtDls::Model *);
         void drawMessages(QPainter &, const QRect &);
         static void staticLoggingCallback(const char *, void *);
