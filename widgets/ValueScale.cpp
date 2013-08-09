@@ -234,11 +234,11 @@ QString ValueScale::formatValue(double value) const
     QString str, fmt;
 
     if (decade < 0) {
-        fmt.sprintf("%%.%ilf", -decade);
-        str.sprintf(fmt.toLatin1().constData(), value);
+        str = QLocale().toString(value, 'f', -decade);
     }
-    else
-        str.setNum(value);
+    else {
+        str = QLocale().toString(value, 'f', 0);
+    }
 
     return str;
 }
