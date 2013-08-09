@@ -106,8 +106,8 @@ QtDls::Channel *Model::getChannel(QUrl url)
     }
 
     if (locList.empty()) {
-        qWarning() << "Invalid URL:" << url;
-        return NULL;
+        QString err = QString("Invalid URL: %1").arg(url.toString());
+        throw Exception(err);
     }
 
     // try to find an existing local dir with matching path
