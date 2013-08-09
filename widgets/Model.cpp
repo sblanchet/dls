@@ -71,9 +71,9 @@ struct LocalChannel {
 QtDls::Channel *Model::getChannel(QUrl url)
 {
     if (!url.scheme().isEmpty() && url.scheme() != "file") {
-        qWarning() << QString("URL scheme \"%1\" is not supported!")
+        QString err = QString("URL scheme \"%1\" is not supported!")
             .arg(url.scheme());
-        return NULL;
+        throw Exception(err);
     }
 
     // using local file path
@@ -156,7 +156,8 @@ QtDls::Channel *Model::getChannel(QUrl url)
         return ch;
     }
 
-    return NULL;
+    QString err = QString("Channel %1 not found!").arg(url.toString());
+    throw Exception(err);
 }
 
 /****************************************************************************/
