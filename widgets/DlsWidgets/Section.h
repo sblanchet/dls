@@ -29,7 +29,7 @@
 
 #include <QTextDocument>
 
-#include "../src/com_time.hpp"
+#include "com_time.hpp"
 
 #include "ValueScale.h"
 
