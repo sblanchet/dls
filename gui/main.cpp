@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("EtherLab");
     QCoreApplication::setOrganizationDomain("etherlab.org");
-    QCoreApplication::setApplicationName("dls");
+    QCoreApplication::setApplicationName("dlsgui");
 
     QApplication app(argc, argv);
 
