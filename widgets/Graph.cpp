@@ -549,24 +549,6 @@ void Graph::removeSection(Section *section)
 
 /****************************************************************************/
 
-/** Clears the list of sections.
- */
-void Graph::clearSections()
-{
-    rwLockSections.lockForWrite();
-
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        delete *s;
-    }
-
-    sections.clear();
-
-    rwLockSections.unlock();
-}
-
-/****************************************************************************/
-
 void Graph::updateRange()
 {
     if (!autoRange) {
