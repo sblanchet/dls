@@ -30,6 +30,7 @@
 #include "Graph.h"
 #include "Section.h"
 #include "Layer.h"
+#include "Channel.h"
 #include "Model.h"
 #include "SectionDialog.h"
 #include "DatePickerDialog.h"
@@ -600,6 +601,21 @@ QSet<QtDls::Channel *> Graph::channels() const
     }
 
     return channels;
+}
+
+/****************************************************************************/
+
+QSet<QUrl> Graph::urls() const
+{
+    QSet<QtDls::Channel *> chs = channels();
+    QSet<QUrl> ret;
+
+    for (QSet<QtDls::Channel *>::const_iterator ch = chs.begin();
+            ch != chs.end(); ch++) {
+        ret += (*ch)->url();
+    }
+
+    return ret;
 }
 
 /****************************************************************************/
