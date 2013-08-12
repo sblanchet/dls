@@ -84,6 +84,7 @@
        <normaloff>:/images/document-open.svg</normaloff>:/images/document-open.svg</iconset>
      </property>
     </widget>
+    <addaction name="actionNew"/>
     <addaction name="actionLoad"/>
     <addaction name="menuRecentFiles"/>
     <addaction name="actionSave"/>
@@ -166,6 +167,11 @@
   <action name="actionLogWindow">
    <property name="text">
     <string>Log Window</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
    </property>
   </action>
  </widget>
