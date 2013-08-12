@@ -160,6 +160,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void pan(double);
         void print();
         void setShowMessages(bool);
+        void clearSections();
 
     protected:
         bool event(QEvent *);
@@ -224,6 +225,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction gotoLastYearAction;
         QAction sectionPropertiesAction;
         QAction removeSectionAction;
+        QAction clearSectionsAction;
         QAction messagesAction;
         QAction printAction;
         QAction exportAction;

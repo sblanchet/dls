@@ -109,6 +109,7 @@ Graph::Graph(
     gotoLastYearAction(this),
     sectionPropertiesAction(this),
     removeSectionAction(this),
+    clearSectionsAction(this),
     messagesAction(this),
     printAction(this),
     exportAction(this),
@@ -273,6 +274,12 @@ Graph::Graph(
     removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
     connect(&removeSectionAction, SIGNAL(triggered()),
             this, SLOT(removeSelectedSection()));
+
+    clearSectionsAction.setText(tr("Clear sections"));
+    clearSectionsAction.setStatusTip(tr("Remove all sections."));
+    clearSectionsAction.setIcon(QIcon(":/images/list-remove.svg"));
+    connect(&clearSectionsAction, SIGNAL(triggered()),
+            this, SLOT(clearSections()));
 
     messagesAction.setText(tr("Show Messages"));
     messagesAction.setStatusTip(tr("Show process messages."));
@@ -909,6 +916,24 @@ void Graph::setShowMessages(
 
 /****************************************************************************/
 
+/** Clears the list of sections.
+ */
+void Graph::clearSections()
+{
+    rwLockSections.lockForWrite();
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        delete *s;
+    }
+
+    sections.clear();
+
+    rwLockSections.unlock();
+}
+
+/****************************************************************************/
+
 /** Event handler.
  */
 bool Graph::event(
@@ -1380,6 +1405,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
 
     selectedSection = sectionFromPos(event->pos());
     removeSectionAction.setEnabled(selectedSection);
+    clearSectionsAction.setEnabled(!sections.isEmpty());
     sectionPropertiesAction.setEnabled(selectedSection);
 
     menu.addAction(&prevViewAction);
@@ -1400,6 +1426,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addSeparator();
     menu.addAction(&sectionPropertiesAction);
     menu.addAction(&removeSectionAction);
+    menu.addAction(&clearSectionsAction);
     menu.addAction(&messagesAction);
     menu.addSeparator();
     menu.addAction(&printAction);
