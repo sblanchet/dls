@@ -400,6 +400,9 @@ void MainWindow::scriptFinished(
 #if 0
     QByteArray result = scriptProcess.readAll();
     qDebug() << "finished" << exitCode << exitStatus << result;
+#else
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
 #endif
 
     updateScriptActions();
