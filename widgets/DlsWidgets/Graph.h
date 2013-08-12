@@ -126,6 +126,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
         QSet<QtDls::Channel *> channels() const;
+        QSet<QUrl> urls() const;
 
         enum Interaction {
             Zoom,
