@@ -58,6 +58,7 @@ class MainWindow:
         void addRecentFile(const QString &);
         void updateRecentFileActions();
 
+        static QString viewFilterString();
 
     private slots:
         void on_actionLoad_triggered();

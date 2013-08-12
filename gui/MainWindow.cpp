@@ -171,9 +171,9 @@ void MainWindow::updateRecentFileActions()
 
 /****************************************************************************/
 
-void MainWindow::loggingCallback(const QString &msg)
+QString MainWindow::viewFilterString()
 {
-    logWindow.log(msg);
+    return tr("DLS Views (*.dlsv);;XML files (*.xml);;All files (*.*)");
 }
 
 /****************************************************************************/
@@ -182,7 +182,8 @@ void MainWindow::on_actionLoad_triggered()
 {
     QFileDialog dialog(this);
 
-    QString path = dialog.getOpenFileName(this, tr("Open view"));
+    QString path = dialog.getOpenFileName(this, tr("Open view"),
+            currentFileName, viewFilterString());
 
     if (path.isEmpty()) {
         return;
@@ -222,7 +223,8 @@ void MainWindow::on_actionSave_triggered()
     if (currentFileName.isEmpty()) {
         QFileDialog dialog(this);
 
-        path = dialog.getSaveFileName(this, tr("Save view"));
+        path = dialog.getSaveFileName(this, tr("Save view"), "",
+                viewFilterString());
 
         if (path.isEmpty()) {
             return;
@@ -244,7 +246,8 @@ void MainWindow::on_actionSaveAs_triggered()
 {
     QFileDialog dialog(this);
 
-    QString path = dialog.getSaveFileName(this, tr("Save view"));
+    QString path = dialog.getSaveFileName(this, tr("Save view"),
+            currentFileName, viewFilterString());
 
     if (path.isEmpty()) {
         return;
@@ -294,6 +297,13 @@ void MainWindow::on_toolButtonNewDir_clicked()
         qWarning() << e.msg.c_str();
         delete dir;
     }
+}
+
+/****************************************************************************/
+
+void MainWindow::loggingCallback(const QString &msg)
+{
+    logWindow.log(msg);
 }
 
 /****************************************************************************/
