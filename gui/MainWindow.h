@@ -53,6 +53,7 @@ class MainWindow:
         enum { MaxRecentFiles = 10 };
         QAction *recentFileActions[MaxRecentFiles];
 
+        void showEvent(QShowEvent *);
         void closeEvent(QCloseEvent *);
         void addRecentFile(const QString &);
         void updateRecentFileActions();
