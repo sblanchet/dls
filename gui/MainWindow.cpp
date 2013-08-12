@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent):
 
         if (dlsGraph->load(path, &model)) {
             currentFileName = path;
-            setWindowFilePath(path);
+            setWindowFilePath(currentFileName);
         }
         else {
             qWarning() << "failed to load" << path;
@@ -178,6 +178,15 @@ QString MainWindow::viewFilterString()
 
 /****************************************************************************/
 
+void MainWindow::on_actionNew_triggered()
+{
+    currentFileName = "";
+    setWindowFilePath(currentFileName);
+    dlsGraph->clearSections();
+}
+
+/****************************************************************************/
+
 void MainWindow::on_actionLoad_triggered()
 {
     QFileDialog dialog(this);
@@ -191,7 +200,7 @@ void MainWindow::on_actionLoad_triggered()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
-        setWindowFilePath(path);
+        setWindowFilePath(currentFileName);
         addRecentFile(currentFileName);
     }
 }
@@ -209,7 +218,7 @@ void MainWindow::openRecentFile()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
-        setWindowFilePath(path);
+        setWindowFilePath(currentFileName);
         addRecentFile(currentFileName);
     }
 }
@@ -236,6 +245,7 @@ void MainWindow::on_actionSave_triggered()
 
     if (dlsGraph->save(path)) {
         currentFileName = path;
+        setWindowFilePath(currentFileName);
         addRecentFile(currentFileName);
     }
 }
@@ -255,6 +265,7 @@ void MainWindow::on_actionSaveAs_triggered()
 
     if (dlsGraph->save(path)) {
         currentFileName = path;
+        setWindowFilePath(currentFileName);
         addRecentFile(currentFileName);
     }
 }

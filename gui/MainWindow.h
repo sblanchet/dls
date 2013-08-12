@@ -61,6 +61,7 @@ class MainWindow:
         static QString viewFilterString();
 
     private slots:
+        void on_actionNew_triggered();
         void on_actionLoad_triggered();
         void openRecentFile();
         void on_actionSave_triggered();
