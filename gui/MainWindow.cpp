@@ -89,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent):
 
         if (dlsGraph->load(path, &model)) {
             currentFileName = path;
+            setWindowFilePath(path);
         }
         else {
             qWarning() << "failed to load" << path;
@@ -105,6 +106,18 @@ MainWindow::~MainWindow()
     for (QList<LibDLS::Directory *>::iterator dir = dirs.begin();
             dir != dirs.end(); dir++) {
         delete *dir;
+    }
+}
+
+/********************** HACK: QTBUG-16507 workaround ************************/
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    QString filePath = windowFilePath();
+    if (!filePath.isEmpty()) {
+        setWindowFilePath(filePath + "x");
+        setWindowFilePath(filePath);
     }
 }
 
@@ -177,6 +190,7 @@ void MainWindow::on_actionLoad_triggered()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
+        setWindowFilePath(path);
         addRecentFile(currentFileName);
     }
 }
@@ -194,6 +208,7 @@ void MainWindow::openRecentFile()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
+        setWindowFilePath(path);
         addRecentFile(currentFileName);
     }
 }
