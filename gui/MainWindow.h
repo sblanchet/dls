@@ -22,6 +22,7 @@
  ****************************************************************************/
 
 #include <QMainWindow>
+#include <QProcess>
 
 #include "ui_MainWindow.h"
 #include "LogWindow.h"
@@ -47,16 +48,21 @@ class MainWindow:
         QtDls::Model model;
         bool restore;
         QStringList recentFiles;
+        QStringList scripts;
         QString currentFileName;
         LogWindow logWindow;
 
         enum { MaxRecentFiles = 10 };
         QAction *recentFileActions[MaxRecentFiles];
 
+        QAction **scriptActions;
+        QProcess scriptProcess;
+
         void showEvent(QShowEvent *);
         void closeEvent(QCloseEvent *);
         void addRecentFile(const QString &);
         void updateRecentFileActions();
+        void updateScriptActions();
 
         static QString viewFilterString();
 
@@ -72,6 +78,9 @@ class MainWindow:
         void on_toolButtonNewDir_clicked();
 
         void loggingCallback(const QString &);
+        void execScript();
+        void scriptFinished(int, QProcess::ExitStatus);
+        void scriptError(QProcess::ProcessError);
 };
 
 /****************************************************************************/

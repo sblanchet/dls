@@ -28,6 +28,8 @@ using namespace std;
 #include <QFileDialog>
 #include <QSettings>
 #include <QCloseEvent>
+#include <QMessageBox>
+#include <QUrl>
 
 #include "MainWindow.h"
 #include "SettingsDialog.h"
@@ -41,16 +43,23 @@ using namespace std;
 /****************************************************************************/
 
 MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent)
+    QMainWindow(parent),
+    scriptActions(NULL),
+    scriptProcess(this)
 {
     setupUi(this);
 
     connect(dlsGraph, SIGNAL(logMessage(const QString &)),
             this, SLOT(loggingCallback(const QString &)));
+    connect(&scriptProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
+            this, SLOT(scriptFinished(int, QProcess::ExitStatus)));
+    connect(&scriptProcess, SIGNAL(error(QProcess::ProcessError)),
+            this, SLOT(scriptError(QProcess::ProcessError)));
 
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
     recentFiles = settings.value("RecentFiles").toStringList();
+    scripts = settings.value("Scripts").toStringList();
     if (settings.contains("WindowHeight") &&
             settings.contains("WindowWidth")) {
         resize(settings.value("WindowWidth").toInt(),
@@ -75,6 +84,22 @@ MainWindow::MainWindow(QWidget *parent):
     }
 
     updateRecentFileActions();
+
+    if (scripts.size() > 0) {
+        scriptActions = new QAction *[scripts.size()];
+
+        for (int i = 0; i < scripts.size(); ++i) {
+            scriptActions[i] = new QAction(this);
+            scriptActions[i]->setText(scripts[i]);
+            scriptActions[i]->setData(scripts[i]);
+            connect(scriptActions[i], SIGNAL(triggered()),
+                    this, SLOT(execScript()));
+            menuScripts->addAction(scriptActions[i]);
+        }
+    }
+
+    menuScripts->menuAction()->setVisible(scripts.size() > 0);
+    updateScriptActions();
 
 #if MODELTEST
     new ModelTest(&model);
@@ -107,6 +132,8 @@ MainWindow::~MainWindow()
             dir != dirs.end(); dir++) {
         delete *dir;
     }
+
+    delete [] scriptActions;
 }
 
 /********************** HACK: QTBUG-16507 workaround ************************/
@@ -167,6 +194,17 @@ void MainWindow::updateRecentFileActions()
     }
 
     menuRecentFiles->setEnabled(numRecentFiles > 0);
+}
+
+/****************************************************************************/
+
+void MainWindow::updateScriptActions()
+{
+    bool enabled = scriptProcess.state() == QProcess::NotRunning;
+
+    for (int i = 0; i < scripts.size(); ++i) {
+        scriptActions[i]->setEnabled(enabled);
+    }
 }
 
 /****************************************************************************/
@@ -315,6 +353,91 @@ void MainWindow::on_toolButtonNewDir_clicked()
 void MainWindow::loggingCallback(const QString &msg)
 {
     logWindow.log(msg);
+}
+
+/****************************************************************************/
+
+void MainWindow::execScript()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (!action) {
+        return;
+    }
+
+    QString path = action->data().toString();
+    scriptProcess.start(path);
+
+    if (!scriptProcess.waitForStarted()) {
+        return;
+    }
+
+    QString yaml;
+
+    yaml += QString("---\nstart: %1\nend: %2i\nchannels:\n")
+        .arg(dlsGraph->getStart().to_real_time().c_str())
+        .arg(dlsGraph->getEnd().to_real_time().c_str());
+
+    QSet<QUrl> urls = dlsGraph->urls();
+
+    for (QSet<QUrl>::const_iterator u = urls.begin();
+            u != urls.end(); u++) {
+        yaml += QString("   - url: %1\n").arg(u->toString());
+    }
+
+    scriptProcess.write(yaml.toLocal8Bit());
+    scriptProcess.closeWriteChannel();
+
+    updateScriptActions();
+}
+
+/****************************************************************************/
+
+void MainWindow::scriptFinished(
+        int exitCode,
+        QProcess::ExitStatus exitStatus
+        )
+{
+#if 0
+    QByteArray result = scriptProcess.readAll();
+    qDebug() << "finished" << exitCode << exitStatus << result;
+#endif
+
+    updateScriptActions();
+}
+
+/****************************************************************************/
+
+void MainWindow::scriptError(
+        QProcess::ProcessError error
+        )
+{
+    QString msg;
+
+    switch (error) {
+        case QProcess::FailedToStart:
+            msg = tr("Failed to start process.");
+            break;
+        case QProcess::Crashed:
+            msg = tr("Script crashed.");
+            break;
+        case QProcess::Timedout:
+            msg = tr("Script timed out.");
+            break;
+        case QProcess::WriteError:
+            msg = tr("Failed to write to script.");
+            break;
+        case QProcess::ReadError:
+            msg = tr("Failed to read from script.");
+            break;
+        default:
+            msg = tr("Unknown error.");
+            break;
+    }
+
+    QMessageBox::critical(this, tr("Script"),
+            tr("Failed to execute script: %1").arg(msg));
+
+    updateScriptActions();
 }
 
 /****************************************************************************/
