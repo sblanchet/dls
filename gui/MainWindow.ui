@@ -104,8 +104,14 @@
     </property>
     <addaction name="actionLogWindow"/>
    </widget>
+   <widget class="QMenu" name="menuScripts">
+    <property name="title">
+     <string>Scripts</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
+   <addaction name="menuScripts"/>
    <addaction name="menuWindows"/>
   </widget>
   <action name="actionClose">
