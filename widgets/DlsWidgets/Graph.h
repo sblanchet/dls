@@ -120,7 +120,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *appendSection();
         Section *insertSectionBefore(Section *);
         void removeSection(Section *);
-        void clearSections();
 
         void updateRange();
         void setRange(const COMTime &, const COMTime &);
