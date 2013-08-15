@@ -236,6 +236,7 @@ void MainWindow::on_actionLoad_triggered()
     dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setDefaultSuffix("dlsv");
     dialog.setNameFilters(viewFilters());
+    dialog.selectFile(currentFileName);
 
     if (dialog.exec() != QDialog::Accepted) {
         return;
@@ -311,6 +312,7 @@ void MainWindow::on_actionSaveAs_triggered()
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setDefaultSuffix("dlsv");
     dialog.setNameFilters(viewFilters());
+    dialog.selectFile(currentFileName);
 
     if (dialog.exec() != QDialog::Accepted) {
         return;
