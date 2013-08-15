@@ -209,9 +209,13 @@ void MainWindow::updateScriptActions()
 
 /****************************************************************************/
 
-QString MainWindow::viewFilterString()
+QStringList MainWindow::viewFilters()
 {
-    return tr("DLS Views (*.dlsv);;XML files (*.xml);;All files (*.*)");
+    QStringList filters;
+    filters << tr("DLS Views (*.dlsv)");
+    filters << tr("XML files (*.xml)");
+    filters << tr("All files (*.*)");
+    return filters;
 }
 
 /****************************************************************************/
@@ -228,9 +232,16 @@ void MainWindow::on_actionNew_triggered()
 void MainWindow::on_actionLoad_triggered()
 {
     QFileDialog dialog(this);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setDefaultSuffix("dlsv");
+    dialog.setNameFilters(viewFilters());
 
-    QString path = dialog.getOpenFileName(this, tr("Open view"),
-            currentFileName, viewFilterString());
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    QString path = dialog.selectedFiles()[0];
 
     if (path.isEmpty()) {
         return;
@@ -269,13 +280,16 @@ void MainWindow::on_actionSave_triggered()
 
     if (currentFileName.isEmpty()) {
         QFileDialog dialog(this);
+        dialog.setAcceptMode(QFileDialog::AcceptSave);
+        dialog.setFileMode(QFileDialog::AnyFile);
+        dialog.setDefaultSuffix("dlsv");
+        dialog.setNameFilters(viewFilters());
 
-        path = dialog.getSaveFileName(this, tr("Save view"), "",
-                viewFilterString());
-
-        if (path.isEmpty()) {
+        if (dialog.exec() != QDialog::Accepted) {
             return;
         }
+
+        path = dialog.selectedFiles()[0];
     }
     else {
         path = currentFileName;
@@ -293,9 +307,16 @@ void MainWindow::on_actionSave_triggered()
 void MainWindow::on_actionSaveAs_triggered()
 {
     QFileDialog dialog(this);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setDefaultSuffix("dlsv");
+    dialog.setNameFilters(viewFilters());
 
-    QString path = dialog.getSaveFileName(this, tr("Save view"),
-            currentFileName, viewFilterString());
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    QString path = dialog.selectedFiles()[0];
 
     if (path.isEmpty()) {
         return;
@@ -328,10 +349,8 @@ void MainWindow::on_actionLogWindow_triggered()
 
 void MainWindow::on_toolButtonNewDir_clicked()
 {
-    QFileDialog dialog(this);
-
-    QString path = dialog.getExistingDirectory(this, tr("Open data diretory"),
-            "/vol/data/dls_data");
+    QString path = QFileDialog::getExistingDirectory(this,
+            tr("Open data diretory"), "/vol/data/dls_data");
 
     if (path.isEmpty()) {
         return;

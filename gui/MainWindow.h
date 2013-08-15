@@ -64,7 +64,7 @@ class MainWindow:
         void updateRecentFileActions();
         void updateScriptActions();
 
-        static QString viewFilterString();
+        static QStringList viewFilters();
 
     private slots:
         void on_actionNew_triggered();
