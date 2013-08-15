@@ -22,7 +22,8 @@
  ****************************************************************************/
 
 #include <QApplication>
-#include <QMainWindow>
+#include <QLibraryInfo>
+#include <QTranslator>
 
 #include "MainWindow.h"
 
@@ -37,6 +38,12 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("dlsgui");
 
     QApplication app(argc, argv);
+
+    // load Qt's own translations
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(),
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
 
     MainWindow mainWin;
     mainWin.show();
