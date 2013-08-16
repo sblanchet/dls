@@ -115,7 +115,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         virtual QSize sizeHint() const;
 
         bool load(const QString &, QtDls::Model *);
-        bool save(const QString &) const;
+        bool save(const QString &);
 
         Section *appendSection();
         Section *insertSectionBefore(Section *);
@@ -125,8 +125,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
-        QSet<QtDls::Channel *> channels() const;
-        QSet<QUrl> urls() const;
+        QSet<QtDls::Channel *> channels();
+        QSet<QUrl> urls();
 
         enum Interaction {
             Zoom,
