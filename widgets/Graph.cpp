@@ -435,7 +435,7 @@ bool Graph::load(const QString &path, Model *model)
 
 /** Saves sections and settings to an XML file.
  */
-bool Graph::save(const QString &path) const
+bool Graph::save(const QString &path)
 {
     QFile file(path);
 
@@ -477,10 +477,14 @@ bool Graph::save(const QString &path) const
     QDomElement secElem = doc.createElement("Sections");
     root.appendChild(secElem);
 
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::const_iterator s = sections.begin();
             s != sections.end(); s++) {
         (*s)->save(secElem, doc);
     }
+
+    rwLockSections.unlock();
 
     QByteArray ba = doc.toByteArray(2);
     if (file.write(ba) != ba.size()) {
@@ -495,10 +499,13 @@ bool Graph::save(const QString &path) const
 
 Section *Graph::appendSection()
 {
-    Section *s = new Section(this);
     rwLockSections.lockForWrite();
+
+    Section *s = new Section(this);
     sections.append(s);
+
     rwLockSections.unlock();
+
     updateScrollBar();
     updateActions();
     return s;
@@ -534,6 +541,22 @@ void Graph::removeSection(Section *section)
 {
     rwLockSections.lockForWrite();
 
+    if (dropSection == section) {
+        dropSection = NULL;
+    }
+
+    if (selectedSection == section) {
+        selectedSection = NULL;
+    }
+
+    if (splitterSection == section) {
+        splitterSection = NULL;
+    }
+
+    if (movingSection == section) {
+        movingSection = NULL;
+    }
+
     int num = sections.removeAll(section);
 
     rwLockSections.unlock();
@@ -559,10 +582,14 @@ void Graph::updateRange()
     COMTime start, end;
     bool valid = false;
 
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::const_iterator s = sections.begin();
             s != sections.end(); s++) {
         (*s)->getRange(valid, start, end);
     }
+
+    rwLockSections.unlock();
 
     if (valid) {
         bool scaleChanged =
@@ -591,21 +618,25 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
 /****************************************************************************/
 
-QSet<QtDls::Channel *> Graph::channels() const
+QSet<QtDls::Channel *> Graph::channels()
 {
     QSet<QtDls::Channel *> channels;
+
+    rwLockSections.lockForRead();
 
     for (QList<Section *>::const_iterator s = sections.begin();
             s != sections.end(); s++) {
         channels += (*s)->channels();
     }
 
+    rwLockSections.unlock();
+
     return channels;
 }
 
 /****************************************************************************/
 
-QSet<QUrl> Graph::urls() const
+QSet<QUrl> Graph::urls()
 {
     QSet<QtDls::Channel *> chs = channels();
     QSet<QUrl> ret;
@@ -657,11 +688,16 @@ void Graph::loadData()
         dataWidth -= scrollBar.width();
     }
 
+    rwLockSections.lockForRead();
+
     // mark all sections as busy
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         (*s)->setBusy(true);
     }
+
+    rwLockSections.unlock();
+
     update(); // FIXME update busy rect only
 
     if (workerBusy) {
@@ -836,6 +872,8 @@ void Graph::print()
 
     set<LibDLS::Job *> jobSet;
 
+    rwLockSections.lockForRead();
+
     QList<Section *>::iterator first = sections.begin();
 
     while (first != sections.end()) {
@@ -894,6 +932,8 @@ void Graph::print()
         }
     }
 
+    rwLockSections.unlock();
+
     painter.end();
 }
 
@@ -920,6 +960,11 @@ void Graph::clearSections()
 {
     rwLockSections.lockForWrite();
 
+    dropSection = NULL;
+    selectedSection = NULL;
+    splitterSection = NULL;
+    movingSection = NULL;
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         delete *s;
@@ -928,6 +973,10 @@ void Graph::clearSections()
     sections.clear();
 
     rwLockSections.unlock();
+
+    updateScrollBar();
+    updateActions();
+    update();
 }
 
 /****************************************************************************/
@@ -1048,7 +1097,6 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         update(msgSplitterRect);
     }
 
-    Section *sec = NULL;
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
         scrollBar.value();
     QRect splitterRect(contentsRect());
@@ -1056,6 +1104,10 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     if (scrollBarNeeded) {
         splitterRect.setWidth(contentsRect().width() - scrollBar.width());
     }
+
+    rwLockSections.lockForRead();
+
+    Section *sec = NULL;
 
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
@@ -1074,6 +1126,8 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         splitterSection = sec;
         update();
     }
+
+    rwLockSections.unlock();
 
     updateCursor();
 }
@@ -1200,10 +1254,14 @@ void Graph::resizeEvent(QResizeEvent *event)
         dataWidth -= scrollBar.width();
     }
 
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         (*s)->resize(dataWidth);
     }
+
+    rwLockSections.unlock();
 
     loadData();
 }
@@ -1223,6 +1281,9 @@ void Graph::paintEvent(
     QRect timeScaleRect(contentsRect());
     int height = scale.getOuterLength() + 1;
     scaleWidth = 0;
+
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         height += (*s)->getHeight() + splitterWidth;
@@ -1233,6 +1294,8 @@ void Graph::paintEvent(
             }
         }
     }
+
+    rwLockSections.unlock();
 
     if (height > contentsRect().height()) {
         height = contentsRect().height();
@@ -1269,6 +1332,8 @@ void Graph::paintEvent(
 
     painter.setClipRect(dataRect);
 
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect sectionRect(dataRect);
@@ -1298,6 +1363,8 @@ void Graph::paintEvent(
 
         top += (*s)->getHeight() + splitterWidth;
     }
+
+    rwLockSections.unlock();
 
     painter.setClipping(false);
 
@@ -1551,6 +1618,8 @@ void Graph::updateDragging(QPoint p)
 
     resetDragging();
 
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         if (y <= top + DROP_TOLERANCE) {
@@ -1568,6 +1637,8 @@ void Graph::updateDragging(QPoint p)
     if (!dropSection) {
         dropRemaining = top;
     }
+
+    rwLockSections.unlock();
 
     update();
 }
@@ -1668,12 +1739,17 @@ void Graph::updateMeasuring()
 void Graph::updateScrollBar()
 {
     int height = 0;
+
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect rect(contentsRect().left(), height,
                 contentsRect().width(), (*s)->getHeight());
         height += (*s)->getHeight() + splitterWidth;
     }
+
+    rwLockSections.unlock();
 
     int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
     if (showMessages) {
@@ -1712,15 +1788,21 @@ Section *Graph::sectionFromPos(const QPoint &pos)
 
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
         scrollBar.value();
+
+    rwLockSections.lockForRead();
+
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect rect(contentsRect().left(), top,
                 contentsRect().width(), (*s)->getHeight());
         if (rect.contains(pos)) {
+            rwLockSections.unlock();
             return *s;
         }
         top += (*s)->getHeight() + splitterWidth;
     }
+
+    rwLockSections.unlock();
 
     return NULL;
 }
