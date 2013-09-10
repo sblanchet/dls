@@ -33,6 +33,7 @@
 #include <QScrollBar>
 #include <QtDesigner/QDesignerExportWidget>
 #include <QReadWriteLock>
+#include <QTouchEvent>
 
 #include "lib_job.hpp"
 
@@ -257,6 +258,13 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         QMutex loggingMutex;
 
+        COMTime touchT0;
+        COMTime touchT1;
+        bool touchZooming;
+#if 0
+        QFile debugFile;
+#endif
+
         void updateDragging(QPoint);
         void resetDragging();
         void updateCursor();
@@ -270,6 +278,10 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void drawMessages(QPainter &, const QRect &);
         static void staticLoggingCallback(const char *, void *);
         void loggingCallback(const char *);
+        void updateTouch(QTouchEvent *);
+        void touchZoomStart(int, int);
+        void touchZoomUpdate(int, int);
+        int getDataWidth() const;
 
     private slots:
         void interactionSlot();

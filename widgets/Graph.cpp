@@ -127,9 +127,15 @@ Graph::Graph(
     showMessages(false),
     messageAreaHeight(55),
     mouseOverMsgSplitter(false),
-    movingMsgSplitter(false)
+    movingMsgSplitter(false),
+    touchZooming(false)
 {
     dls_set_logging_callback(staticLoggingCallback, this);
+
+#if DEBUG
+    debugFile.setFileName("\\\\10.202.246.121\\transfer\\dlsdebug.txt");
+    debugFile.open(QIODevice::WriteOnly);
+#endif
 
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setBackgroundRole(QPalette::Base);
@@ -139,6 +145,7 @@ Graph::Graph(
     setAcceptDrops(true);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+    setAttribute(Qt::WA_AcceptTouchEvents);
 
     scrollBar.setVisible(false);
     scrollBar.setCursor(Qt::ArrowCursor);
@@ -311,6 +318,9 @@ Graph::~Graph()
     thread.quit();
     thread.wait();
     clearSections();
+#if DEBUG
+    debugFile.close();
+#endif
 }
 
 /****************************************************************************/
@@ -683,10 +693,7 @@ void Graph::nextView()
 
 void Graph::loadData()
 {
-    int dataWidth = contentsRect().width() - scaleWidth;
-    if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
-    }
+    int dataWidth = getDataWidth();
 
     rwLockSections.lockForRead();
 
@@ -995,6 +1002,12 @@ bool Graph::event(
         case QEvent::LanguageChange:
             break;
 
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+            updateTouch(static_cast<QTouchEvent *>(event));
+            break;
+
         default:
             break;
     }
@@ -1022,13 +1035,14 @@ void Graph::mousePressEvent(QMouseEvent *event)
             movingSection = splitterSection;
             startHeight = splitterSection->getHeight();
         }
-        else if (interaction == Zoom) {
+        else if (interaction == Zoom && !touchZooming) {
             zooming = true;
         }
-        else if (interaction == Pan) {
+        else if (interaction == Pan && !touchZooming) {
             panning = true;
         }
 
+        updateCursor();
         update();
     }
 }
@@ -1068,7 +1082,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     }
 
     if (panning) {
-        int dataWidth = contentsRect().width() - scaleWidth;
+        int dataWidth = getDataWidth();
         COMTime range = getEnd() - getStart();
 
         if (range > 0.0 && dataWidth > 0) {
@@ -1140,12 +1154,8 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
 {
     bool wasZooming = zooming;
     bool wasPanning = panning;
-    int dataWidth = contentsRect().width() - scaleWidth;
+    int dataWidth = getDataWidth();
     COMTime range = getEnd() - getStart();
-
-    if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
-    }
 
     movingMsgSplitter = false;
     zooming = false;
@@ -1249,16 +1259,16 @@ void Graph::resizeEvent(QResizeEvent *event)
     scale.setLength(contentsRect().width());
     updateScrollBar();
 
-    int dataWidth = contentsRect().width();
+    int sectionWidth = contentsRect().width();
     if (scrollBarNeeded) {
-        dataWidth -= scrollBar.width();
+        sectionWidth -= scrollBar.width();
     }
 
     rwLockSections.lockForRead();
 
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        (*s)->resize(dataWidth);
+        (*s)->resize(sectionWidth);
     }
 
     rwLockSections.unlock();
@@ -1903,13 +1913,13 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
         feed[i] = -scaleWidth;
     }
 
-    int dataWidth = contentsRect().width() - scaleWidth;
+    int messageWidth = contentsRect().width() - scaleWidth;
     COMTime range = getEnd() - getStart();
 
-    if (range > 0.0 && dataWidth > 0) {
-        double xScale = dataWidth / range.to_dbl_time();
-        LibDLS::Job::Message::Type types[dataWidth];
-        for (int i = 0; i < dataWidth; i++) {
+    if (range > 0.0 && messageWidth > 0) {
+        double xScale = messageWidth / range.to_dbl_time();
+        LibDLS::Job::Message::Type types[messageWidth];
+        for (int i = 0; i < messageWidth; i++) {
             types[i] = LibDLS::Job::Message::Unknown;
         }
 
@@ -1923,7 +1933,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                 continue;
             }
             int xc = (int) (xv + 0.5);
-            if (xc >= dataWidth) {
+            if (xc >= messageWidth) {
                 break;
             }
             if (msg->type > types[xc]) {
@@ -1983,7 +1993,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
         msgMutex.unlock();
 
-        for (int i = 0; i < dataWidth; i++) {
+        for (int i = 0; i < messageWidth; i++) {
             if (types[i] == LibDLS::Job::Message::Unknown) {
                 continue;
             }
@@ -2014,6 +2024,194 @@ void Graph::loggingCallback(const char *msg)
     loggingMutex.lock();
     emit logMessage(QString(msg));
     loggingMutex.unlock();
+}
+
+/****************************************************************************/
+
+#if DEBUG
+static int counter = 0;
+#endif
+
+void Graph::updateTouch(QTouchEvent *event)
+{
+    int count = event->touchPoints().count();
+
+    event->accept();
+
+#if DEBUG
+    QString type;
+    switch (event->type()) {
+        case QEvent::TouchBegin:
+            type = "TouchBegin";
+            break;
+        case QEvent::TouchUpdate:
+            type = "TouchUpdate";
+            break;
+        case QEvent::TouchEnd:
+            type = "TouchEnd";
+            break;
+        default:
+            type = "???";
+            break;
+    }
+    QString dbg = QString("\n%1: %2 count=%3\n")
+        .arg(counter++).arg(type).arg(count);
+    debugFile.write(dbg.toUtf8().constData());
+    debugFile.flush();
+
+    dbg = QString("touchZooming = %1\n").arg(touchZooming);
+    for (int i = 0; i < event->touchPoints().count(); i++) {
+        QTouchEvent::TouchPoint tp = event->touchPoints()[i];
+        dbg += tr("%1 %2x%3 - %4x%5\n").arg(i)
+            .arg(tp.startPos().x()).arg(tp.startPos().y())
+            .arg(tp.lastPos().x()).arg(tp.lastPos().y());
+    }
+    debugFile.write(dbg.toUtf8().constData());
+    debugFile.flush();
+#endif
+
+    int dataWidth = getDataWidth();
+
+    if (count < 2 || dataWidth <= 0) {
+        if (touchZooming) {
+            touchZooming = false;
+            newView();
+            loadData();
+        }
+        return;
+    }
+
+    QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+    QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
+
+    switch (event->type()) {
+        case QEvent::TouchBegin:
+            touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+            break;
+
+        case QEvent::TouchUpdate:
+            if (touchZooming) {
+                touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+            }
+            else {
+                touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+            }
+            break;
+
+        case QEvent::TouchEnd:
+            if (touchZooming) { // end
+                touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+                touchZooming = false;
+                newView();
+                loadData();
+            }
+
+        default:
+            break;
+    }
+}
+
+/****************************************************************************/
+
+void Graph::touchZoomStart(int x0, int x1)
+{
+    COMTime range = getEnd() - getStart();
+    int width = x1 - x0, dataWidth = getDataWidth();
+
+    if (range <= 0.0 || width == 0) {
+        return;
+    }
+
+    double xScale = range.to_dbl_time() / dataWidth;
+    int offset = contentsRect().left() + scaleWidth;
+    COMTime d0, d1;
+    d0.from_dbl_time((x0 - offset) * xScale);
+    d1.from_dbl_time((x1 - offset) * xScale);
+    if (d0 < d1) {
+        touchT0 = getStart() + d0;
+        touchT1 = getStart() + d1;
+    }
+    else {
+        touchT0 = getStart() + d1;
+        touchT1 = getStart() + d0;
+    }
+    touchZooming = true;
+    panning = false;
+    zooming = false;
+    updateCursor();
+
+#if DEBUG
+    QString dbg = QString("zooming1 %1 - %2\n")
+        .arg(touchT0.to_real_time().c_str())
+        .arg(touchT1.to_real_time().c_str());
+    COMTime xrange = touchT1 - touchT0;
+    dbg += QString("range=%1 width=%2 scale=%3\n")
+        .arg(xrange.to_dbl_time())
+        .arg(width)
+        .arg(xScale);
+    debugFile.write(dbg.toUtf8().constData());
+    debugFile.flush();
+#endif
+}
+
+/****************************************************************************/
+
+void Graph::touchZoomUpdate(int x0, int x1)
+{
+    COMTime range = touchT1 - touchT0;
+    int width = x1 - x0, dataWidth = getDataWidth();
+
+#if DEBUG
+    QString dbg = QString("range=%1 width=%2\n")
+        .arg(range.to_dbl_time())
+        .arg(width);
+    debugFile.write(dbg.toUtf8().constData());
+    debugFile.flush();
+#endif
+
+    if (width == 0 || range <= 0.0) {
+        return;
+    }
+
+    if (width < 0) {
+        width *= -1;
+        x0 = x1; // x1 is not used later on
+    }
+
+    double newScale = range.to_dbl_time() / width;
+    int offset = contentsRect().left() + scaleWidth;
+    COMTime diff;
+    diff.from_dbl_time((x0 - offset) * newScale);
+    COMTime start = touchT0 - diff;
+    diff.from_dbl_time(dataWidth * newScale);
+    COMTime end = start + diff;
+    scale.setRange(start, end);
+    autoRange = false;
+    update();
+
+#if DEBUG
+    dbg = QString("update scale=%3 %4 - %5\n   %1 - %2\n")
+        .arg(start.to_real_time().c_str())
+        .arg(end.to_real_time().c_str())
+        .arg(newScale)
+        .arg(touchT0.to_real_time().c_str())
+        .arg(touchT1.to_real_time().c_str());
+    debugFile.write(dbg.toUtf8().constData());
+    debugFile.flush();
+#endif
+}
+
+/****************************************************************************/
+
+int Graph::getDataWidth() const
+{
+    int dataWidth = contentsRect().width() - scaleWidth;
+
+    if (scrollBarNeeded) {
+        dataWidth -= scrollBar.width();
+    }
+
+    return dataWidth;
 }
 
 /****************************************************************************/
