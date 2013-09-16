@@ -845,14 +845,21 @@ void Graph::pan(double fraction)
 
 void Graph::print()
 {
-    QPrinter printer(QPrinter::HighResolution);
+    QPrinter printer;
     printer.setOrientation(QPrinter::Landscape);
     printer.setPaperSize(QPrinter::A4);
+
+#ifdef __unix__
+    /* the native windows printing dialog does not support pdf output.
+     * http://qt-project.org/forums/viewthread/6088 */
+    printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setOutputFileName("dls-export.pdf");
+#endif
 
     QPrintDialog dialog(&printer, this);
+    int ret = dialog.exec();
 
-    if (dialog.exec() != QDialog::Accepted) {
+    if (ret != QDialog::Accepted) {
         return;
     }
 
