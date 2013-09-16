@@ -845,13 +845,16 @@ void Graph::pan(double fraction)
 
 void Graph::print()
 {
-    QPrinter printer;
+    QPrinter printer(QPrinter::HighResolution);
     printer.setOrientation(QPrinter::Landscape);
     printer.setPaperSize(QPrinter::A4);
     printer.setOutputFileName("dls-export.pdf");
 
     QPrintDialog dialog(&printer, this);
-    dialog.exec();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
 
     QPainter painter;
 
