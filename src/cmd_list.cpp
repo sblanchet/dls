@@ -92,7 +92,7 @@ struct IndexList {
 int list_chunks(Job *job)
 {
     list<Channel>::iterator channel_i;
-    list<Chunk>::const_iterator chunk_i;
+    Channel::ChunkMap::const_iterator chunk_i;
     list<IndexList> groups;
     list<IndexList>::iterator group_i;
     bool same_chunks_found;
@@ -146,9 +146,10 @@ int list_chunks(Job *job)
         for (chunk_i = channel->chunks().begin();
              chunk_i != channel->chunks().end();
              chunk_i++) {
-            cout << "  Chunk from " << chunk_i->start().to_real_time()
-                 << " to " << chunk_i->end().to_real_time()
-                 << " (" << chunk_i->start().diff_str_to(chunk_i->end())
+            const Chunk *c = &chunk_i->second;
+            cout << "  Chunk from " << c->start().to_real_time()
+                 << " to " << c->end().to_real_time()
+                 << " (" << c->start().diff_str_to(c->end())
                  << ")" << endl;
         }
     }

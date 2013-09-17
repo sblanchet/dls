@@ -557,7 +557,7 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
 {
     double xp, old_xp;
     int offset_drawing, height_drawing;
-    list<Chunk>::const_iterator chunk_i;
+    Channel::ChunkMap::const_iterator chunk_i;
     ViewViewDataChunkRange chunk_range;
     vector<ViewViewDataChunkRange> chunk_ranges, relevant_chunk_ranges;
     vector<ViewViewDataChunkRange>::iterator chunk_range_i;
@@ -570,8 +570,8 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
     for (chunk_i = channel->channel()->chunks().begin();
          chunk_i != channel->channel()->chunks().end();
          chunk_i++) {
-        chunk_range.start = chunk_i->start();
-        chunk_range.end = chunk_i->end();
+        chunk_range.start = chunk_i->second.start();
+        chunk_range.end = chunk_i->second.end();
         chunk_ranges.push_back(chunk_range);
     }
 

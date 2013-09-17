@@ -48,7 +48,13 @@ using namespace LibDLS;
    Constructor.
 */
 
-Chunk::Chunk()
+Chunk::Chunk():
+    _sample_frequency(0.0),
+    _meta_reduction(0),
+    _format_index(0),
+    _mdct_block_size(0),
+    _type(DLS_TUNKNOWN),
+    _incomplete(true)
 {
 }
 
@@ -78,6 +84,8 @@ void Chunk::import(const string &path, COMChannelType type)
 
     _dir = path;
     _type = type;
+    _incomplete = true;
+
     chunk_file_name = _dir + "/chunk.xml";
 
     file.open(chunk_file_name.c_str(), ios::in);
@@ -669,6 +677,7 @@ void Chunk::fetch_range()
 
     _start = (uint64_t) 0;
     _end = (uint64_t) 0;
+    _incomplete = true;
 
     global_index_file_name = _dir + "/level0/data_gen.idx";
 
@@ -759,6 +768,10 @@ void Chunk::fetch_range()
         last_global_index_record.end_time = index_record.end_time;
 
         index.close();
+    }
+    else {
+        // last global index record has time != 0
+        _incomplete = false;
     }
 
     global_index.close();
