@@ -16,8 +16,6 @@
 
 using namespace QtDls;
 
-#define DEBUG_TIMING 0
-
 /*****************************************************************************/
 
 Channel::Channel(
@@ -58,39 +56,13 @@ QString Channel::name() const
 void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
         LibDLS::DataCallback callback, void *priv, unsigned int decimation)
 {
-    COMTime s, e;
-
-#if DEBUG_TIMING
-    cerr << __func__ << ch->name().c_str() << endl;
-#endif
-
     rwlock.lockForWrite();
-#if DEBUG_TIMING
-    s.set_now();
-#endif
     ch->fetch_chunks();
-#if DEBUG_TIMING
-    e.set_now();
-#endif
     rwlock.unlock();
-
-#if DEBUG_TIMING
-    cerr << "fetch_chunks " << s.diff_str_to(e) << endl;
-#endif
 
     rwlock.lockForRead();
-#if DEBUG_TIMING
-    s.set_now();
-#endif
     ch->fetch_data(start, end, min_values, callback, priv, decimation);
-#if DEBUG_TIMING
-    e.set_now();
-#endif
     rwlock.unlock();
-
-#if DEBUG_TIMING
-    cerr << "fetch_data " << s.diff_str_to(e) << endl;
-#endif
 }
 
 /****************************************************************************/

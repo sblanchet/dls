@@ -36,6 +36,8 @@ using namespace std;
 #include "com_xml_parser.hpp"
 using namespace LibDLS;
 
+#define DEBUG_TIMING 0
+
 /*****************************************************************************/
 
 /**
@@ -145,6 +147,11 @@ void Channel::fetch_chunks()
     bool first = true;
     int64_t dir_time;
 
+#if DEBUG_TIMING
+    COMTime ts, te;
+    ts.set_now();
+#endif
+
     _range_start.set_null();
     _range_end.set_null();
 
@@ -217,6 +224,13 @@ void Channel::fetch_chunks()
     }
 
     closedir(dir);
+
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_chunks " << ts.diff_str_to(te);
+    dls_log(msg.str());
+#endif
 }
 
 /*****************************************************************************/
@@ -240,15 +254,27 @@ void Channel::fetch_data(COMTime start, /**< start of requested time range */
                          unsigned int decimation /**< Decimation. */
                          ) const
 {
+#if DEBUG_TIMING
+    COMTime ts, te;
+    ts.set_now();
+#endif
+
     ChunkMap::const_iterator chunk_i;
     COMRingBuffer ring(100000);
 
-    if (start >= end) return;
-
-    for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
-        chunk_i->second.fetch_data(start, end, min_values, &ring, cb, cb_data,
-                decimation);
+    if (start < end) {
+        for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
+            chunk_i->second.fetch_data(start, end,
+                    min_values, &ring, cb, cb_data, decimation);
+        }
     }
+
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_data " << ts.diff_str_to(te);
+    dls_log(msg.str());
+#endif
 }
 
 /*****************************************************************************/
