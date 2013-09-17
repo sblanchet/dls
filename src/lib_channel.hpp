@@ -25,7 +25,7 @@
 /*****************************************************************************/
 
 #include <string>
-#include <list>
+#include <map>
 using namespace std;
 
 #include "com_exception.hpp"
@@ -77,7 +77,8 @@ namespace LibDLS {
         const string &unit() const;
         COMChannelType type() const;
 
-        const list<LibDLS::Chunk> &chunks() const;
+        typedef map<int64_t, Chunk> ChunkMap;
+        const ChunkMap &chunks() const;
         bool has_same_chunks_as(const Channel &) const;
 
         COMTime start() const;
@@ -94,7 +95,7 @@ namespace LibDLS {
         string _unit; /**< channel unit */
         COMChannelType _type; /**< channel type */
 
-        list<Chunk> _chunks; /**< list of chunks */
+        ChunkMap _chunks; /**< list of chunks */
         COMTime _range_start; /**< start of channel data range */
         COMTime _range_end; /**< end of channel data range */
 
@@ -169,7 +170,7 @@ inline COMChannelType LibDLS::Channel::type() const
    \return chunk list
 */
 
-inline const list<LibDLS::Chunk> &LibDLS::Channel::chunks() const
+inline const LibDLS::Channel::ChunkMap &LibDLS::Channel::chunks() const
 {
     return _chunks;
 }

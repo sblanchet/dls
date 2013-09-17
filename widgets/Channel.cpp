@@ -16,6 +16,8 @@
 
 using namespace QtDls;
 
+#define DEBUG_TIMING 0
+
 /*****************************************************************************/
 
 Channel::Channel(
@@ -56,13 +58,39 @@ QString Channel::name() const
 void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
         LibDLS::DataCallback callback, void *priv, unsigned int decimation)
 {
+    COMTime s, e;
+
+#if DEBUG_TIMING
+    cerr << __func__ << ch->name().c_str() << endl;
+#endif
+
     rwlock.lockForWrite();
+#if DEBUG_TIMING
+    s.set_now();
+#endif
     ch->fetch_chunks();
+#if DEBUG_TIMING
+    e.set_now();
+#endif
     rwlock.unlock();
 
+#if DEBUG_TIMING
+    cerr << "fetch_chunks " << s.diff_str_to(e) << endl;
+#endif
+
     rwlock.lockForRead();
+#if DEBUG_TIMING
+    s.set_now();
+#endif
     ch->fetch_data(start, end, min_values, callback, priv, decimation);
+#if DEBUG_TIMING
+    e.set_now();
+#endif
     rwlock.unlock();
+
+#if DEBUG_TIMING
+    cerr << "fetch_data " << s.diff_str_to(e) << endl;
+#endif
 }
 
 /****************************************************************************/
@@ -91,11 +119,12 @@ vector<Channel::TimeRange> Channel::chunkRanges()
     vector<TimeRange> ranges;
 
     if (rwlock.tryLockForRead()) {
-        for (list<LibDLS::Chunk>::const_iterator c = ch->chunks().begin();
+        for (LibDLS::Channel::ChunkMap::const_iterator c =
+                ch->chunks().begin();
                 c != ch->chunks().end(); c++) {
             TimeRange r;
-            r.start = c->start();
-            r.end = c->end();
+            r.start = c->second.start();
+            r.end = c->second.end();
             ranges.push_back(r);
         }
 

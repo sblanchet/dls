@@ -2,10 +2,9 @@ vim700: spelllang=en spell
 
 - Data access
     - (*) Data access via network
-    - Caching
+    - Data caching
     - Create update_jobs() method.
     - Create update_channels() method.
-    - Create update_chunks() method.
     - Display non-existing channels in model
     - Sort channels in model
     - Display channels as tree

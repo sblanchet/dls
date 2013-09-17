@@ -73,8 +73,10 @@ namespace LibDLS
         void import(const string &, COMChannelType);
         void fetch_range();
 
-        COMTime start() const;
-        COMTime end() const;
+        COMTime start() const { return _start; }
+        COMTime end() const { return _end; }
+        bool incomplete() const { return _incomplete; }
+
         void fetch_data(COMTime, COMTime, unsigned int,
                         COMRingBuffer *,
                         DataCallback, void *,
@@ -92,6 +94,7 @@ namespace LibDLS
         COMTime _start;                 /**< Startzeit des Chunks */
         COMTime _end;                   /**< Endzeit des Chunks */
         COMChannelType _type; /**< channel type */
+        bool _incomplete; /**< Data ist still logged. */
 
         unsigned int _calc_optimal_level(COMTime, COMTime, unsigned int) const;
         COMTime _time_per_value(unsigned int) const;
@@ -132,30 +135,6 @@ namespace LibDLS
                                unsigned int,
                                unsigned int &) const;
     };
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the chunk's start time.
-   \return start time
-*/
-
-inline COMTime LibDLS::Chunk::start() const
-{
-    return _start;
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the chunk's end time.
-   \return end time
-*/
-
-inline COMTime LibDLS::Chunk::end() const
-{
-    return _end;
 }
 
 /*****************************************************************************/
