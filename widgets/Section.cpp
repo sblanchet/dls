@@ -809,7 +809,17 @@ void Section::loadLayers(const QDomElement &elem, Model *model)
             throw Exception("Invalid URL!");
         }
 
-        QtDls::Channel *ch = model->getChannel(url);
+        QtDls::Channel *ch = NULL;
+
+        try {
+            ch = model->getChannel(url);
+        }
+        catch (Model::Exception &e) {
+            throw Exception(QString("Failed to get channel %1: %2")
+                    .arg(url.toString())
+                    .arg(e.msg));
+        }
+
         if (!ch) {
             throw Exception(QString("Failed to get channel %1!")
                     .arg(url.toString()));
