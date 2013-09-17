@@ -24,6 +24,7 @@
 #include <QApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
+#include <QDebug>
 
 #include "MainWindow.h"
 
@@ -47,7 +48,14 @@ int main(int argc, char *argv[])
 
     MainWindow mainWin;
     mainWin.show();
-    return app.exec();
+
+    try {
+        return app.exec();
+    }
+    catch(QtDls::Model::Exception &e) {
+        qCritical() << "Model exception: " << e.msg;
+        return 1;
+    }
 }
 
 /****************************************************************************/
