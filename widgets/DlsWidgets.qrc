@@ -1,5 +1,5 @@
 <RCC>
-  <qresource prefix="/" >
+  <qresource prefix="/DlsWidgets" >
     <file>images/dialog-error.svg</file>
     <file>images/dialog-information.svg</file>
     <file>images/dialog-warning.svg</file>

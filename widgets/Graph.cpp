@@ -58,11 +58,11 @@ QColor Graph::messageColor[] = {
 /****************************************************************************/
 
 QString Graph::messagePixmap[] = {
-    ":/images/dialog-information.svg",
-    ":/images/dialog-warning.svg",
-    ":/images/dialog-error.svg",
-    ":/images/dialog-error.svg",
-    ":/images/dialog-information.svg"
+    ":/DlsWidgets/images/dialog-information.svg",
+    ":/DlsWidgets/images/dialog-warning.svg",
+    ":/DlsWidgets/images/dialog-error.svg",
+    ":/DlsWidgets/images/dialog-error.svg",
+    ":/DlsWidgets/images/dialog-information.svg"
 };
 
 /****************************************************************************/
@@ -89,7 +89,7 @@ Graph::Graph(
     workerBusy(false),
     reloadPending(false),
     pendingWidth(0),
-    busySvg(QString(":/images/view-refresh.svg"), this),
+    busySvg(QString(":/DlsWidgets/images/view-refresh.svg"), this),
     prevViewAction(this),
     nextViewAction(this),
     loadDataAction(this),
@@ -162,37 +162,37 @@ Graph::Graph(
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
     prevViewAction.setStatusTip(tr("Return to previous view."));
-    prevViewAction.setIcon(QIcon(":/images/edit-undo.svg"));
+    prevViewAction.setIcon(QIcon(":/DlsWidgets/images/edit-undo.svg"));
     connect(&prevViewAction, SIGNAL(triggered()), this, SLOT(previousView()));
 
     nextViewAction.setText(tr("&Next view"));
     nextViewAction.setShortcut(Qt::ALT | Qt::Key_Right);
     nextViewAction.setStatusTip(tr("Proceed to next view."));
-    nextViewAction.setIcon(QIcon(":/images/edit-redo.svg"));
+    nextViewAction.setIcon(QIcon(":/DlsWidgets/images/edit-redo.svg"));
     connect(&nextViewAction, SIGNAL(triggered()), this, SLOT(nextView()));
 
     loadDataAction.setText(tr("&Update"));
     loadDataAction.setShortcut(Qt::Key_F5);
     loadDataAction.setStatusTip(tr("Update displayed data."));
-    loadDataAction.setIcon(QIcon(":/images/view-refresh.svg"));
+    loadDataAction.setIcon(QIcon(":/DlsWidgets/images/view-refresh.svg"));
     connect(&loadDataAction, SIGNAL(triggered()), this, SLOT(loadData()));
 
     zoomAction.setText(tr("&Zoom"));
     zoomAction.setShortcut(Qt::Key_Z);
     zoomAction.setStatusTip(tr("Set mouse interaction to zooming."));
-    zoomAction.setIcon(QIcon(":/images/system-search.svg"));
+    zoomAction.setIcon(QIcon(":/DlsWidgets/images/system-search.svg"));
     connect(&zoomAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
 
     panAction.setText(tr("&Pan"));
     panAction.setShortcut(Qt::Key_P);
     panAction.setStatusTip(tr("Set mouse interaction to panning."));
-    panAction.setIcon(QIcon(":/images/go-next.svg"));
+    panAction.setIcon(QIcon(":/DlsWidgets/images/go-next.svg"));
     connect(&panAction, SIGNAL(triggered()), this, SLOT(interactionSlot()));
 
     measureAction.setText(tr("&Measure"));
     measureAction.setShortcut(Qt::Key_M);
     measureAction.setStatusTip(tr("Set mouse interaction to measuring."));
-    measureAction.setIcon(QIcon(":/images/measure.svg"));
+    measureAction.setIcon(QIcon(":/DlsWidgets/images/measure.svg"));
     connect(&measureAction, SIGNAL(triggered()),
             this, SLOT(interactionSlot()));
 
@@ -200,20 +200,20 @@ Graph::Graph(
     zoomInAction.setShortcut(Qt::Key_Plus);
     zoomInAction.setStatusTip(tr("Zoom the current view in to half"
                 " of the time around the center."));
-    zoomInAction.setIcon(QIcon(":/images/system-search.svg"));
+    zoomInAction.setIcon(QIcon(":/DlsWidgets/images/system-search.svg"));
     connect(&zoomInAction, SIGNAL(triggered()), this, SLOT(zoomIn()));
 
     zoomOutAction.setText(tr("Zoom out"));
     zoomOutAction.setShortcut(Qt::Key_Minus);
     zoomOutAction.setStatusTip(tr("Zoom the current view out the double"
                 " time around the center."));
-    zoomOutAction.setIcon(QIcon(":/images/system-search.svg"));
+    zoomOutAction.setIcon(QIcon(":/DlsWidgets/images/system-search.svg"));
     connect(&zoomOutAction, SIGNAL(triggered()), this, SLOT(zoomOut()));
 
     zoomResetAction.setText(tr("Auto range"));
     zoomResetAction.setStatusTip(
             tr("Automatically zoom to the data extent."));
-    zoomResetAction.setIcon(QIcon(":/images/view-fullscreen.svg"));
+    zoomResetAction.setIcon(QIcon(":/DlsWidgets/images/view-fullscreen.svg"));
     connect(&zoomResetAction, SIGNAL(triggered()), this, SLOT(zoomReset()));
 
     pickDateAction.setText(tr("Choose date..."));
@@ -273,37 +273,37 @@ Graph::Graph(
     sectionPropertiesAction.setStatusTip(tr("Open the section configuration"
                 " dialog."));
     sectionPropertiesAction.setIcon(
-            QIcon(":/images/document-properties.svg"));
+            QIcon(":/DlsWidgets/images/document-properties.svg"));
     connect(&sectionPropertiesAction, SIGNAL(triggered()),
             this, SLOT(sectionProperties()));
 
     removeSectionAction.setText(tr("Remove section"));
     removeSectionAction.setStatusTip(tr("Remove the selected section."));
-    removeSectionAction.setIcon(QIcon(":/images/list-remove.svg"));
+    removeSectionAction.setIcon(QIcon(":/DlsWidgets/images/list-remove.svg"));
     connect(&removeSectionAction, SIGNAL(triggered()),
             this, SLOT(removeSelectedSection()));
 
     clearSectionsAction.setText(tr("Clear sections"));
     clearSectionsAction.setStatusTip(tr("Remove all sections."));
-    clearSectionsAction.setIcon(QIcon(":/images/list-remove.svg"));
+    clearSectionsAction.setIcon(QIcon(":/DlsWidgets/images/list-remove.svg"));
     connect(&clearSectionsAction, SIGNAL(triggered()),
             this, SLOT(clearSections()));
 
     messagesAction.setText(tr("Show Messages"));
     messagesAction.setStatusTip(tr("Show process messages."));
-    messagesAction.setIcon(QIcon(":/images/messages.svg"));
+    messagesAction.setIcon(QIcon(":/DlsWidgets/images/messages.svg"));
     messagesAction.setCheckable(true);
     connect(&messagesAction, SIGNAL(changed()),
             this, SLOT(showMessagesChanged()));
 
     printAction.setText(tr("Print..."));
     printAction.setStatusTip(tr("Open the print dialog."));
-    printAction.setIcon(QIcon(":/images/document-print.svg"));
+    printAction.setIcon(QIcon(":/DlsWidgets/images/document-print.svg"));
     connect(&printAction, SIGNAL(triggered()), this, SLOT(print()));
 
     exportAction.setText(tr("Export..."));
     exportAction.setStatusTip(tr("Open the export dialog."));
-    exportAction.setIcon(QIcon(":/images/document-save.svg"));
+    exportAction.setIcon(QIcon(":/DlsWidgets/images/document-save.svg"));
     connect(&exportAction, SIGNAL(triggered()), this, SLOT(showExport()));
 
     updateActions();
