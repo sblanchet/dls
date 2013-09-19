@@ -87,7 +87,7 @@ QVariant Dir::data(const QModelIndex &index, int role) const
                         .arg(dir->path().c_str());
                     break;
                 case Qt::DecorationRole:
-                    ret = QIcon(":/images/drive-harddisk.svg");
+                    ret = QIcon(":/DlsWidgets/images/drive-harddisk.svg");
                     break;
             }
             break;

@@ -244,7 +244,7 @@ void SectionDialog::tableContextMenu(const QPoint &pos)
 
     QAction removeAction(this);
     removeAction.setText(tr("Remove %n layer(s)", "", indexes.size()));
-    removeAction.setIcon(QIcon(":/images/list-remove.svg"));
+    removeAction.setIcon(QIcon(":/DlsWidgets/images/list-remove.svg"));
     removeAction.setEnabled(indexes.size() > 0);
     connect(&removeAction, SIGNAL(triggered()), this, SLOT(removeLayers()));
     menu.addAction(&removeAction);

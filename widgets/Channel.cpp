@@ -156,7 +156,8 @@ QVariant Channel::data(const QModelIndex &index, int role) const
                     ret = QString(ch->name().c_str());
                     break;
                 case Qt::DecorationRole:
-                    ret = QIcon(":/images/utilities-system-monitor.svg");
+                    ret = QIcon(":/DlsWidgets/images/"
+                            "utilities-system-monitor.svg");
                     break;
             }
             break;
