@@ -59,7 +59,6 @@ MainWindow::MainWindow(QWidget *parent):
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
     recentFiles = settings.value("RecentFiles").toStringList();
-    scripts = settings.value("Scripts").toStringList();
     if (settings.contains("WindowHeight") &&
             settings.contains("WindowWidth")) {
         resize(settings.value("WindowWidth").toInt(),
@@ -85,20 +84,50 @@ MainWindow::MainWindow(QWidget *parent):
 
     updateRecentFileActions();
 
-    if (scripts.size() > 0) {
+    int size = settings.beginReadArray("Scripts");
+    if (size > 0) {
         scriptActions = new QAction *[scripts.size()];
 
-        for (int i = 0; i < scripts.size(); ++i) {
+        for (int i = 0; i < size; ++i) {
+            settings.setArrayIndex(i);
+            Script s;
+            s.command = settings.value("Command").toString();
+            s.alias = settings.value("Alias").toString();
+            QString dialect = settings.value("Dialect").toString();
+            if (dialect == "Yaml" || dialect == "") {
+                s.dialect = Script::Yaml;
+            }
+            else if (dialect == "Octave") {
+                s.dialect = Script::Octave;
+            }
+            else if (dialect == "Dls") {
+                s.dialect = Script::Dls;
+            }
+            else {
+                qWarning() <<
+                    tr("Unknown dialect \"%1\": Defaulting to Yaml.")
+                    .arg(dialect);
+                s.dialect = Script::Yaml;
+            }
+
             scriptActions[i] = new QAction(this);
-            scriptActions[i]->setText(scripts[i]);
-            scriptActions[i]->setData(scripts[i]);
+            if (s.alias != "") {
+                scriptActions[i]->setText(s.alias);
+            }
+            else {
+                scriptActions[i]->setText(s.command);
+            }
+            scriptActions[i]->setData(i);
             connect(scriptActions[i], SIGNAL(triggered()),
                     this, SLOT(execScript()));
             menuScripts->addAction(scriptActions[i]);
+
+            scripts.append(s);
         }
     }
+    settings.endArray();
 
-    menuScripts->menuAction()->setVisible(scripts.size() > 0);
+    menuScripts->menuAction()->setVisible(size > 0);
     updateScriptActions();
 
 #if MODELTEST
@@ -385,27 +414,80 @@ void MainWindow::execScript()
         return;
     }
 
-    QString path = action->data().toString();
-    scriptProcess.start(path);
+    int index = action->data().toInt();
+    if (index < 0 || index >= scripts.size()) {
+        return;
+    }
+
+    QString command = scripts[index].command;
+
+    if (command == "") {
+        qWarning() << "Command is empty.";
+        return;
+    }
+
+#if 0
+    qDebug() << QString("Executing \"%1\" with dialect %2")
+        .arg(scripts[index].command)
+        .arg(scripts[index].dialect);
+#endif
+
+    scriptProcess.start(scripts[index].command);
 
     if (!scriptProcess.waitForStarted()) {
         return;
     }
 
-    QString yaml;
+    QString out;
+    QList<DLS::Graph::ChannelInfo> channelInfo = dlsGraph->channelInfo();
 
-    yaml += QString("---\nstart: %1\nend: %2\nchannels:\n")
-        .arg(dlsGraph->getStart().to_real_time().c_str())
-        .arg(dlsGraph->getEnd().to_real_time().c_str());
+    switch (scripts[index].dialect) {
+        case Script::Octave:
+            out += QString(
+                    "dls.start = [{'%1'}, %2];\n"
+                    "dls.end = [{'%3'}, %4];\n")
+                .arg(dlsGraph->getStart().to_iso_time().c_str())
+                .arg(dlsGraph->getStart().to_dbl_time(), 0, 'f')
+                .arg(dlsGraph->getEnd().to_iso_time().c_str())
+                .arg(dlsGraph->getEnd().to_dbl_time(), 0, 'f');
+            out += "dls.channels = [\n";
+            for (QList<DLS::Graph::ChannelInfo>::const_iterator ci =
+                    channelInfo.begin(); ci != channelInfo.end(); ci++) {
+                out += QString("    {'url: %1'}, %2, %3;\n")
+                    .arg(ci->url.toString())
+                    .arg(ci->jobId)
+                    .arg(ci->dirIndex);
+            }
+            out += "];\n";
+            break;
 
-    QSet<QUrl> urls = dlsGraph->urls();
+        case Script::Dls:
+            out += QString(
+                    "-s \"%1\"\n"
+                    "-e \"%2\"\n")
+                .arg(dlsGraph->getStart().to_iso_time().c_str())
+                .arg(dlsGraph->getEnd().to_iso_time().c_str());
+            for (QList<DLS::Graph::ChannelInfo>::const_iterator ci =
+                    channelInfo.begin(); ci != channelInfo.end(); ci++) {
+                out += QString("    -j %1 -c %2\n")
+                    .arg(ci->jobId)
+                    .arg(ci->dirIndex);
+            }
+            break;
 
-    for (QSet<QUrl>::const_iterator u = urls.begin();
-            u != urls.end(); u++) {
-        yaml += QString("   - url: %1\n").arg(u->toString());
+        default: // Yaml
+            out += QString("---\nstart: %1\nend: %2\nchannels:\n")
+                .arg(dlsGraph->getStart().to_iso_time().c_str())
+                .arg(dlsGraph->getEnd().to_iso_time().c_str());
+            for (QList<DLS::Graph::ChannelInfo>::const_iterator ci =
+                    channelInfo.begin(); ci != channelInfo.end(); ci++) {
+                out += QString("   - url: %1\n").arg(ci->url.toString());
+                out += QString("     job: %1\n").arg(ci->jobId);
+                out += QString("   index: %1\n").arg(ci->dirIndex);
+            }
     }
 
-    scriptProcess.write(yaml.toLocal8Bit());
+    scriptProcess.write(out.toLocal8Bit());
     scriptProcess.closeWriteChannel();
 
     updateScriptActions();

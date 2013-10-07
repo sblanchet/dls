@@ -48,9 +48,19 @@ class MainWindow:
         QtDls::Model model;
         bool restore;
         QStringList recentFiles;
-        QStringList scripts;
         QString currentFileName;
         LogWindow logWindow;
+        struct Script {
+            QString command;
+            QString alias;
+            enum Dialect {
+                Yaml,
+                Octave,
+                Dls
+            };
+            Dialect dialect;
+        };
+        QList<Script> scripts;
 
         enum { MaxRecentFiles = 10 };
         QAction *recentFileActions[MaxRecentFiles];
