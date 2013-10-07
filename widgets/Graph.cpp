@@ -628,32 +628,33 @@ void Graph::setRange(const COMTime &start, const COMTime &end)
 
 /****************************************************************************/
 
-QSet<QtDls::Channel *> Graph::channels()
-{
-    QSet<QtDls::Channel *> channels;
-
-    rwLockSections.lockForRead();
-
-    for (QList<Section *>::const_iterator s = sections.begin();
-            s != sections.end(); s++) {
-        channels += (*s)->channels();
-    }
-
-    rwLockSections.unlock();
-
-    return channels;
-}
-
-/****************************************************************************/
-
 QSet<QUrl> Graph::urls()
 {
-    QSet<QtDls::Channel *> chs = channels();
+    QSet<QtDls::Channel *> chs = displayedChannels(); // FIXME race
     QSet<QUrl> ret;
 
     for (QSet<QtDls::Channel *>::const_iterator ch = chs.begin();
             ch != chs.end(); ch++) {
         ret += (*ch)->url();
+    }
+
+    return ret;
+}
+
+/****************************************************************************/
+
+QList<Graph::ChannelInfo> Graph::channelInfo()
+{
+    QSet<QtDls::Channel *> chs = displayedChannels(); // FIXME race
+    QList<ChannelInfo> ret;
+    ChannelInfo ci;
+
+    for (QSet<QtDls::Channel *>::const_iterator ch = chs.begin();
+            ch != chs.end(); ch++) {
+        ci.url = (*ch)->url();
+        ci.jobId = (*ch)->job()->id();
+        ci.dirIndex = (*ch)->dirIndex();
+        ret += ci;
     }
 
     return ret;
@@ -2350,9 +2351,29 @@ void Graph::showMessagesChanged()
 
 void Graph::showExport()
 {
-    ExportDialog *dialog = new ExportDialog(this, &thread, channels());
+    // FIXME channels() race
+    ExportDialog *dialog =
+        new ExportDialog(this, &thread, displayedChannels());
     dialog->exec();
     delete dialog;
+}
+
+/****************************************************************************/
+
+QSet<QtDls::Channel *> Graph::displayedChannels()
+{
+    QSet<QtDls::Channel *> channels;
+
+    rwLockSections.lockForRead();
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        channels += (*s)->channels();
+    }
+
+    rwLockSections.unlock();
+
+    return channels;
 }
 
 /****************************************************************************/

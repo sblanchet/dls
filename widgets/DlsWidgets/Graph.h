@@ -34,6 +34,7 @@
 #include <QtDesigner/QDesignerExportWidget>
 #include <QReadWriteLock>
 #include <QTouchEvent>
+#include <QUrl>
 
 #include "lib_job.hpp"
 
@@ -126,8 +127,14 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setRange(const COMTime &, const COMTime &);
         const COMTime &getStart() const { return scale.getStart(); };
         const COMTime &getEnd() const { return scale.getEnd(); };
-        QSet<QtDls::Channel *> channels();
         QSet<QUrl> urls();
+
+        struct ChannelInfo {
+            QUrl url;
+            unsigned int jobId;
+            unsigned int dirIndex;
+        };
+        QList<ChannelInfo> channelInfo();
 
         enum Interaction {
             Zoom,
@@ -294,6 +301,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateSection(Section *section);
         void showMessagesChanged();
         void showExport();
+
+        QSet<QtDls::Channel *> displayedChannels();
 };
 
 /****************************************************************************/
