@@ -394,7 +394,7 @@ void MainWindow::execScript()
 
     QString yaml;
 
-    yaml += QString("---\nstart: %1\nend: %2i\nchannels:\n")
+    yaml += QString("---\nstart: %1\nend: %2\nchannels:\n")
         .arg(dlsGraph->getStart().to_real_time().c_str())
         .arg(dlsGraph->getEnd().to_real_time().c_str());
 
