@@ -30,6 +30,7 @@ class Channel:
         QUrl url() const;
         QString name() const;
         LibDLS::Job *job() const { return ch->getJob(); }
+        unsigned int dirIndex() const { return ch->dir_index(); }
 
         class Exception
         {
