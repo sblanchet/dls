@@ -84,6 +84,7 @@ public:
     string to_real_time() const;
     string format_time(const char *) const;
     string to_rfc811_time() const;
+    string to_iso_time() const;
     string diff_str_to(const COMTime &) const;
     int year() const;
     int month() const;

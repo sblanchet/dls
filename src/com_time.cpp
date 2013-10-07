@@ -574,6 +574,25 @@ string COMTime::to_rfc811_time() const
 
 /*****************************************************************************/
 
+string COMTime::to_iso_time() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    char str[100];
+    string ret;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    strftime(str, sizeof(str), "%Y-%m-%d %H:%M:%S", &local_time);
+    ret = str;
+    sprintf(str, ".%06u", (unsigned int) tv.tv_usec);
+    return ret + str;
+}
+
+/*****************************************************************************/
+
 string COMTime::diff_str_to(const COMTime &other) const
 {
     stringstream str;
