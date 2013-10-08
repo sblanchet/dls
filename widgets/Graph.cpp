@@ -904,6 +904,17 @@ void Graph::print()
 
     rwLockSections.lockForRead();
 
+    COMTime range = getEnd() - getStart();
+	int dataWidth = page.width() - scaleWidth;
+	int measurePos = -1;
+	if (!measureTime.is_null() && dataWidth > 0
+			&& measureTime >= getStart() && measureTime < getEnd()
+			&& range > 0.0) {
+		double xScale = dataWidth / range.to_dbl_time();
+		measurePos =
+			(measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+	}
+
     QList<Section *>::iterator first = sections.begin();
 
     while (first != sections.end()) {
@@ -936,6 +947,7 @@ void Graph::print()
         int top = page.top() + printScale.getOuterLength() + 1;
         QRect dataRect(page);
         dataRect.setTop(page.top() + printScale.getOuterLength() + 1);
+
         for (QList<Section *>::iterator s = first; s != last + 1; s++) {
             int height = (*s)->getHeight() * (dataRect.height() - count - 1)
                 / heightSum;
@@ -945,8 +957,8 @@ void Graph::print()
             drawSection.setHeight(height);
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
-                page.width(), &worker, jobSet);
-            drawSection.draw(painter, r, -1, scaleWidth);
+                dataWidth, &worker, jobSet);
+            drawSection.draw(painter, r, measurePos, scaleWidth);
 
             QPen pen;
             painter.setPen(pen);
@@ -955,6 +967,40 @@ void Graph::print()
 
             top += height + 1;
         }
+
+		if (measurePos != -1) {
+			int xp = page.left() + scaleWidth + measurePos;
+			QPen pen;
+			pen.setColor(Qt::darkBlue);
+			painter.setPen(pen);
+
+			painter.drawLine(xp, page.top(), xp, page.bottom());
+
+			QRect textRect(page);
+			textRect.setLeft(xp + 3);
+			textRect.setTop(page.top() + 2);
+			textRect.setHeight(page.height() - 4);
+			QString label(measureTime.to_real_time().c_str());
+			QFontMetrics fm(painter.font());
+			QSize s = fm.size(0, label);
+			if (s.width() <= textRect.width()) {
+				painter.fillRect(
+						QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
+						Qt::white);
+				painter.drawText(textRect, Qt::AlignLeft, label);
+			}
+			else {
+				textRect.setLeft(page.left());
+				textRect.setRight(xp - 3);
+				if (s.width() <= textRect.width()) {
+					painter.fillRect(QRect(
+								QPoint(textRect.right() + 1 - s.width(),
+									textRect.top()), s).adjusted(-2, 0, 2, 0),
+							Qt::white);
+					painter.drawText(textRect, Qt::AlignRight, label);
+				}
+			}
+		}
 
         first = last + 1;
         if (first != sections.end()) {
