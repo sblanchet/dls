@@ -39,6 +39,8 @@ MOC_DIR = .moc
 OBJECTS_DIR = .obj
 QT += svg
 
+include(updateqm.pri)
+
 isEmpty(PREFIX) {
     unix:PREFIX = /vol/opt/etherlab
     win32:PREFIX = "c:/msys/1.0/local"
@@ -79,6 +81,7 @@ inst_headers.files = \
     DlsWidgets/Model.h \
     DlsWidgets/Scale.h \
     DlsWidgets/Section.h \
+    DlsWidgets/Translator.h \
     DlsWidgets/ValueScale.h
 
 INSTALLS += inst_headers
@@ -113,6 +116,7 @@ SOURCES += \
     Section.cpp \
     SectionDialog.cpp \
     SectionModel.cpp \
+    Translator.cpp \
     ValueScale.cpp \
     WidgetCollection.cpp
 
@@ -122,6 +126,8 @@ FORMS = \
     SectionDialog.ui
 
 RESOURCES = DlsWidgets.qrc
+
+TRANSLATIONS = DlsWidgets_de.ts
 
 ADDITIONAL_DISTFILES =
 
