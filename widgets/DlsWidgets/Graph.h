@@ -136,6 +136,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         };
         QList<ChannelInfo> channelInfo();
 
+		COMTime getMeasureTime() const { return measureTime; }
+
         enum Interaction {
             Zoom,
             Pan,
