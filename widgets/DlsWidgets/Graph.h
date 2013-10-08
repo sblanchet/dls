@@ -212,6 +212,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int pendingWidth;
         QSvgRenderer busySvg;
 
+        QAction fixMeasuringAction;
+        QAction removeMeasuringAction;
         QAction prevViewAction;
         QAction nextViewAction;
         QAction loadDataAction;
@@ -288,6 +290,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void touchZoomStart(int, int);
         void touchZoomUpdate(int, int);
         int getDataWidth() const;
+        QSet<QtDls::Channel *> displayedChannels();
 
     private slots:
         void interactionSlot();
@@ -300,8 +303,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateSection(Section *section);
         void showMessagesChanged();
         void showExport();
-
-        QSet<QtDls::Channel *> displayedChannels();
+        void fixMeasuringLine();
+        void removeMeasuringLine();
 };
 
 /****************************************************************************/

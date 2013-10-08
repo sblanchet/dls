@@ -88,6 +88,8 @@ Graph::Graph(
     reloadPending(false),
     pendingWidth(0),
     busySvg(QString(":/DlsWidgets/images/view-refresh.svg"), this),
+    fixMeasuringAction(this),
+    removeMeasuringAction(this),
     prevViewAction(this),
     nextViewAction(this),
     loadDataAction(this),
@@ -156,6 +158,17 @@ Graph::Graph(
     connect(&worker, SIGNAL(notifySection(Section *)),
             this, SLOT(updateSection(Section *)));
     connect(&worker, SIGNAL(finished()), this, SLOT(workerFinished()));
+
+    fixMeasuringAction.setText(tr("&Fix measuring line"));
+    fixMeasuringAction.setStatusTip(
+			tr("Fix the measuring line at the current time."));
+    connect(&fixMeasuringAction, SIGNAL(triggered()),
+			this, SLOT(fixMeasuringLine()));
+
+    removeMeasuringAction.setText(tr("&Remove measuring line"));
+    removeMeasuringAction.setStatusTip(tr("Remove the measuring line."));
+    connect(&removeMeasuringAction, SIGNAL(triggered()),
+			this, SLOT(removeMeasuringLine()));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -763,6 +776,9 @@ void Graph::setInteraction(Interaction i)
     if (panning && interaction != Pan) {
         panning = false;
     }
+    if (measuring && interaction != Measure) {
+		measureTime.set_null();
+    }
 
     updateMeasuring();
     updateActions();
@@ -1003,7 +1019,7 @@ bool Graph::event(
 {
     switch (event->type()) {
         case QEvent::MouseButtonDblClick:
-            zoomReset();
+            fixMeasuringLine();
             break;
 
         case QEvent::LanguageChange:
@@ -1335,10 +1351,12 @@ void Graph::paintEvent(
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
     COMTime range = getEnd() - getStart();
-    int mp = -1;
-	if (measuring && range > 0.0) {
+    int measurePos = -1;
+	if (!measureTime.is_null()
+			&& measureTime >= getStart() && measureTime < getEnd()
+			&& range > 0.0) {
 		double xScale = getDataWidth() / range.to_dbl_time();
-		mp = (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+		measurePos = (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
 	}
     QRect dataRect(contentsRect());
     dataRect.setTop(top);
@@ -1361,7 +1379,7 @@ void Graph::paintEvent(
         QRect sectionRect(dataRect);
         sectionRect.setTop(top - scrollBar.value());
         sectionRect.setHeight((*s)->getHeight());
-        (*s)->draw(painter, sectionRect, mp, scaleWidth);
+        (*s)->draw(painter, sectionRect, measurePos, scaleWidth);
 
         QRect splitterRect(sectionRect);
         splitterRect.setTop(top + (*s)->getHeight() - scrollBar.value());
@@ -1446,16 +1464,17 @@ void Graph::paintEvent(
         painter.drawLine(zoomRect.topRight(), zoomRect.bottomRight());
     }
 
-    if (measuring) {
+    if (measurePos != -1) {
+		int xp = contentsRect().left() + scaleWidth + measurePos;
         QPen pen;
         pen.setColor(Qt::darkBlue);
         painter.setPen(pen);
 
-        painter.drawLine(endPos.x(), contentsRect().top(),
-                endPos.x(), contentsRect().bottom());
+        painter.drawLine(xp, contentsRect().top(),
+                xp, contentsRect().bottom());
 
         QRect textRect(contentsRect());
-        textRect.setLeft(endPos.x() + 3);
+        textRect.setLeft(xp + 3);
         textRect.setTop(contentsRect().top() + 2);
         textRect.setHeight(contentsRect().height() - 4);
         QString label(measureTime.to_real_time().c_str());
@@ -1469,7 +1488,7 @@ void Graph::paintEvent(
         }
         else {
             textRect.setLeft(contentsRect().left());
-            textRect.setRight(endPos.x() - 3);
+            textRect.setRight(xp - 3);
             if (s.width() <= textRect.width()) {
                 painter.fillRect(QRect(
                             QPoint(textRect.right() + 1 - s.width(),
@@ -1490,11 +1509,16 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
     QMenu gotoMenu(this);
 
+    removeMeasuringAction.setEnabled(
+			interaction != Measure && !measureTime.is_null());
     selectedSection = sectionFromPos(event->pos());
     removeSectionAction.setEnabled(selectedSection);
     clearSectionsAction.setEnabled(!sections.isEmpty());
     sectionPropertiesAction.setEnabled(selectedSection);
 
+    menu.addAction(&fixMeasuringAction);
+    menu.addAction(&removeMeasuringAction);
+    menu.addSeparator();
     menu.addAction(&prevViewAction);
     menu.addAction(&nextViewAction);
     menu.addSeparator();
@@ -1733,17 +1757,17 @@ void Graph::updateMeasuring()
         return;
     }
 
+    COMTime range = getEnd() - getStart();
     QRect measureRect(contentsRect());
     measureRect.setLeft(contentsRect().left() + scaleWidth);
-
-    COMTime range = getEnd() - getStart();
+	int dataWidth = getDataWidth();
 
     if (range <= 0.0 || !measureRect.isValid() ||
-            !measureRect.contains(endPos)) {
+            !measureRect.contains(endPos) || dataWidth <= 0) {
         measuring = false;
     }
     else {
-        double xScale = range.to_dbl_time() / measureRect.width();
+        double xScale = range.to_dbl_time() / dataWidth;
 
         int measurePos = endPos.x() - measureRect.left();
         measureTime.from_dbl_time(measurePos * xScale);
@@ -2226,6 +2250,26 @@ int Graph::getDataWidth() const
 
 /****************************************************************************/
 
+QSet<QtDls::Channel *> Graph::displayedChannels()
+{
+    QSet<QtDls::Channel *> channels;
+
+    rwLockSections.lockForRead();
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        channels += (*s)->channels();
+    }
+
+    rwLockSections.unlock();
+
+    return channels;
+}
+
+/*****************************************************************************
+ * private slots
+ ****************************************************************************/
+
 void Graph::interactionSlot()
 {
     if (sender() == &zoomAction) {
@@ -2359,20 +2403,35 @@ void Graph::showExport()
 
 /****************************************************************************/
 
-QSet<QtDls::Channel *> Graph::displayedChannels()
+void Graph::fixMeasuringLine()
 {
-    QSet<QtDls::Channel *> channels;
+    COMTime range = getEnd() - getStart();
+    QRect measureRect(contentsRect());
+    measureRect.setLeft(contentsRect().left() + scaleWidth);
+	int dataWidth = getDataWidth();
 
-    rwLockSections.lockForRead();
+    if (range > 0.0 && measureRect.isValid()
+			&& measureRect.contains(endPos) && dataWidth > 0) {
 
-    for (QList<Section *>::const_iterator s = sections.begin();
-            s != sections.end(); s++) {
-        channels += (*s)->channels();
+		if (interaction == Measure) {
+			setInteraction(Pan);
+		}
+
+        double xScale = range.to_dbl_time() / dataWidth;
+        int measurePos = endPos.x() - measureRect.left();
+        measureTime.from_dbl_time(measurePos * xScale);
+        measureTime += getStart();
+
+		update();
     }
+}
 
-    rwLockSections.unlock();
+/****************************************************************************/
 
-    return channels;
+void Graph::removeMeasuringLine()
+{
+	measureTime.set_null();
+	update();
 }
 
 /****************************************************************************/
