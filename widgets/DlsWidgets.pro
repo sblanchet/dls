@@ -32,7 +32,6 @@ TARGET = DlsWidgets
 # - Change version in .spec file
 # - Add a NEWS entry
 VERSION = 0.9.0
-WIN32_LIB_VERSION = 1
 
 CONFIG += designer plugin dll
 DEPENDPATH += .
@@ -57,7 +56,6 @@ INCLUDEPATH += . $$PWD/../src
 INCLUDEPATH += $$PWD/DlsWidgets
 
 win32 {
-    #CONFIG(debug, debug|release): TARGET = $$join(TARGET,,d)
     QMAKE_LFLAGS += -shared
 }
 
@@ -71,21 +69,6 @@ unix {
     libraries.files = libDlsWidgets.so
 
     INSTALLS += libraries
-}
-win32 {
-    #libraries.path = "$${PREFIX}/lib"
-    #CONFIG(release, debug|release):libraries.files = \
-    #    "release/libDlsWidgets$${WIN32_LIB_VERSION}.a"
-    #CONFIG(debug, debug|release):libraries.files = \
-    #    "debug/libdDlsWidgets$${WIN32_LIB_VERSION}.a"
-
-    #dlls.path = "$${PREFIX}/bin"
-    #CONFIG(release, debug|release):dlls.files = \
-    #    "release/DlsWidgets$${WIN32_LIB_VERSION}.dll"
-    #CONFIG(debug, debug|release):dlls.files = \
-    #    "debug/dDlsWidgets$${WIN32_LIB_VERSION}.dll"
-
-    #INSTALLS += dlls libraries
 }
 
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
