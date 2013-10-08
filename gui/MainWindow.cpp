@@ -40,6 +40,8 @@ using namespace std;
 #include "modeltest.h"
 #endif
 
+#define DEBUG_SCRIPTS 0
+
 /****************************************************************************/
 
 MainWindow::MainWindow(QWidget *parent):
@@ -430,7 +432,7 @@ void MainWindow::execScript()
         return;
     }
 
-#if 0
+#if DEBUG_SCRIPTS
     qDebug() << QString("Executing \"%1\" with dialect %2")
         .arg(scripts[index].command)
         .arg(scripts[index].dialect);
@@ -515,7 +517,7 @@ void MainWindow::scriptFinished(
         QProcess::ExitStatus exitStatus
         )
 {
-#if 0
+#if DEBUG_SCRIPTS
     QByteArray result = scriptProcess.readAll();
     qDebug() << "finished" << exitCode << exitStatus << result;
 #else
