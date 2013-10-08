@@ -86,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent):
 
     int size = settings.beginReadArray("Scripts");
     if (size > 0) {
-        scriptActions = new QAction *[scripts.size()];
+        scriptActions = new QAction *[size];
 
         for (int i = 0; i < size; ++i) {
             settings.setArrayIndex(i);
@@ -160,6 +160,10 @@ MainWindow::~MainWindow()
     for (QList<LibDLS::Directory *>::iterator dir = dirs.begin();
             dir != dirs.end(); dir++) {
         delete *dir;
+    }
+
+    for (int i = 0; i < scripts.size(); ++i) {
+        delete scriptActions[i];
     }
 
     delete [] scriptActions;
