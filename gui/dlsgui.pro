@@ -30,6 +30,11 @@ DEPENDPATH += .
 INCLUDEPATH += ../widgets ../src
 QT += svg
 
+isEmpty(PREFIX) {
+    unix:PREFIX = /vol/opt/etherlab
+    win32:PREFIX = "c:/msys/1.0/local"
+}
+
 unix {
     CONFIG += debug
     LIBS += -L$$PWD/../widgets -lDlsWidgets
@@ -44,6 +49,9 @@ win32 {
     LIBS += -L$$PWD/../src/.libs -ldls
     LIBS += -lfftw3 -lm -lz
 }
+
+target.path = $$PREFIX/bin
+INSTALLS += target
 
 HEADERS += MainWindow.h SettingsDialog.h LogWindow.h
 SOURCES += main.cpp MainWindow.cpp SettingsDialog.cpp LogWindow.cpp
