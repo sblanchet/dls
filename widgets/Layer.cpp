@@ -430,7 +430,6 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
     if (genericData.size()) {
         double prev_value = 0.0;
         int prev_xp = 0, prev_yp = 0;
-        double prev_xv = 0.0, prev_yv = 0.0;
         bool first_in_chunk = true;
 
         QPen pen;
@@ -470,11 +469,12 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                         painter.drawPoint(p);
                     }
                     else {
-                        QPointF prev(rect.left() + prev_xv,
-                                rect.bottom() - prev_yv);
-                        QPointF inter(rect.left() + xv,
-                                rect.bottom() - prev_yv);
-                        QPointF cur(rect.left() + xv, rect.bottom() - yv);
+                        QPoint prev(rect.left() + prev_xp,
+                                rect.bottom() - prev_yp);
+                        QPoint inter(rect.left() + xp,
+                                rect.bottom() - prev_yp);
+                        QPoint cur(rect.left() + xp,
+								rect.bottom() - yp);
 
                         painter.drawLine(prev, inter);
                         painter.drawLine(inter, cur);
@@ -519,8 +519,6 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                     break;
                 }
 
-                prev_xv = xv;
-                prev_yv = yv;
                 prev_xp = xp;
                 prev_yp = yp;
                 prev_value = value;
