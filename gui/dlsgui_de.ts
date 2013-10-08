@@ -148,7 +148,7 @@
     </message>
     <message>
         <location filename="MainWindow.cpp" line="390"/>
-        <source>Open data diretory</source>
+        <source>Open data directory</source>
         <translation>Öffne Datenverzeichnis</translation>
     </message>
     <message>
