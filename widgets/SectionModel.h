@@ -17,6 +17,8 @@ class Section;
 class SectionModel:
     public QAbstractTableModel
 {
+    Q_OBJECT
+
     public:
         SectionModel(Section *);
         ~SectionModel();
