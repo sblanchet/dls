@@ -402,7 +402,6 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
 
     Layer::MeasureData measureData;
     measureData.x = measureX;
-    QString measureStr;
     QList<Layer::MeasureData> measureList;
     QFont font;
     font.setPointSize(8);
