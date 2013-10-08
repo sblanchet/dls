@@ -2144,7 +2144,7 @@ void Graph::updateTouch(QTouchEvent *event)
     dbg = QString("touchZooming = %1\n").arg(touchZooming);
     for (int i = 0; i < event->touchPoints().count(); i++) {
         QTouchEvent::TouchPoint tp = event->touchPoints()[i];
-        dbg += tr("%1 %2x%3 - %4x%5\n").arg(i)
+        dbg += QString("%1 %2x%3 - %4x%5\n").arg(i)
             .arg(tp.startPos().x()).arg(tp.startPos().y())
             .arg(tp.lastPos().x()).arg(tp.lastPos().y());
     }

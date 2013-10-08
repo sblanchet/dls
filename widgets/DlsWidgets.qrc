@@ -17,5 +17,6 @@
     <file>images/utilities-system-monitor.svg</file>
     <file>images/view-fullscreen.svg</file>
     <file>images/view-refresh.svg</file>
+    <file>.qm/locale/DlsWidgets_de.qm</file>
   </qresource>
 </RCC>

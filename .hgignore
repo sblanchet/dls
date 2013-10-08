@@ -58,6 +58,7 @@ src/libdls.la
 src/libdls_la-*.lo
 stamp-h1
 widgets/.moc
+widgets/.qm
 widgets/DlsWidgets_resource.rc
 widgets/Makefile.Debug
 widgets/Makefile.Release
