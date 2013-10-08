@@ -502,19 +502,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                         }
                         else if (xp > measure->x && prev_xp
                                 < measure->x && !first_in_chunk) {
-                            if (measure->x - prev_xp < xp - measure->x) {
-                                measure->minimum = prev_value;
-                                measure->maximum = prev_value;
-                                measure->minY = prev_yp;
-                                measure->maxY = prev_yp;
-                            }
-                            else {
-                                measure->minimum = value;
-                                measure->maximum = value;
-                                measure->minY = yp;
-                                measure->maxY = yp;
-                            }
-
+							measure->minimum = prev_value;
+							measure->maximum = prev_value;
+							measure->minY = prev_yp;
+							measure->maxY = prev_yp;
                             measure->found = true;
                         }
                     }
