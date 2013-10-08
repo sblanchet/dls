@@ -82,8 +82,6 @@ Graph::Graph(
     interaction(Pan),
     panning(false),
     measuring(false),
-    measurePos(0),
-    measureTime(0.0),
     thread(this),
     worker(this),
     workerBusy(false),
@@ -1336,7 +1334,12 @@ void Graph::paintEvent(
             contentsRect().top() + scale.getOuterLength());
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
-    int mp = measuring ? measurePos : -1;
+    COMTime range = getEnd() - getStart();
+    int mp = -1;
+	if (measuring && range > 0.0) {
+		double xScale = getDataWidth() / range.to_dbl_time();
+		mp = (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+	}
     QRect dataRect(contentsRect());
     dataRect.setTop(top);
     if (showMessages) {
@@ -1742,7 +1745,7 @@ void Graph::updateMeasuring()
     else {
         double xScale = range.to_dbl_time() / measureRect.width();
 
-        measurePos = endPos.x() - measureRect.left();
+        int measurePos = endPos.x() - measureRect.left();
         measureTime.from_dbl_time(measurePos * xScale);
         measureTime += getStart();
         measuring = true;
