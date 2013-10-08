@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QUrl>
+#include <QApplication>
 
 #include "lib_job.hpp"
 
@@ -83,7 +84,9 @@ QVariant Job::data(const QModelIndex &index, int role) const
         case 0:
             switch (role) {
                 case Qt::DisplayRole: {
-                        QString text = QString("Job %1").arg(job->id());
+                        QString text =
+                            QApplication::translate("Job", "Job %1")
+                            .arg(job->id());
 
                         QString desc(job->preset().description().c_str());
                         if (!desc.isEmpty()) {

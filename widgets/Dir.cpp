@@ -11,6 +11,7 @@ using namespace std;
 #include <QDebug>
 #include <QUrl>
 #include <QIcon>
+#include <QApplication>
 
 #include "lib_dir.hpp"
 
@@ -83,7 +84,7 @@ QVariant Dir::data(const QModelIndex &index, int role) const
         case 0:
             switch (role) {
                 case Qt::DisplayRole:
-                    ret = QString("Local directory %1")
+                    ret = QApplication::translate("Dir", "Local directory %1")
                         .arg(dir->path().c_str());
                     break;
                 case Qt::DecorationRole:
