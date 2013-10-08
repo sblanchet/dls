@@ -387,7 +387,7 @@ void MainWindow::on_actionLogWindow_triggered()
 void MainWindow::on_toolButtonNewDir_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
-            tr("Open data diretory"), "/vol/data/dls_data");
+            tr("Open data directory"), "/vol/data/dls_data");
 
     if (path.isEmpty()) {
         return;
