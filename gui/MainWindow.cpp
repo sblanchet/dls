@@ -440,6 +440,7 @@ void MainWindow::execScript()
 
     QString out;
     QList<DLS::Graph::ChannelInfo> channelInfo = dlsGraph->channelInfo();
+    COMTime measure = dlsGraph->getMeasureTime();
 
     switch (scripts[index].dialect) {
         case Script::Octave:
@@ -450,6 +451,11 @@ void MainWindow::execScript()
                 .arg(dlsGraph->getStart().to_dbl_time(), 0, 'f')
                 .arg(dlsGraph->getEnd().to_iso_time().c_str())
                 .arg(dlsGraph->getEnd().to_dbl_time(), 0, 'f');
+            if (!measure.is_null()) {
+                out += QString("dls.measure = [{'%1'}, %2];\n")
+                    .arg(measure.to_iso_time().c_str())
+                    .arg(measure.to_dbl_time(), 0, 'f');
+            }
             out += "dls.channels = [\n";
             for (QList<DLS::Graph::ChannelInfo>::const_iterator ci =
                     channelInfo.begin(); ci != channelInfo.end(); ci++) {
@@ -476,9 +482,14 @@ void MainWindow::execScript()
             break;
 
         default: // Yaml
-            out += QString("---\nstart: %1\nend: %2\nchannels:\n")
+            out += QString("---\nstart: %1\nend: %2\n")
                 .arg(dlsGraph->getStart().to_iso_time().c_str())
                 .arg(dlsGraph->getEnd().to_iso_time().c_str());
+            if (!measure.is_null()) {
+                out += QString("measure: %1\n")
+                    .arg(measure.to_iso_time().c_str());
+            }
+            out += "channels:\n";
             for (QList<DLS::Graph::ChannelInfo>::const_iterator ci =
                     channelInfo.begin(); ci != channelInfo.end(); ci++) {
                 out += QString("   - url: %1\n").arg(ci->url.toString());
