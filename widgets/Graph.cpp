@@ -694,8 +694,6 @@ void Graph::nextView()
 
 void Graph::loadData()
 {
-    int dataWidth = getDataWidth();
-
     rwLockSections.lockForRead();
 
     // mark all sections as busy
@@ -710,10 +708,10 @@ void Graph::loadData()
 
     if (workerBusy) {
         reloadPending = true;
-        pendingWidth = dataWidth;
+        pendingWidth = getDataWidth();
     }
     else {
-        worker.width = dataWidth;
+        worker.width = getDataWidth();
         workerBusy = true;
         QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
     }
@@ -2081,9 +2079,7 @@ void Graph::updateTouch(QTouchEvent *event)
     debugFile.flush();
 #endif
 
-    int dataWidth = getDataWidth();
-
-    if (count < 2 || dataWidth <= 0) {
+    if (count < 2) {
         if (touchZooming) {
             touchZooming = false;
             newView();
@@ -2127,13 +2123,13 @@ void Graph::updateTouch(QTouchEvent *event)
 void Graph::touchZoomStart(int x0, int x1)
 {
     COMTime range = getEnd() - getStart();
-    int width = x1 - x0, dataWidth = getDataWidth();
+    int width = x1 - x0;
 
     if (range <= 0.0 || width == 0) {
         return;
     }
 
-    double xScale = range.to_dbl_time() / dataWidth;
+    double xScale = range.to_dbl_time() / getDataWidth();
     int offset = contentsRect().left() + scaleWidth;
     COMTime d0, d1;
     d0.from_dbl_time((x0 - offset) * xScale);
@@ -2170,7 +2166,7 @@ void Graph::touchZoomStart(int x0, int x1)
 void Graph::touchZoomUpdate(int x0, int x1)
 {
     COMTime range = touchT1 - touchT0;
-    int width = x1 - x0, dataWidth = getDataWidth();
+    int width = x1 - x0;
 
 #if DEBUG
     QString dbg = QString("range=%1 width=%2\n")
@@ -2194,7 +2190,7 @@ void Graph::touchZoomUpdate(int x0, int x1)
     COMTime diff;
     diff.from_dbl_time((x0 - offset) * newScale);
     COMTime start = touchT0 - diff;
-    diff.from_dbl_time(dataWidth * newScale);
+    diff.from_dbl_time(getDataWidth() * newScale);
     COMTime end = start + diff;
     scale.setRange(start, end);
     autoRange = false;
