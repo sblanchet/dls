@@ -203,7 +203,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Interaction interaction;
         bool panning;
         bool measuring;
-        int measurePos;
         COMTime measureTime;
 
         QThread thread;
