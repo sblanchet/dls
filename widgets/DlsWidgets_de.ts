@@ -199,7 +199,7 @@
     <message>
         <location filename="Graph.cpp" line="267"/>
         <source>Set the date range to last month.</source>
-        <translation>Setzt den Zeitbereich auf letzten Monat</translation>
+        <translation>Setzt den Zeitbereich auf letzten Monat.</translation>
     </message>
     <message>
         <location filename="Graph.cpp" line="271"/>
@@ -244,7 +244,7 @@
     <message>
         <location filename="Graph.cpp" line="297"/>
         <source>Clear sections</source>
-        <translation>Alle Abschnitte entfernen.</translation>
+        <translation>Alle Abschnitte entfernen</translation>
     </message>
     <message>
         <location filename="Graph.cpp" line="298"/>
@@ -284,7 +284,7 @@
     <message>
         <location filename="Graph.cpp" line="366"/>
         <source>Failed to open %1!</source>
-        <translation>Öffnen von %1 fehlgeschlagen.</translation>
+        <translation>Öffnen von %1 fehlgeschlagen!</translation>
     </message>
     <message>
         <location filename="Graph.cpp" line="376"/>
@@ -385,6 +385,14 @@
     </message>
 </context>
 <context>
+    <name>Dir</name>
+    <message>
+        <location filename="Dir.cpp" line="87"/>
+        <source>Local directory %1</source>
+        <translation>Lokales Verzeichnis %1</translation>
+    </message>
+</context>
+<context>
     <name>ExportDialog</name>
     <message>
         <location filename="ExportDialog.ui" line="14"/>
@@ -414,7 +422,7 @@
     <message>
         <location filename="ExportDialog.ui" line="116"/>
         <source>Target Directory</source>
-        <translation>Zielverzeichnis:</translation>
+        <translation>Zielverzeichnis</translation>
     </message>
     <message>
         <location filename="ExportDialog.ui" line="135"/>
@@ -440,6 +448,14 @@
         <location filename="ExportDialog.ui" line="173"/>
         <source>Decimation:</source>
         <translation>Untersetzung:</translation>
+    </message>
+</context>
+<context>
+    <name>Job</name>
+    <message>
+        <location filename="Job.cpp" line="88"/>
+        <source>Job %1</source>
+        <translation>Auftrag %1</translation>
     </message>
 </context>
 <context>
