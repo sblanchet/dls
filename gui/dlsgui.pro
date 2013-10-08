@@ -30,6 +30,8 @@ DEPENDPATH += .
 INCLUDEPATH += ../widgets ../src
 QT += svg
 
+include(../widgets/updateqm.pri)
+
 isEmpty(PREFIX) {
     unix:PREFIX = /vol/opt/etherlab
     win32:PREFIX = "c:/msys/1.0/local"
@@ -60,6 +62,8 @@ FORMS += SettingsDialog.ui
 FORMS += LogWindow.ui
 
 RESOURCES += dlsgui.qrc
+
+TRANSLATIONS = dlsgui_de.ts
 
 #HEADERS += modeltest.h
 #SOURCES += modeltest.cpp

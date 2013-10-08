@@ -26,6 +26,8 @@
 #include <QTranslator>
 #include <QDebug>
 
+#include "DlsWidgets/Translator.h"
+
 #include "MainWindow.h"
 
 /****************************************************************************/
@@ -45,6 +47,13 @@ int main(int argc, char *argv[])
     qtTranslator.load("qt_" + QLocale::system().name(),
             QLibraryInfo::location(QLibraryInfo::TranslationsPath));
     app.installTranslator(&qtTranslator);
+
+    DLS::installTranslator();
+    DLS::loadTranslation(QLocale::system().name());
+
+    QTranslator translator;
+    translator.load(":/.qm/locale/dlsgui_" + QLocale::system().name());
+    app.installTranslator(&translator);
 
     MainWindow mainWin;
     mainWin.show();

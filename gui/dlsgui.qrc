@@ -5,5 +5,6 @@
     <file>images/document-save-as.svg</file>
     <file>images/document-save.svg</file>
     <file>images/system-log-out.svg</file>
+    <file>.qm/locale/dlsgui_de.qm</file>
   </qresource>
 </RCC>
