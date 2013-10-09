@@ -64,7 +64,7 @@
     <message>
         <location filename="Graph.cpp" line="185"/>
         <source>&amp;Update</source>
-        <translation>&amp;Aktu&amp;ualisieren</translation>
+        <translation>&amp;Akt&amp;ualisieren</translation>
     </message>
     <message>
         <location filename="Graph.cpp" line="187"/>
@@ -124,7 +124,7 @@
     <message>
         <location filename="Graph.cpp" line="224"/>
         <source>Auto range</source>
-        <translation>Auto-Bereich</translation>
+        <translation>Gesamten Zeitbereich anzeigen</translation>
     </message>
     <message>
         <location filename="Graph.cpp" line="226"/>
