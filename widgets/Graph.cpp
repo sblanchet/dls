@@ -2425,8 +2425,25 @@ void Graph::workerFinished()
 
 void Graph::updateSection(Section *section)
 {
-    section->update();
-    updateRange();
+    bool updated = false;
+
+    // look up section in the list: it could be deleted in the meantime!
+
+    rwLockSections.lockForRead();
+
+    if (sections.contains(section)) {
+        section->update();
+        updated = true;
+    }
+
+    rwLockSections.unlock();
+
+    if (updated) {
+        updateRange();
+    }
+    else {
+        qWarning() << "Section" << (void *) section << "deleted.";
+    }
 }
 
 /****************************************************************************/
