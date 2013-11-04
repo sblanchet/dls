@@ -107,6 +107,13 @@ void CTLJobPreset::write(const string &dls_dir)
         throw ECOMJobPreset(err.str());
     }
 
+    if (chmod(tmp_file_name, 0644) == -1) {
+        err << "Could not change rights of \"" << tmp_file_name
+            << "\": " << strerror(errno);
+        delete [] tmp_file_name;
+        throw ECOMJobPreset(err.str());
+    }
+
     // Datei öffnen
     file.open(tmp_file_name, ios::out);
     close(fd);
