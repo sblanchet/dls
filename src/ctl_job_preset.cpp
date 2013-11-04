@@ -90,7 +90,7 @@ void CTLJobPreset::write(const string &dls_dir)
     file_name = dir_name.str() + "/job.xml";
 
     try {
-        tmp_file_name = new char[strlen(file_name.c_str()) + 7];
+        tmp_file_name = new char[strlen(file_name.c_str()) + 8];
     }
     catch (...) {
         err << "Failed to allocate memory for file name!";
