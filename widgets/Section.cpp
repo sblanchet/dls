@@ -93,6 +93,9 @@ Section::Section(
 
     updateLegend();
     updateScale();
+
+    graph->updateRange();
+    graph->update();
 }
 
 /****************************************************************************/
@@ -131,7 +134,9 @@ Section &Section::operator=(
     for (QList<Layer *>::const_iterator l = o.layers.begin();
             l != o.layers.end(); l++) {
         Layer *newLayer = new Layer(**l, this);
+        rwLockLayers.lockForWrite();
         layers.append(newLayer);
+        rwLockLayers.unlock();
     }
 
     updateLegend();
@@ -208,7 +213,7 @@ void Section::load(const QDomElement &e, Model *model)
 
 /** Saves settings and layers to an XML element.
  */
-void Section::save(QDomElement &e, QDomDocument &doc) const
+void Section::save(QDomElement &e, QDomDocument &doc)
 {
     QDomElement secElem = doc.createElement("Section");
     e.appendChild(secElem);
@@ -245,10 +250,14 @@ void Section::save(QDomElement &e, QDomDocument &doc) const
     QDomElement layersElem = doc.createElement("Layers");
     secElem.appendChild(layersElem);
 
+    rwLockLayers.lockForRead();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         (*l)->save(layersElem, doc);
     }
+
+    rwLockLayers.unlock();
 }
 
 /****************************************************************************/
@@ -413,6 +422,8 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
     unsigned int group = 1;
     int totalLabelHeight = 0;
 
+    rwLockLayers.lockForRead();
+
     // draw data and capture measuring intersections
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
@@ -439,6 +450,8 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
             totalLabelHeight += fm.height();
         }
     }
+
+    rwLockLayers.unlock();
 
     // sort labels by minimum value
     qStableSort(measureList.begin(), measureList.end());
@@ -559,7 +572,11 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
 Layer *Section::appendLayer(QtDls::Channel *ch)
 {
     Layer *l = new Layer(this, ch);
+
+    rwLockLayers.lockForWrite();
     layers.append(l);
+    rwLockLayers.unlock();
+
     updateLegend();
     return l;
 }
@@ -569,6 +586,8 @@ Layer *Section::appendLayer(QtDls::Channel *ch)
 void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 {
     COMTime s, e;
+
+    rwLockLayers.lockForRead();
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
@@ -589,6 +608,8 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
             valid = true;
         }
     }
+
+    rwLockLayers.unlock();
 }
 
 /****************************************************************************/
@@ -596,16 +617,19 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 void Section::loadData(const COMTime &start, const COMTime &end,
         int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
-    // FIXME lock layers
+    rwLockLayers.lockForRead();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         (*l)->loadData(start, end, width, worker, jobSet);
     }
+
+    rwLockLayers.unlock();
 }
 
 /****************************************************************************/
 
-QColor Section::nextColor() const
+QColor Section::nextColor()
 {
     unsigned int used[sizeof(colorList) / sizeof(QColor)];
 
@@ -615,6 +639,9 @@ QColor Section::nextColor() const
 
     // count usage and find maximum
     unsigned int max = 0U;
+
+    rwLockLayers.lockForRead();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor);
@@ -628,6 +655,8 @@ QColor Section::nextColor() const
             }
         }
     }
+
+    rwLockLayers.unlock();
 
     // find minimum
     unsigned int min = max;
@@ -682,14 +711,18 @@ void Section::update()
 
 /****************************************************************************/
 
-QSet<Channel *> Section::channels() const
+QSet<Channel *> Section::channels()
 {
     QSet<Channel *> channels;
+
+    rwLockLayers.lockForRead();
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         channels += (*l)->getChannel();
     }
+
+    rwLockLayers.unlock();
 
     return channels;
 }
@@ -703,6 +736,9 @@ void Section::updateLegend()
         "<body style=\"font-size: 8pt\">";
 
     bool first = true;
+
+    rwLockLayers.lockForRead();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         if (first) {
@@ -714,6 +750,8 @@ void Section::updateLegend()
         html += (*l)->title();
         html += "</span>";
     }
+
+    rwLockLayers.unlock();
 
     html += "</body></html>";
 
@@ -750,6 +788,8 @@ void Section::updateExtrema()
     maximum = 0.0;
     extremaValid = false;
 
+    rwLockLayers.lockForRead();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         if (!(*l)->getExtremaValid()) {
@@ -772,18 +812,24 @@ void Section::updateExtrema()
             extremaValid = true;
         }
     }
+
+    rwLockLayers.unlock();
 }
 
 /****************************************************************************/
 
 void Section::clearLayers()
 {
+    rwLockLayers.lockForWrite();
+
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
         delete *l;
     }
 
     layers.clear();
+
+    rwLockLayers.unlock();
 }
 
 /****************************************************************************/
@@ -839,7 +885,9 @@ void Section::loadLayers(const QDomElement &elem, Model *model)
             throw Exception(msg);
         }
 
+        rwLockLayers.lockForWrite();
         layers.append(layer);
+        rwLockLayers.unlock();
     }
 }
 

@@ -28,6 +28,7 @@
 #include <set>
 
 #include <QTextDocument>
+#include <QReadWriteLock>
 
 #include "com_time.hpp"
 
@@ -68,7 +69,7 @@ class Q_DECL_EXPORT Section
         Section &operator=(const Section &);
 
         void load(const QDomElement &, QtDls::Model *);
-        void save(QDomElement &, QDomDocument &) const;
+        void save(QDomElement &, QDomDocument &);
 
         Graph *getGraph() { return graph; }
 
@@ -93,7 +94,7 @@ class Q_DECL_EXPORT Section
         void loadData(const COMTime &, const COMTime &, int, GraphWorker *,
                 std::set<LibDLS::Job *> &);
 
-        QColor nextColor() const;
+        QColor nextColor();
 
         enum {Margin = 1};
 
@@ -109,11 +110,12 @@ class Q_DECL_EXPORT Section
         void setBusy(bool);
         void update();
 
-        QSet<QtDls::Channel *> channels() const;
+        QSet<QtDls::Channel *> channels();
 
     private:
         Graph * const graph;
         ValueScale scale;
+        QReadWriteLock rwLockLayers;
         QList<Layer *> layers; /**< List of data layers. */
         bool autoScale;
         bool showScale;
