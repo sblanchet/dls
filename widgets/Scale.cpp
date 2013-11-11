@@ -119,7 +119,7 @@ void Scale::update()
 
     outerLength = 2; // margin to bottom end
 
-    s = fm.size(0, "88. 88. 8888\n88:88:88\n888.888 ms");
+    s = fm.size(0, "CEST (+2000)\n88. 88. 8888\n88:88:88\n888.888 ms");
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 0.5) { // sub-second
@@ -150,13 +150,13 @@ void Scale::update()
 
         tics = Time;
         majorStep = normMajorStep * pow(10.0, decade);
-        format = "%x\n%H:%M:%S";
+        format = "%Z (%z)\n%x\n%H:%M:%S";
         subDigits = -decade;
         outerLength += s.height();
         return;
     }
 
-    s = fm.size(0, "88. 88. 8888\n88:88:88");
+    s = fm.size(0, "CEST (+2000)\n88. 88. 8888\n88:88:88");
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 30.0) { // seconds
@@ -188,13 +188,13 @@ void Scale::update()
 
         tics = Time;
         majorStep = ticPeriod;
-        format = "%x\n%H:%M:%S";
+        format = "%Z (%z)\n%x\n%H:%M:%S";
         subDigits = 0;
         outerLength += s.height();
         return;
     }
 
-    s = fm.size(0, "8888-88-88\n88:88");
+    s = fm.size(0, "CEST (+2000)\n8888-88-88\n88:88");
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 3600.0) { // minutes
@@ -225,7 +225,7 @@ void Scale::update()
 
         tics = Time;
         majorStep = minutes * 60.0;
-        format = "%x\n%H:%M";
+        format = "%Z (%z)\n%x\n%H:%M";
         subDigits = 0;
         outerLength += s.height();
         return;
@@ -252,7 +252,7 @@ void Scale::update()
         }
 
         tics = Hours;
-        format = "%x\n%H:%M";
+        format = "%Z (%z)\n%x\n%H:%M";
         subDigits = 0;
         outerLength += s.height();
 #ifdef DEBUG
@@ -261,7 +261,7 @@ void Scale::update()
         return;
     }
 
-    s = fm.size(0, "Sep. 8888\nSo. XX");
+    s = fm.size(0, "CEST (+2000)\nSep. 8888\nSo. XX");
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 3600.0 * 24.0 * 14.0) { // days
@@ -282,7 +282,7 @@ void Scale::update()
         }
 
         tics = Days;
-        format = "%b. %Y\n%d (%a.)";
+        format = "%Z (%z)\n%b. %Y\n%d (%a.)";
         subDigits = 0;
         outerLength += s.height();
 #ifdef DEBUG
