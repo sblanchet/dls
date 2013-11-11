@@ -112,6 +112,10 @@ Section &Section::operator=(
         const Section &o
         )
 {
+    if (graph != o.graph) {
+        throw Exception("Assigning section of a different graph!");
+    }
+
     // graph is const
     autoScale = o.autoScale;
     showScale = o.showScale;
