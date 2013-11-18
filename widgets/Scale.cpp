@@ -119,7 +119,12 @@ void Scale::update()
 
     outerLength = 2; // margin to bottom end
 
+#ifdef __WIN32__
+    s = fm.size(0, "Mitteleuropaeische Sommerzeit\n"
+            "88. 88. 8888\n88:88:88\n888.888 ms");
+#else
     s = fm.size(0, "CEST (+2000)\n88. 88. 8888\n88:88:88\n888.888 ms");
+#endif
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 0.5) { // sub-second
@@ -150,13 +155,22 @@ void Scale::update()
 
         tics = Time;
         majorStep = normMajorStep * pow(10.0, decade);
+#ifdef __WIN32__
+        format = "%z\n%x\n%H:%M:%S";
+#else
         format = "%Z (%z)\n%x\n%H:%M:%S";
+#endif
         subDigits = -decade;
         outerLength += s.height();
         return;
     }
 
+#ifdef __WIN32__
+    s = fm.size(0, "Mitteleuropaeische Sommerzeit\n"
+            "88. 88. 8888\n88:88:88");
+#else
     s = fm.size(0, "CEST (+2000)\n88. 88. 8888\n88:88:88");
+#endif
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 30.0) { // seconds
@@ -188,13 +202,22 @@ void Scale::update()
 
         tics = Time;
         majorStep = ticPeriod;
+#ifdef __WIN32__
+        format = "%z\n%x\n%H:%M:%S";
+#else
         format = "%Z (%z)\n%x\n%H:%M:%S";
+#endif
         subDigits = 0;
         outerLength += s.height();
         return;
     }
 
-    s = fm.size(0, "CEST (+2000)\n8888-88-88\n88:88");
+#ifdef __WIN32__
+    s = fm.size(0, "Mitteleuropaeische Sommerzeit\n"
+            "88. 88. 8888\n88:88");
+#else
+    s = fm.size(0, "CEST (+2000)\n88. 88. 8888\n88:88");
+#endif
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 3600.0) { // minutes
@@ -225,7 +248,11 @@ void Scale::update()
 
         tics = Time;
         majorStep = minutes * 60.0;
+#ifdef __WIN32__
+        format = "%z\n%x\n%H:%M";
+#else
         format = "%Z (%z)\n%x\n%H:%M";
+#endif
         subDigits = 0;
         outerLength += s.height();
         return;
@@ -252,7 +279,11 @@ void Scale::update()
         }
 
         tics = Hours;
+#ifdef __WIN32__
+        format = "%z\n%x\n%H:%M";
+#else
         format = "%Z (%z)\n%x\n%H:%M";
+#endif
         subDigits = 0;
         outerLength += s.height();
 #ifdef DEBUG
@@ -261,7 +292,11 @@ void Scale::update()
         return;
     }
 
+#ifdef __WIN32__
+    s = fm.size(0, "Mitteleuropaeische Sommerzeit\nSep. 8888\nSo. XX");
+#else
     s = fm.size(0, "CEST (+2000)\nSep. 8888\nSo. XX");
+#endif
     ticPeriod = range * (s.width() + 6) / length;
 
     if (ticPeriod < 3600.0 * 24.0 * 14.0) { // days
@@ -282,7 +317,11 @@ void Scale::update()
         }
 
         tics = Days;
+#ifdef __WIN32__
+        format = "%z\n%b. %Y\n%d (%a.)";
+#else
         format = "%Z (%z)\n%b. %Y\n%d (%a.)";
+#endif
         subDigits = 0;
         outerLength += s.height();
 #ifdef DEBUG
