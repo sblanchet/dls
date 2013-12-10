@@ -19,7 +19,17 @@
 #
 #------------------------------------------------------------------------------
 
-AC_INIT([dls],[1.2.7],[fp@igh-essen.com])
+#
+# Release instructions
+# - Update version below
+# - Update LIBDLS_VERSION below
+# - Update NEWS file
+# - Update ChangeLog (hg log --branch default --style=changelog > ChangeLog)
+# - commit
+# - make dist-bzip2
+# - add tag release-x.x.x
+#
+AC_INIT([dls],[1.3.0],[fp@igh-essen.com])
 AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
