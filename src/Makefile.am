@@ -44,7 +44,8 @@ lib_LTLIBRARIES = libdls.la
 #------------------------------------------------------------------------------
 
 libdls_la_CPPFLAGS = @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
-libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
+libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
+	-version-info @LIBDLS_VERSION@
 libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
 
 libdls_la_SOURCES = \

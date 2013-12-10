@@ -24,6 +24,8 @@ AC_CONFIG_AUX_DIR([autoconf])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
+AC_SUBST(LIBDLS_VERSION, [1:0:0])
+
 # automake >= 1.12 needs AM_PROG_AR, older versions don't know it
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
