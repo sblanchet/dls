@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with DLS. If not, see <http://www.gnu.org/licenses/>.
 #
-# vim: tw=78 spelllang=en spell
+# vim: tw=78 spelllang=en
 #
 
 Name: @PACKAGE@
@@ -39,6 +39,7 @@ BuildRequires: libXft-devel
 BuildRequires: libXinerama-devel
 BuildRequires: libfltk1
 BuildRequires: xorg-x11-proto-devel
+BuildRequires: libqt4-devel
 
 %description
 DLS is a process data logging service, capable of capturing high-frequency
@@ -46,22 +47,51 @@ data over a long time and storing it in a compressed way. The aim is to allow
 the user unlimited high-performance access to the data at any time. Be it a
 year's overview or a small signal peak in fractions of a second.
 
+%package -n dls-devel
+Summary:        Development files for data logging service
+Summary(de):    Entwickungsdateien für den DLS
+Group:          EtherLab
+Group(de):      EtherLab
+Requires:       %name = %version
+
+%description -n dls-devel
+The %name-devel package contains the static libraries and header files
+needed for development with %name.
+
 %prep
 %setup
 
 %build
 %configure
-make
+make %{?_smp_mflags}
+cd widgets
+qmake PREFIX=%{_prefix}
+make %{?_smp_mflags}
+cd ..
+cd gui
+qmake PREFIX=%{_prefix}
+make %{?_smp_mflags}
+cd ..
 
 %install
 make DESTDIR=${RPM_BUILD_ROOT} install
 %if "%{_vendor}" == "suse"
-install -d ${RPM_BUILD_ROOT}/usr/sbin
+install -d ${RPM_BUILD_ROOT}%{_sbindir}
 ln -s %{_sysconfdir}/init.d/dls ${RPM_BUILD_ROOT}%{_sbindir}/rcdls
 %endif
+cd widgets
+make install INSTALL_ROOT=${RPM_BUILD_ROOT}
+cd ..
+cd gui
+make install INSTALL_ROOT=${RPM_BUILD_ROOT}
+cd ..
 
 %clean
-rm -rf ${RPM_BUILD_ROOT}
+%{__rm} -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root)
@@ -74,6 +104,32 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_sbindir}/rcdls
 %endif
 %{_datadir}/applications/*.desktop
+%{_libdir}/libdls.so*
+%{_libdir}/libDlsWidgets.so
+
+%files -n dls-devel
+%defattr(-,root,root,755)
+%{_includedir}/DlsWidgets/Graph.h
+%{_includedir}/DlsWidgets/Layer.h
+%{_includedir}/DlsWidgets/Model.h
+%{_includedir}/DlsWidgets/Scale.h
+%{_includedir}/DlsWidgets/Section.h
+%{_includedir}/DlsWidgets/Translator.h
+%{_includedir}/DlsWidgets/ValueScale.h
+%{_includedir}/com_channel_preset.hpp
+%{_includedir}/com_exception.hpp
+%{_includedir}/com_job_preset.hpp
+%{_includedir}/com_time.hpp
+%{_includedir}/lib_channel.hpp
+%{_includedir}/lib_chunk.hpp
+%{_includedir}/lib_data.hpp
+%{_includedir}/lib_dir.hpp
+%{_includedir}/lib_export.hpp
+%{_includedir}/lib_globals.hpp
+%{_includedir}/lib_job.hpp
+%{_libdir}/libdls.a
+%{_libdir}/libdls.la
+%{_libdir}/qt4/plugins/designer/libDlsWidgets.so
 
 %changelog
 * Thu Jan 8 2013 fp@igh-essen.com
