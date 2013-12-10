@@ -34,6 +34,7 @@ using namespace std;
 /*****************************************************************************/
 
 #include "com_globals.hpp"
+#include "com_xml_tag.hpp"
 #include "ctl_job_preset.hpp"
 
 /*****************************************************************************/
@@ -89,7 +90,7 @@ void CTLJobPreset::write(const string &dls_dir)
     file_name = dir_name.str() + "/job.xml";
 
     try {
-        tmp_file_name = new char[strlen(file_name.c_str()) + 7];
+        tmp_file_name = new char[strlen(file_name.c_str()) + 8];
     }
     catch (...) {
         err << "Failed to allocate memory for file name!";
@@ -101,6 +102,13 @@ void CTLJobPreset::write(const string &dls_dir)
     fd = mkstemp(tmp_file_name);
     if (fd == -1) {
         err << "Could not create \"" << tmp_file_name
+            << "\": " << strerror(errno);
+        delete [] tmp_file_name;
+        throw ECOMJobPreset(err.str());
+    }
+
+    if (chmod(tmp_file_name, 0644) == -1) {
+        err << "Could not change rights of \"" << tmp_file_name
             << "\": " << strerror(errno);
         delete [] tmp_file_name;
         throw ECOMJobPreset(err.str());

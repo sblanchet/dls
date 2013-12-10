@@ -19,7 +19,6 @@
  *
  *****************************************************************************/
 
-#include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -38,26 +37,24 @@ const char *dls_format_strings[DLS_FORMAT_COUNT] =
     "Quant/ZLib/Base64"
 };
 
-static stringstream _msg;
-
 bool is_daemon = false;
 
 /*****************************************************************************/
 
 COMChannelType dls_str_to_channel_type(const string &str)
 {
-    if (str == "TCHAR")  return TCHAR;
-    if (str == "TUCHAR") return TUCHAR;
-    if (str == "TSHORT") return TSHORT;
-    if (str == "TUSHORT")return TUSHORT;
-    if (str == "TINT")   return TINT;
-    if (str == "TUINT")  return TUINT;
-    if (str == "TLINT")  return TLINT;
-    if (str == "TULINT") return TULINT;
-    if (str == "TFLT")   return TFLT;
-    if (str == "TDBL")   return TDBL;
+    if (str == "TCHAR")  return DLS_TCHAR;
+    if (str == "TUCHAR") return DLS_TUCHAR;
+    if (str == "TSHORT") return DLS_TSHORT;
+    if (str == "TUSHORT")return DLS_TUSHORT;
+    if (str == "TINT")   return DLS_TINT;
+    if (str == "TUINT")  return DLS_TUINT;
+    if (str == "TLINT")  return DLS_TLINT;
+    if (str == "TULINT") return DLS_TULINT;
+    if (str == "TFLT")   return DLS_TFLT;
+    if (str == "TDBL")   return DLS_TDBL;
 
-    return TUNKNOWN;
+    return DLS_TUNKNOWN;
 }
 
 /*****************************************************************************/
@@ -65,16 +62,16 @@ COMChannelType dls_str_to_channel_type(const string &str)
 const char *dls_channel_type_to_str(COMChannelType type)
 {
     switch (type) {
-        case TCHAR:  return "TCHAR";
-        case TUCHAR: return "TUCHAR";
-        case TSHORT: return "TSHORT";
-        case TUSHORT: return "TUSHORT";
-        case TINT:   return "TINT";
-        case TUINT:  return "TUINT";
-        case TLINT:  return "TLINT";
-        case TULINT: return "TULINT";
-        case TFLT:   return "TFLT";
-        case TDBL:   return "TDBL";
+        case DLS_TCHAR:  return "TCHAR";
+        case DLS_TUCHAR: return "TUCHAR";
+        case DLS_TSHORT: return "TSHORT";
+        case DLS_TUSHORT: return "TUSHORT";
+        case DLS_TINT:   return "TINT";
+        case DLS_TUINT:  return "TUINT";
+        case DLS_TLINT:  return "TLINT";
+        case DLS_TULINT: return "TULINT";
+        case DLS_TFLT:   return "TFLT";
+        case DLS_TDBL:   return "TDBL";
         default: return "-";
     }
 }
@@ -143,40 +140,6 @@ string convert_to_bin(const void *data,
     }
 
     return ret;
-}
-
-/*****************************************************************************/
-
-stringstream &msg()
-{
-    return _msg;
-}
-
-/*****************************************************************************/
-
-void log(DLSLogType type)
-{
-    string msg;
-
-    if      (type == DLSError) msg = "ERROR: ";
-    else if (type == DLSInfo) msg = "INFO: ";
-    else if (type == DLSWarning) msg = "WARNING: ";
-    else if (type == DLSDebug) msg = "DEBUG: ";
-    else msg = "UNKNOWN: ";
-
-    msg += _msg.str();
-
-    if (type != DLSDebug) {
-        // Nachricht an den syslogd weiterreichen
-        syslog(LOG_INFO, "%s", msg.c_str());
-    }
-
-    // Wenn Verbindung zu einem Terminal besteht, die Meldung hier
-    // ebenfalls ausgeben!
-    if (!is_daemon) cout << setw(10) << getpid() << " " << msg << endl;
-
-    // Nachricht entfernen
-    _msg.str("");
 }
 
 /*****************************************************************************/

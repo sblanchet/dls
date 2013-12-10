@@ -31,6 +31,7 @@
 using namespace std;
 
 #include "../config.h"
+#include "lib_globals.hpp"
 
 /*****************************************************************************/
 
@@ -57,45 +58,6 @@ using namespace std;
 */
 
 /*****************************************************************************/
-
-enum COMChannelType
-{
-    TUNKNOWN,
-    TCHAR,
-    TUCHAR,
-    TSHORT,
-    TUSHORT,
-    TINT,
-    TUINT,
-    TLINT,
-    TULINT,
-    TFLT,
-    TDBL
-};
-
-/*
-  ---------------- Hinzufügen von Kanaltypen: ---------------------
-
-  Editiert werden muss an folgenden Stellen:
-
-  - Die beiden Konvertierungsfunktionen in com_globals.cpp
-  - In DLSLogger::create_gen_saver()
-  - In ViewChannel::fetch_chunks()
-
-*/
-
-/*****************************************************************************/
-
-// Beim Erweitern bitte auch die Behandlungszweige
-// in "_meta_value()" und "_ending()" anpassen!
-
-enum DLSMetaType
-{
-    DLSMetaGen = 0,
-    DLSMetaMean = 1,
-    DLSMetaMin = 2,
-    DLSMetaMax = 4
-};
 
 string dls_meta_type_str(DLSMetaType);
 
@@ -160,19 +122,6 @@ struct COMRealChannel
 bool operator<(const COMRealChannel &a, const COMRealChannel &b);
 
 /*****************************************************************************/
-
-enum DLSLogType
-{
-    DLSInfo,
-    DLSError,
-    DLSWarning,
-    DLSDebug
-};
-
-/*****************************************************************************/
-
-stringstream &msg();
-void log(DLSLogType);
 
 COMChannelType dls_str_to_channel_type(const string &);
 const char *dls_channel_type_to_str(COMChannelType);

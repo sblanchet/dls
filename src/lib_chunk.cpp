@@ -48,7 +48,13 @@ using namespace LibDLS;
    Constructor.
 */
 
-Chunk::Chunk()
+Chunk::Chunk():
+    _sample_frequency(0.0),
+    _meta_reduction(0),
+    _format_index(0),
+    _mdct_block_size(0),
+    _type(DLS_TUNKNOWN),
+    _incomplete(true)
 {
 }
 
@@ -78,6 +84,8 @@ void Chunk::import(const string &path, COMChannelType type)
 
     _dir = path;
     _type = type;
+    _incomplete = true;
+
     chunk_file_name = _dir + "/chunk.xml";
 
     file.open(chunk_file_name.c_str(), ios::in);
@@ -198,56 +206,56 @@ void LibDLS::Chunk::_fetch_level_data_wrapper(COMTime start,
                                               ) const
 {
     switch (_type) {
-        case TCHAR:
+        case DLS_TCHAR:
             _fetch_level_data<char>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
                                     decimation, decimationCounter);
             break;
-        case TUCHAR:
+        case DLS_TUCHAR:
             _fetch_level_data<unsigned char>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
                                              decimationCounter);
             break;
-        case TSHORT:
+        case DLS_TSHORT:
             _fetch_level_data<short>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
                                      decimation, decimationCounter);
             break;
-        case TUSHORT:
+        case DLS_TUSHORT:
             _fetch_level_data<unsigned short>(start, end, meta_type, level,
                                               time_per_value, ring, data,
                                               cb, cb_data, decimation,
                                               decimationCounter);
             break;
-        case TINT:
+        case DLS_TINT:
             _fetch_level_data<int>(start, end, meta_type, level,
                                    time_per_value, ring, data, cb, cb_data,
                                    decimation, decimationCounter);
             break;
-        case TUINT:
+        case DLS_TUINT:
             _fetch_level_data<unsigned int>(start, end, meta_type, level,
                                             time_per_value, ring, data,
                                             cb, cb_data, decimation,
                                             decimationCounter);
             break;
-        case TLINT:
+        case DLS_TLINT:
             _fetch_level_data<long>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
                                     decimation, decimationCounter);
             break;
-        case TULINT:
+        case DLS_TULINT:
             _fetch_level_data<unsigned long>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
                                              decimationCounter);
             break;
-        case TFLT:
+        case DLS_TFLT:
             _fetch_level_data<float>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
                                      decimation, decimationCounter);
             break;
-        case TDBL:
+        case DLS_TDBL:
             _fetch_level_data<double>(start, end, meta_type, level,
                                       time_per_value, ring, data, cb, cb_data,
                                       decimation, decimationCounter);
@@ -309,7 +317,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 new COMCompressionT_MDCT<double>(_mdct_block_size, 0);
         }
         else {
-            cout << "ERROR: MDCT only for floating point types!" << endl;
+			stringstream err;
+            err << "ERROR: MDCT only for floating point types!";
+			dls_log(err.str());
             return;
         }
     }
@@ -323,13 +333,17 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 new COMCompressionT_Quant<double>(0.0);
         }
         else {
-            cout << "ERROR: Quant only for floating point types!" << endl;
+			stringstream err;
+            err << "ERROR: Quant only for floating point types!";
+			dls_log(err.str());
             return;
         }
     }
     else {
-        cout << "ERROR: Unknown compression type index: "
-             << _format_index << endl;
+		stringstream err;
+        err << "ERROR: Unknown compression type index: "
+             << _format_index;
+		dls_log(err.str());
         return;
     }
 
@@ -350,9 +364,11 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
         try {
             global_index_record = global_index[i];
         } catch (ECOMIndexT &e) {
-            cout << "ERROR: Failed read record " << i
+			stringstream err;
+            err << "ERROR: Failed read record " << i
                  << " from global index \"";
-            cout << global_index_file_name << "\". Reason: " << e.msg << endl;
+            err << global_index_file_name << "\". Reason: " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -375,17 +391,22 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                        << "/data" << global_index_record.start_time
                        << "_" << dls_meta_type_str(meta_type);
 
+        string indexPath = data_file_name.str() + ".idx";
         try {
-            index.open_read(data_file_name.str() + ".idx");
+            index.open_read(indexPath);
             data_file.open_read(data_file_name.str().c_str());
         } catch (ECOMIndexT &e) {
-            cout << "ERROR: Failed to open index \"";
-            cout << data_file_name.str() << ".idx\": " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: Failed to open index \"";
+            err << indexPath << "\": " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         } catch (ECOMFile &e) {
-            cout << "ERROR: Failed to open data file \"";
-            cout << data_file_name.str() << "\": " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: Failed to open data file \"";
+            err << indexPath << "\": " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -395,7 +416,10 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             try {
                 index_record = index[j];
             } catch (ECOMIndexT &e) {
-                cout << "ERROR: Could not read from index: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: Could not read from index \"" << indexPath
+                    << "\": " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -411,7 +435,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             try {
                 data_file.seek(index_record.position);
             } catch (ECOMFile &e) {
-                cout << "ERROR: Could not seek in data file!" << endl;
+				stringstream err;
+                err << "ERROR: Could not seek in data file!";
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -426,16 +452,20 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 try {
                     data_file.read(write_ptr, write_len, &write_len);
                 } catch (ECOMFile &e) {
-                    cout << "ERROR: Could not read from data file: "
-                         << e.msg << endl;
+					stringstream err;
+                    err << "ERROR: Could not read from data file: "
+                         << e.msg;
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
 
                 if (!write_len) {
-                    cout << "ERROR: EOF in \"" << data_file_name.str()
+					stringstream err;
+                    err << "ERROR: EOF in \"" << data_file_name.str()
                          << "\" after searching position "
-                         << index_record.position << "!" << endl;
+                         << index_record.position << "!";
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
@@ -447,7 +477,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 } catch (ECOMXMLParserEOF &e) {
                     continue;
                 } catch (ECOMXMLParser &e) {
-                    cout << "parsing error: " << e.msg << endl;
+					stringstream err;
+                    err << "parsing error: " << e.msg;
+					dls_log(err.str());
                     delete comp;
                     return;
                 }
@@ -459,8 +491,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                                           comp, data, cb, cb_data,
                                           decimation, decimationCounter);
                     } catch (ECOMXMLTag &e) {
-                        cout << "ERROR: Could not read block: "
-                             << e.msg << endl;
+						stringstream err;
+                        err << "ERROR: Could not read block: " << e.msg;
+						dls_log(err.str());
                         delete comp;
                         return;
                     }
@@ -483,7 +516,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
             must_read_again = false;
         }
         catch (ECOMXMLParser &e) {
-            cout << "ERROR: While parsing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR: While parsing: " << e.msg;
+			dls_log(err.str());
             delete comp;
             return;
         }
@@ -499,7 +534,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 data_file.read(write_ptr, write_len, &write_len);
             }
             catch (ECOMFile &e) {
-                cout << "ERROR: Could not read data file: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: Could not read data file: " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -516,7 +553,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                 must_read_again = false;
             }
             catch (ECOMXMLParser &e) {
-                cout << "ERROR: While parsing: " << e.msg << endl;
+				stringstream err;
+                err << "ERROR: While parsing: " << e.msg;
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -532,7 +571,9 @@ void LibDLS::Chunk::_fetch_level_data(COMTime start,
                                   decimation, decimationCounter);
             }
             catch (ECOMXMLTag &e) {
-                cout << "ERROR: Failed to read block!" << endl;
+				stringstream err;
+                err << "ERROR: Failed to read block!";
+				dls_log(err.str());
                 delete comp;
                 return;
             }
@@ -573,7 +614,9 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         try {
             comp->uncompress(block_data, strlen(block_data), block_size);
         } catch (ECOMCompression &e) {
-            cout << "ERROR while uncompressing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR while uncompressing: " << e.msg;
+			dls_log(err.str());
             return;
         }
 
@@ -593,7 +636,9 @@ void LibDLS::Chunk::_process_data_tag(const COMXMLTag *tag,
         try {
             comp->flush_uncompress(block_data, strlen(block_data));
         } catch (ECOMCompression &e) {
-            cout << "ERROR while uncompressing: " << e.msg << endl;
+			stringstream err;
+            err << "ERROR while uncompressing: " << e.msg;
+			dls_log(err.str());
             return;
         }
 
@@ -632,6 +677,7 @@ void Chunk::fetch_range()
 
     _start = (uint64_t) 0;
     _end = (uint64_t) 0;
+    _incomplete = true;
 
     global_index_file_name = _dir + "/level0/data_gen.idx";
 
@@ -652,18 +698,28 @@ void Chunk::fetch_range()
         throw ChunkException(err.str());
     }
 
+    // Ersten und letzten Record lesen, um die Zeitspanne zu bestimmen
     try
     {
-        // Ersten und letzten Record lesen, um die Zeitspanne zu bestimmen
         first_global_index_record = global_index[0];
-        last_global_index_record
-            = global_index[global_index.record_count() - 1];
     }
     catch (ECOMIndexT &e)
     {
-        err << "Could not read first and last"
-            << " record from global index file \""
-            << global_index_file_name << "\"!";
+        err << "Could not read first record of global index file \""
+            << global_index_file_name << "\": " << e.msg;
+        throw ChunkException(err.str());
+    }
+
+    unsigned int rec_idx = global_index.record_count() - 1;
+    try
+    {
+        last_global_index_record = global_index[rec_idx];
+    }
+    catch (ECOMIndexT &e)
+    {
+        err << "Could not read last record (" << rec_idx
+            << ") of global index file \"" << global_index_file_name
+            << "\": " << e.msg;
         throw ChunkException(err.str());
     }
 
@@ -693,21 +749,29 @@ void Chunk::fetch_range()
             throw ChunkException(err.str());
         }
 
+        unsigned int rec_idx = index.record_count() - 1;
         try
         {
             // Letzten Record lesen
-            index_record = index[index.record_count() - 1];
+            index_record = index[rec_idx];
         }
         catch (ECOMIndexT &e)
         {
-            err << "Could not read from index file \""
-                << index_file_name.str() << "\": " << e.msg;
+            stringstream err;
+            err << "Could not read last (" << rec_idx
+                << ") record from index file \""
+                << index_file_name.str() << "\" (logging in progress): "
+                << e.msg;
             throw ChunkException(err.str());
         }
 
         last_global_index_record.end_time = index_record.end_time;
 
         index.close();
+    }
+    else {
+        // last global index record has time != 0
+        _incomplete = false;
     }
 
     global_index.close();

@@ -413,7 +413,7 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
     double coeff_imdct[_dim];
     double quant_imdct[_dim];
     double max_error, error;
-    double scale;
+    double scale = 0.0;
     unsigned char bits, use_bits, start, end;
 
     // Alle DCTs durchführen
@@ -499,12 +499,14 @@ unsigned int COMMDCTT<T>::_transform_all(const double *input,
             // Maximale Anzahl Bits zum Quantisieren verwenden
             use_bits = MDCT_MAX_BYTES * 8 - 1;
 
+#ifdef MDCT_DEBUG
             // Warnung ausgeben!
             msg() << "MDCT - Could not reach maximal error of "
                   << _accuracy / 2;
             msg() << ". Quantizing with " << (int) bits
                   << " bits. Error is " << max_error;
             log(DLSWarning);
+#endif
         }
 
 #ifdef MDCT_DEBUG
@@ -919,7 +921,7 @@ void COMMDCTT<T>::_detransform_all(const char *input,
         {
             for (i = 0; i < _dim / 2; i++)
             {
-                if (input[current_byte] & (1 << current_bit - 1))
+                if (input[current_byte] & (1 << (current_bit - 1)))
                     int_coeff[i] |= 1 << (b - 1);
 
                 if (--current_bit == 0)

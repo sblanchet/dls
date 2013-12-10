@@ -76,13 +76,20 @@ COMFile::~COMFile()
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read(const char *filename)
+void COMFile::open_read(const char *filename, OpenFlag f)
 {
     stringstream err;
+    int flags = O_RDONLY;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
-    if ((_fd = ::open(filename, O_RDONLY)) == -1)
+    if ((_fd = ::open(filename, flags)) == -1)
     {
         err << "Could not open file";
         err << " \"" << filename << "\"";
@@ -107,20 +114,27 @@ void COMFile::open_read(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read_write(const char *filename)
+void COMFile::open_read_write(const char *filename, OpenFlag f)
 {
     stringstream err;
     struct stat stat_buf;
+    int flags = O_RDWR;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
     // Prüfen, ob die Datei bereits existiert
-    if (lstat(filename, &stat_buf) == -1)
+    if (stat(filename, &stat_buf) == -1)
     {
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
             // Datei neu erstellen
-            if ((_fd = ::open(filename, O_RDWR | O_CREAT, 0644)) == -1)
+            if ((_fd = ::open(filename, flags | O_CREAT, 0644)) == -1)
             {
                 err << "Could not create file";
                 err << " \"" << filename << "\"";
@@ -138,7 +152,7 @@ void COMFile::open_read_write(const char *filename)
     else // Datei existiert
     {
         // Existierende Datei zum Schreiben öffnen
-        if ((_fd = ::open(filename, O_RDWR)) == -1)
+        if ((_fd = ::open(filename, flags)) == -1)
         {
             err << "Could not open file";
             err << " \"" << filename << "\"";
@@ -164,20 +178,27 @@ void COMFile::open_read_write(const char *filename)
    \throw ECOMFile Datei konnte nicht geöffnet werden
 */
 
-void COMFile::open_read_append(const char *filename)
+void COMFile::open_read_append(const char *filename, OpenFlag f)
 {
     stringstream err;
     struct stat stat_buf;
+    int flags = O_RDWR | O_APPEND;
+
+#ifdef __WIN32__
+    if (f == Binary) {
+        flags |= O_BINARY;
+    }
+#endif
 
     COMFile::close();
 
     // Prüfen, ob die Datei bereits existiert
-    if (lstat(filename, &stat_buf) == -1)
+    if (stat(filename, &stat_buf) == -1)
     {
         if (errno == ENOENT) // Alles ok, die Datei existiert nur noch nicht.
         {
             // Datei neu erstellen
-            if ((_fd = ::open(filename, O_RDWR | O_CREAT | O_APPEND, 0644))
+            if ((_fd = ::open(filename, flags | O_CREAT, 0644))
                 == -1)
             {
                 err << "Could not create file";
@@ -196,7 +217,7 @@ void COMFile::open_read_append(const char *filename)
     else // Datei existiert
     {
         // Existierende Datei zum Schreiben öffnen und leeren
-        if ((_fd = ::open(filename, O_RDWR | O_APPEND)) == -1)
+        if ((_fd = ::open(filename, flags)) == -1)
         {
             err << "Could not open file";
             err << " \"" << filename << "\"";
@@ -224,10 +245,12 @@ void COMFile::close()
     bool error = false;
 
     if (_mode != fomClosed) {
+#if _BSD_SOURCE || _XOPEN_SOURCE || _POSIX_C_SOURCE >= 200112L
         if (fsync(_fd) == -1) {
             error = true;
             err << "Could not sync pending data (" << strerror(errno) << ").";
         }
+#endif
 
         do {
             if (::close(_fd) == 0) break;
@@ -435,9 +458,15 @@ void COMFile::seek(unsigned int position)
         throw ECOMFile("File not open.");
     }
 
-    if (lseek(_fd, position, SEEK_SET) == (off_t) - 1)
-    {
-        err << "Position could not be reached! Seek: " << strerror(errno);
+    off_t ret = lseek(_fd, position, SEEK_SET);
+
+    if (ret == (off_t) -1) {
+        err << "Seek position " << position << " error: " << strerror(errno);
+        throw ECOMFile(err.str());
+    }
+    else if (ret != (off_t) position) {
+        err << "Position could not be reached (" << ret << "/" << position
+            << ")! Seek: " << strerror(errno);
         throw ECOMFile(err.str());
     }
 }
@@ -457,36 +486,44 @@ void COMFile::seek(unsigned int position)
 
 void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
 {
-    stringstream err;
-    unsigned int bytes = 0;
+    unsigned int bytes = 0, to_read = length;
     int read_ret;
 
-    if (_mode == fomClosed)
-    {
+    if (!to_read) {
+        return;
+    }
+
+    if (_mode == fomClosed) {
         throw ECOMFile("File not open.");
     }
 
-    if (length > 0)
-    {
-        while (1)
-        {
-            if ((read_ret = ::read(_fd, target, length)) == -1)
-            {
-                if (errno != EINTR)
-                {
-                    err << "Read error: " << strerror(errno);
-                    throw ECOMFile(err.str());
-                }
+    while (to_read > 0) {
+        read_ret = ::read(_fd, target, to_read);
+
+        if (read_ret == -1) {
+            stringstream err;
+
+            if (errno == EINTR) {
+                continue;
             }
-            else
-            {
-                bytes = read_ret;
-                break;
-            }
+
+            err << "Read error: " << strerror(errno);
+            throw ECOMFile(err.str());
+        }
+        else if (read_ret == 0) {
+            // EOF
+            break;
+        }
+        else {
+            bytes += read_ret;
+            target += read_ret;
+            to_read -= read_ret;
         }
     }
 
-    if (bytes_read) *bytes_read = bytes;
+    if (bytes_read) {
+        *bytes_read = bytes;
+    }
 
     return;
 }
@@ -502,7 +539,7 @@ void COMFile::read(char *target, unsigned int length, unsigned int *bytes_read)
 uint64_t COMFile::calc_size()
 {
     stringstream err;
-    uint64_t size;
+    off_t size;
 
     if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
     {

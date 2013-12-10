@@ -19,16 +19,21 @@
  *
  *****************************************************************************/
 
+#ifdef __unix__
 #include <sys/ioctl.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 using namespace std;
 
 #include "lib_dir.hpp"
@@ -91,6 +96,7 @@ int export_main(int argc, char *argv[])
     unsigned int current_channel, total_channels;
     stringstream info_file_name;
     ofstream info_file;
+    int ret;
 
     now.set_now();
 
@@ -201,35 +207,18 @@ int export_main(int argc, char *argv[])
 
     cout << "Exporting to \"" << dls_export_dir << "\" ..." << endl;
 
+#ifdef __unix__
+    ret = mkdir(dls_export_dir.c_str(), 0755);
+#else
+    ret = mkdir(dls_export_dir.c_str());
+#endif
+
     // create unique directory
-    if (mkdir(dls_export_dir.c_str(), 0755)) {
+    if (ret) {
         cerr << "ERROR: Failed to create export directory: ";
         cerr << strerror(errno) << endl;
         exit(1);
     }
-
-    // create info file
-    info_file_name << dls_export_dir << "/dls_export_info";
-    info_file.open(info_file_name.str().c_str(), ios::trunc);
-
-    if (!info_file.is_open()) {
-        cerr << "ERROR: Failed to write \""
-             << info_file_name.str() << "\"!" << endl;
-        exit(1);
-    }
-
-    info_file << endl
-              << "This is a DLS export directory." << endl << endl
-              << "Exported on: "
-              << now.to_rfc811_time() << endl << endl
-              << "Exported range from: "
-              << start_time.to_real_time() << endl
-              << "                 to: "
-              << end_time.to_real_time() << endl
-              << "           duration: "
-              << start_time.diff_str_to(end_time) << endl << endl;
-
-    info_file.close();
 
     if (start_time < channels_start) start_time = channels_start;
     if (end_time > channels_end) end_time = channels_end;
@@ -282,6 +271,29 @@ int export_main(int argc, char *argv[])
         }
     }
 
+    // create info file
+    info_file_name << dls_export_dir << "/dls_export_info";
+    info_file.open(info_file_name.str().c_str(), ios::trunc);
+
+    if (!info_file.is_open()) {
+        cerr << "ERROR: Failed to write \""
+             << info_file_name.str() << "\"!" << endl;
+        exit(1);
+    }
+
+    info_file << endl
+              << "This is a DLS export directory." << endl << endl
+              << "Exported on: "
+              << now.to_rfc811_time() << endl << endl
+              << "Exported range from: "
+              << start_time.to_real_time() << endl
+              << "                 to: "
+              << end_time.to_real_time() << endl
+              << "           duration: "
+              << start_time.diff_str_to(end_time) << endl << endl;
+
+    info_file.close();
+
     cout << endl << "Export finished." << endl;
     return 0;
 }
@@ -304,7 +316,8 @@ int export_data_callback(Data *data, void *cb_data)
     if (!quiet) {
         // display progress
         diff_time = (data->end_time() - info->start).to_dbl();
-        percentage = info->channel_percentage + diff_time * info->channel_factor;
+        percentage = info->channel_percentage +
+            diff_time * info->channel_factor;
         draw_progress(percentage + 0.5);
     }
 
@@ -663,7 +676,7 @@ int terminal_width()
     else
         return 50;
 #else
-    return 50
+    return 50;
 #endif
 }
 

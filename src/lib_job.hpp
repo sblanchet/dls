@@ -68,12 +68,36 @@ namespace LibDLS
         Channel *find_channel(unsigned int);
 
         const string &path() const;
+        unsigned int id() const;
         const COMJobPreset &preset() const;
 
         bool operator<(const Job &) const;
 
+        struct Message
+        {
+            COMTime time;
+            enum Type {
+                Unknown = -1,
+                Info,
+                Warning,
+                Error,
+                Critical,
+                Broadcast,
+                TypeCount
+            };
+            Type type;
+            string text;
+
+            bool operator<(const Message &other) const {
+                return time < other.time;
+            }
+        };
+
+        list<Message> load_msg(COMTime, COMTime) const;
+
     private:
         string _path; /**< DLS job directory path */
+        unsigned int _id; /**< Job index. */
         COMJobPreset _preset; /**< job preset */
         list<Channel> _channels; /**< list of recorded channels */
     };
@@ -89,6 +113,18 @@ namespace LibDLS
 inline const string &LibDLS::Job::path() const
 {
     return _path;
+}
+
+/*************************************************************************/
+
+/**
+   Returns the job's ID.
+   \return job ID
+*/
+
+inline unsigned int LibDLS::Job::id() const
+{
+    return _id;
 }
 
 /*************************************************************************/

@@ -24,20 +24,26 @@
 
 /*****************************************************************************/
 
-#include "com_globals.hpp"
+#include "lib_globals.hpp"
 #include "com_exception.hpp"
 #include "com_time.hpp"
-#include "com_ring_buffer_t.hpp"
-#include "com_xml_tag.hpp"
-#include "com_compression_t.hpp"
-
 #include "lib_data.hpp"
+
+template <class TYPE, class SIZE> class COMRingBufferT;
+typedef class COMRingBufferT<char, unsigned int> COMRingBuffer;
+class COMXMLTag;
+template <class T> class COMCompressionT;
 
 namespace LibDLS
 {
     class Channel;
     class Data;
 
+    /** Data callback.
+     *
+     * \return non-zero, if the Data object is adopted. In this case, the
+     * caller has to delete the object.
+     */
     typedef int (*DataCallback)(Data *, void *);
 
     /*************************************************************************/
@@ -67,8 +73,10 @@ namespace LibDLS
         void import(const string &, COMChannelType);
         void fetch_range();
 
-        COMTime start() const;
-        COMTime end() const;
+        COMTime start() const { return _start; }
+        COMTime end() const { return _end; }
+        bool incomplete() const { return _incomplete; }
+
         void fetch_data(COMTime, COMTime, unsigned int,
                         COMRingBuffer *,
                         DataCallback, void *,
@@ -86,6 +94,7 @@ namespace LibDLS
         COMTime _start;                 /**< Startzeit des Chunks */
         COMTime _end;                   /**< Endzeit des Chunks */
         COMChannelType _type; /**< channel type */
+        bool _incomplete; /**< Data ist still logged. */
 
         unsigned int _calc_optimal_level(COMTime, COMTime, unsigned int) const;
         COMTime _time_per_value(unsigned int) const;
@@ -126,30 +135,6 @@ namespace LibDLS
                                unsigned int,
                                unsigned int &) const;
     };
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the chunk's start time.
-   \return start time
-*/
-
-inline COMTime LibDLS::Chunk::start() const
-{
-    return _start;
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the chunk's end time.
-   \return end time
-*/
-
-inline COMTime LibDLS::Chunk::end() const
-{
-    return _end;
 }
 
 /*****************************************************************************/

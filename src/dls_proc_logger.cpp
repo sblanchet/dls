@@ -743,7 +743,7 @@ void DLSProcLogger::_process_tag()
 
                         real_channel.type = dls_str_to_channel_type(type);
 
-                        if (real_channel.type == TUNKNOWN) {
+                        if (real_channel.type == DLS_TUNKNOWN) {
                             // ignore unknown channel types
                             break;
                         }

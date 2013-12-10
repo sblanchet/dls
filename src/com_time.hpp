@@ -54,8 +54,8 @@ public:
     void from_dbl_time(double);
     void set_null();
     void set_now();
+    int set_date(int, int = 1, int = 1, int = 0, int = 0, int = 0);
 
-    //  COMTime &operator =(int);
     COMTime &operator =(int64_t);
     COMTime &operator =(uint64_t);
     COMTime &operator =(double);
@@ -78,12 +78,23 @@ public:
     double to_dbl_time() const;
     int64_t to_int64() const;
     uint64_t to_uint64() const;
+    time_t to_time_t() const;
     string to_str() const;
     struct timeval to_tv() const;
     string to_real_time() const;
     string format_time(const char *) const;
     string to_rfc811_time() const;
+    string to_iso_time() const;
     string diff_str_to(const COMTime &) const;
+    int year() const;
+    int month() const;
+    int day() const;
+    int hour() const;
+    int min() const;
+    int sec() const;
+    int day_of_week() const;
+    bool is_leap_year() const;
+    int month_days() const;
 
     static COMTime now();
 

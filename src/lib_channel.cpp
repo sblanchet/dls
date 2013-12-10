@@ -29,11 +29,14 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "com_xml_parser.hpp"
+#include "com_globals.hpp"
 #include "lib_chunk.hpp"
 #include "lib_job.hpp"
 #include "lib_channel.hpp"
+#include "com_xml_parser.hpp"
 using namespace LibDLS;
+
+#define DEBUG_TIMING 0
 
 /*****************************************************************************/
 
@@ -41,9 +44,10 @@ using namespace LibDLS;
    Constructor.
 */
 
-Channel::Channel()
+Channel::Channel(Job *job):
+    _job(job),
+    _dir_index(0)
 {
-    _dir_index = 0;
 }
 
 /*****************************************************************************/
@@ -93,7 +97,7 @@ void Channel::import(
         _unit = xml.tag()->att("unit")->to_str();
 
         if ((_type = dls_str_to_channel_type(xml.tag()->att("type")->to_str()))
-            == TUNKNOWN) {
+            == DLS_TUNKNOWN) {
             stringstream err;
             file.close();
             err << "Unknown channel type \""
@@ -139,12 +143,17 @@ void Channel::fetch_chunks()
     DIR *dir;
     struct dirent *dir_ent;
     string dir_ent_name;
-    Chunk chunk;
+    Chunk new_chunk, *chunk;
     bool first = true;
+    int64_t dir_time;
+
+#if DEBUG_TIMING
+    COMTime ts, te;
+    ts.set_now();
+#endif
 
     _range_start.set_null();
     _range_end.set_null();
-    _chunks.clear();
 
     if (!(dir = opendir(path().c_str()))) {
         stringstream err;
@@ -152,44 +161,76 @@ void Channel::fetch_chunks()
         throw ChannelException(err.str());
     }
 
+    /* TODO: Delete chunks, if no existing any more. */
+
     while ((dir_ent = readdir(dir))) {
         dir_ent_name = dir_ent->d_name;
-        if (dir_ent_name.find("chunk") != 0) continue;
-
-        try {
-            chunk.import(path() + "/" + dir_ent_name, _type);
-        }
-        catch (ChunkException &e) {
-            cerr << "WARNING: Failed import chunk: " << e.msg << endl;
+        if (dir_ent_name.find("chunk") != 0) {
             continue;
         }
 
-        try {
-            // Start- und Endzeiten holen
-            chunk.fetch_range();
+        // get chunk time from directory name for map indexing
+        stringstream str;
+        str << dir_ent_name.substr(5);
+        str >> dir_time;
+
+        ChunkMap::iterator chunk_i = _chunks.find(dir_time);
+        if (chunk_i == _chunks.end()) {
+            try {
+                new_chunk.import(path() + "/" + dir_ent_name, _type);
+            }
+            catch (ChunkException &e) {
+                stringstream err;
+                err << "WARNING: Failed import chunk: " << e.msg;
+                dls_log(err.str());
+                continue;
+            }
+
+            pair<int64_t, Chunk> val(dir_time, new_chunk);
+            pair<ChunkMap::iterator, bool> ret = _chunks.insert(val);
+            chunk = &ret.first->second;
         }
-        catch (ChunkException &e) {
-            cerr << "WARNING: Failed to fetch chunk range: " << e.msg << endl;
-            continue;
+        else {
+            // chunk existing
+            chunk = &chunk_i->second;
+        }
+
+        if (chunk->incomplete()) {
+            // chunk is still logging, fetch current end time
+            try {
+                chunk->fetch_range();
+            }
+            catch (ChunkException &e) {
+                stringstream err;
+                err << "WARNING: Failed to fetch chunk range: " << e.msg;
+                dls_log(err.str());
+                continue;
+            }
         }
 
         if (first) {
-            _range_start = chunk.start();
-            _range_end = chunk.end();
+            _range_start = chunk->start();
+            _range_end = chunk->end();
             first = false;
         }
         else {
-            if (chunk.start() < _range_start) _range_start = chunk.start();
-            if (chunk.end() > _range_end) _range_end = chunk.end();
+            if (chunk->start() < _range_start) {
+                _range_start = chunk->start();
+            }
+            if (chunk->end() > _range_end) {
+                _range_end = chunk->end();
+            }
         }
-
-        _chunks.push_back(chunk);
     }
 
     closedir(dir);
 
-    // Chunks aufsteigend nach Anfangszeit sortieren
-    _chunks.sort();
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_chunks " << ts.diff_str_to(te);
+    dls_log(msg.str());
+#endif
 }
 
 /*****************************************************************************/
@@ -213,15 +254,27 @@ void Channel::fetch_data(COMTime start, /**< start of requested time range */
                          unsigned int decimation /**< Decimation. */
                          ) const
 {
-    list<Chunk>::const_iterator chunk_i;
+#if DEBUG_TIMING
+    COMTime ts, te;
+    ts.set_now();
+#endif
+
+    ChunkMap::const_iterator chunk_i;
     COMRingBuffer ring(100000);
 
-    if (start >= end) return;
-
-    for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
-        chunk_i->fetch_data(start, end, min_values, &ring, cb, cb_data,
-                decimation);
+    if (start < end) {
+        for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
+            chunk_i->second.fetch_data(start, end,
+                    min_values, &ring, cb, cb_data, decimation);
+        }
     }
+
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_data " << ts.diff_str_to(te);
+    dls_log(msg.str());
+#endif
 }
 
 /*****************************************************************************/

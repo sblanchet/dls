@@ -59,10 +59,15 @@ public:
     COMFile();
     ~COMFile();
 
+    enum OpenFlag {
+        Text,
+        Binary
+    };
+
     //@{
-    void open_read(const char *);
-    void open_read_write(const char *);
-    void open_read_append(const char *);
+    void open_read(const char *, OpenFlag = Text);
+    void open_read_write(const char *, OpenFlag = Text);
+    void open_read_append(const char *, OpenFlag = Text);
     void close();
     //@}
 

@@ -32,7 +32,7 @@ vim: tw=78 spelllang=en spell
     - show compression rate
 
 * lib:
-	- fetch_chunks(): only update
+	- fetch_chunks(): delete non-existing chunks
 
 * dls_view:
   - add shortcuts

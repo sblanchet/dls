@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdlib.h> // getenv()
 using namespace std;
 
 #include <FL/Fl.H>

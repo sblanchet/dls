@@ -195,6 +195,65 @@ void COMTime::set_null()
 /*****************************************************************************/
 
 /**
+   Setzt die Zeit auf die aktuelle Zeit
+
+   \returns Referenz auf die gesetzte Zeit
+*/
+
+void COMTime::set_now()
+{
+    *this = COMTime::now();
+}
+
+/*****************************************************************************/
+
+/**
+   Setzt die Zeit auf die aktuelle Zeit
+
+   \returns 0 bei Erfolg, sonst ungleich 0
+*/
+
+int COMTime::set_date(int year, int month, int day,
+        int hour, int min, int sec)
+{
+    struct tm tm = {};
+    time_t t;
+
+    tm.tm_sec = sec;
+    tm.tm_min = min;
+    tm.tm_hour = hour;
+    tm.tm_mday = day;
+    tm.tm_mon = month - 1;
+    tm.tm_year = year - 1900;
+    tm.tm_isdst = -1;
+
+    t = mktime(&tm);
+#if 0
+    if (t < -2147483648 || t > 2147483647) { // 32 bit test
+        std::cerr << __func__
+            << "(" << t << "): Failed to set date "
+                    << year << "-" << month << "-" << day << " "
+                    << hour << ":" << min << ":" << sec << std::endl;
+        t = -1;
+    }
+#endif
+    if (t == -1) {
+#if 0
+        std::cerr << __func__
+            << "(): Failed to set date "
+                    << year << "-" << month << "-" << day << " "
+                    << hour << ":" << min << ":" << sec << std::endl;
+#endif
+        return -1;
+    }
+
+    _time = t * 1000000LL;
+    return 0;
+}
+
+/*****************************************************************************/
+
+/**
    Prüft, ob die Zeit auf Null gesetzt ist
 
    \return true, wenn auf Null
@@ -425,6 +484,19 @@ uint64_t COMTime::to_uint64() const
 /*****************************************************************************/
 
 /**
+   Konvertierung nach "time_t"
+
+   \returns Anzahl der Sekunden seit Epoch
+*/
+
+time_t COMTime::to_time_t() const
+{
+    return (time_t) _time / 1000000;
+}
+
+/*****************************************************************************/
+
+/**
    Konvertierung nach "struct timeval"
 
    \returns Zeit als "struct timeval"
@@ -465,9 +537,11 @@ string COMTime::to_real_time() const
     struct tm local_time;
     char str[100];
     string ret;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     strftime(str, sizeof(str), "%d.%m.%Y %H:%M:%S", &local_time);
     ret = str;
     sprintf(str, ".%06u", (unsigned int) tv.tv_usec);
@@ -482,9 +556,11 @@ string COMTime::format_time(const char *fmt) const
     struct tm local_time;
     char str[100];
     string ret;
+    time_t t;
 
     tv = to_tv();
-    local_time = *localtime(&tv.tv_sec);
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
     strftime(str, sizeof(str), fmt, &local_time);
     return str;
 }
@@ -494,6 +570,25 @@ string COMTime::format_time(const char *fmt) const
 string COMTime::to_rfc811_time() const
 {
     return format_time("%a, %d %b %Y %H:%M:%S %z");
+}
+
+/*****************************************************************************/
+
+string COMTime::to_iso_time() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    char str[100];
+    string ret;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    strftime(str, sizeof(str), "%Y-%m-%d %H:%M:%S", &local_time);
+    ret = str;
+    sprintf(str, ".%06u", (unsigned int) tv.tv_usec);
+    return ret + str;
 }
 
 /*****************************************************************************/
@@ -535,15 +630,120 @@ string COMTime::diff_str_to(const COMTime &other) const
 
 /*****************************************************************************/
 
-/**
-   Setzt die Zeit auf die aktuelle Zeit
-
-   \returns Referenz auf die gesetzte Zeit
-*/
-
-void COMTime::set_now()
+int COMTime::year() const
 {
-    *this = COMTime::now();
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_year + 1900;
+}
+
+/*****************************************************************************/
+
+int COMTime::month() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_mon + 1;
+}
+
+/*****************************************************************************/
+
+int COMTime::hour() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_hour;
+}
+
+/*****************************************************************************/
+
+int COMTime::min() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_min;
+}
+
+/*****************************************************************************/
+
+int COMTime::sec() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_sec;
+}
+
+/*****************************************************************************/
+
+int COMTime::day() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_mday;
+}
+
+
+/*****************************************************************************/
+
+int COMTime::day_of_week() const
+{
+    struct timeval tv;
+    struct tm local_time;
+    time_t t;
+
+    tv = to_tv();
+    t = tv.tv_sec;
+    local_time = *localtime(&t);
+    return local_time.tm_wday;
+}
+
+/*****************************************************************************/
+
+bool COMTime::is_leap_year() const
+{
+    int y = year();
+
+    return (!(y % 4) && (y % 100)) || !(y % 400);
+}
+
+/*****************************************************************************/
+
+int COMTime::month_days() const
+{
+    static int days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int m = month();
+
+    return days[m - 1] + (m == 2 ? (int) is_leap_year() : 0);
 }
 
 /*****************************************************************************/

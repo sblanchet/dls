@@ -20,6 +20,7 @@
  *****************************************************************************/
 
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 #include "lib_data.hpp"
@@ -33,6 +34,19 @@ using namespace LibDLS;
 
 Data::Data()
 {
+}
+
+/*****************************************************************************/
+
+/** Copy constructor.
+*/
+Data::Data(const Data &o)
+{
+    _start_time = o._start_time;
+    _time_per_value = o._time_per_value;
+    _meta_type = o._meta_type;
+    _meta_level = o._meta_level;
+    _data = o._data;
 }
 
 /*****************************************************************************/
@@ -57,7 +71,9 @@ void Data::push_back(const Data &other)
 
     if (other._time_per_value != _time_per_value
         || other._start_time != end_time() + _time_per_value) {
-        cerr << "WARNING: Data appending failed!" << endl;
+		stringstream err;
+        err << "WARNING: Data appending failed!";
+		dls_log(err.str());
         return;
     }
 

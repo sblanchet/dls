@@ -394,7 +394,8 @@ void CTLDialogChannels::_thread_function()
 
                                     channel.type =
                                         dls_str_to_channel_type(type);
-                                    if (channel.type == TUNKNOWN) {
+
+                                    if (channel.type == DLS_TUNKNOWN) {
                                         continue;
                                     }
 
