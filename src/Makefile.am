@@ -21,7 +21,7 @@
 
 REV = `$(top_srcdir)/revision.sh $(top_srcdir)`
 
-AM_CPPFLAGS = -Wall
+AM_CXXFLAGS = -Wall
 
 #------------------------------------------------------------------------------
 
