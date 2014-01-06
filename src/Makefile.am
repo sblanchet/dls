@@ -43,7 +43,7 @@ lib_LTLIBRARIES = libdls.la
 
 #------------------------------------------------------------------------------
 
-libdls_la_CPPFLAGS = @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+libdls_la_CXXFLAGS = @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
 	-version-info @LIBDLS_VERSION@
 libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
@@ -82,7 +82,7 @@ include_HEADERS = \
 
 #------------------------------------------------------------------------------
 
-dlsd_CPPFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dlsd_CXXFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dlsd_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
 dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm
 dlsd_DEPENDENCIES = libdls.la
@@ -98,8 +98,8 @@ dlsd_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_ctl_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
-dls_ctl_LDFLAGS = -L$(builddir)/.libs
+dls_ctl_CXXFLAGS = -fPIE -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
+dls_ctl_LDFLAGS = -pie -L$(builddir)/.libs
 dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls
 dls_ctl_DEPENDENCIES = libdls.la
 
@@ -121,7 +121,7 @@ dls_ctl_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_view_CPPFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
+dls_view_CXXFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
 	@FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_view_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
 dls_view_LDADD = @FLTK_LDFLAGS@ -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
@@ -139,7 +139,7 @@ dls_view_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_CPPFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dls_CXXFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
 dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
 dls_DEPENDENCIES = libdls.la
