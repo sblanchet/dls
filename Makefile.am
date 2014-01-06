@@ -116,7 +116,8 @@ BUILT_SOURCES = \
 appdir=$(datarootdir)/applications
 dist_app_DATA = \
 	dls_ctl.desktop \
-	dls_view.desktop
+	dls_view.desktop \
+	dlsgui.desktop
 
 mydist:
 	@REV=`hg id $(srcdir)` && \
