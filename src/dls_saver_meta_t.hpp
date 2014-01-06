@@ -154,7 +154,7 @@ void DLSSaverMetaT<T>::generate_meta_data(COMTime start_time,
 template <class T>
 T DLSSaverMetaT<T>::_meta_value(const T *buffer, unsigned int length)
 {
-    T meta_val;
+    T meta_val = 0;
 
     if (_type == DLSMetaMean)
     {

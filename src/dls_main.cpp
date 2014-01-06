@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 {
     DLSProcMother *mother_process;
     DLSProcLogger *logger_process;
-    int exit_code;
+    int exit_code = 1;
     struct rlimit rlim;
     struct passwd *pwd;
 

@@ -493,7 +493,6 @@ void DLSProcLogger::send_command(const string &cmd)
 void DLSProcLogger::_check_signals()
 {
     int status;
-    pid_t pid;
     int exit_code;
 
     if (sig_int_term) {
@@ -543,7 +542,7 @@ void DLSProcLogger::_check_signals()
     // Flush-Prozess hat sich beendet
     while (sig_child != _sig_child) {
         _sig_child++;
-        pid = wait(&status); // Zombie töten!
+        wait(&status); // Zombie töten!
         exit_code = (signed char) WEXITSTATUS(status);
         msg() << "Cleanup process exited with code " << exit_code;
         log(DLSInfo);
