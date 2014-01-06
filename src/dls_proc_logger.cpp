@@ -315,7 +315,7 @@ bool DLSProcLogger::_connect_socket()
 void DLSProcLogger::_read_write_socket()
 {
     fd_set read_fds, write_fds;
-    int select_ret, recv_ret, send_ret;
+    int select_ret, send_ret;
     struct timeval timeout;
 
     while (1) {
