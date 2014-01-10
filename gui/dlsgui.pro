@@ -63,6 +63,8 @@ FORMS += LogWindow.ui
 
 RESOURCES += dlsgui.qrc
 
+RC_FILE = dlsgui.rc
+
 TRANSLATIONS = dlsgui_de.ts
 
 #HEADERS += modeltest.h
