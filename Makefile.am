@@ -119,6 +119,9 @@ dist_app_DATA = \
 	dls_view.desktop \
 	dlsgui.desktop
 
+mimedir=$(datarootdir)/mime/packages
+dist_mime_DATA = dlsgui-mime.xml
+
 mydist:
 	@REV=`hg id $(srcdir)` && \
 		$(MAKE) dist-bzip2 distdir=$(PACKAGE)-$(VERSION)-$${REV}
