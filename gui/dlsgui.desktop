@@ -23,6 +23,7 @@ GenericName=Data Logging Service Qt GUI
 GenericName[de]=Data-Logging-Service Qt-Oberfläche
 GenericName[en]=Data Logging Service Qt GUI
 Exec=dlsgui %f
+Icon=dlsgui
 Type=Application
 Categories=Education;Engineering;
 MimeType=application/dlsgui;

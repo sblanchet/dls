@@ -116,11 +116,7 @@ BUILT_SOURCES = \
 appdir=$(datarootdir)/applications
 dist_app_DATA = \
 	dls_ctl.desktop \
-	dls_view.desktop \
-	dlsgui.desktop
-
-mimedir=$(datarootdir)/mime/packages
-dist_mime_DATA = dlsgui-mime.xml
+	dls_view.desktop
 
 mydist:
 	@REV=`hg id $(srcdir)` && \
