@@ -24,11 +24,14 @@ Version: @VERSION@
 Release: 1
 
 Summary: Data Logging Service
-License: GPL
+License: GPL-3.0+
 Vendor: Ingenieurgemeinschaft IgH GmbH
-Group: EtherLab
+Group: Productivity/Other
 Url: http://etherlab.org/en/dls
-Source: http://etherlab.org/download/dls/%{name}-%{version}.tar.bz2
+Source0: http://etherlab.org/download/dls/%{name}-%{version}.tar.bz2
+Source1: dls-rpmlintrc
+Patch0: rpath.patch
+PreReq: permissions
 BuildRoot: %_tmppath/%name-%version-root
 BuildRequires: fftw3-devel
 BuildRequires: fltk-devel
@@ -40,6 +43,8 @@ BuildRequires: libXinerama-devel
 BuildRequires: libfltk1
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: libqt4-devel
+BuildRequires: shared-mime-info
+BuildRequires: desktop-file-utils
 
 %description
 DLS is a process data logging service, capable of capturing high-frequency
@@ -50,9 +55,10 @@ year's overview or a small signal peak in fractions of a second.
 %package -n dls-devel
 Summary:        Development files for data logging service
 Summary(de):    Entwickungsdateien für den DLS
-Group:          EtherLab
-Group(de):      EtherLab
+Group:          Development/Libraries/C and C++
 Requires:       %name = %version
+Requires:       fftw3-devel
+Requires:       zlib-devel
 
 %description -n dls-devel
 The %name-devel package contains the static libraries and header files
@@ -60,6 +66,7 @@ needed for development with %name.
 
 %prep
 %setup
+%patch0 -p1
 
 %build
 %configure
@@ -78,6 +85,9 @@ make DESTDIR=${RPM_BUILD_ROOT} install
 %if "%{_vendor}" == "suse"
 install -d ${RPM_BUILD_ROOT}%{_sbindir}
 ln -s %{_sysconfdir}/init.d/dls ${RPM_BUILD_ROOT}%{_sbindir}/rcdls
+install -d ${RPM_BUILD_ROOT}/var/adm/fillup-templates
+mv ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig/dls \
+    ${RPM_BUILD_ROOT}/var/adm/fillup-templates/sysconfig.dls
 %endif
 cd widgets
 make install INSTALL_ROOT=${RPM_BUILD_ROOT}
@@ -89,14 +99,38 @@ cd ..
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
-%post -p /sbin/ldconfig
+%verifyscript
+%verify_permissions -e /usr/bin/dls_ctl
+%verify_permissions -e /usr/bin/dls_view
+%verify_permissions -e /usr/bin/dlsgui
 
-%postun -p /sbin/ldconfig
+%post
+%{fillup_and_insserv dls}
+%set_permissions /usr/bin/dls_ctl
+%set_permissions /usr/bin/dls_view
+%set_permissions /usr/bin/dlsgui
+/sbin/ldconfig
+/usr/bin/update-mime-database /usr/share/mime
+touch /usr/share/icons/hicolor
+/usr/bin/update-desktop-database
+
+%preun
+%stop_on_removal
+
+%postun
+%insserv_cleanup
+/sbin/ldconfig
+/usr/bin/update-mime-database /usr/share/mime
+touch /usr/share/icons/hicolor
+/usr/bin/update-desktop-database
+%restart_on_update
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS ChangeLog COPYING INSTALL NEWS
-%config %{_sysconfdir}/sysconfig/dls
+%doc AUTHORS ChangeLog COPYING NEWS
+%if "%{_vendor}" == "suse"
+/var/adm/fillup-templates/sysconfig.dls
+%endif
 %{_sysconfdir}/init.d/dls
 %{_sysconfdir}/profile.d/dls.sh
 %{_bindir}/dls*
@@ -104,11 +138,21 @@ cd ..
 %{_sbindir}/rcdls
 %endif
 %{_datadir}/applications/*.desktop
-%{_libdir}/libdls.so*
+%{_datadir}/mime/packages/*.xml
+%{_datadir}/icons/hicolor
+%{_datadir}/icons/hicolor/scalable
+%{_datadir}/icons/hicolor/scalable/apps
+%{_datadir}/icons/hicolor/scalable/apps/*.svg
+%{_datadir}/icons/hicolor/32x32
+%{_datadir}/icons/hicolor/32x32/apps
+%{_datadir}/icons/hicolor/32x32/apps/*.png
+%{_libdir}/libdls.so.1.0.0
 %{_libdir}/libDlsWidgets.so
 
 %files -n dls-devel
 %defattr(-,root,root,755)
+%doc INSTALL
+%{_includedir}/DlsWidgets
 %{_includedir}/DlsWidgets/Graph.h
 %{_includedir}/DlsWidgets/Layer.h
 %{_includedir}/DlsWidgets/Model.h
@@ -129,6 +173,8 @@ cd ..
 %{_includedir}/lib_job.hpp
 %{_libdir}/libdls.a
 %{_libdir}/libdls.la
+%{_libdir}/libdls.so.1
+%{_libdir}/libdls.so
 %{_libdir}/qt4/plugins/designer/libDlsWidgets.so
 
 %changelog
