@@ -67,6 +67,20 @@ RC_FILE = dlsgui.rc
 
 TRANSLATIONS = dlsgui_de.ts
 
+mimetype.path = $$PREFIX/share/mime/packages
+mimetype.files = dlsgui-mime.xml
+
+desktop.path = $$PREFIX/share/applications
+desktop.files = dlsgui.desktop
+
+icons_svg.path = $$PREFIX/share/icons/hicolor/scalable/apps
+icons_svg.files = images/dlsgui.svg images/dlsgui-view.svg
+
+icons_png.path = $$PREFIX/share/icons/hicolor/32x32/apps
+icons_png.files = images/dlsgui.png images/dlsgui-view.png
+
+INSTALLS += mimetype desktop icons_svg icons_png
+
 #HEADERS += modeltest.h
 #SOURCES += modeltest.cpp
 
