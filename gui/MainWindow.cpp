@@ -58,6 +58,8 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     connect(&scriptProcess, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(scriptError(QProcess::ProcessError)));
 
+    setWindowIcon(QPixmap(":/images/dlsgui.svg"));
+
     QSettings settings;
     restore = settings.value("RestoreOnStartup", true).toBool();
     recentFiles = settings.value("RecentFiles").toStringList();
