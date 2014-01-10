@@ -55,7 +55,18 @@ int main(int argc, char *argv[])
     translator.load(":/.qm/locale/dlsgui_" + QLocale::system().name());
     app.installTranslator(&translator);
 
-    MainWindow mainWin;
+#ifdef __unix__
+    QStringList args = app.arguments();
+    QString fileName;
+
+    if (args.count() >= 2) {
+        fileName = args[1];
+    }
+
+    MainWindow mainWin(fileName);
+#else
+    MainWindow mainWin();
+#endif
     mainWin.show();
 
     try {
