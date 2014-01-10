@@ -36,11 +36,19 @@ EXTRA_DIST = \
 	gui/SettingsDialog.cpp \
 	gui/SettingsDialog.h \
 	gui/SettingsDialog.ui \
+	gui/dlsgui-mime.xml \
+	gui/dlsgui.desktop \
 	gui/dlsgui.pro \
 	gui/dlsgui.qrc \
+	gui/dlsgui.rc \
 	gui/dlsgui_de.ts \
 	gui/images/document-new.svg \
 	gui/images/document-open.svg \
+	gui/images/dlsgui-view.png \
+	gui/images/dlsgui-view.svg \
+	gui/images/dlsgui.ico \
+	gui/images/dlsgui.png \
+	gui/images/dlsgui.svg \
 	gui/images/document-save-as.svg \
 	gui/images/document-save.svg \
 	gui/images/system-log-out.svg \
