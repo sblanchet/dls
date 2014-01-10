@@ -227,6 +227,7 @@ AC_CONFIG_FILES([
     script/Makefile
     script/init.sh
     src/Makefile
+    src/images/Makefile
 ])
 AC_OUTPUT
 
