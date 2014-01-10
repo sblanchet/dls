@@ -23,5 +23,6 @@ GenericName=Data Logging Service FLTK Job Configurator
 GenericName[de]=Data-Logging-Service FLTK-Auftragskonfigurator
 GenericName[en]=Data Logging Service FLTK Job Configurator
 Exec=dls_ctl
+Icon=dls_ctl
 Type=Application
 Categories=Education;Engineering;

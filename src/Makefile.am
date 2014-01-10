@@ -19,9 +19,14 @@
 #
 #------------------------------------------------------------------------------
 
+SUBDIRS = images
+
 REV = `$(top_srcdir)/revision.sh $(top_srcdir)`
 
 AM_CXXFLAGS = -Wall
+
+appdir=$(datarootdir)/applications
+dist_app_DATA =
 
 #------------------------------------------------------------------------------
 
@@ -119,6 +124,9 @@ dls_ctl_SOURCES = \
 	ctl_main.cpp \
 	fl_grid.cpp
 
+dist_app_DATA += \
+	dls_ctl.desktop
+
 #------------------------------------------------------------------------------
 
 dls_view_CXXFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
@@ -136,6 +144,9 @@ dls_view_SOURCES = \
 	view_main.cpp \
 	view_view_data.cpp \
 	view_view_msg.cpp
+
+dist_app_DATA += \
+	dls_view.desktop
 
 #------------------------------------------------------------------------------
 
