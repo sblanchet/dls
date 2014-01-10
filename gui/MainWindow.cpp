@@ -44,7 +44,7 @@ using namespace std;
 
 /****************************************************************************/
 
-MainWindow::MainWindow(QWidget *parent):
+MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     QMainWindow(parent),
     scriptActions(NULL),
     scriptProcess(this)
@@ -140,15 +140,23 @@ MainWindow::MainWindow(QWidget *parent):
 
     treeView->setModel(&model);
 
-    if (restore && recentFiles.size() > 0) {
-        QString path = recentFiles.front();
+    QString fileToLoad;
 
-        if (dlsGraph->load(path, &model)) {
-            currentFileName = path;
+    if (!fileName.isEmpty()) {
+        fileToLoad = fileName;
+    }
+    else if (restore && recentFiles.size() > 0) {
+        fileToLoad = recentFiles.front();
+    }
+
+    if (!fileToLoad.isEmpty()) {
+        if (dlsGraph->load(fileToLoad, &model)) {
+            currentFileName = fileToLoad;
             setWindowFilePath(currentFileName);
+            addRecentFile(currentFileName);
         }
         else {
-            qWarning() << "failed to load" << path;
+            qWarning() << "failed to load" << fileToLoad;
         }
     }
 }

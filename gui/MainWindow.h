@@ -40,7 +40,7 @@ class MainWindow:
     Q_OBJECT
 
     public:
-        MainWindow(QWidget * = 0);
+        MainWindow(const QString &fileName = QString(), QWidget * = 0);
         ~MainWindow();
 
     private:
