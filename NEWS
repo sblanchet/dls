@@ -6,6 +6,12 @@ vim700: spelllang=en spell
 
 ------------------------------------------------------------------------------
 
+Version 1.3.1
+
+* Added Icons, MIME information and desktop files for DLSGUI.
+* Accept first argument as file to load on Unix.
+* Spec file improvements; building on openSUSE build service.
+
 Version 1.3.0
 
 * Added Qt-based dlsgui.
