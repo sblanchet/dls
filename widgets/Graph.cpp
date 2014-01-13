@@ -44,6 +44,7 @@ using QtDls::Model;
 #define DROP_TOLERANCE 10
 #define MSG_ROW_HEIGHT 16
 #define MSG_LINES_HEIGHT 3
+#define MIN_TOUCH_HEIGHT 20
 
 /****************************************************************************/
 
@@ -1171,7 +1172,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     QRect msgSplitterRect(contentsRect());
     msgSplitterRect.setTop(
             contentsRect().bottom() + 1 - messageAreaHeight - splitterWidth);
-    msgSplitterRect.setHeight(splitterWidth);
+    msgSplitterRect.setHeight(max(splitterWidth, MIN_TOUCH_HEIGHT));
 
     bool last = mouseOverMsgSplitter;
     mouseOverMsgSplitter =
@@ -1183,7 +1184,6 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
         scrollBar.value();
     QRect splitterRect(contentsRect());
-    splitterRect.setHeight(splitterWidth);
     if (scrollBarNeeded) {
         splitterRect.setWidth(contentsRect().width() - scrollBar.width());
     }
@@ -1198,6 +1198,13 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
             break;
         }
         splitterRect.moveTop(top + (*s)->getHeight());
+        QList<Section *>::iterator next = s + 1;
+        int height = splitterWidth;
+        if (next != sections.end()) {
+            height += (*next)->legendHeight();
+        }
+        height = max(height, MIN_TOUCH_HEIGHT);
+        splitterRect.setHeight(height);
         if (splitterRect.contains(event->pos())) {
             sec = *s;
             break;
@@ -1388,6 +1395,7 @@ void Graph::paintEvent(
     timeScaleRect.setHeight(height);
     scale.draw(painter, timeScaleRect);
 
+    // Horizontal line above top section
     QPen verLinePen;
     painter.setPen(verLinePen);
     painter.drawLine(contentsRect().left(),
