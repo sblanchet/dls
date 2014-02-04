@@ -86,7 +86,7 @@ class Q_DECL_EXPORT Section
 
         void resize(int);
         int getScaleWidth() const { return scale.getWidth(); }
-        void draw(QPainter &, const QRect &, int, int);
+        void draw(QPainter &, const QRect &, int, int, bool);
         int legendHeight() const { return legend.size().height(); }
 
         Layer *appendLayer(QtDls::Channel *);

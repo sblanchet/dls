@@ -366,7 +366,7 @@ void spreadGroup(QList<Layer::MeasureData> &list,
 /****************************************************************************/
 
 void Section::draw(QPainter &painter, const QRect &rect, int measureX,
-        int scaleWidth)
+        int scaleWidth, bool drawBusy)
 {
     QRect legendRect(rect);
     legendRect.setHeight(legend.size().height());
@@ -384,7 +384,7 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
         legend.drawContents(&painter);
         painter.restore();
 
-        if (busy) {
+        if (busy && drawBusy) {
             QRect busyRect(legendRect);
             busyRect.setWidth(legendRect.height());
             busyRect.moveRight(legendRect.right());
