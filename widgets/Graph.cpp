@@ -959,7 +959,7 @@ void Graph::print()
             drawSection.resize(page.width());
             drawSection.loadData(scale.getStart(), scale.getEnd(),
                 dataWidth, &worker, jobSet);
-            drawSection.draw(painter, r, measurePos, scaleWidth);
+            drawSection.draw(painter, r, measurePos, scaleWidth, false);
 
             QPen pen;
             painter.setPen(pen);
@@ -1433,7 +1433,7 @@ void Graph::paintEvent(
         QRect sectionRect(dataRect);
         sectionRect.setTop(top - scrollBar.value());
         sectionRect.setHeight((*s)->getHeight());
-        (*s)->draw(painter, sectionRect, measurePos, scaleWidth);
+        (*s)->draw(painter, sectionRect, measurePos, scaleWidth, true);
 
         QRect splitterRect(sectionRect);
         splitterRect.setTop(top + (*s)->getHeight() - scrollBar.value());
