@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
     MainWindow mainWin(fileName);
 #else
-    MainWindow mainWin();
+    MainWindow mainWin;
 #endif
     mainWin.show();
 
