@@ -525,7 +525,6 @@ void DLSProcLogger::_check_signals()
             msg() << "Job is no longer running.";
             log(DLSInfo);
         }
-
         else { // Erfassung soll weiterlaufen
             if (_state == dls_waiting_for_trigger) {
                 _state = dls_listening;
