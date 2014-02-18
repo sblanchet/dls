@@ -45,6 +45,7 @@ AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
+AC_CHECK_PDCOM
 
 #------------------------------------------------------------------------------
 # Daemon
