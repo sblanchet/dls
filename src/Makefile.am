@@ -23,8 +23,6 @@ SUBDIRS = images
 
 REV = `$(top_srcdir)/revision.sh $(top_srcdir)`
 
-AM_CXXFLAGS = -Wall
-
 appdir=$(datarootdir)/applications
 dist_app_DATA =
 
@@ -48,7 +46,7 @@ lib_LTLIBRARIES = libdls.la
 
 #------------------------------------------------------------------------------
 
-libdls_la_CXXFLAGS = @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+libdls_la_CXXFLAGS = -Wall @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
 	-version-info @LIBDLS_VERSION@
 libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
@@ -87,9 +85,27 @@ include_HEADERS = \
 
 #------------------------------------------------------------------------------
 
-dlsd_CXXFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
-dlsd_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
-dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm
+dlsd_CPPFLAGS = -DREVISION=\"$(REV)\"
+
+dlsd_CXXFLAGS = \
+	-Wall \
+	@FFTW3_CFLAGS@ \
+	@ZLIB_CFLAGS@ \
+	$(PDCOM_CPPFLAGS)
+
+dlsd_LDFLAGS = \
+	-L$(builddir)/.libs \
+	@FFTW3_LDFLAGS@ \
+	@ZLIB_LDFLAGS@ \
+	$(PDCOM_LDFLAGS)
+
+dlsd_LDADD = \
+	@FFTW3_LIBS@ \
+	-ldls \
+	@ZLIB_LIBS@ \
+	$(PDCOM_LIBS) \
+	-lm
+
 dlsd_DEPENDENCIES = libdls.la
 
 dlsd_SOURCES = \
@@ -103,7 +119,7 @@ dlsd_SOURCES = \
 
 #------------------------------------------------------------------------------
 
-dls_ctl_CXXFLAGS = -fPIE -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
+dls_ctl_CXXFLAGS = -Wall -fPIE -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
 dls_ctl_LDFLAGS = -pie -L$(builddir)/.libs -pthread
 dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls
 dls_ctl_DEPENDENCIES = libdls.la
@@ -129,7 +145,7 @@ dist_app_DATA += \
 
 #------------------------------------------------------------------------------
 
-dls_view_CXXFLAGS = -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
+dls_view_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
 	@FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_view_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ -pthread
 dls_view_LDADD = @FLTK_LDFLAGS@ -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
@@ -150,7 +166,7 @@ dist_app_DATA += \
 
 #------------------------------------------------------------------------------
 
-dls_CXXFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
+dls_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_LDFLAGS = -L$(builddir)/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ -pthread
 dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
 dls_DEPENDENCIES = libdls.la
