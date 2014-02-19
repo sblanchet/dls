@@ -82,19 +82,21 @@ public:
     //@}
 
     //@{
-    void process_data(COMTime, int, const string &);
     uint64_t data_size() const;
     //@}
 
-    void ack_received(const string &);
-    void message(const COMXMLTag *);
+    void message(COMTime, const std::string &, const std::string &);
+
     void finish();
-    void discard_data();
+    void discard();
 
     const COMJobPreset *preset() const;
 
+    void notify_error(int);
+    void notify_data();
+
 private:
-    DLSProcLogger *_parent_proc; /**< Zeiger auf den besitzenden
+    DLSProcLogger * const _parent_proc; /**< Zeiger auf den besitzenden
                                     Logging-Prozess */
     string _dls_dir; /**< DLS-Datenverzeichnis */
     COMJobPreset _preset; /**< Auftragsvorgaben */
@@ -114,10 +116,8 @@ private:
     void _clear_loggers();
     void _sync_loggers(SyncLoggerMode);
     bool _add_logger(const COMChannelPreset *);
-    bool _change_logger(DLSLogger *, const COMChannelPreset *);
-    void _remove_logger(DLSLogger *);
+    void _stop_logger(DLSLogger *);
     DLSLogger *_logger_exists_for_channel(const string &);
-    string _generate_id();
 };
 
 /*****************************************************************************/

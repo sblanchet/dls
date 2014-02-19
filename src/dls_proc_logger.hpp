@@ -31,86 +31,85 @@ using namespace std;
 
 /*****************************************************************************/
 
+#include <pdcom/Process.h>
+
+/*****************************************************************************/
+
 #include "com_xml_parser.hpp"
 #include "com_time.hpp"
 #include "dls_job.hpp"
 
 /*****************************************************************************/
-
-enum DLSProcLoggerState
-{
-    dls_connecting,
-    dls_waiting_for_channels,
-    dls_getting_channels,
-    dls_waiting_for_trigger,
-    dls_listening,
-    dls_getting_data
-};
-
 /*****************************************************************************/
 
 /**
    Logging-Prozess
 */
 
-class DLSProcLogger
+class DLSProcLogger:
+	private PdCom::Process,
+    private PdCom::Subscriber // for trigger variable
 {
 public:
     DLSProcLogger(const string &, unsigned int);
     ~DLSProcLogger();
 
     int start();
-    void send_command(const string &);
-    double max_frequency() const;
-    const list<COMRealChannel> *real_channels() const;
+
+	PdCom::Variable *findVariable(const std::string &path) const {
+		return PdCom::Process::findVariable(path);
+	}
+
+    void notify_error(int);
+    void notify_data(void);
 
 private:
     string _dls_dir;
     unsigned int _job_id;
-    DLSJob *_job;
+    DLSJob _job;
     int _socket;
-    COMRingBuffer *_ring_buf;
+	bool _write_request;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
-    string _to_send;
     bool _exit;
     int _exit_code;
-    COMXMLParser _xml;
-    COMXMLTag _tag;
-    DLSProcLoggerState _state;
-    int _msr_version;
-    list<COMRealChannel> _real_channels;
-    COMTime _data_time;
-    COMTime _first_data_time;
-    bool _got_channels;
-    struct timeval _last_trigger_requested;
-    struct timeval _last_watchdog;
-    COMTime _last_data_received;
+	enum {
+		Connecting,
+		Waiting,
+		Data
+	} _state;
+    COMTime _quota_start_time;
+    COMTime _last_watchdog_time;
+    COMTime _last_receive_time;
     bool _receiving_data;
-    unsigned int _buffer_level;
-    COMTime _last_read_time;
+    PdCom::Variable *_trigger;
 
     void _start();
     bool _connect_socket();
     void _read_write_socket();
     void _read_socket();
+    void _subscribe_trigger();
     void _check_signals();
-    void _parse_ring_buffer();
-    void _process_tag();
-    void _save_data();
-    void _do_trigger();
+    void _reload();
     void _do_watchdogs();
     void _do_quota();
     void _create_pid_file();
     void _remove_pid_file();
+
+	// PdCom::Process
+	bool clientInteraction(const std::string &, const std::string &,
+			const std::string &, std::list<ClientInteraction> &);
+	void sigConnected();
+	void sendRequest();
+	int sendData(const char *, size_t);
+	void processMessage(const PdCom::Time &, LogLevel_t, unsigned int,
+			const std::string &) const;
+	void protocolLog(LogLevel_t, const std::string &) const;
+
+	// from PdCom::Subscriber()
+    void notify(PdCom::Variable *);
+	void notifyDelete(PdCom::Variable *);
 };
-
-/*****************************************************************************/
-
-inline const list<COMRealChannel> *DLSProcLogger::real_channels() const
-{
-    return &_real_channels;
-}
 
 /*****************************************************************************/
 

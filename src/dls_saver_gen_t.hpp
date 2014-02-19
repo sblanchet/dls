@@ -86,6 +86,7 @@ public:
     virtual void process_data(const void *buffer,
                               unsigned int length,
                               COMTime time_of_last) = 0;
+    virtual void process_one(const void *buffer, COMTime time_of_last) = 0;
 };
 
 /*****************************************************************************/
@@ -98,7 +99,9 @@ public:
 */
 
 template <class T>
-class DLSSaverGenT : public DLSSaverGen, public DLSSaverT<T>
+class DLSSaverGenT:
+	public DLSSaverGen,
+	public DLSSaverT<T>
 {
     using DLSSaverT<T>::_block_buf;
     using DLSSaverT<T>::_block_buf_index;
@@ -121,6 +124,7 @@ public:
 
     void add_meta_saver(DLSMetaType type);
     void process_data(const void *, unsigned int, COMTime);
+    void process_one(const void *, COMTime);
     void flush();
 
 private:
@@ -128,6 +132,7 @@ private:
     list<DLSSaverMetaT<T> *> _meta_savers; /**< Liste der aktiven Meta-Saver */
     bool _savers_created; /**< Wurden bereits alle Meta-Saver erstellt? */
     bool _finished; /**< true, wenn keine Daten mehr im Speicher */
+    uint64_t _processed_values; /**< Processed values since start. */
 
     void _fill_buffers(const T *, unsigned int, COMTime);
 
@@ -141,8 +146,6 @@ private:
     int _meta_level() const;
     string _meta_type() const;
 
-    void _convert_endianess(unsigned char *, unsigned int) const;
-
     DLSSaverGenT(); // Default-Konstruktor darf nicht aufgerufen werden!
 };
 
@@ -155,11 +158,14 @@ private:
 */
 
 template <class T>
-DLSSaverGenT<T>::DLSSaverGenT(DLSLogger *parent_logger)
-    : DLSSaverT<T>(parent_logger)
+DLSSaverGenT<T>::DLSSaverGenT(
+        DLSLogger *parent_logger
+        ):
+    DLSSaverT<T>(parent_logger),
+    _savers_created(false),
+    _finished(true),
+    _processed_values(0)
 {
-    _savers_created = false;
-    _finished = true;
 }
 
 /*****************************************************************************/
@@ -239,10 +245,14 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
     unsigned int values_in_buffer;
     stringstream err;
 
-    if (size == 0) return;
+    if (size == 0) {
+		return;
+	}
 
     // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-    if (size % sizeof(T)) throw EDLSSaver("Illegal data size!");
+    if (size % sizeof(T)) {
+		throw EDLSSaver("Illegal data size!");
+	}
 
     values_in_buffer = size / sizeof(T);
 
@@ -250,20 +260,20 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
     time_of_first = time_of_last - diff_time; // Zeit des ersten neuen Wertes
 
     // Wenn Werte in den Puffern sind
-    if (_block_buf_index || _meta_buf_index)
-    {
+    if (_block_buf_index || _meta_buf_index) {
         // Zeitabstände errechnen
-        target_diff.from_dbl_time(1 / freq);         // Erwarteter Zeitabstand
+        target_diff.from_dbl_time(1 / freq); // Erwarteter Zeitabstand
         actual_diff = time_of_first - _time_of_last; // Tats. Zeitabstand
 
         // Relativen Fehler errechnen
         error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
             / target_diff.to_dbl() * 100;
-        if (error_percent < 0) error_percent *= -1;
+        if (error_percent < 0) {
+			error_percent *= -1;
+		}
 
         // Toleranzbereich verletzt?
-        if (error_percent > ALLOWED_TIME_VARIANCE)
-        {
+        if (error_percent > ALLOWED_TIME_VARIANCE) {
             // Fehler! Prozess beenden!
             err << "Time diff of " << actual_diff;
             err << " (expected: " << target_diff
@@ -274,56 +284,77 @@ void DLSSaverGenT<T>::process_data(const void *buffer,
         }
     }
 
-    // Endianess konvertieren, falls nötig
-    if (arch != source_arch)
-        _convert_endianess((unsigned char *) buffer, size);
-
     // Daten speichern
     _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
+    _processed_values += values_in_buffer;
 }
 
 /*****************************************************************************/
 
-/**
-   Konvertieren der Endianess
+/** Process one value.
+ *
+   Diese Methode führt Plausiblitätsprüfungen (vergangene Zeit seit dem
+   letzten Datenwert) durch, um die Daten schliesslich als Array vom Typ T an
+   die Methode _fill_buffers() weiterzuleiten.
 
-   Bemerkung: Konnte von mir noch nicht getestet werden! fp
+   Wird der zeitliche Toleranzbereich verletzt, wird eine Exception geworfen.
+   Der Prozess sollte dann beendet werden.
 
-   \param buffer Adresse des Datenspeichers
-   \param size Anzahl der Bytes im Speicher
+   \param buffer Adresse des Datenpuffers
+   \param time Zeit des Datenwertes im Puffer
+   \throw EDLSSaver Fehler beim Speichern der Daten
+   \throw EDLSTimeTolerance Toleranzfehler! Prozess beenden!
 */
 
 template <class T>
-void DLSSaverGenT<T>::_convert_endianess(unsigned char *buffer,
-                                         unsigned int size) const
+void DLSSaverGenT<T>::process_one(
+		const void *buffer,
+		COMTime time
+		)
 {
-    unsigned int i, j, k, bytes_per_value, values;
-    unsigned char tmp;
+    COMTime actual_diff, target_diff;
+    float error_percent;
+    stringstream err;
 
-    bytes_per_value = sizeof(T);
-    values = size / bytes_per_value;
+#if 0
+    if (_parent_logger->channel_preset()->sample_frequency == 500.0) {
+        cerr << time.to_str()
+            << " d=" << _time_of_last.diff_str_to(time) << endl;
+    }
+#endif
 
-    // "Byteweise drehen"
-    if ((arch == LittleEndian && source_arch == BigEndian) ||
-        (arch == BigEndian && source_arch == LittleEndian))
-    {
-        for (i = 0; i < values; i++)
-        {
-            for (j = 0; j < bytes_per_value / 2; j++)
-            {
-                k = bytes_per_value - j - 1;
-                tmp = buffer[j];
-                buffer[j] = buffer[k];
-                buffer[k] = tmp;
-            }
+    // Wenn Werte in den Puffern sind
+    if (_block_buf_index || _meta_buf_index) {
+        // Zeitabstände errechnen
+		double freq = _parent_logger->channel_preset()->sample_frequency;
+        target_diff.from_dbl_time(1 / freq); // Erwarteter Zeitabstand
+        actual_diff = time - _time_of_last; // Tats. Zeitabstand
 
-            buffer += bytes_per_value;
+        // Relativen Fehler errechnen
+        error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
+            / target_diff.to_dbl() * 100.0;
+        if (error_percent < 0.0) {
+			error_percent *= -1.0;
+		}
+
+        // Toleranzbereich verletzt?
+        if (error_percent > ALLOWED_TIME_VARIANCE) {
+            // Fehler! Prozess beenden!
+            err << "Time diff of " << actual_diff;
+            err << " (expected: " << target_diff
+                << ", error: " << error_percent << "%)";
+            err << " channel \"" << _parent_logger->channel_preset()->name
+                << "\".";
+            cerr << __func__ << err.str()
+                << " processed=" << _processed_values
+                << " Logger=" << _parent_logger << endl;
+            throw EDLSTimeTolerance(err.str());
         }
     }
-    else
-    {
-        throw EDLSTimeTolerance("Unknown architecture conversion!");
-    }
+
+    // Daten speichern
+    _fill_buffers((T *) buffer, 1, time);
+    _processed_values++;
 }
 
 /*****************************************************************************/
@@ -359,14 +390,17 @@ void DLSSaverGenT<T>::_fill_buffers(const T *buffer,
     _finished = false;
 
     // Alle Werte übernehmen
-    for (unsigned int i = 0; i < length; i++)
-    {
+    for (unsigned int i = 0; i < length; i++) {
         // Zeit des zuletzt eingefügten Wertes setzen
         _time_of_last = time_of_first + time_of_one * i;
 
         // Bei Blockanfang, Zeiten vermerken
-        if (_block_buf_index == 0) _block_time = _time_of_last;
-        if (_meta_buf_index == 0) _meta_time = _time_of_last;
+        if (_block_buf_index == 0) {
+            _block_time = _time_of_last;
+        }
+        if (_meta_buf_index == 0) {
+            _meta_time = _time_of_last;
+        }
 
         // Wert in die Puffer übernehmen
         _block_buf[_block_buf_index++] = buffer[i];
