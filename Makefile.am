@@ -122,7 +122,7 @@ BUILT_SOURCES = \
 	dls.spec
 
 mydist:
-	@REV=`hg id $(srcdir)` && \
+	@REV=`hg id -i $(srcdir)` && \
 		$(MAKE) dist-bzip2 distdir=$(PACKAGE)-$(VERSION)-$${REV}
 
 dist-hook:
