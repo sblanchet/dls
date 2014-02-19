@@ -46,6 +46,7 @@ using namespace std;
 //#define DEBUG_SIZES
 //#define DEBUG_SEND
 //#define DEBUG_REC
+//#define DEBUG_NOTIFY
 
 /*****************************************************************************/
 
@@ -469,6 +470,15 @@ void DLSProcLogger::_subscribe_trigger()
         return;
     }
 
+    try {
+        pv->poll(this);
+    }
+    catch (PdCom::Exception &e) {
+        msg() << "Trigger polling failed: " << e.what();
+        log(DLSError);
+        return;
+    }
+
     _trigger = pv;
 }
 
@@ -546,6 +556,11 @@ void DLSProcLogger::_reload()
         }
     }
     else { // not triggered
+        if (_trigger) {
+            _trigger->unsubscribe(this);
+            _trigger = NULL;
+        }
+
         if (_state == Waiting) {
             _state = Data;
             _last_receive_time.set_now();
@@ -918,7 +933,7 @@ void DLSProcLogger::notify(PdCom::Variable *pv)
 
     pv->getValue(&run);
 
-#ifdef DEBUG
+#ifdef DEBUG_NOTIFY
     cout << __func__ << ": " << run << endl;
 #endif
 
@@ -949,7 +964,7 @@ void DLSProcLogger::notify(PdCom::Variable *pv)
 
 void DLSProcLogger::notifyDelete(PdCom::Variable *pv)
 {
-#ifdef DEBUG
+#ifdef DEBUG_NOTIFY
     cout << __func__ << endl;
 #endif
 
