@@ -113,9 +113,7 @@ struct COMRealChannel
 {
     string name;            /**< Name des Kanals */
     string unit;            /**< Einheit */
-    int index;              /**< Index */
     COMChannelType type;    /**< Kanaltyp (TUINT, TDBL, usw.) */
-    unsigned int bufsize;   /**< Größe des Kanalpuffers im MSR-Modul */
     unsigned int frequency; /**< Maximale Abtastrate des Kanals */
 };
 

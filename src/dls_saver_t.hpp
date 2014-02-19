@@ -55,10 +55,12 @@ using namespace std;
    Allgemeine Exception eines Saver-Objekts
 */
 
-class EDLSSaver : public COMException
+class EDLSSaver:
+    public COMException
 {
 public:
-    EDLSSaver(const string &pmsg) : COMException(pmsg) {};
+    EDLSSaver(const string &pmsg):
+        COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -72,10 +74,12 @@ public:
    einen festgelegten Grenzwert überschreitet.
 */
 
-class EDLSTimeTolerance : public COMException
+class EDLSTimeTolerance:
+    public COMException
 {
 public:
-    EDLSTimeTolerance(const string &pmsg) : COMException(pmsg) {};
+    EDLSTimeTolerance(const string &pmsg):
+        COMException(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -97,7 +101,7 @@ public:
     virtual ~DLSSaverT();
 
 protected:
-    DLSLogger *_parent_logger;        /**< Zeiger auf das besitzende
+    DLSLogger * const _parent_logger; /**< Zeiger auf das besitzende
                                          Logger-Objekt */
     T *_block_buf;                    /**< Array von Datenwerten, die als Block
                                          in die entsprechende Datei gespeichert
@@ -164,100 +168,86 @@ private:
 */
 
 template <class T>
-DLSSaverT<T>::DLSSaverT(DLSLogger *parent_logger)
+DLSSaverT<T>::DLSSaverT(
+        DLSLogger *parent_logger
+        ):
+    _parent_logger(parent_logger),
+    _block_buf(NULL),
+    _meta_buf(NULL),
+    _block_buf_index(0U),
+    _block_buf_size(_parent_logger->channel_preset()->block_size),
+    _meta_buf_index(0U),
+    _meta_buf_size(_parent_logger->channel_preset()->meta_reduction),
+    _compression(NULL)
 {
     stringstream err;
-    unsigned int dim;
-    double acc;
 
-    _parent_logger = parent_logger;
-
-    _block_buf_size = _parent_logger->channel_preset()->block_size;
-    _block_buf_index = 0;
-    _meta_buf_size = _parent_logger->channel_preset()->meta_reduction;
-    _meta_buf_index = 0;
-
-    _block_buf = 0;
-    _meta_buf = 0;
-    _compression = 0;
-
-    try
-    {
+    try {
         _block_buf = new T[_block_buf_size];
         _meta_buf = new T[_meta_buf_size];
     }
-    catch (...)
-    {
+    catch (...) {
         throw EDLSSaver("Could not allocate memory for buffers!");
     }
 
-    try
-    {
-        if (_parent_logger->channel_preset()->format_index == DLS_FORMAT_ZLIB)
-        {
+    try {
+        if (_parent_logger->channel_preset()->format_index ==
+                DLS_FORMAT_ZLIB) {
             _compression = new COMCompressionT_ZLib<T>();
         }
         else if (_parent_logger->channel_preset()->format_index
-                 == DLS_FORMAT_MDCT)
-        {
-            dim = _parent_logger->channel_preset()->mdct_block_size;
-            acc = _parent_logger->channel_preset()->accuracy;
+                 == DLS_FORMAT_MDCT) {
+            unsigned int dim =
+                _parent_logger->channel_preset()->mdct_block_size;
+            double acc = _parent_logger->channel_preset()->accuracy;
 
-            if (typeid(T) == typeid(float))
-            {
+            if (typeid(T) == typeid(float)) {
                 _compression = (COMCompressionT<T> *)
                     new COMCompressionT_MDCT<float>(dim, acc);
             }
-            else if (typeid(T) == typeid(double))
-            {
+            else if (typeid(T) == typeid(double)) {
                 _compression = (COMCompressionT<T> *)
                     new COMCompressionT_MDCT<double>(dim, acc);
             }
-            else
-            {
+            else {
                 err << "MDCT only suitable for";
                 err << " floating point types, not for "
                     << typeid(T).name() << "!";
             }
         }
         else if (_parent_logger->channel_preset()->format_index
-                 == DLS_FORMAT_QUANT)
-        {
-            acc = _parent_logger->channel_preset()->accuracy;
+                 == DLS_FORMAT_QUANT) {
+            double acc = _parent_logger->channel_preset()->accuracy;
 
-            if (typeid(T) == typeid(float))
-            {
+            if (typeid(T) == typeid(float)) {
                 _compression = (COMCompressionT<T> *)
                     new COMCompressionT_Quant<float>(acc);
             }
-            else if (typeid(T) == typeid(double))
-            {
+            else if (typeid(T) == typeid(double)) {
                 _compression = (COMCompressionT<T> *)
                     new COMCompressionT_Quant<double>(acc);
             }
-            else
-            {
+            else {
                 err << "Quantization only suitable for";
                 err << " floating point types, not for "
                     << typeid(T).name() << "!";
             }
         }
-        else
-        {
+        else {
             err << "Unknown channel format index "
                 << _parent_logger->channel_preset()->format_index;
         }
     }
-    catch (ECOMCompression &e)
-    {
+    catch (ECOMCompression &e) {
         throw EDLSSaver(e.msg);
     }
-    catch (...)
-    {
+    catch (...) {
         throw EDLSSaver("Could not allocate memory for compression object!");
     }
 
-    if (err.str() != "") throw EDLSSaver(err.str());
+    if (err.str() != "") {
+        throw EDLSSaver(err.str());
+    }
 }
 
 /*****************************************************************************/

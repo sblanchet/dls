@@ -383,12 +383,8 @@ void CTLDialogChannels::_thread_function()
                                         channel.unit =
                                             tag->att("unit")->to_str();
                                     }
-                                    channel.index =
-                                        tag->att("index")->to_int();
                                     channel.frequency =
                                         tag->att("HZ")->to_int();
-                                    channel.bufsize =
-                                        tag->att("bufsize")->to_int();
 
                                     type = tag->att("typ")->to_str();
 
