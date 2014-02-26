@@ -26,6 +26,7 @@
 
 #include <string>
 #include <list>
+#include <set>
 using namespace std;
 
 #include "com_exception.hpp"
@@ -66,6 +67,7 @@ namespace LibDLS
         list<Channel> &channels();
         Channel *channel(unsigned int);
         Channel *find_channel(unsigned int);
+        set<Channel *> find_channels_by_name(const std::string &);
 
         const string &path() const;
         unsigned int id() const;
