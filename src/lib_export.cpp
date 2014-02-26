@@ -20,6 +20,8 @@
  *****************************************************************************/
 
 #include <sstream>
+#include <limits>
+#include <iomanip>
 using namespace std;
 
 #include "lib_export.hpp"
@@ -86,6 +88,8 @@ void ExportAscii::begin(
     _file << "% Channel: " << channel.name() << endl;
     _file << "%    Unit: " << channel.unit() << endl;
     _file << "%" << endl;
+
+    _file << setprecision(std::numeric_limits<long double>::digits10);
 }
 
 /*****************************************************************************/
