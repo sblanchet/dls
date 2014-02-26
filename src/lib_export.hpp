@@ -64,7 +64,8 @@ namespace LibDLS
         Export();
         virtual ~Export();
 
-        virtual void begin(const Channel &, const string &) = 0;
+        virtual void begin(const Channel &, const string &,
+                const string & = string()) = 0;
         virtual void data(const Data *) = 0;
         virtual void end() = 0;
     };
@@ -77,7 +78,8 @@ namespace LibDLS
         ExportAscii();
         ~ExportAscii();
 
-        void begin(const Channel &, const string &);
+        void begin(const Channel &, const string &,
+                const string & = string());
         void data(const Data *);
         void end();
 
@@ -93,7 +95,8 @@ namespace LibDLS
         ExportMat4();
         ~ExportMat4();
 
-        void begin(const Channel &, const string &);
+        void begin(const Channel &, const string &,
+                const string & = string());
         void data(const Data *);
         void end();
 

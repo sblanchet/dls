@@ -34,6 +34,7 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <set>
 using namespace std;
 
 #include "lib_dir.hpp"
@@ -48,7 +49,8 @@ static string dls_dir_path;
 static string dls_export_dir;
 static string dls_export_format;
 static unsigned int job_id = 0;
-static list<unsigned int> channel_indices;
+static list<unsigned int> channel_indices; // FIXME replace with set
+static set<string> paths;
 static COMTime start_time;
 static COMTime end_time;
 static unsigned int decimation = 1;
@@ -71,6 +73,13 @@ ExportInfo;
 
 /*****************************************************************************/
 
+struct ExportChannel {
+    Channel *channel;
+    string filename;
+};
+
+/*****************************************************************************/
+
 int export_data_callback(Data *, void *);
 void draw_progress(double percentage);
 void export_get_environment();
@@ -85,8 +94,7 @@ int export_main(int argc, char *argv[])
     Directory dls_dir;
     Job *job;
     list<unsigned int>::iterator index_i;
-    list<Channel *> channels;
-    list<Channel *>::iterator channel_i;
+    list<ExportChannel> channels;
     list<Channel>::iterator job_channel_i;
     Channel *channel;
     COMTime channels_start, channels_end, now;
@@ -143,14 +151,68 @@ int export_main(int argc, char *argv[])
                  << "\" to list available channels." << endl;
             exit(1);
         }
-        channels.push_back(channel);
+        ExportChannel ec;
+        ec.channel = channel;
+        stringstream str;
+        str << "channel" << *index_i;
+        ec.filename = str.str();
+        channels.push_back(ec);
     }
 
-    if (channels.empty()) {
+    for (set<string>::const_iterator path_i = paths.begin();
+         path_i != paths.end(); path_i++) {
+
+        string name;
+        string filename;
+        string::size_type idx = path_i->find(':');
+        if (idx == string::npos) { // no colon found
+            name = *path_i;
+        }
+        else {
+            filename = path_i->substr(0, idx);
+            name = path_i->substr(idx + 1);
+        }
+
+        set<Channel *> chs = job->find_channels_by_name(name);
+
+        if (chs.empty()) {
+            cerr << "ERROR: No such channel - " << *path_i << "." << endl;
+            cerr << "Call \"dls list -j " << job_id
+                 << "\" to list available channels." << endl;
+            exit(1);
+        }
+
+        if (chs.size() > 1) {
+            cerr << "ERROR: Channel " << *path_i << " is not unique." << endl;
+            cerr << "Call \"dls list -j " << job_id
+                 << "\" to list available channels." << endl;
+            exit(1);
+        }
+
+        ExportChannel ec;
+        set<Channel *>::iterator ch_i = chs.begin();
+        ec.channel = *ch_i;
+        if (filename.empty()) {
+            stringstream str;
+            str << "channel" << ec.channel->dir_index();
+            ec.filename = str.str();
+        }
+        else {
+            ec.filename = filename;
+        }
+        channels.push_back(ec);
+    }
+
+    if (channel_indices.empty() && paths.empty()) {
         for (job_channel_i = job->channels().begin();
              job_channel_i != job->channels().end();
              job_channel_i++) {
-            channels.push_back(&(*job_channel_i));
+            ExportChannel ec;
+            ec.channel = &(*job_channel_i);
+            stringstream str;
+            str << "channel" << job_channel_i->dir_index();
+            ec.filename = str.str();
+            channels.push_back(ec);
         }
     }
 
@@ -160,10 +222,10 @@ int export_main(int argc, char *argv[])
     }
 
     cout << "Channels to export:" << endl;
-    for (channel_i = channels.begin();
+    for (list<ExportChannel>::const_iterator channel_i = channels.begin();
          channel_i != channels.end();
          channel_i++) {
-        channel = *channel_i;
+        channel = channel_i->channel;
         cout << "  (" << channel->dir_index() << ") "
             << channel->name() << endl;
 
@@ -233,14 +295,16 @@ int export_main(int argc, char *argv[])
         / (end_time - start_time).to_dbl();
 
     // actual exporting
-    for (channel_i = channels.begin();
-         channel_i != channels.end();
-         channel_i++) {
-        channel = *channel_i;
+    for (list<ExportChannel>::const_iterator channel_i = channels.begin();
+         channel_i != channels.end(); channel_i++) {
+        channel = channel_i->channel;
 
         try {
-            for (exp_i = exporters.begin(); exp_i != exporters.end(); exp_i++)
-                (*exp_i)->begin(*channel, dls_export_dir);
+            for (exp_i = exporters.begin();
+                    exp_i != exporters.end(); exp_i++) {
+                (*exp_i)->begin(*channel, dls_export_dir,
+                        channel_i->filename);
+            }
         } catch (ExportException &e) {
             cerr << "ERROR: Beginning export file: " << e.msg << endl;
             exit(1);
@@ -291,6 +355,14 @@ int export_main(int argc, char *argv[])
               << end_time.to_real_time() << endl
               << "           duration: "
               << start_time.diff_str_to(end_time) << endl << endl;
+
+    for (list<ExportChannel>::const_iterator channel_i = channels.begin();
+         channel_i != channels.end(); channel_i++) {
+        channel = channel_i->channel;
+        info_file << channel_i->filename << ": " << channel->name() << endl;
+    }
+
+    info_file << endl;
 
     info_file.close();
 
@@ -517,7 +589,9 @@ void export_get_options(int argc, char *argv[])
     int c;
 
     while (1) {
-        if ((c = getopt(argc, argv, "d:o:f:amj:c:s:e:n:qh")) == -1) break;
+        if ((c = getopt(argc, argv, "d:o:f:amj:c:p:s:e:n:qh")) == -1) {
+            break;
+        }
 
         switch (c) {
             case 'd':
@@ -553,6 +627,10 @@ void export_get_options(int argc, char *argv[])
                          << e << endl;
                     exit(1);
                 }
+                break;
+
+            case 'p':
+                paths.insert(optarg);
                 break;
 
             case 's':
@@ -631,8 +709,8 @@ void export_print_usage()
          << " Default: $DLS_DIR" << endl
          << "   -o DIR         Output directory."
          << " Default: $DLS_EXPORT_DIR or \".\"" << endl
-         << "   -f NAMEFMT     Naming format for export directory."
-         << " See strftime(3)." << endl
+         << "   -f NAMEFMT     Naming format for export directory." << endl
+         << "                  See strftime(3)." << endl
          << "                  Default: $DLS_EXPORT_FMT"
          << " or \"dls-export-%Y-%m-%d-%H-%M-%S\"" << endl
          << "   -a             Enable ASCII exporter" << endl
@@ -641,6 +719,9 @@ void export_print_usage()
          << "   -c CHANNELS    Indices of channels to export"
          << " (see below)." << endl
          << "                  Default: All channels" << endl
+         << "   -p CHANNEL     Path of one channel to export (see" << endl
+         << "                  below). This option may appear" << endl
+         << "                  multiple times. Default: All channels." << endl
          << "   -s TIMESTAMP   Start time (see below)."
          << " Default: Start of recording"
          << endl
@@ -653,6 +734,11 @@ void export_print_usage()
          << "CHANNELS is a comma-separated list of channel indices." << endl
          << "   Use the minus sign to specify ranges." << endl
          << "   Examples: \"2,4,9\", \"1-20\", \"2,4,13-15,42\"." << endl
+         << "CHANNEL is a signal name, optionally prefixed with" << endl
+         << "   'FILE:', where FILE is the name of the exported" << endl
+         << "   channel data file. If FILE is empty, or there is no" << endl
+         << "   colon found, files are named according to the channel" << endl
+         << "   indices." << endl
          << "TIMESTAMP is a broken-down time with microsecond resolution:"
          << endl
          << "   YYYY[-MM[-DD[-HH[-MM[-SS[-UUUUUU]]]]]] or" << endl

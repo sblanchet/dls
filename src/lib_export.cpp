@@ -55,16 +55,29 @@ ExportAscii::~ExportAscii()
 
 /*****************************************************************************/
 
-void ExportAscii::begin(const Channel &channel, const string &path)
+void ExportAscii::begin(
+        const Channel &channel,
+        const string &path,
+        const string &filename
+        )
 {
-    stringstream filename;
+    stringstream filepath;
 
-    filename << path << "/channel" << channel.dir_index() << ".dat";
-    _file.open(filename.str().c_str(), ios::trunc);
+    filepath << path << "/";
+
+    if (filename.empty()) {
+        filepath << "channel" << channel.dir_index();
+    }
+    else {
+        filepath << filename;
+    }
+
+    filepath << ".dat";
+    _file.open(filepath.str().c_str(), ios::trunc);
 
     if (!_file.is_open()) {
         stringstream err;
-        err << "Failed to open file \"" << filename.str() << "\"!";
+        err << "Failed to open file \"" << filepath.str() << "\"!";
         throw ExportException(err.str());
     }
 
@@ -110,11 +123,20 @@ ExportMat4::~ExportMat4()
 
 /*****************************************************************************/
 
-void ExportMat4::begin(const Channel &channel, const string &path)
+void ExportMat4::begin(
+        const Channel &channel,
+        const string &path,
+        const string &filename
+        )
 {
-    stringstream filename, name;
+    stringstream name;
 
-    name << "channel" << channel.dir_index();
+    if (filename.empty()) {
+        name << "channel" << channel.dir_index();
+    }
+    else {
+        name << filename;
+    }
 
     _header.type = 0000; // Little-Endian, double, numeric (full) matrix
     _header.mrows = 2;
@@ -122,8 +144,9 @@ void ExportMat4::begin(const Channel &channel, const string &path)
     _header.imagf = 0; // only real data, no imaginary part
     _header.namelen = name.str().size() + 1;
 
-    filename << path << "/channel" << channel.dir_index() << ".mat";
-    _file.open_read_write(filename.str().c_str());
+    stringstream filepath;
+    filepath << path << "/" << name.str() << ".mat";
+    _file.open_read_write(filepath.str().c_str());
 
     _file.write((const char *) &_header, sizeof(Mat4Header));
     _file.write(name.str().c_str(), name.str().size() + 1);
