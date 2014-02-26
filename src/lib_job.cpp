@@ -188,6 +188,28 @@ LibDLS::Channel *LibDLS::Job::find_channel(
 /*************************************************************************/
 
 /**
+*/
+
+set<LibDLS::Channel *> LibDLS::Job::find_channels_by_name(
+        const std::string &name
+        )
+{
+    set<LibDLS::Channel *> res;
+
+    for (list<Channel>::iterator channel_i = _channels.begin();
+         channel_i != _channels.end(); channel_i++) {
+
+        if (channel_i->name() == name) {
+            res.insert(&(*channel_i));
+        }
+    }
+
+    return res;
+}
+
+/*************************************************************************/
+
+/**
    Less-Operator for sorting.
    \return the "left" job is less than the "right" one
 */
