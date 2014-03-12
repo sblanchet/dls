@@ -24,6 +24,9 @@
 
 #include <QtGui>
 #include <QDomDocument>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QMenu>
 
 #include "lib_channel.hpp"
 
@@ -381,11 +384,10 @@ bool Graph::load(const QString &path, Model *model)
 
     QDomElement docElem = doc.documentElement();
     QDomNodeList children = docElem.childNodes();
-    unsigned int i;
     int64_t start = 0LL, end = 0LL;
     bool hasStart = false, hasEnd = false, val;
 
-    for (i = 0; i < children.length(); i++) {
+    for (int i = 0; i < children.size(); i++) {
         QDomNode node = children.item(i);
         if (!node.isElement()) {
             continue;
@@ -1951,7 +1953,7 @@ bool Graph::loadSections(const QDomElement &elem, Model *model)
 {
     QDomNodeList children = elem.childNodes();
 
-    for (unsigned int i = 0; i < children.length(); i++) {
+    for (int i = 0; i < children.size(); i++) {
         QDomNode node = children.item(i);
         if (!node.isElement()) {
             continue;

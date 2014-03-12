@@ -106,7 +106,7 @@ void Layer::load(const QDomElement &e)
 {
     QDomNodeList children = e.childNodes();
 
-    for (unsigned int i = 0; i < children.length(); i++) {
+    for (int i = 0; i < children.size(); i++) {
         QDomNode node = children.item(i);
         if (!node.isElement()) {
             continue;

@@ -33,11 +33,18 @@ TARGET = DlsWidgets
 # - Add a NEWS entry
 VERSION = 0.9.0
 
-CONFIG += designer plugin dll
+greaterThan(QT_MAJOR_VERSION, 4) {
+    CONFIG += plugin dll
+    QT += widgets designer svg printsupport
+}
+else {
+    CONFIG += designer plugin dll
+    QT += svg
+}
+
 DEPENDPATH += .
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
-QT += svg
 
 include(updateqm.pri)
 
@@ -61,7 +68,7 @@ win32 {
     QMAKE_LFLAGS += -shared
 }
 
-LIBS += -L$$OUT_PWD/../src/.libs -ldls -lfftw3 -lz
+LIBS += -L$$PWD/../src/.libs -L$$OUT_PWD/../src/.libs -ldls -lfftw3 -lz
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target
