@@ -23,6 +23,8 @@
  ****************************************************************************/
 
 #include <QtGui>
+#include <QWidget>
+
 #include <math.h>
 
 #include "ValueScale.h"

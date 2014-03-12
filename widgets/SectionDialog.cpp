@@ -65,6 +65,15 @@ SectionDialog::SectionDialog(
     tableViewLayers->setModel(model);
     tableViewLayers->verticalHeader()->hide();
     QHeaderView *header = tableViewLayers->horizontalHeader();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(0, QHeaderView::Stretch);
+    header->setSectionResizeMode(1, QHeaderView::Stretch);
+    header->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+#else
     header->setResizeMode(0, QHeaderView::Stretch);
     header->setResizeMode(1, QHeaderView::Stretch);
     header->setResizeMode(2, QHeaderView::ResizeToContents);
@@ -72,6 +81,7 @@ SectionDialog::SectionDialog(
     header->setResizeMode(4, QHeaderView::ResizeToContents);
     header->setResizeMode(5, QHeaderView::ResizeToContents);
     header->setResizeMode(6, QHeaderView::ResizeToContents);
+#endif
     tableViewLayers->resizeColumnsToContents();
 
     connect(radioButtonAuto, SIGNAL(toggled(bool)),
