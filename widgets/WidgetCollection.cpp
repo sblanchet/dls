@@ -69,6 +69,8 @@ WidgetCollection::customWidgets() const
 
 // first parameter must be the same as the TARGET variable in the .pro file.
 
+#if QT_VERSION < 0x050000
 Q_EXPORT_PLUGIN2(DlsWidgets, WidgetCollection)
+#endif
 
 /****************************************************************************/
