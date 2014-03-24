@@ -837,7 +837,8 @@ void DLSProcLogger::_process_tag()
                         log(DLSError);
                     }
 
-                    if ((COMTime::now() - _last_read_time).to_dbl_time() > 2.0) {
+                    if ((COMTime::now() - _last_read_time).to_dbl_time() > 2.0)
+                    {
 #ifdef DEBUG_REC
                         cout << "intermediate read!" << endl;
 #endif
