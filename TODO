@@ -14,6 +14,11 @@ vim: tw=78 spelllang=en spell
     - Store absolute path for recent files
     - Concept for relative signal paths.
 
+* dlsgui
+    - Table model for message list.
+    - Store absolute path for recent files
+    - Concept for relative signal paths.
+
 * dlsd:
     - Port to PdCom (trigger via channel).
     - store the same signal with different settings (compression, sample
