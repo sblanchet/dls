@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/etherlabsign.svg</file>
     <file>images/document-new.svg</file>
     <file>images/document-open.svg</file>
     <file>images/document-save-as.svg</file>
