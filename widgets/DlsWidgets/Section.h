@@ -68,7 +68,7 @@ class Q_DECL_EXPORT Section
 
         Section &operator=(const Section &);
 
-        void load(const QDomElement &, QtDls::Model *);
+        void load(const QDomElement &, QtDls::Model *, const QDir &);
         void save(QDomElement &, QDomDocument &);
 
         Graph *getGraph() { return graph; }
@@ -135,7 +135,7 @@ class Q_DECL_EXPORT Section
         void updateScale();
         void updateExtrema();
         void clearLayers();
-        void loadLayers(const QDomElement &, QtDls::Model *);
+        void loadLayers(const QDomElement &, QtDls::Model *, const QDir &);
 };
 
 /****************************************************************************/
