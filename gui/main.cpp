@@ -42,15 +42,20 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
+    // retrieve system locale
+    QLocale::setDefault(QLocale(QLocale::system().name()));
+
     // load Qt's own translations
     QTranslator qtTranslator;
     qtTranslator.load("qt_" + QLocale::system().name(),
             QLibraryInfo::location(QLibraryInfo::TranslationsPath));
     app.installTranslator(&qtTranslator);
 
+    // load DlsWidgets translations
     DLS::installTranslator();
     DLS::loadTranslation(QLocale::system().name());
 
+    // load dlsgui translations
     QTranslator translator;
     translator.load(":/.qm/locale/dlsgui_" + QLocale::system().name());
     app.installTranslator(&translator);
