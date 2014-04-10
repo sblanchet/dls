@@ -82,8 +82,10 @@ class MainWindow:
         void openRecentFile();
         void on_actionSave_triggered();
         void on_actionSaveAs_triggered();
+        void on_actionAddDataSource_triggered();
         void on_actionSettings_triggered();
         void on_actionLogWindow_triggered();
+        void on_actionAboutDlsgui_triggered();
 
         void on_toolButtonNewDir_clicked();
 

@@ -33,6 +33,7 @@ using namespace std;
 
 #include "MainWindow.h"
 #include "SettingsDialog.h"
+#include "AboutDialog.h"
 
 #define MODELTEST 0
 
@@ -378,6 +379,13 @@ void MainWindow::on_actionSaveAs_triggered()
 
 /****************************************************************************/
 
+void MainWindow::on_actionAddDataSource_triggered()
+{
+    on_toolButtonNewDir_clicked();
+}
+
+/****************************************************************************/
+
 void MainWindow::on_actionSettings_triggered()
 {
     SettingsDialog dialog(restore, this);
@@ -390,6 +398,15 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_actionLogWindow_triggered()
 {
     logWindow.show();
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionAboutDlsgui_triggered()
+{
+    AboutDialog dialog(this);
+
+    dialog.exec();
 }
 
 /****************************************************************************/

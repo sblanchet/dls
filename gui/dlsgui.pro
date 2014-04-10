@@ -55,11 +55,24 @@ win32 {
 target.path = $$PREFIX/bin
 INSTALLS += target
 
-HEADERS += MainWindow.h SettingsDialog.h LogWindow.h
-SOURCES += main.cpp MainWindow.cpp SettingsDialog.cpp LogWindow.cpp
-FORMS += MainWindow.ui
-FORMS += SettingsDialog.ui
-FORMS += LogWindow.ui
+HEADERS += \
+    AboutDialog.h \
+    LogWindow.h \
+    MainWindow.h \
+    SettingsDialog.h
+
+SOURCES += \
+    AboutDialog.cpp \
+    LogWindow.cpp \
+    MainWindow.cpp \
+    SettingsDialog.cpp \
+    main.cpp
+
+FORMS += \
+    AboutDialog.ui \
+    LogWindow.ui \
+    MainWindow.ui \
+    SettingsDialog.ui
 
 RESOURCES += dlsgui.qrc
 
