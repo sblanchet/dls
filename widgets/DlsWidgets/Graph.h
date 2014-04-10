@@ -35,6 +35,7 @@
 #include <QReadWriteLock>
 #include <QTouchEvent>
 #include <QUrl>
+#include <QDir>
 
 #include "lib_job.hpp"
 
@@ -284,7 +285,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         Section *sectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
-        bool loadSections(const QDomElement &, QtDls::Model *);
+        bool loadSections(const QDomElement &, QtDls::Model *, const QDir &);
         void drawMessages(QPainter &, const QRect &);
         static void staticLoggingCallback(const char *, void *);
         void loggingCallback(const char *);

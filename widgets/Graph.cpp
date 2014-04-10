@@ -365,6 +365,8 @@ bool Graph::load(const QString &path, Model *model)
     clearSections();
 
     QFile file(path);
+    QFileInfo fi(path);
+    QDir dir = fi.absoluteDir();
 
     if (!file.open(QFile::ReadOnly)) {
         qWarning() << tr("Failed to open %1!").arg(path);
@@ -436,7 +438,7 @@ bool Graph::load(const QString &path, Model *model)
             messageAreaHeight = num;
         }
         else if (child.tagName() == "Sections") {
-            loadSections(child, model);
+            loadSections(child, model, dir);
         }
     }
 
@@ -1949,7 +1951,8 @@ void Graph::newView()
 
 /****************************************************************************/
 
-bool Graph::loadSections(const QDomElement &elem, Model *model)
+bool Graph::loadSections(const QDomElement &elem, Model *model,
+        const QDir &dir)
 {
     QDomNodeList children = elem.childNodes();
 
@@ -1967,7 +1970,7 @@ bool Graph::loadSections(const QDomElement &elem, Model *model)
         Section *section = new Section(this);
 
         try {
-            section->load(child, model);
+            section->load(child, model, dir);
         } catch (Section::Exception &e) {
             delete section;
             clearSections();

@@ -150,7 +150,7 @@ Section &Section::operator=(
 
 /****************************************************************************/
 
-void Section::load(const QDomElement &e, Model *model)
+void Section::load(const QDomElement &e, Model *model, const QDir &dir)
 {
     QDomNodeList children = e.childNodes();
 
@@ -201,7 +201,7 @@ void Section::load(const QDomElement &e, Model *model)
             setHeight(num);
         }
         else if (child.tagName() == "Layers") {
-            loadLayers(child, model);
+            loadLayers(child, model, dir);
         }
     }
 
@@ -834,7 +834,8 @@ void Section::clearLayers()
 
 /****************************************************************************/
 
-void Section::loadLayers(const QDomElement &elem, Model *model)
+void Section::loadLayers(const QDomElement &elem, Model *model,
+        const QDir &dir)
 {
     QDomNodeList children = elem.childNodes();
 
@@ -856,6 +857,14 @@ void Section::loadLayers(const QDomElement &elem, Model *model)
         QUrl url = child.attribute("url");
         if (!url.isValid()) {
             throw Exception("Invalid URL!");
+        }
+
+        // allow relative paths
+        if (url.scheme().isEmpty() || url.scheme() == "file") {
+            QString path = url.path();
+            if (QDir::isRelativePath(path)) {
+                url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
+            }
         }
 
         QtDls::Channel *ch = NULL;
