@@ -217,8 +217,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::addRecentFile(const QString &path)
 {
-    recentFiles.removeAll(path);
-    recentFiles.prepend(path);
+    QDir cur = QDir::currentPath();
+    QString absPath = cur.absoluteFilePath(path);
+    absPath = QDir::cleanPath(absPath);
+    recentFiles.removeAll(absPath);
+    recentFiles.prepend(absPath);
     updateRecentFileActions();
 }
 
