@@ -29,6 +29,7 @@
 
 #include <QTextDocument>
 #include <QReadWriteLock>
+#include <QDir>
 
 #include "com_time.hpp"
 
