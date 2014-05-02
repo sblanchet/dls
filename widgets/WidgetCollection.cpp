@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012-2014  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -53,6 +53,17 @@ WidgetCollection::WidgetCollection(
         ): QObject(parent)
 {
     widgets.append(new GraphPlugin(this));
+}
+
+/****************************************************************************/
+
+/** Destructor.
+ */
+WidgetCollection::~WidgetCollection()
+{
+    for (int i = 0; i < widgets.size(); i++) {
+        delete widgets[i];
+    }
 }
 
 /****************************************************************************/
