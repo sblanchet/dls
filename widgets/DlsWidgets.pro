@@ -36,6 +36,7 @@ VERSION = 0.9.0
 greaterThan(QT_MAJOR_VERSION, 4) {
     CONFIG += plugin dll
     QT += widgets designer svg printsupport
+    DEFINES += DLS_QT5 # needed for moc processing of WidgetCollection.h
 }
 else {
     CONFIG += designer plugin dll

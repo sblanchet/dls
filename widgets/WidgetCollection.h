@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012-2014  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -25,8 +25,8 @@
 #ifndef DLS_WIDGETCOLLECTION_H
 #define DLS_WIDGETCOLLECTION_H
 
-#include <QtDesigner/QtDesigner>
-#include <QtCore/qplugin.h>
+#include <QtDesigner>
+#include <qplugin.h>
 
 /****************************************************************************/
 
@@ -37,10 +37,16 @@ class WidgetCollection:
     public QDesignerCustomWidgetCollectionInterface
 {
     Q_OBJECT
+#ifdef DLS_QT5
+    /* DLS_QT5 defined in project file, thus interpreted by moc */
+    Q_PLUGIN_METADATA(IID
+            "org.qt-project.Qt.QDesignerCustomWidgetCollectionInterface")
+#endif
     Q_INTERFACES(QDesignerCustomWidgetCollectionInterface)
 
     public:
         WidgetCollection(QObject *parent = 0);
+        virtual ~WidgetCollection();
 
         virtual QList<QDesignerCustomWidgetInterface *> customWidgets() const;
 
