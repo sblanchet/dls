@@ -2,7 +2,7 @@
  *
  * $Id$
  *
- * Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012-2014  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -96,7 +96,7 @@ QIcon Plugin::icon() const
  */
 QString Plugin::toolTip() const
 {
-    return QString();
+    return "";
 }
 
 /****************************************************************************/
@@ -123,8 +123,18 @@ bool Plugin::isContainer() const
  */
 QString Plugin::domXml() const
 {
-    QString xml = "<widget class=\"DLS::" + widgetClassName + "\" "
+    QString xml;
+
+#if QT_VERSION >= 0x050000
+    xml = "<ui language=\"c++\">\n"
+        "  <widget class=\"DLS::" + widgetClassName + "\" "
+        "name=\"dls" + widgetClassName + "\" />\n"
+        "</ui>\n";
+#else
+    xml = "<widget class=\"DLS::" + widgetClassName + "\" "
         "name=\"dls" + widgetClassName + "\" />\n";
+#endif
+
     return xml;
 }
 
