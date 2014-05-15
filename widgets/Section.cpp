@@ -175,7 +175,7 @@ void Section::load(const QDomElement &e, Model *model, const QDir &dir)
             bool ok;
             double num = text.toDouble(&ok);
             if (!ok) {
-                QString msg("Invalid value in ScaleMinimum");
+                QString msg = tr("Invalid value in ScaleMinimum");
                 throw Exception(msg);
             }
            setScaleMinimum(num);
@@ -185,7 +185,7 @@ void Section::load(const QDomElement &e, Model *model, const QDir &dir)
             bool ok;
             double num = text.toDouble(&ok);
             if (!ok) {
-                QString msg("Invalid value in ScaleMaximum");
+                QString msg = tr("Invalid value in ScaleMaximum");
                 throw Exception(msg);
             }
             setScaleMaximum(num);
@@ -195,7 +195,7 @@ void Section::load(const QDomElement &e, Model *model, const QDir &dir)
             bool ok;
             unsigned int num = text.toInt(&ok);
             if (!ok) {
-                QString msg("Invalid value in Height");
+                QString msg = tr("Invalid value in Height");
                 throw Exception(msg);
             }
             setHeight(num);
@@ -851,12 +851,14 @@ void Section::loadLayers(const QDomElement &elem, Model *model,
         }
 
         if (!child.hasAttribute("url")) {
-            throw Exception("Missing url attribute!");
+            qWarning() << tr("Layer element missing url attribute!");
+            continue;
         }
 
         QUrl url = child.attribute("url");
         if (!url.isValid()) {
-            throw Exception("Invalid URL!");
+            qWarning() << tr("Invalid URL in Layer element!");
+            continue;
         }
 
         // allow relative paths
@@ -873,14 +875,16 @@ void Section::loadLayers(const QDomElement &elem, Model *model,
             ch = model->getChannel(url);
         }
         catch (Model::Exception &e) {
-            throw Exception(QString("Failed to get channel %1: %2")
-                    .arg(url.toString())
-                    .arg(e.msg));
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url.toString())
+                .arg(e.msg);
+            continue;
         }
 
         if (!ch) {
-            throw Exception(QString("Failed to get channel %1!")
-                    .arg(url.toString()));
+            qWarning() << tr("Failed to get channel %1!")
+                .arg(url.toString());
+            continue;
         }
 
         Layer *layer = new Layer(this, ch);
@@ -889,9 +893,8 @@ void Section::loadLayers(const QDomElement &elem, Model *model,
             layer->load(child);
         } catch (Layer::Exception &e) {
             delete layer;
-            clearLayers();
-            QString msg(QString("Failed to parse section: %1").arg(e.msg));
-            throw Exception(msg);
+            qWarning() << tr("Failed to load layer: %1").arg(e.msg);
+            continue;
         }
 
         rwLockLayers.lockForWrite();
