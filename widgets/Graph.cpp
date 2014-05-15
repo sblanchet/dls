@@ -1974,7 +1974,7 @@ bool Graph::loadSections(const QDomElement &elem, Model *model,
         } catch (Section::Exception &e) {
             delete section;
             clearSections();
-            qWarning() << tr("Failed to parse section: %1").arg(e.msg);
+            qWarning() << tr("Failed to load section: %1").arg(e.msg);
             return false;
         }
 
