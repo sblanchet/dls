@@ -60,6 +60,8 @@ class Layer;
  */
 class Q_DECL_EXPORT Section
 {
+    Q_DECLARE_TR_FUNCTIONS(Section)
+
     friend class SectionModel;
     friend class Layer;
 
