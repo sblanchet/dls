@@ -226,6 +226,7 @@ AC_CONFIG_FILES([
     Makefile
     dls.spec
     script/Makefile
+    script/dlsd.service
     script/init.sh
     src/Makefile
     src/images/Makefile
