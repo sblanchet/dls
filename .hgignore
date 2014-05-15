@@ -45,6 +45,7 @@ m4/lt~obsolete.m4
 mingw*-config.cache
 script/Makefile
 script/Makefile.in
+script/dlsd.service
 script/init.sh
 src/.deps
 src/.libs
