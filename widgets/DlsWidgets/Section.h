@@ -30,6 +30,7 @@
 #include <QTextDocument>
 #include <QReadWriteLock>
 #include <QDir>
+#include <QCoreApplication> // Q_DECLARE_TR_FUNCTIONS()
 
 #include "com_time.hpp"
 
