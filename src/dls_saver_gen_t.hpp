@@ -235,10 +235,9 @@ void DLSSaverGenT<T>::process_one(
     stringstream err;
 
 #if 0
-    if (_parent_logger->channel_preset()->sample_frequency == 500.0) {
-        cerr << time.to_str()
-            << " d=" << _time_of_last.diff_str_to(time) << endl;
-    }
+    cerr << time.to_str()
+        << " d=" << _time_of_last.diff_str_to(time)
+        << " v=" << ((T *) buffer)[0] << endl;
 #endif
 
     // Wenn Werte in den Puffern sind
@@ -262,10 +261,7 @@ void DLSSaverGenT<T>::process_one(
             err << " us (expected " << target_diff
                 << " us, error is " << error_percent << " %)";
             err << " at channel \"" << _parent_logger->channel_preset()->name
-                << "\".";
-            cerr << __func__ << err.str()
-                << " processed=" << _processed_values
-                << " Logger=" << _parent_logger << endl;
+                << "\" after processing " << _processed_values << " values.";
             throw EDLSTimeTolerance(err.str());
         }
     }
@@ -395,6 +391,7 @@ void DLSSaverGenT<T>::flush()
 
     // Jetzt ist nichts mehr im Speicher
     _finished = true;
+    _processed_values = 0;
 }
 
 /*****************************************************************************/
