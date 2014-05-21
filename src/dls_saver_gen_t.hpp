@@ -82,10 +82,6 @@ public:
        \throw EDLSSaver Fehler beim Verarbeiten der Daten
        \throw EDLSTimeTolerance Zeit-Toleranzfehler!
     */
-
-    virtual void process_data(const void *buffer,
-                              unsigned int length,
-                              COMTime time_of_last) = 0;
     virtual void process_one(const void *buffer, COMTime time_of_last) = 0;
 };
 
@@ -123,7 +119,6 @@ public:
     virtual ~DLSSaverGenT();
 
     void add_meta_saver(DLSMetaType type);
-    void process_data(const void *, unsigned int, COMTime);
     void process_one(const void *, COMTime);
     void flush();
 
@@ -214,83 +209,6 @@ void DLSSaverGenT<T>::add_meta_saver(DLSMetaType type)
 
 /*****************************************************************************/
 
-/**
-   Nimmt Binärdaten zum Speichern entgegen
-
-   Diese Methode führt Plausiblitätsprüfungen (Anzahl der
-   Werte / Größe des Puffers / vergangene Zeit seit dem
-   letzten Datenwert) durch, um die Daten
-   schliesslich als Array vom Typ T an die Methode
-   _fill_buffers() weiterzuleiten.
-
-   Wird der zeitliche Toleranzbereich verletzt,
-   wird eine Exception geworfen. Der Prozess sollte
-   dann beendet werden.
-
-   \param buffer Adresse des Datenpuffers
-   \param size Anzahl der Bytes im Puffer
-   \param time_of_last Zeit des letzten Datenwertes im Puffer
-   \throw EDLSSaver Fehler beim Speichern der Daten
-   \throw EDLSTimeTolerance Toleranzfehler! Prozess beenden!
-*/
-
-template <class T>
-void DLSSaverGenT<T>::process_data(const void *buffer,
-                                   unsigned int size,
-                                   COMTime time_of_last)
-{
-    COMTime diff_time, time_of_first, actual_diff, target_diff;
-    float error_percent;
-    double freq = _parent_logger->channel_preset()->sample_frequency;
-    unsigned int values_in_buffer;
-    stringstream err;
-
-    if (size == 0) {
-		return;
-	}
-
-    // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-    if (size % sizeof(T)) {
-		throw EDLSSaver("Illegal data size!");
-	}
-
-    values_in_buffer = size / sizeof(T);
-
-    diff_time.from_dbl_time((values_in_buffer - 1) / freq);
-    time_of_first = time_of_last - diff_time; // Zeit des ersten neuen Wertes
-
-    // Wenn Werte in den Puffern sind
-    if (_block_buf_index || _meta_buf_index) {
-        // Zeitabstände errechnen
-        target_diff.from_dbl_time(1 / freq); // Erwarteter Zeitabstand
-        actual_diff = time_of_first - _time_of_last; // Tats. Zeitabstand
-
-        // Relativen Fehler errechnen
-        error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
-            / target_diff.to_dbl() * 100;
-        if (error_percent < 0) {
-			error_percent *= -1;
-		}
-
-        // Toleranzbereich verletzt?
-        if (error_percent > ALLOWED_TIME_VARIANCE) {
-            // Fehler! Prozess beenden!
-            err << "Time diff of " << actual_diff;
-            err << " (expected: " << target_diff
-                << ", error: " << error_percent << "%)";
-            err << " channel \"" << _parent_logger->channel_preset()->name
-                << "\".";
-            throw EDLSTimeTolerance(err.str());
-        }
-    }
-
-    // Daten speichern
-    _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
-    _processed_values += values_in_buffer;
-}
-
-/*****************************************************************************/
-
 /** Process one value.
  *
    Diese Methode führt Plausiblitätsprüfungen (vergangene Zeit seit dem
@@ -341,9 +259,9 @@ void DLSSaverGenT<T>::process_one(
         if (error_percent > ALLOWED_TIME_VARIANCE) {
             // Fehler! Prozess beenden!
             err << "Time diff of " << actual_diff;
-            err << " (expected: " << target_diff
-                << ", error: " << error_percent << "%)";
-            err << " channel \"" << _parent_logger->channel_preset()->name
+            err << " us (expected " << target_diff
+                << " us, error is " << error_percent << " %)";
+            err << " at channel \"" << _parent_logger->channel_preset()->name
                 << "\".";
             cerr << __func__ << err.str()
                 << " processed=" << _processed_values
