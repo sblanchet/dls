@@ -288,6 +288,11 @@ void Layer::setPrecision(int p)
 void Layer::loadData(const COMTime &start, const COMTime &end, int width,
         GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
+#if 0
+    qDebug() << __func__ << start.to_str().c_str()
+        << end.to_str().c_str() << width;
+#endif
+
     worker->clearData();
     channel->fetchData(start, end, width,
             GraphWorker::dataCallback, worker, 1);
@@ -528,7 +533,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
         painter.restore();
     }
-    else if (minimumData.size() && maximumData.size()) {
+
+    if (minimumData.size() && maximumData.size()) {
         double yv, value;
         int xp, yp, i;
         unsigned int j;
