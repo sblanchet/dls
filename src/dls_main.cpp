@@ -489,6 +489,48 @@ void check_running(const string *dls_dir)
         exit(-1);
     }
 
+    // check for stale PID file
+    {
+        char path[256];
+        snprintf(path, sizeof(path) - 1, "/proc/%d/cmdline", pid);
+        FILE *file = fopen(path, "r");
+        if (!file) {
+            cerr << "ERROR: Failed to read " << path << "!" << endl;
+            exit(-1);
+        }
+
+        char name[256], *cur = name, byte;
+        int counter = 0;
+        do { // read basename
+            size_t ret = fread(&byte, 1, 1, file);
+            if (ret != 1) {
+                break;
+            }
+            if (byte != '/') {
+                *cur++ = byte;
+            }
+            else {
+                cur = name;
+                counter = 0;
+            }
+        } while (byte && counter++ < (sizeof(name) - 1));
+
+        name[counter] = 0;
+        fclose(file);
+
+        if (name != "dlsd") {
+            cout << "INFO: Deleting stale pid file." << endl;
+
+            if (unlink(pid_file_name.c_str()) == -1) {
+                cerr << "ERROR: Could not delete pid file \""
+                     << pid_file_name << "\"!" << endl;
+                exit(-1);
+            }
+
+            return;
+        }
+    }
+
     if (kill(pid, 0) == -1)
     {
         if (errno == ESRCH) // Prozess mit angegebener PID existiert nicht
