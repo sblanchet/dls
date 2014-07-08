@@ -439,34 +439,64 @@ void closeSTDXXX()
 
 /*****************************************************************************/
 
+string read_basename(pid_t pid)
+{
+    char path[256];
+    snprintf(path, sizeof(path) - 1, "/proc/%d/cmdline", pid);
+    FILE *file = fopen(path, "r");
+    if (!file) {
+        cerr << "WARNING: Failed to read " << path << "!" << endl;
+        return "";
+    }
+
+    char name[256], *cur = name, byte;
+    int counter = 0;
+    do { // read basename
+        size_t ret = fread(&byte, 1, 1, file);
+        if (ret != 1) {
+            break;
+        }
+        if (byte != '/') {
+            *cur++ = byte;
+        }
+        else {
+            cur = name;
+            counter = 0;
+        }
+    } while (byte && counter++ < (sizeof(name) - 1));
+
+    name[counter] = 0;
+    fclose(file);
+
+    return name;
+}
+
+/*****************************************************************************/
+
 void check_running(const string *dls_dir)
 {
     int pid_fd, pid, ret;
     string pid_file_name;
-    char buffer[11];
+    char buffer[32];
     stringstream str;
 
     str.exceptions(ios::badbit | ios::failbit);
 
     pid_file_name = *dls_dir + "/" + DLS_PID_FILE;
 
-    if ((pid_fd = open(pid_file_name.c_str(), O_RDONLY)) == -1)
-    {
-        if (errno == ENOENT)
-        {
+    if ((pid_fd = open(pid_file_name.c_str(), O_RDONLY)) == -1) {
+        if (errno == ENOENT) {
             // PID-Datei existiert nicht. Alles ok!
             return;
         }
-        else
-        {
+        else {
             cerr << "ERROR: could not open PID file \"" << pid_file_name
                  << "\"!" << endl;
             exit(-1);
         }
     }
 
-    if ((ret = read(pid_fd, buffer, 10)) < 0)
-    {
+    if ((ret = read(pid_fd, buffer, sizeof(buffer) - 1)) < 0) {
         close(pid_fd);
         cerr << "ERROR: could not read from PID file \"" << pid_file_name
              << "\"!" << endl;
@@ -478,79 +508,58 @@ void check_running(const string *dls_dir)
     buffer[ret] = 0;
     str << buffer;
 
-    try
-    {
+    try {
         str >> pid;
     }
-    catch (...)
-    {
+    catch (...) {
         cerr << "ERROR: PID file \"" << pid_file_name
              << "\" has no valid content!" << endl;
         exit(-1);
     }
 
-    // check for stale PID file
-    {
-        char path[256];
-        snprintf(path, sizeof(path) - 1, "/proc/%d/cmdline", pid);
-        FILE *file = fopen(path, "r");
-        if (!file) {
-            cerr << "ERROR: Failed to read " << path << "!" << endl;
-            exit(-1);
-        }
-
-        char name[256], *cur = name, byte;
-        int counter = 0;
-        do { // read basename
-            size_t ret = fread(&byte, 1, 1, file);
-            if (ret != 1) {
-                break;
-            }
-            if (byte != '/') {
-                *cur++ = byte;
-            }
-            else {
-                cur = name;
-                counter = 0;
-            }
-        } while (byte && counter++ < (sizeof(name) - 1));
-
-        name[counter] = 0;
-        fclose(file);
-
-        if (name != "dlsd") {
-            cout << "INFO: Deleting stale pid file." << endl;
+    if (kill(pid, 0) == -1) {
+        if (errno == ESRCH) { // Prozess mit angegebener PID existiert nicht
+            cout << "INFO: Deleting old PID file" << endl;
 
             if (unlink(pid_file_name.c_str()) == -1) {
-                cerr << "ERROR: Could not delete pid file \""
+                cerr << "ERROR: Could not delete PID file \""
                      << pid_file_name << "\"!" << endl;
                 exit(-1);
             }
 
             return;
+        }
+        else {
+            cerr << "ERROR: Could not signal process " << pid << "!" << endl;
+            exit(-1);
         }
     }
 
-    if (kill(pid, 0) == -1)
-    {
-        if (errno == ESRCH) // Prozess mit angegebener PID existiert nicht
-        {
-            cout << "INFO: deleting old pid file" << endl;
+    // check for stale PID file
 
-            if (unlink(pid_file_name.c_str()) == -1)
-            {
-                cerr << "ERROR: could not delete pid file \""
-                     << pid_file_name << "\"!" << endl;
-                exit(-1);
-            }
+    pid_t my_pid = getpid();
+    string my_name = read_basename(my_pid);
+    if (my_name == "") {
+        cerr << "ERROR: Failed to read own basename!" << endl;
+        exit(-1);
+    }
 
-            return;
-        }
-        else
-        {
-            cerr << "ERROR: could not signal process " << pid << "!" << endl;
+    string pidfile_name = read_basename(pid);
+    if (pidfile_name == "") {
+        cerr << "ERROR: Failed to read PID file basename!" << endl;
+        exit(-1);
+    }
+
+    if (my_name != pidfile_name) {
+        cout << "INFO: Deleting stale PID file." << endl;
+
+        if (unlink(pid_file_name.c_str()) == -1) {
+            cerr << "ERROR: Could not delete PID file \""
+                << pid_file_name << "\"!" << endl;
             exit(-1);
         }
+
+        return;
     }
 
     cerr << endl << "ERROR: process already running with PID " << pid
