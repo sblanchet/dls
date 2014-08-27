@@ -40,7 +40,6 @@ using namespace std;
 #include "dls_job.hpp"
 
 /*****************************************************************************/
-/*****************************************************************************/
 
 /**
    Logging-Prozess
@@ -71,6 +70,7 @@ private:
 	bool _write_request;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
+    unsigned int _sig_usr1;
     bool _exit;
     int _exit_code;
 	enum {
@@ -95,6 +95,7 @@ private:
     void _do_quota();
     void _create_pid_file();
     void _remove_pid_file();
+    void _flush();
 
 	// PdCom::Process
 	bool clientInteraction(const std::string &, const std::string &,
