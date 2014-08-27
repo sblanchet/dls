@@ -47,6 +47,7 @@ using namespace std;
 unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
+unsigned int sig_usr1 = 0;
 DLSProcessType process_type = dlsMotherProcess;
 unsigned int dlsd_job_id = 0;
 string dls_dir = "";
@@ -326,6 +327,10 @@ void signal_handler(int sig)
         case SIGINT:
         case SIGTERM:
             sig_int_term++;
+            break;
+
+        case SIGUSR1:
+            sig_usr1++;
             break;
 
         default:

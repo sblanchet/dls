@@ -72,6 +72,7 @@ private:
     COMRingBuffer *_ring_buf;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
+    unsigned int _sig_usr1;
     string _to_send;
     bool _exit;
     int _exit_code;
@@ -103,6 +104,7 @@ private:
     void _do_quota();
     void _create_pid_file();
     void _remove_pid_file();
+    void _flush();
 };
 
 /*****************************************************************************/

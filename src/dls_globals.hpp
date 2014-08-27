@@ -75,6 +75,7 @@ enum DLSProcessType
 extern unsigned int sig_int_term;
 extern unsigned int sig_hangup;
 extern unsigned int sig_child;
+extern unsigned int sig_usr1;
 
 // Architektur
 extern DLSArchitecture arch;

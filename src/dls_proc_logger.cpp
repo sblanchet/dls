@@ -61,6 +61,7 @@ DLSProcLogger::DLSProcLogger(const string &dls_dir, unsigned int job_id)
     _job_id = job_id;
     _sig_hangup = sig_hangup;
     _sig_child = sig_child;
+    _sig_usr1 = sig_usr1;
     _exit = false;
     _exit_code = E_DLS_SUCCESS;
     _state = dls_connecting;
@@ -536,6 +537,16 @@ void DLSProcLogger::_check_signals()
                 _job->change_logging();
             }
         }
+    }
+
+    // Nachricht Flush!
+    if (sig_usr1 != _sig_usr1) {
+        _sig_usr1 = sig_usr1;
+
+        msg() << "Received SIGUSR1; flushing.";
+        log(DLSInfo);
+
+        _flush();
     }
 
     // Flush-Prozess hat sich beendet
@@ -1042,7 +1053,6 @@ void DLSProcLogger::_remove_pid_file()
 
 void DLSProcLogger::_do_quota()
 {
-    int fork_ret;
     uint64_t quota_time = _job->preset()->quota_time();
     uint64_t quota_size = _job->preset()->quota_size();
     bool quota_reached = false;
@@ -1070,29 +1080,41 @@ void DLSProcLogger::_do_quota()
     }
 
     if (quota_reached) {
-        _first_data_time.set_null();
+        _flush();
+    }
+}
 
-        if ((fork_ret = fork()) == -1) {
-            _exit = true;
-            _exit_code = E_DLS_ERROR_RESTART;
-            msg() << "could not fork!";
-            log(DLSError);
-            return;
-        }
+/*****************************************************************************/
 
-        if (fork_ret == 0) { // "Kind"
-            // Wir sind jetzt der Aufräum-Prozess
-            process_type = dlsCleanupProcess;
-            // Normal beenden und Daten speichern
-            _exit = true;
-            msg() << "flushing process forked.";
-            log(DLSInfo);
-        }
-        else {
-            // Alle Daten vergessen. Diese werden vom anderen
-            // Zweig gespeichert.
-            _job->discard_data();
-        }
+/** Flush data.
+*/
+
+void DLSProcLogger::_flush()
+{
+    int fork_ret;
+
+    _first_data_time.set_null();
+
+    if ((fork_ret = fork()) == -1) {
+        _exit = true;
+        _exit_code = E_DLS_ERROR_RESTART;
+        msg() << "could not fork!";
+        log(DLSError);
+        return;
+    }
+
+    if (fork_ret == 0) { // "Kind"
+        // Wir sind jetzt der Aufräum-Prozess
+        process_type = dlsCleanupProcess;
+        // Normal beenden und Daten speichern
+        _exit = true;
+        msg() << "flushing process forked.";
+        log(DLSInfo);
+    }
+    else {
+        // Alle Daten vergessen. Diese werden vom anderen
+        // Zweig gespeichert.
+        _job->discard_data();
     }
 }
 
