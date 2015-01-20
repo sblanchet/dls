@@ -135,6 +135,8 @@ Graph::Graph(
     messageAreaHeight(55),
     mouseOverMsgSplitter(false),
     movingMsgSplitter(false),
+    touchX0(0),
+    touchPanning(false),
     touchZooming(false)
 {
     dls_set_logging_callback(staticLoggingCallback, this);
@@ -2209,29 +2211,41 @@ void Graph::updateTouch(QTouchEvent *event)
     debugFile.flush();
 #endif
 
-    if (count < 2) {
-        if (touchZooming) {
-            touchZooming = false;
-            newView();
-            loadData();
-        }
-        return;
-    }
-
-    QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
-    QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
-
     switch (event->type()) {
         case QEvent::TouchBegin:
-            touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+            if (count == 1) {
+                QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+                touchPanStart(tp0.lastPos().x());
+            }
+            else if (count == 2) {
+                QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+                QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
+                touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+            }
             break;
 
         case QEvent::TouchUpdate:
-            if (touchZooming) {
-                touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+            if (count == 1) {
+                if (touchZooming) {
+                    touchZooming = false;
+                }
+                QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+                if (touchPanning) {
+                    touchPanUpdate(tp0.lastPos().x());
+                }
+                else {
+                    touchPanStart(tp0.lastPos().x());
+                }
             }
-            else {
-                touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+            else if (count >= 2) {
+                QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+                QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
+                if (touchZooming) {
+                    touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+                }
+                else {
+                    touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+                }
             }
             break;
 
@@ -2239,8 +2253,12 @@ void Graph::updateTouch(QTouchEvent *event)
 #if QT_VERSION >= 0x050000
         case QEvent::TouchCancel:
 #endif
-            if (touchZooming) { // end
-                touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+            if (touchPanning) {
+                touchPanning = false;
+                newView();
+                loadData();
+            }
+            if (touchZooming) {
                 touchZooming = false;
                 newView();
                 loadData();
@@ -2249,6 +2267,37 @@ void Graph::updateTouch(QTouchEvent *event)
         default:
             break;
     }
+}
+
+/****************************************************************************/
+
+void Graph::touchPanStart(int x)
+{
+    touchX0 = x;
+    touchPanning = true;
+    panning = false;
+}
+
+/****************************************************************************/
+
+void Graph::touchPanUpdate(int x)
+{
+    int dataWidth = getDataWidth();
+    COMTime range = getEnd() - getStart();
+
+    if (range <= 0.0 || dataWidth <= 0) {
+        return;
+    }
+
+    double xScale = range.to_dbl_time() / dataWidth;
+
+    COMTime diff;
+    diff.from_dbl_time((x - touchX0) * xScale);
+    touchX0 = x;
+    scale.setRange(getStart() - diff, getEnd() - diff);
+    autoRange = false;
+    updateActions();
+    update();
 }
 
 /****************************************************************************/
@@ -2276,6 +2325,7 @@ void Graph::touchZoomStart(int x0, int x1)
         touchT1 = getStart() + d0;
     }
     touchZooming = true;
+    touchPanning = false;
     panning = false;
     zooming = false;
     updateCursor();
