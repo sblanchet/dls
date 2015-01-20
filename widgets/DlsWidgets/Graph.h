@@ -269,6 +269,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
         QMutex loggingMutex;
 
+        int touchX0;
+        bool touchPanning;
+
         COMTime touchT0;
         COMTime touchT1;
         bool touchZooming;
@@ -290,6 +293,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         static void staticLoggingCallback(const char *, void *);
         void loggingCallback(const char *);
         void updateTouch(QTouchEvent *);
+        void touchPanStart(int);
+        void touchPanUpdate(int);
         void touchZoomStart(int, int);
         void touchZoomUpdate(int, int);
         int getDataWidth() const;
