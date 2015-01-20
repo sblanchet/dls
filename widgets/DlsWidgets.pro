@@ -54,6 +54,14 @@ isEmpty(PREFIX) {
     win32:PREFIX = "c:/msys/1.0/local"
 }
 
+# Graph class debug defines
+equals(DEBUG_MT_ON_SCREEN, 1) {
+    DEFINES += DEBUG_MT_ON_SCREEN
+}
+equals(DEBUG_MT_IN_FILE, 1) {
+    DEFINES += DEBUG_MT_IN_FILE
+}
+
 LIBEXT=""
 unix {
     HARDWARE_PLATFORM = $$system(uname -i)
