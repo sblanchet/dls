@@ -49,9 +49,6 @@ using QtDls::Model;
 #define MSG_LINES_HEIGHT 3
 #define MIN_TOUCH_HEIGHT 20
 
-#define DEBUG_MT_ON_SCREEN 1
-#define DEBUG_MT_IN_FILE 0
-
 /****************************************************************************/
 
 QColor Graph::messageColor[] = {
@@ -141,7 +138,7 @@ Graph::Graph(
 {
     dls_set_logging_callback(staticLoggingCallback, this);
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     debugFile.setFileName("\\\\10.202.246.121\\transfer\\dlsdebug.txt");
     debugFile.open(QIODevice::WriteOnly);
 #endif
@@ -338,7 +335,7 @@ Graph::~Graph()
     thread.quit();
     thread.wait();
     clearSections();
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     debugFile.close();
 #endif
 }
@@ -1565,7 +1562,7 @@ void Graph::paintEvent(
         }
     }
 
-#if DEBUG_MT_ON_SCREEN
+#ifdef DEBUG_MT_ON_SCREEN
     painter.setClipping(false);
     QPen pen;
     pen.setColor(Qt::darkRed);
@@ -2145,7 +2142,7 @@ void Graph::loggingCallback(const char *msg)
 
 /****************************************************************************/
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
 static int counter = 0;
 #endif
 
@@ -2155,7 +2152,7 @@ void Graph::updateTouch(QTouchEvent *event)
 
     event->accept();
 
-#if DEBUG_MT_ON_SCREEN
+#ifdef DEBUG_MT_ON_SCREEN
     int displayCount = count;
     if (event->type() == QEvent::TouchEnd
 #if QT_VERSION >= 0x050000
@@ -2174,7 +2171,7 @@ void Graph::updateTouch(QTouchEvent *event)
     update();
 #endif
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     QString type;
     switch (event->type()) {
         case QEvent::TouchBegin:
@@ -2330,7 +2327,7 @@ void Graph::touchZoomStart(int x0, int x1)
     zooming = false;
     updateCursor();
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     QString dbg = QString("zooming1 %1 - %2\n")
         .arg(touchT0.to_real_time().c_str())
         .arg(touchT1.to_real_time().c_str());
@@ -2351,7 +2348,7 @@ void Graph::touchZoomUpdate(int x0, int x1)
     COMTime range = touchT1 - touchT0;
     int width = x1 - x0;
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     QString dbg = QString("range=%1 width=%2\n")
         .arg(range.to_dbl_time())
         .arg(width);
@@ -2379,7 +2376,7 @@ void Graph::touchZoomUpdate(int x0, int x1)
     autoRange = false;
     update();
 
-#if DEBUG_MT_IN_FILE
+#ifdef DEBUG_MT_IN_FILE
     dbg = QString("update scale=%3 %4 - %5\n   %1 - %2\n")
         .arg(start.to_real_time().c_str())
         .arg(end.to_real_time().c_str())
