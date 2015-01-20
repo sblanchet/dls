@@ -272,9 +272,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         COMTime touchT0;
         COMTime touchT1;
         bool touchZooming;
-#if 0
+
         QFile debugFile;
-#endif
+        QString debugString;
 
         void updateDragging(QPoint);
         void resetDragging();
