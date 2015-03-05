@@ -71,8 +71,8 @@ class Q_DECL_EXPORT Layer
         void setPrecision(int);
         int getPrecision() const { return precision; }
 
-        void loadData(const COMTime &, const COMTime &, int, GraphWorker *,
-                std::set<LibDLS::Job *> &);
+        void loadData(const LibDLS::Time &, const LibDLS::Time &, int,
+                GraphWorker *, std::set<LibDLS::Job *> &);
 
         struct MeasureData {
             const Layer *layer;

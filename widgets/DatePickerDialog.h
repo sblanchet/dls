@@ -27,7 +27,7 @@
 
 #include <QDialog>
 
-#include "../src/com_time.hpp"
+#include "../lib/Time.h"
 
 #include "ui_DatePickerDialog.h"
 
@@ -47,12 +47,12 @@ class DatePickerDialog:
         DatePickerDialog(QWidget * = NULL);
         ~DatePickerDialog();
 
-        COMTime getStart() const { return start; }
-        COMTime getEnd() const { return end; }
+        LibDLS::Time getStart() const { return start; }
+        LibDLS::Time getEnd() const { return end; }
 
     private:
-        COMTime start;
-        COMTime end;
+        LibDLS::Time start;
+        LibDLS::Time end;
 
     private slots:
         void accept();

@@ -11,7 +11,7 @@
 #include "Layer.h"
 #include "Channel.h"
 
-#include "lib_channel.hpp"
+#include "../lib/Channel.h"
 
 using namespace DLS;
 

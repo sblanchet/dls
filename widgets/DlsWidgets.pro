@@ -70,14 +70,14 @@ unix {
     }
 }
 
-INCLUDEPATH += . $$PWD/../src
+INCLUDEPATH += . $$PWD/..
 INCLUDEPATH += $$PWD/DlsWidgets
 
 win32 {
     QMAKE_LFLAGS += -shared
 }
 
-LIBS += -L$$PWD/../src/.libs -L$$OUT_PWD/../src/.libs -ldls -lfftw3 -lz
+LIBS += -L$$PWD/../lib/.libs -L$$OUT_PWD/../lib/.libs -ldls -lfftw3 -lz
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target

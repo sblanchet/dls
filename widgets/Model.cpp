@@ -9,7 +9,7 @@
 #include <QMimeData>
 #include <QUrl>
 
-#include "lib_dir.hpp"
+#include "../lib/Dir.h"
 
 #include "Model.h"
 #include "Dir.h"
