@@ -583,9 +583,9 @@ Layer *Section::appendLayer(QtDls::Channel *ch)
 
 /****************************************************************************/
 
-void Section::getRange(bool &valid, COMTime &start, COMTime &end)
+void Section::getRange(bool &valid, LibDLS::Time &start, LibDLS::Time &end)
 {
-    COMTime s, e;
+    LibDLS::Time s, e;
 
     rwLockLayers.lockForRead();
 
@@ -614,7 +614,7 @@ void Section::getRange(bool &valid, COMTime &start, COMTime &end)
 
 /****************************************************************************/
 
-void Section::loadData(const COMTime &start, const COMTime &end,
+void Section::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
         int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
     rwLockLayers.lockForRead();

@@ -29,7 +29,7 @@
 #include <QSet>
 #include <QDir>
 
-#include "com_time.hpp"
+#include "../lib/Time.h"
 
 #include "ui_ExportDialog.h"
 
@@ -59,7 +59,7 @@ class ExportWorker:
     Q_OBJECT
 
     public:
-        ExportWorker(QSet<QtDls::Channel *>, COMTime, COMTime);
+        ExportWorker(QSet<QtDls::Channel *>, LibDLS::Time, LibDLS::Time);
         ~ExportWorker();
 
         void setDirectory(QDir d) { dir = d; }
@@ -80,8 +80,8 @@ class ExportWorker:
         void finished();
 
     private:
-        COMTime start;
-        COMTime end;
+        LibDLS::Time start;
+        LibDLS::Time end;
         unsigned int decimation;
         QSet<QtDls::Channel *> channels;
         double totalProgress;
@@ -114,7 +114,7 @@ class ExportDialog:
         ExportWorker worker;
         QDir dir;
         bool dirCreated;
-        COMTime now;
+        LibDLS::Time now;
         bool workerBusy;
 
         ExportDialog();

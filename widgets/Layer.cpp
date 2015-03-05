@@ -25,7 +25,7 @@
 #include <QtGui>
 #include <QDomElement>
 
-#include "lib_channel.hpp"
+#include "../lib/Channel.h"
 
 #include "Section.h"
 #include "Layer.h"
@@ -285,8 +285,8 @@ void Layer::setPrecision(int p)
 
 /****************************************************************************/
 
-void Layer::loadData(const COMTime &start, const COMTime &end, int width,
-        GraphWorker *worker, set<LibDLS::Job *> &jobSet)
+void Layer::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
+        int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
 {
 #if 0
     qDebug() << __func__ << start.to_str().c_str()
@@ -449,7 +449,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
             for (unsigned int i = 0; i < (*d)->size(); i++) {
                 double value = (*d)->value(i) * scale + offset;
-                COMTime dt = (*d)->time(i) - section->getGraph()->getStart();
+                LibDLS::Time dt = (*d)->time(i)
+                    - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 double yv = (value -  min) * yScale;
                 int xp, yp;
@@ -554,7 +555,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
             QString msg;
             QTextStream str(&msg);
             str << "ERROR: Failed to allocate drawing memory!";
-            dls_log(msg.toUtf8().constData());
+            LibDLS::log(msg.toLocal8Bit().constData());
             return;
         }
 
@@ -582,7 +583,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j) * scale + offset;
-                COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
+                LibDLS::Time dt = (*d)->time(j)
+                    - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - min) * yScale;
 
@@ -638,7 +640,8 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
             for (j = 0; j < (*d)->size(); j++) {
                 value = (*d)->value(j) * scale + offset;
-                COMTime dt = (*d)->time(j) - section->getGraph()->getStart();
+                LibDLS::Time dt = (*d)->time(j)
+                    - section->getGraph()->getStart();
                 double xv = dt.to_dbl_time() * xScale;
                 yv = (value - min) * yScale;
 
@@ -742,7 +745,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
 {
     double xp, prev_xp;
     vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
-    COMTime last_end;
+    LibDLS::Time last_end;
     QColor gapColor(255, 255, 220, 127);
 
     ranges = channel->chunkRanges();
@@ -757,7 +760,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
             QTextStream str(&msg);
             str << "WARNING: Chunks overlapping in channel"
                  << channel->name();
-            dls_log(msg.toUtf8().constData());
+            LibDLS::log(msg.toLocal8Bit().constData());
             return;
         }
         last_end = range->end;

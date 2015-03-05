@@ -27,7 +27,7 @@ TEMPLATE = app
 TARGET = dlsgui
 DEPENDPATH += .
 
-INCLUDEPATH += ../widgets ../src
+INCLUDEPATH += ../widgets ..
 QT += svg
 
 include(../widgets/updateqm.pri)
@@ -40,15 +40,15 @@ isEmpty(PREFIX) {
 unix {
     CONFIG += debug
     LIBS += -L$$PWD/../widgets -lDlsWidgets
-    LIBS += -L$$PWD/../src/.libs -ldls
+    LIBS += -L$$PWD/../lib/.libs -ldls
     LIBS += -lfftw3 -lm -lz
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../src/.libs"
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
 }
 win32 {
     CONFIG += release
     LIBS += -L$$PWD/../widgets/release -lDlsWidgets0
-    LIBS += -L$$PWD/../src/.libs -ldls
+    LIBS += -L$$PWD/../lib/.libs -ldls
     LIBS += -lfftw3 -lm -lz
 }
 

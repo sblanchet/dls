@@ -28,7 +28,7 @@
 #include <QPrintDialog>
 #include <QMenu>
 
-#include "lib_channel.hpp"
+#include "../lib/Channel.h"
 
 #include "Graph.h"
 #include "Section.h"
@@ -136,7 +136,7 @@ Graph::Graph(
     touchPanning(false),
     touchZooming(false)
 {
-    dls_set_logging_callback(staticLoggingCallback, this);
+    LibDLS::set_logging_callback(staticLoggingCallback, this);
 
 #ifdef DEBUG_MT_IN_FILE
     debugFile.setFileName("\\\\10.202.246.121\\transfer\\dlsdebug.txt");
@@ -607,7 +607,7 @@ void Graph::updateRange()
         return;
     }
 
-    COMTime start, end;
+    LibDLS::Time start, end;
     bool valid = false;
 
     rwLockSections.lockForRead();
@@ -635,7 +635,7 @@ void Graph::updateRange()
 
 /****************************************************************************/
 
-void Graph::setRange(const COMTime &start, const COMTime &end)
+void Graph::setRange(const LibDLS::Time &start, const LibDLS::Time &end)
 {
     scale.setRange(start, end);
     autoRange = false;
@@ -743,7 +743,7 @@ void Graph::zoomIn()
         return;
     }
 
-    COMTime diff;
+    LibDLS::Time diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 4.0);
     setRange(getStart() + diff, getEnd() - diff);
 }
@@ -756,7 +756,7 @@ void Graph::zoomOut()
         return;
     }
 
-    COMTime diff;
+    LibDLS::Time diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() / 2.0);
     setRange(getStart() - diff, getEnd() + diff);
 }
@@ -797,7 +797,7 @@ void Graph::setInteraction(Interaction i)
 
 void Graph::setNamedRange(NamedRange r)
 {
-    COMTime now, start, end;
+    LibDLS::Time now, start, end;
     int day;
 
     now.set_now();
@@ -856,7 +856,7 @@ void Graph::pan(double fraction)
         return;
     }
 
-    COMTime diff;
+    LibDLS::Time diff;
     diff.from_dbl_time((getEnd() - getStart()).to_dbl_time() * fraction);
     setRange(getStart() + diff, getEnd() + diff);
 }
@@ -911,7 +911,7 @@ void Graph::print()
 
     rwLockSections.lockForRead();
 
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
 	int dataWidth = page.width() - scaleWidth;
 	int measurePos = -1;
 	if (!measureTime.is_null() && dataWidth > 0
@@ -1162,12 +1162,12 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
 
     if (panning) {
         int dataWidth = getDataWidth();
-        COMTime range = getEnd() - getStart();
+        LibDLS::Time range = getEnd() - getStart();
 
         if (range > 0.0 && dataWidth > 0) {
             double xScale = range.to_dbl_time() / dataWidth;
 
-            COMTime diff;
+            LibDLS::Time diff;
             diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
             scale.setRange(dragStart - diff, dragEnd - diff);
             autoRange = false;
@@ -1240,7 +1240,7 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
     bool wasZooming = zooming;
     bool wasPanning = panning;
     int dataWidth = getDataWidth();
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
 
     movingMsgSplitter = false;
     zooming = false;
@@ -1256,16 +1256,16 @@ void Graph::mouseReleaseEvent(QMouseEvent *event)
     double xScale = range.to_dbl_time() / dataWidth;
 
     if (wasZooming) {
-        COMTime diff;
+        LibDLS::Time diff;
         int offset = contentsRect().left() + scaleWidth;
         diff.from_dbl_time((startPos.x() - offset) * xScale);
-        COMTime newStart = getStart() + diff;
+        LibDLS::Time newStart = getStart() + diff;
         diff.from_dbl_time((event->pos().x() - offset) * xScale);
-        COMTime newEnd = getStart() + diff;
+        LibDLS::Time newEnd = getStart() + diff;
         setRange(newStart, newEnd);
     }
     else if (wasPanning) {
-        COMTime diff;
+        LibDLS::Time diff;
         diff.from_dbl_time((endPos.x() - startPos.x()) * xScale);
         setRange(dragStart - diff, dragEnd - diff);
     }
@@ -1413,7 +1413,7 @@ void Graph::paintEvent(
             contentsRect().top() + scale.getOuterLength());
 
     int top = contentsRect().top() + scale.getOuterLength() + 1;
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
     int measurePos = -1;
 	if (!measureTime.is_null()
 			&& measureTime >= getStart() && measureTime < getEnd()
@@ -1834,7 +1834,7 @@ void Graph::updateMeasuring()
         return;
     }
 
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
     QRect measureRect(contentsRect());
     measureRect.setLeft(contentsRect().left() + scaleWidth);
 	int dataWidth = getDataWidth();
@@ -2028,7 +2028,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
     }
 
     int messageWidth = contentsRect().width() - scaleWidth;
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
 
     if (range > 0.0 && messageWidth > 0) {
         double xScale = messageWidth / range.to_dbl_time();
@@ -2041,7 +2041,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
         for (QList<LibDLS::Job::Message>::const_iterator msg =
                 messages.begin(); msg != messages.end(); msg++) {
-            COMTime dt = msg->time - getStart();
+            LibDLS::Time dt = msg->time - getStart();
             double xv = dt.to_dbl_time() * xScale;
             if (xv < 0) {
                 continue;
@@ -2280,7 +2280,7 @@ void Graph::touchPanStart(int x)
 void Graph::touchPanUpdate(int x)
 {
     int dataWidth = getDataWidth();
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
 
     if (range <= 0.0 || dataWidth <= 0) {
         return;
@@ -2288,7 +2288,7 @@ void Graph::touchPanUpdate(int x)
 
     double xScale = range.to_dbl_time() / dataWidth;
 
-    COMTime diff;
+    LibDLS::Time diff;
     diff.from_dbl_time((x - touchX0) * xScale);
     touchX0 = x;
     scale.setRange(getStart() - diff, getEnd() - diff);
@@ -2301,7 +2301,7 @@ void Graph::touchPanUpdate(int x)
 
 void Graph::touchZoomStart(int x0, int x1)
 {
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
     int width = x1 - x0;
 
     if (range <= 0.0 || width == 0) {
@@ -2310,7 +2310,7 @@ void Graph::touchZoomStart(int x0, int x1)
 
     double xScale = range.to_dbl_time() / getDataWidth();
     int offset = contentsRect().left() + scaleWidth;
-    COMTime d0, d1;
+    LibDLS::Time d0, d1;
     d0.from_dbl_time((x0 - offset) * xScale);
     d1.from_dbl_time((x1 - offset) * xScale);
     if (d0 < d1) {
@@ -2331,7 +2331,7 @@ void Graph::touchZoomStart(int x0, int x1)
     QString dbg = QString("zooming1 %1 - %2\n")
         .arg(touchT0.to_real_time().c_str())
         .arg(touchT1.to_real_time().c_str());
-    COMTime xrange = touchT1 - touchT0;
+    LibDLS::Time xrange = touchT1 - touchT0;
     dbg += QString("range=%1 width=%2 scale=%3\n")
         .arg(xrange.to_dbl_time())
         .arg(width)
@@ -2345,7 +2345,7 @@ void Graph::touchZoomStart(int x0, int x1)
 
 void Graph::touchZoomUpdate(int x0, int x1)
 {
-    COMTime range = touchT1 - touchT0;
+    LibDLS::Time range = touchT1 - touchT0;
     int width = x1 - x0;
 
 #ifdef DEBUG_MT_IN_FILE
@@ -2367,11 +2367,11 @@ void Graph::touchZoomUpdate(int x0, int x1)
 
     double newScale = range.to_dbl_time() / width;
     int offset = contentsRect().left() + scaleWidth;
-    COMTime diff;
+    LibDLS::Time diff;
     diff.from_dbl_time((x0 - offset) * newScale);
-    COMTime start = touchT0 - diff;
+    LibDLS::Time start = touchT0 - diff;
     diff.from_dbl_time(getDataWidth() * newScale);
-    COMTime end = start + diff;
+    LibDLS::Time end = start + diff;
     scale.setRange(start, end);
     autoRange = false;
     update();
@@ -2575,7 +2575,7 @@ void Graph::showExport()
 
 void Graph::fixMeasuringLine()
 {
-    COMTime range = getEnd() - getStart();
+    LibDLS::Time range = getEnd() - getStart();
     QRect measureRect(contentsRect());
     measureRect.setLeft(contentsRect().left() + scaleWidth);
 	int dataWidth = getDataWidth();
@@ -2685,13 +2685,13 @@ int GraphWorker::dataCallback(LibDLS::Data *data, void *cb_data)
 void GraphWorker::newData(LibDLS::Data *data)
 {
     switch (data->meta_type()) {
-        case DLSMetaGen:
+        case LibDLS::MetaGen:
             genericData.push_back(data);
             break;
-        case DLSMetaMin:
+        case LibDLS::MetaMin:
             minimumData.push_back(data);
             break;
-        case DLSMetaMax:
+        case LibDLS::MetaMax:
             maximumData.push_back(data);
             break;
         default:
