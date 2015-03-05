@@ -30,7 +30,7 @@
 #include "Graph.h"
 #include "Channel.h"
 
-#include "lib_export.hpp"
+#include "../lib/Export.h"
 
 using DLS::ExportDialog;
 using DLS::ExportWorker;
@@ -49,7 +49,7 @@ ExportDialog::ExportDialog(
     graph(graph),
     worker(channels, graph->getStart(), graph->getEnd()),
     dirCreated(false),
-    now(COMTime::now()),
+    now(LibDLS::Time::now()),
     workerBusy(false)
 {
     setupUi(this);
@@ -255,8 +255,8 @@ void ExportDialog::on_pushButtonDir_clicked()
 
 ExportWorker::ExportWorker(
         QSet<Channel *> channels,
-        COMTime start,
-        COMTime end
+        LibDLS::Time start,
+        LibDLS::Time end
         ):
     start(start),
     end(end),

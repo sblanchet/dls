@@ -52,7 +52,7 @@ Scale::Scale(QWidget *p):
  *
  * If the values change, this re-calculates the scale layout.
  */
-void Scale::setRange(const COMTime &t1, const COMTime &t2)
+void Scale::setRange(const LibDLS::Time &t1, const LibDLS::Time &t2)
 {
     bool changed;
 
@@ -426,7 +426,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
 
     switch (tics) {
         case Time: {
-            COMTime t, step;
+            LibDLS::Time t, step;
             step.from_dbl_time(majorStep);
             t.from_dbl_time(
                     floor(start.to_dbl_time() / majorStep) * majorStep);
@@ -437,7 +437,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 for (unsigned int i = 1; i < minorDiv; i++) {
-                    COMTime minor;
+                    LibDLS::Time minor;
                     minor.from_dbl_time(
                             t.to_dbl_time() + i * majorStep / minorDiv);
                     if (minor >= start && minor < end) {
@@ -460,7 +460,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
 #ifdef DEBUG
             qDebug() << y << m << d << h;
 #endif
-            COMTime t, step;
+            LibDLS::Time t, step;
             if (t.set_date(y, m, d, h)) {
                 break;
             }
@@ -472,7 +472,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 for (unsigned int i = 1; i < minorDiv; i++) {
-                    COMTime minor;
+                    LibDLS::Time minor;
                     minor.from_dbl_time( t.to_dbl_time() +
                             i * majorStep * 3600.0 / minorDiv);
                     if (minor >= start && minor < end) {
@@ -494,7 +494,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
 #ifdef DEBUG
             qDebug() << y << m << d;
 #endif
-            COMTime t, next;
+            LibDLS::Time t, next;
             if (t.set_date(y, m, d)) {
                 break;
             }
@@ -532,7 +532,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 while (1) {
-                    COMTime minor;
+                    LibDLS::Time minor;
                     int minorStep = majorStep / minorDiv;
 
                     while (minorStep--) {
@@ -572,14 +572,14 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
 #ifdef DEBUG
             qDebug() << y << m;
 #endif
-            COMTime t;
+            LibDLS::Time t;
             if (t.set_date(y, m)) {
                 break;
             }
 
             while (t < end) {
                 if (t >= start) {
-                    COMTime next;
+                    LibDLS::Time next;
                     int ny = y, nm = m;
                     for (int i = 0; i < majorStep; i++) {
                         nm++;
@@ -595,7 +595,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 for (unsigned int i = 1; i < minorDiv; i++) {
-                    COMTime minor;
+                    LibDLS::Time minor;
                     int my = y;
                     int md = i * majorStep / minorDiv;
                     int mm = m;
@@ -636,7 +636,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
             qDebug() << "start" << start.to_real_time().c_str() << y;
             qDebug() << "end" << end.to_real_time().c_str() << endYear;
 #endif
-            COMTime t;
+            LibDLS::Time t;
 
             while (y < endYear) {
                 if (t.set_date(y)) {
@@ -645,7 +645,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 if (t >= start && t < end) {
-                    COMTime next;
+                    LibDLS::Time next;
                     if (next.set_date(y + majorStep)) {
                         break;
                     }
@@ -653,7 +653,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
                 }
 
                 for (unsigned int i = 1; i < minorDiv; i++) {
-                    COMTime minor;
+                    LibDLS::Time minor;
                     if (minor.set_date(y + i * majorStep / minorDiv)) {
                         break;
                     }
@@ -673,7 +673,7 @@ void Scale::draw(QPainter &painter, const QRect &rect) const
 
 /** Formats a numeric value.
  */
-QString Scale::formatValue(const COMTime &t, QString &prevLabel) const
+QString Scale::formatValue(const LibDLS::Time &t, QString &prevLabel) const
 {
     QString label;
 
@@ -727,8 +727,8 @@ void Scale::drawMajor(
         QPainter &painter,
         const QRect &rect,
         double scale,
-        const COMTime &t,
-        const COMTime &n,
+        const LibDLS::Time &t,
+        const LibDLS::Time &n,
         QString &prevLabel
         ) const
 {
@@ -773,7 +773,7 @@ void Scale::drawMinor(
         QPainter &painter,
         const QRect &rect,
         double scale,
-        const COMTime &t
+        const LibDLS::Time &t
         ) const
 {
     QPen pen = painter.pen();

@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-#include "lib_export.hpp"
+#include "../lib/Export.h"
 
 #include "Channel.h"
 
@@ -53,8 +53,9 @@ QString Channel::name() const
 
 /****************************************************************************/
 
-void Channel::fetchData(COMTime start, COMTime end, unsigned int min_values,
-        LibDLS::DataCallback callback, void *priv, unsigned int decimation)
+void Channel::fetchData(LibDLS::Time start, LibDLS::Time end,
+        unsigned int min_values, LibDLS::DataCallback callback, void *priv,
+        unsigned int decimation)
 {
     rwlock.lockForWrite();
     ch->fetch_chunks();
@@ -116,7 +117,7 @@ vector<Channel::TimeRange> Channel::chunkRanges()
 
 /****************************************************************************/
 
-bool Channel::getRange(COMTime &start, COMTime &end)
+bool Channel::getRange(LibDLS::Time &start, LibDLS::Time &end)
 {
     bool ret;
 

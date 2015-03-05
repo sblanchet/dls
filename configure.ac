@@ -223,12 +223,15 @@ AX_DEFINE_DIR([BINDIR], [bindir])
 
 AC_CONFIG_FILES([
     Makefile
+    daemon/Makefile
     dls.spec
+    fltkguis/Makefile
+    fltkguis/images/Makefile
+    lib/Makefile
     script/Makefile
     script/dlsd.service
     script/init.sh
-    src/Makefile
-    src/images/Makefile
+    tool/Makefile
 ])
 AC_OUTPUT
 
