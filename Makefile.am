@@ -21,7 +21,12 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src script
+SUBDIRS = \
+	lib \
+	daemon \
+	fltkguis \
+	script \
+	tool
 
 EXTRA_DIST = \
 	bootstrap.sh \

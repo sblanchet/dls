@@ -476,7 +476,7 @@ void MainWindow::execScript()
 
     QString out;
     QList<DLS::Graph::ChannelInfo> channelInfo = dlsGraph->channelInfo();
-    COMTime measure = dlsGraph->getMeasureTime();
+    LibDLS::Time measure = dlsGraph->getMeasureTime();
 
     switch (scripts[index].dialect) {
         case Script::Octave:

@@ -37,7 +37,7 @@
 #include <QUrl>
 #include <QDir>
 
-#include "lib_job.hpp"
+#include "../lib/Job.h"
 
 #include "Scale.h"
 
@@ -125,9 +125,9 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void removeSection(Section *);
 
         void updateRange();
-        void setRange(const COMTime &, const COMTime &);
-        const COMTime &getStart() const { return scale.getStart(); };
-        const COMTime &getEnd() const { return scale.getEnd(); };
+        void setRange(const LibDLS::Time &, const LibDLS::Time &);
+        const LibDLS::Time &getStart() const { return scale.getStart(); };
+        const LibDLS::Time &getEnd() const { return scale.getEnd(); };
         QSet<QUrl> urls();
 
         struct ChannelInfo {
@@ -137,7 +137,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         };
         QList<ChannelInfo> channelInfo();
 
-		COMTime getMeasureTime() const { return measureTime; }
+        LibDLS::Time getMeasureTime() const { return measureTime; }
 
         enum Interaction {
             Zoom,
@@ -200,13 +200,13 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int dropRemaining;
         QPoint startPos;
         QPoint endPos;
-        COMTime dragStart;
-        COMTime dragEnd;
+        LibDLS::Time dragStart;
+        LibDLS::Time dragEnd;
         bool zooming;
         Interaction interaction;
         bool panning;
         bool measuring;
-        COMTime measureTime;
+        LibDLS::Time measureTime;
 
         QThread thread;
         GraphWorker worker;
@@ -251,8 +251,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int scaleWidth;
 
         struct View {
-            COMTime start;
-            COMTime end;
+            LibDLS::Time start;
+            LibDLS::Time end;
         };
         QList<View> views;
         QList<View>::iterator currentView;
@@ -272,8 +272,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int touchX0;
         bool touchPanning;
 
-        COMTime touchT0;
-        COMTime touchT1;
+        LibDLS::Time touchT0;
+        LibDLS::Time touchT1;
         bool touchZooming;
 
         QFile debugFile;

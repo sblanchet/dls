@@ -7,7 +7,7 @@
 #include <QList>
 #include <QReadWriteLock>
 
-#include "lib_channel.hpp"
+#include "../lib/Channel.h"
 
 #include "Node.h"
 
@@ -39,17 +39,18 @@ class Channel:
                 QString msg;
         };
 
-        void fetchData(COMTime, COMTime, unsigned int, LibDLS::DataCallback,
+        void fetchData(LibDLS::Time, LibDLS::Time, unsigned int,
+                LibDLS::DataCallback,
                 void *, unsigned int);
         bool beginExport(LibDLS::Export *, const QString &);
 
         struct TimeRange
         {
-            COMTime start;
-            COMTime end;
+            LibDLS::Time start;
+            LibDLS::Time end;
         };
         vector<TimeRange> chunkRanges();
-        bool getRange(COMTime &, COMTime &);
+        bool getRange(LibDLS::Time &, LibDLS::Time &);
 
         int rowCount() const;
         QVariant data(const QModelIndex &, int) const;

@@ -27,7 +27,7 @@
 
 #include <QRect>
 
-#include "com_time.hpp"
+#include "../lib/Time.h"
 
 namespace DLS {
 
@@ -40,9 +40,9 @@ class Scale
     public:
         Scale(QWidget *);
 
-        const COMTime &getStart() const { return start; }
-        const COMTime &getEnd() const { return end; }
-        void setRange(const COMTime &, const COMTime &);
+        const LibDLS::Time &getStart() const { return start; }
+        const LibDLS::Time &getEnd() const { return end; }
+        void setRange(const LibDLS::Time &, const LibDLS::Time &);
         int getLength() const { return length; }
         void setLength(int);
 
@@ -52,8 +52,8 @@ class Scale
 
     private:
         const QWidget * const parent; /**< Parent widget. */
-        COMTime start; /**< Minimum value. */
-        COMTime end; /**< Maximum value. */
+        LibDLS::Time start; /**< Minimum value. */
+        LibDLS::Time end; /**< Maximum value. */
         int length; /**< Scale length in pixel. */
 
         int outerLength; /**< Space for the numbering in pixel. */
@@ -72,11 +72,11 @@ class Scale
 
         Scale();
         void update();
-        QString formatValue(const COMTime &, QString &) const;
-        void drawMajor(QPainter &, const QRect &, double, const COMTime &,
-                const COMTime &, QString &) const;
+        QString formatValue(const LibDLS::Time &, QString &) const;
+        void drawMajor(QPainter &, const QRect &, double, const LibDLS::Time &,
+                const LibDLS::Time &, QString &) const;
         void drawMinor(QPainter &, const QRect &, double,
-                const COMTime &) const;
+                const LibDLS::Time &) const;
 };
 
 /****************************************************************************/

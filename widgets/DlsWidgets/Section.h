@@ -32,7 +32,7 @@
 #include <QDir>
 #include <QCoreApplication> // Q_DECLARE_TR_FUNCTIONS()
 
-#include "com_time.hpp"
+#include "../lib/Time.h"
 
 #include "ValueScale.h"
 
@@ -95,9 +95,9 @@ class Q_DECL_EXPORT Section
 
         Layer *appendLayer(QtDls::Channel *);
 
-        void getRange(bool &, COMTime &, COMTime &);
-        void loadData(const COMTime &, const COMTime &, int, GraphWorker *,
-                std::set<LibDLS::Job *> &);
+        void getRange(bool &, LibDLS::Time &, LibDLS::Time &);
+        void loadData(const LibDLS::Time &, const LibDLS::Time &, int,
+                GraphWorker *, std::set<LibDLS::Job *> &);
 
         QColor nextColor();
 

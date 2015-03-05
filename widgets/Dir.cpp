@@ -13,7 +13,7 @@ using namespace std;
 #include <QIcon>
 #include <QApplication>
 
-#include "lib_dir.hpp"
+#include "../lib/Dir.h"
 
 #include "Dir.h"
 #include "Job.h"
