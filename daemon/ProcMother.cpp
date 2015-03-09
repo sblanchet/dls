@@ -28,6 +28,10 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
 
 #include <fstream>
 using namespace std;
@@ -97,11 +101,13 @@ ProcMother::~ProcMother()
 
 */
 
-int ProcMother::start(const string &dls_dir)
+int ProcMother::start(const string &dls_dir, bool no_bind,
+        const std::string &service)
 {
 #ifdef DEBUG
     int p;
 #endif
+    int ret;
 
     _dls_dir = dls_dir;
 
@@ -120,8 +126,25 @@ int ProcMother::start(const string &dls_dir)
     // Anfangs einmal alle Aufträge laden
     _check_jobs();
 
-    while (!_exit)
-    {
+    if (!no_bind && _prepare_socket(service.c_str())) {
+        return -1;
+    }
+
+    while (!_exit) {
+        fd_set rfds;
+        struct timeval tv;
+        int max_fd = -1;
+
+        FD_ZERO(&rfds);
+
+        if (_listen_fd != -1) {
+            FD_SET(_listen_fd, &rfds);
+            max_fd = _listen_fd;
+        }
+
+        tv.tv_sec = JOB_CHECK_INTERVAL;
+        tv.tv_usec = 0;
+
         // Sind zwischenzeitlich Signale eingetroffen?
         _check_signals();
 
@@ -137,8 +160,37 @@ int ProcMother::start(const string &dls_dir)
 
         if (process_type != MotherProcess || _exit) break;
 
-        // Alle Arbeit ist getan - Schlafen legen
-        sleep(JOB_CHECK_INTERVAL);
+        ret = select(max_fd + 1, &rfds, NULL, NULL, &tv);
+        if (ret == -1) {
+            msg() << "select() failed: " << strerror(errno);
+            log(Error);
+            _exit = true;
+            _exit_error = true;
+        }
+
+        if (ret > 0 && FD_ISSET(_listen_fd, &rfds)) {
+            struct sockaddr_storage peer_addr;
+            std::string addr_str;
+            socklen_t peer_addr_size = sizeof(peer_addr);
+
+            int cfd = accept(_listen_fd,
+                    (struct sockaddr *) &peer_addr, &peer_addr_size);
+            if (cfd == -1) {
+                msg() << "accept() failed: " << strerror(errno);
+                log(Warning);
+            }
+
+            addr_str = _format_address((struct sockaddr *) &peer_addr);
+            msg() << "Accepted connection from " << addr_str;
+            log(Info);
+
+            ret = write(cfd, "hallo\n", 6);
+            msg() << "write" << ret;
+            log(Warning);
+
+            sleep(2);
+            close(cfd);
+        }
     }
 
     if (process_type == MotherProcess) {
@@ -150,6 +202,11 @@ int ProcMother::start(const string &dls_dir)
 
         msg() << "----- DLS Mother process finished. -----";
         log(Info);
+    }
+
+    if (_listen_fd != -1) {
+        close(_listen_fd);
+        _listen_fd = -1;
     }
 
     return _exit_error ? -1 : 0;
@@ -755,6 +812,108 @@ unsigned int ProcMother::_processes_running()
     }
 
     return process_count;
+}
+
+/*****************************************************************************/
+
+int ProcMother::_prepare_socket(const char *service)
+{
+    int ret;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+
+    // init socket hints
+    // Use IPv6 for both v4 and v6 by default; see man ipv6(7)
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET6; /* IPv6 (and v4 implicitely) */
+    hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+    hints.ai_flags = AI_PASSIVE; /* wildcard IP address */
+    hints.ai_protocol = 0; /* Any protocol */
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+    ret = getaddrinfo(NULL, service, &hints, &result);
+    if (ret != 0) {
+        msg() << "Failed to get address info: " << gai_strerror(ret);
+        log(Error);
+        return -1;
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        _listen_fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (_listen_fd == -1) {
+            msg() << "Failed to create socket for family " << rp->ai_family
+                << " type " << rp->ai_socktype << " protocol "
+                << rp->ai_protocol << ": " << gai_strerror(ret);
+            log(Warning);
+            continue;
+        }
+
+        ret = bind(_listen_fd, rp->ai_addr, rp->ai_addrlen);
+        if (ret == 0) {
+            // success
+            break;
+        }
+
+        msg() << "Failed to bind socket: " << strerror(errno);
+        log(Warning);
+        close(_listen_fd);
+        _listen_fd = -1;
+    }
+
+    freeaddrinfo(result);
+
+    if (rp == NULL) {
+        msg() << "No socket left.";
+        log(Error);
+        return -1;
+    }
+
+    // listen to socket
+    ret = listen(_listen_fd, 16 /* backlog */);
+    if (ret == -1) {
+        msg() << "Failed to listen to socket: " << strerror(errno);
+        log(Error);
+        close(_listen_fd);
+        _listen_fd = -1;
+        return -1;
+    }
+
+    return 0;
+}
+
+/*****************************************************************************/
+
+std::string ProcMother::_format_address(const struct sockaddr *sa)
+{
+    std::stringstream str;
+    char addr_str[INET6_ADDRSTRLEN + 1];
+
+    switch(sa->sa_family) {
+        case AF_INET:
+            {
+                struct sockaddr_in *sa4 = (struct sockaddr_in *) sa;
+                inet_ntop(AF_INET, &sa4->sin_addr,
+                        addr_str, sizeof(addr_str));
+                str << addr_str << " port " << ntohs(sa4->sin_port);
+            }
+            break;
+
+        case AF_INET6:
+            {
+                struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) sa;
+                inet_ntop(AF_INET6, &sa6->sin6_addr,
+                        addr_str, sizeof(addr_str));
+                str << addr_str << " port " << ntohs(sa6->sin6_port);
+            }
+            break;
+
+        default:
+            str << "Unknown address family";
+    }
+
+    return str.str();
 }
 
 /*****************************************************************************/

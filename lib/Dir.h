@@ -37,63 +37,38 @@ namespace LibDLS {
 
 /****************************************************************************/
 
-/**
-   DLS Directory Exception
+/** DLS Directory Exception.
 */
-
-class DirectoryException : public Exception
+class DirectoryException:
+    public Exception
 {
-public:
-	DirectoryException(const string &pmsg) : Exception(pmsg) {};
+    public:
+        DirectoryException(const string &pmsg):
+            Exception(pmsg) {};
 };
 
 /****************************************************************************/
 
-/**
-   DLS Data Directory.
-*/
-
+/** DLS Data Directory.
+ */
 class Directory
 {
-public:
-	Directory();
-	~Directory();
+    public:
+        Directory();
+        ~Directory();
 
-	void import(const string &);
-	list<Job> &jobs();
-	Job *job(unsigned int);
-	Job *find_job(unsigned int);
+        void importLocal(const string &);
+        void importNetwork(const string &);
 
-	const string &path() const;
+        const string &path() const { return _path; }
+        list<Job> &jobs() { return _jobs; }
+        Job *job(unsigned int);
+        Job *find_job(unsigned int);
 
-private:
-	string _path; /**< path to DLS data directory */
-	list<Job> _jobs; /**< list of jobs */
+    private:
+        string _path; /**< path to DLS data directory */
+        list<Job> _jobs; /**< list of jobs */
 };
-
-/****************************************************************************/
-
-/**
-   Returns the list of jobs.
-   \return list of jobs
-*/
-
-inline list<Job> &Directory::jobs()
-{
-    return _jobs;
-}
-
-/****************************************************************************/
-
-/**
-   Returns the directory's path.
-   \return DLS data directory path.
-*/
-
-inline const string &Directory::path() const
-{
-    return _path;
-}
 
 /****************************************************************************/
 
