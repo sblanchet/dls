@@ -43,12 +43,16 @@ using namespace std;
 #include "ProcLogger.h"
 #include "lib/mdct.h"
 
+#define DEFAULT_PORT "53584" // 0xD150
+
 /*****************************************************************************/
 
 unsigned int sig_int_term = 0;
 unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
 unsigned int sig_usr1 = 0;
+bool no_bind = false;
+std::string service(DEFAULT_PORT);
 ProcessType process_type = MotherProcess;
 unsigned int dlsd_job_id = 0;
 string dls_dir = "";
@@ -183,7 +187,7 @@ int main(int argc, char **argv)
     {
         // Mutterprozess starten
         mother_process = new ProcMother();
-        exit_code = mother_process->start(dls_dir);
+        exit_code = mother_process->start(dls_dir, no_bind, service);
         delete mother_process;
 
         if (process_type == LoggingProcess)
@@ -224,7 +228,7 @@ void get_options(int argc, char **argv)
     char *env, *remainder;
 
     do {
-        c = getopt(argc, argv, "d:u:n:kw:h");
+        c = getopt(argc, argv, "d:u:n:kw:bp:h");
 
         switch (c) {
             case 'd':
@@ -259,6 +263,14 @@ void get_options(int argc, char **argv)
                     print_usage();
                 }
 
+                break;
+
+            case 'b':
+                no_bind = true;
+                break;
+
+            case 'p':
+                service = optarg;
                 break;
 
             case 'h':
@@ -307,6 +319,9 @@ void print_usage()
         << "  -w <seconds>  Wait time before restarting logging" << endl
         << "                  process after an error. Default is "
         << DEFAULT_WAIT_BEFORE_RESTART << "." << endl
+        << "  -b            Do not bind to network socket." << endl
+        << "  -p <port>     Listen port or service name. Default is "
+        << DEFAULT_PORT << "." << endl
         << "  -h            Show this help." << endl;
     exit(0);
 }
@@ -332,6 +347,9 @@ void signal_handler(int sig)
 
         case SIGUSR1:
             sig_usr1++;
+            break;
+
+        case SIGPIPE:
             break;
 
         default:

@@ -50,7 +50,7 @@ public:
     ProcMother();
     ~ProcMother();
 
-    int start(const string &);
+    int start(const string &, bool, const std::string &);
 
 private:
     string _dls_dir; /**< DLS-Datenverzeichnis */
@@ -58,6 +58,7 @@ private:
     unsigned int _sig_child; /**< Zähler für empfangene SIGCHLD-Signale */
     bool _exit; /**< true, wenn der Prozess beendet werden soll */
     bool _exit_error; /**< true, wenn Beendigung mit Fehler erfolgen soll */
+    int _listen_fd; /**< Listening socket. */
 
     void _empty_spool();
     void _check_jobs();
@@ -70,6 +71,8 @@ private:
     void _check_processes();
     JobPreset *_job_exists(unsigned int);
     unsigned int _processes_running();
+    int _prepare_socket(const char *);
+    static std::string _format_address(const struct sockaddr *);
 };
 
 /*****************************************************************************/
