@@ -1,0 +1,40 @@
+message DlsRequest {
+    optional DirInfoRequest dir_info = 1;
+}
+
+message DirInfoRequest {
+    optional string path = 1;
+}
+
+message DirInfoResponse {
+    optional string path = 1;
+    repeated JobInfo job = 2;
+}
+
+message JobInfo {
+    required uint32 id = 1;
+    repeated ChannelInfo channel = 2;
+}
+
+message ChannelInfo {
+    required uint32 id = 1;
+    required string name = 2;
+    optional string unit = 3;
+    required ChannelType type = 4;
+    optional bool recording = 5;
+}
+
+enum ChannelType
+{
+    TUNKNOWN = 0;
+    TCHAR = 1;
+    TUCHAR = 2;
+    TSHORT = 3;
+    TUSHORT = 4;
+    TINT = 5;
+    TUINT = 6;
+    TLINT = 7;
+    TULINT = 8;
+    TFLT = 9;
+    TDBL = 10;
+}
