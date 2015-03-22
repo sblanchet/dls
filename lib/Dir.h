@@ -57,8 +57,9 @@ class Directory
         Directory();
         ~Directory();
 
-        void importLocal(const string &);
-        void importNetwork(const string &);
+        void import(const string &);
+        //void importLocal(const string &);
+        //void importNetwork(const string &);
 
         const string &path() const { return _path; }
         list<Job> &jobs() { return _jobs; }
