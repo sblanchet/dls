@@ -42,7 +42,7 @@ Directory::~Directory()
 
 /*****************************************************************************/
 
-void Directory::import(const string &path)
+void Directory::import(const string &path) // importLocal
 {
     stringstream str;
     DIR *dir;
