@@ -543,7 +543,7 @@ void check_running(const string *dls_dir)
 
     if (kill(pid, 0) == -1) {
         if (errno == ESRCH) { // Prozess mit angegebener PID existiert nicht
-            cout << "INFO: Deleting old PID file" << endl;
+            cout << "INFO: Deleting old PID file " << pid_file_name << endl;
 
             if (unlink(pid_file_name.c_str()) == -1) {
                 cerr << "ERROR: Could not delete PID file \""
@@ -553,8 +553,14 @@ void check_running(const string *dls_dir)
 
             return;
         }
+        else if (errno == EPERM) {
+            // if there is a process, for which we don't have the rights to
+            // send a signal, kill may set errno to EPERM. In this case, there
+            // is obviously a process running. Continue below.
+        }
         else {
-            cerr << "ERROR: Could not signal process " << pid << "!" << endl;
+            cerr << "ERROR: Could not signal process " << pid << " from "
+                << pid_file_name << ": " << strerror(errno) << endl;
             exit(-1);
         }
     }
@@ -575,7 +581,8 @@ void check_running(const string *dls_dir)
     }
 
     if (my_name != pidfile_name) {
-        cout << "INFO: Deleting stale PID file." << endl;
+        cout << "INFO: Deleting stale PID file " << pid_file_name << "."
+            << endl;
 
         if (unlink(pid_file_name.c_str()) == -1) {
             cerr << "ERROR: Could not delete PID file \""
