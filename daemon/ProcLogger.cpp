@@ -960,49 +960,6 @@ void ProcLogger::_create_pid_file()
         }
     }
     else { // PID-Datei existiert bereits!
-        old_pid_file.exceptions(ios::badbit | ios::failbit);
-        old_pid_file.open(pid_file_name.str().c_str(), ios::in);
-        if (!old_pid_file.is_open()) {
-            _exit = true;
-            _exit_code = E_DLS_ERROR;
-            msg() << "Could not open existing PID file \""
-                  << pid_file_name.str() << "\"!";
-            log(Error);
-            return;
-        }
-
-        try {
-            old_pid_file >> pid;
-        }
-        catch (...) {
-            _exit = true;
-            _exit_code = E_DLS_ERROR;
-            old_pid_file.close();
-            msg() << "Existing PID file \"" << pid_file_name.str()
-                  << "\" is corrupt!";
-            log(Error);
-            return;
-        }
-
-        old_pid_file.close();
-
-        if (kill(pid, 0) == -1) {
-            if (errno != ESRCH) {
-                _exit = true;
-                _exit_code = E_DLS_ERROR;
-                msg() << "Could not signal process " << pid << "!";
-                log(Error);
-                return;
-            }
-        }
-        else { // Prozess läuft noch!
-            _exit = true;
-            _exit_code = E_DLS_ERROR;
-            msg() << "Another logging process ist running on job "
-                  << dlsd_job_id << "!";
-            log(Error);
-            return;
-        }
 
         // Existierende PID-Datei löschen
         _remove_pid_file();
