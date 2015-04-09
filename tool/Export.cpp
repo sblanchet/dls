@@ -37,8 +37,8 @@
 #include <set>
 using namespace std;
 
-#include "lib/Dir.h"
-#include "lib/Export.h"
+#include "lib/LibDLS/Dir.h"
+#include "lib/LibDLS/Export.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

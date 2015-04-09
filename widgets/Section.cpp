@@ -25,10 +25,10 @@
 #include <QtGui>
 #include <QDomElement>
 
-#include "Graph.h"
-#include "Section.h"
-#include "Layer.h"
-#include "Model.h"
+#include "DlsWidgets/Graph.h"
+#include "DlsWidgets/Section.h"
+#include "DlsWidgets/Layer.h"
+#include "DlsWidgets/Model.h"
 #include "Channel.h"
 
 using DLS::Section;

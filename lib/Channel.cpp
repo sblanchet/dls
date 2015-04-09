@@ -29,10 +29,11 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "globals.h"
-#include "Chunk.h"
-#include "Job.h"
-#include "Channel.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/Chunk.h"
+#include "LibDLS/Job.h"
+#include "LibDLS/Channel.h"
+
 #include "XmlParser.h"
 using namespace LibDLS;
 

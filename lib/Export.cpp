@@ -24,7 +24,10 @@
 #include <iomanip>
 using namespace std;
 
-#include "Export.h"
+#include "LibDLS/Export.h"
+
+#include "File.h"
+
 using namespace LibDLS;
 
 /******************************************************************************
@@ -117,12 +120,14 @@ void ExportAscii::end()
 
 ExportMat4::ExportMat4()
 {
+	_file = new File();
 }
 
 /*****************************************************************************/
 
 ExportMat4::~ExportMat4()
 {
+	delete _file;
 }
 
 /*****************************************************************************/
@@ -150,10 +155,10 @@ void ExportMat4::begin(
 
     stringstream filepath;
     filepath << path << "/" << name.str() << ".mat";
-    _file.open_read_write(filepath.str().c_str());
+    _file->open_read_write(filepath.str().c_str());
 
-    _file.write((const char *) &_header, sizeof(Mat4Header));
-    _file.write(name.str().c_str(), name.str().size() + 1);
+    _file->write((const char *) &_header, sizeof(Mat4Header));
+    _file->write(name.str().c_str(), name.str().size() + 1);
 }
 
 /*****************************************************************************/
@@ -167,9 +172,9 @@ void ExportMat4::data(const Data *data)
 
     for (i = 0; i < data->size(); i++) {
         val = data->time(i).to_dbl();
-        _file.write((const char *) &val, sizeof(double));
+        _file->write((const char *) &val, sizeof(double));
         val = data->value(i);
-        _file.write((const char *) &val, sizeof(double));
+        _file->write((const char *) &val, sizeof(double));
     }
 }
 
@@ -177,9 +182,9 @@ void ExportMat4::data(const Data *data)
 
 void ExportMat4::end()
 {
-    _file.seek(0); // write header again, this time with number of columns
-    _file.write((const char *) &_header, sizeof(Mat4Header));
-    _file.close();
+    _file->seek(0); // write header again, this time with number of columns
+    _file->write((const char *) &_header, sizeof(Mat4Header));
+    _file->close();
 }
 
 /*****************************************************************************/

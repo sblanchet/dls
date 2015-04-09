@@ -25,7 +25,7 @@
 #include "Plugin.h"
 #include "WidgetCollection.h"
 
-#include "Graph.h"
+#include "DlsWidgets/Graph.h"
 
 using namespace DLS;
 

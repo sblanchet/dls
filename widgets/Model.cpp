@@ -9,9 +9,9 @@
 #include <QMimeData>
 #include <QUrl>
 
-#include "../lib/Dir.h"
+#include <LibDLS/Dir.h>
 
-#include "Model.h"
+#include "DlsWidgets/Model.h"
 #include "Dir.h"
 #include "Channel.h"
 

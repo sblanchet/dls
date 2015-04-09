@@ -29,7 +29,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "lib/ChannelPreset.h"
+#include "lib/LibDLS/ChannelPreset.h"
+
 #include "lib/mdct.h"
 
 #include "CtlGlobals.h"

@@ -36,8 +36,8 @@
 using namespace std;
 #endif
 
-#include "globals.h"
-#include "Exception.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/Exception.h"
 
 /*****************************************************************************/
 
