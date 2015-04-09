@@ -39,6 +39,8 @@ namespace LibDLS {
 
 /*****************************************************************************/
 
+/** Basic DLS channel datatype.
+ */
 enum ChannelType
 {
     TUNKNOWN,

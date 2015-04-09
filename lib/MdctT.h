@@ -24,8 +24,9 @@
 
 #include <math.h>
 
-#include "globals.h"
-#include "Exception.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/Exception.h"
+
 #include "mdct.h"
 
 /*****************************************************************************/

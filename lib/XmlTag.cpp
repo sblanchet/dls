@@ -22,10 +22,10 @@
 #include <sstream>
 using namespace std;
 
-/*****************************************************************************/
+#include "LibDLS/globals.h"
 
-#include "globals.h"
 #include "XmlTag.h"
+
 using namespace LibDLS;
 
 /*****************************************************************************/

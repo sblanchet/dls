@@ -37,7 +37,7 @@
 #include <QUrl>
 #include <QDir>
 
-#include "../lib/Job.h"
+#include <LibDLS/Job.h>
 
 #include "Scale.h"
 

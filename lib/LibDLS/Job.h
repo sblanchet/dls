@@ -32,7 +32,6 @@ using namespace std;
 #include "Exception.h"
 #include "Time.h"
 #include "JobPreset.h"
-
 #include "Channel.h"
 
 /****************************************************************************/

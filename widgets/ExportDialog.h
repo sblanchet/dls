@@ -29,7 +29,7 @@
 #include <QSet>
 #include <QDir>
 
-#include "../lib/Time.h"
+#include <LibDLS/Time.h>
 
 #include "ui_ExportDialog.h"
 

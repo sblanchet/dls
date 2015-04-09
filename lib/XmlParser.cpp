@@ -28,11 +28,11 @@
 #include <fstream>
 using namespace std;
 
-/*****************************************************************************/
+#include "LibDLS/globals.h"
 
-#include "globals.h"
 #include "XmlParser.h"
 #include "RingBufferT.h"
+
 using namespace LibDLS;
 
 /*****************************************************************************/

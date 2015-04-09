@@ -29,9 +29,11 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "globals.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/JobPreset.h"
+
 #include "XmlParser.h"
-#include "JobPreset.h"
+
 using namespace LibDLS;
 
 /*****************************************************************************/

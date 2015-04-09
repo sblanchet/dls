@@ -22,7 +22,7 @@
 #include <iostream>
 using namespace std;
 
-#include "globals.h"
+#include "LibDLS/globals.h"
 
 /*****************************************************************************/
 

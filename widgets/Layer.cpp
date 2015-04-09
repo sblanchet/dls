@@ -25,11 +25,9 @@
 #include <QtGui>
 #include <QDomElement>
 
-#include "../lib/Channel.h"
-
-#include "Section.h"
-#include "Layer.h"
-#include "Graph.h"
+#include "DlsWidgets/Section.h"
+#include "DlsWidgets/Layer.h"
+#include "DlsWidgets/Graph.h"
 #include "Channel.h"
 
 using DLS::Section;

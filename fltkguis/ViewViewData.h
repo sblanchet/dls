@@ -31,8 +31,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "lib/Time.h"
-#include "lib/Job.h"
+#include "lib/LibDLS/Time.h"
+#include "lib/LibDLS/Job.h"
 
 #include "fl_track_bar.h"
 #include "ViewChannel.h"

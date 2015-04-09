@@ -27,7 +27,7 @@ TEMPLATE = app
 TARGET = dlsgui
 DEPENDPATH += .
 
-INCLUDEPATH += ../widgets ..
+INCLUDEPATH += ../widgets ../lib
 QT += svg
 
 include(../widgets/updateqm.pri)
