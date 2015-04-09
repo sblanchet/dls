@@ -29,13 +29,14 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "globals.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/Dir.h"
+#include "LibDLS/Job.h"
+
 #include "XmlParser.h"
 #include "IndexT.h"
 #include "File.h"
 
-#include "Dir.h"
-#include "Job.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

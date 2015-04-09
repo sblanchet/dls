@@ -25,7 +25,7 @@ using namespace std;
 
 #include <dirent.h>
 
-#include "Dir.h"
+#include "LibDLS/Dir.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

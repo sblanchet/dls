@@ -7,11 +7,9 @@
 #include <QDebug>
 
 #include "SectionModel.h"
-#include "Section.h"
-#include "Layer.h"
+#include "DlsWidgets/Section.h"
+#include "DlsWidgets/Layer.h"
 #include "Channel.h"
-
-#include "../lib/Channel.h"
 
 using namespace DLS;
 

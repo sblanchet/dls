@@ -22,8 +22,9 @@
 #include <sstream>
 using namespace std;
 
-#include "globals.h"
-#include "ChannelPreset.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/ChannelPreset.h"
+
 #include "XmlTag.h"
 using namespace LibDLS;
 

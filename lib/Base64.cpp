@@ -26,7 +26,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "globals.h"
+#include "LibDLS/globals.h"
+
 #include "Base64.h"
 
 using namespace LibDLS;

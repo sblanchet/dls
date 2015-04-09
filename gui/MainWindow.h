@@ -27,7 +27,7 @@
 #include "ui_MainWindow.h"
 #include "LogWindow.h"
 
-#include "../lib/Dir.h"
+#include "LibDLS/Dir.h"
 
 #include "DlsWidgets/Model.h"
 

@@ -30,7 +30,7 @@
 #include "ui_SectionDialog.h"
 
 #include "ColorDelegate.h"
-#include "Section.h"
+#include "DlsWidgets/Section.h"
 
 namespace DLS {
 

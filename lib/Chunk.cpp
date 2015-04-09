@@ -38,8 +38,8 @@ using namespace std;
 #include "RingBufferT.h"
 #include "CompressionT.h"
 
-#include "Channel.h"
-#include "Chunk.h"
+#include "LibDLS/Channel.h"
+#include "LibDLS/Chunk.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

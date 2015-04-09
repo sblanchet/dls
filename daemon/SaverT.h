@@ -37,10 +37,10 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "lib/Exception.h"
+#include "lib/LibDLS/Exception.h"
+#include "lib/LibDLS/Time.h"
 #include "lib/ZLib.h"
 #include "lib/Base64.h"
-#include "lib/Time.h"
 #include "lib/File.h"
 #include "lib/IndexT.h"
 #include "lib/CompressionT.h"

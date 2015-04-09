@@ -32,7 +32,7 @@
 #include <QDir>
 #include <QCoreApplication> // Q_DECLARE_TR_FUNCTIONS()
 
-#include "../lib/Time.h"
+#include <LibDLS/Time.h>
 
 #include "ValueScale.h"
 

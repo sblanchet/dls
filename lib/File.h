@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 
-#include "Exception.h"
+#include "LibDLS/Exception.h"
 
 /*****************************************************************************/
 

@@ -28,13 +28,11 @@
 #include <QPrintDialog>
 #include <QMenu>
 
-#include "../lib/Channel.h"
-
-#include "Graph.h"
-#include "Section.h"
-#include "Layer.h"
+#include "DlsWidgets/Graph.h"
+#include "DlsWidgets/Section.h"
+#include "DlsWidgets/Layer.h"
 #include "Channel.h"
-#include "Model.h"
+#include "DlsWidgets/Model.h"
 #include "SectionDialog.h"
 #include "DatePickerDialog.h"
 #include "ExportDialog.h"

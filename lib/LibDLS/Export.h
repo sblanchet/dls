@@ -28,14 +28,14 @@
 using namespace std;
 
 #include "Exception.h"
-#include "File.h"
-
 #include "Channel.h"
 
 /*****************************************************************************/
 
 namespace LibDLS
 {
+	class File;
+
     /*************************************************************************/
 
     class ExportException : public Exception
@@ -102,7 +102,7 @@ namespace LibDLS
 
     private:
         Mat4Header _header;
-        File _file;
+        File *_file;
     };
 }
 

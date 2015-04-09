@@ -32,7 +32,7 @@ using namespace std;
 /*****************************************************************************/
 
 #include "lib/XmlParser.h"
-#include "lib/Time.h"
+#include "lib/LibDLS/Time.h"
 
 #include "Job.h"
 

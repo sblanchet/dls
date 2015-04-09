@@ -29,8 +29,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "lib/Exception.h"
-#include "lib/ChannelPreset.h"
+#include "lib/LibDLS/Exception.h"
+#include "lib/LibDLS/ChannelPreset.h"
 
 /*****************************************************************************/
 
