@@ -28,7 +28,7 @@
 #include "Base64.h"
 #include "MdctT.h"
 #include "QuantT.h"
-#include "Exception.h"
+#include "LibDLS/Exception.h"
 
 //#define DEBUG
 

@@ -27,7 +27,7 @@
 
 #include <math.h>
 
-#include "ValueScale.h"
+#include "DlsWidgets/ValueScale.h"
 
 #define MIN_LINE_DIST 10
 

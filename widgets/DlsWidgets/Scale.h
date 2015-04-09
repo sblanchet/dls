@@ -27,7 +27,7 @@
 
 #include <QRect>
 
-#include "../lib/Time.h"
+#include <LibDLS/Time.h>
 
 namespace DLS {
 
@@ -73,8 +73,8 @@ class Scale
         Scale();
         void update();
         QString formatValue(const LibDLS::Time &, QString &) const;
-        void drawMajor(QPainter &, const QRect &, double, const LibDLS::Time &,
-                const LibDLS::Time &, QString &) const;
+        void drawMajor(QPainter &, const QRect &, double,
+                const LibDLS::Time &, const LibDLS::Time &, QString &) const;
         void drawMinor(QPainter &, const QRect &, double,
                 const LibDLS::Time &) const;
 };

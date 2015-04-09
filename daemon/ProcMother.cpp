@@ -38,9 +38,10 @@ using namespace std;
 
 /*****************************************************************************/
 
+#include "lib/LibDLS/Time.h"
+#include "lib/LibDLS/JobPreset.h"
+
 #include "lib/XmlParser.h"
-#include "lib/Time.h"
-#include "lib/JobPreset.h"
 
 #include "../config.h"
 #include "globals.h"

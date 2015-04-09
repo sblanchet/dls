@@ -28,10 +28,11 @@
 #include <list>
 using namespace std;
 
-#include "lib/Exception.h"
-#include "lib/Time.h"
+#include "lib/LibDLS/Exception.h"
+#include "lib/LibDLS/Time.h"
+#include "lib/LibDLS/Channel.h"
+
 #include "lib/RingBufferT.h"
-#include "lib/Channel.h"
 
 #include "ViewGlobals.h"
 

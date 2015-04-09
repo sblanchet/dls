@@ -19,48 +19,19 @@
 #
 #------------------------------------------------------------------------------
 
-SUBDIRS = LibDLS
+dlsincludedir=$(includedir)/LibDLS
 
-lib_LTLIBRARIES = libdls.la
-
-#------------------------------------------------------------------------------
-
-libdls_la_CXXFLAGS = -Wall @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
-libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
-	-version-info @LIBDLS_VERSION@
-libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
-
-libdls_la_SOURCES = \
-	Base64.cpp \
-	Channel.cpp \
-	ChannelPreset.cpp \
-	Chunk.cpp \
-	Data.cpp \
-	Dir.cpp \
-	Export.cpp \
-	File.cpp \
-	Job.cpp \
-	JobPreset.cpp \
-	Time.cpp \
-	XmlParser.cpp \
-	XmlTag.cpp \
-	ZLib.cpp \
-	globals.cpp \
-	mdct.cpp
-
-#------------------------------------------------------------------------------
-
-noinst_HEADERS = \
-	Base64.h \
-	CompressionT.h \
-	File.h \
-	IndexT.h \
-	MdctT.h \
-	QuantT.h \
-	RingBufferT.h \
-	XmlParser.h \
-	XmlTag.h \
-	ZLib.h \
-	mdct.h
+dlsinclude_HEADERS = \
+	Channel.h \
+	ChannelPreset.h \
+	Chunk.h \
+	Data.h \
+	Dir.h \
+	Exception.h \
+	Export.h \
+	Job.h \
+	JobPreset.h \
+	Time.h \
+	globals.h
 
 #------------------------------------------------------------------------------

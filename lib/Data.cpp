@@ -23,7 +23,7 @@
 #include <sstream>
 using namespace std;
 
-#include "Data.h"
+#include "LibDLS/Data.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

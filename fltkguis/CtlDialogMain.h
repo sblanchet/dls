@@ -33,7 +33,7 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "lib/Time.h"
+#include "lib/LibDLS/Time.h"
 
 #include "fl_grid.h"
 #include "CtlJobPreset.h"

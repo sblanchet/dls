@@ -25,8 +25,8 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "globals.h"
-#include "Time.h"
+#include "LibDLS/globals.h"
+#include "LibDLS/Time.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

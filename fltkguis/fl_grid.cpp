@@ -25,9 +25,8 @@ using namespace std;
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
-/*****************************************************************************/
+#include "lib/LibDLS/globals.h"
 
-#include "lib/globals.h"
 #include "fl_grid.h"
 
 /*****************************************************************************/

@@ -70,8 +70,7 @@ unix {
     }
 }
 
-INCLUDEPATH += . $$PWD/..
-INCLUDEPATH += $$PWD/DlsWidgets
+INCLUDEPATH += . $$PWD/../lib
 
 win32 {
     QMAKE_LFLAGS += -shared

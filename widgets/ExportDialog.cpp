@@ -26,11 +26,11 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "ExportDialog.h"
-#include "Graph.h"
-#include "Channel.h"
+#include <LibDLS/Export.h>
 
-#include "../lib/Export.h"
+#include "ExportDialog.h"
+#include "DlsWidgets/Graph.h"
+#include "Channel.h"
 
 using DLS::ExportDialog;
 using DLS::ExportWorker;

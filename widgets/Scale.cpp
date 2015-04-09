@@ -27,7 +27,7 @@
 
 #include <math.h>
 
-#include "Scale.h"
+#include "DlsWidgets/Scale.h"
 
 using DLS::Scale;
 

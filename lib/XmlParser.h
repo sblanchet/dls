@@ -30,7 +30,7 @@ using namespace std;
 
 /*****************************************************************************/
 
-#include "Exception.h"
+#include "LibDLS/Exception.h"
 #include "XmlTag.h"
 #include "RingBufferT.h"
 

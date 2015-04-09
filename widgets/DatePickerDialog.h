@@ -27,7 +27,7 @@
 
 #include <QDialog>
 
-#include "../lib/Time.h"
+#include <LibDLS/Time.h>
 
 #include "ui_DatePickerDialog.h"
 

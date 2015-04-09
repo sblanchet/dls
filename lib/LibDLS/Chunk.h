@@ -24,7 +24,6 @@
 
 /*****************************************************************************/
 
-#include "globals.h"
 #include "Exception.h"
 #include "Time.h"
 #include "Data.h"

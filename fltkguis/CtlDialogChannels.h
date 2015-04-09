@@ -35,9 +35,7 @@ using namespace std;
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Check_Button.H>
 
-/*****************************************************************************/
-
-#include "lib/globals.h"
+#include "lib/LibDLS/globals.h"
 
 #include "fl_grid.h"
 

@@ -8,7 +8,7 @@
 #include <QUrl>
 #include <QApplication>
 
-#include "../lib/Job.h"
+#include <LibDLS/Job.h>
 
 #include "Job.h"
 #include "Channel.h"

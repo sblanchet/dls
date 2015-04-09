@@ -26,7 +26,7 @@
 #include <iomanip>
 using namespace std;
 
-#include "../lib/Dir.h"
+#include "lib/LibDLS/Dir.h"
 using namespace LibDLS;
 
 /*****************************************************************************/

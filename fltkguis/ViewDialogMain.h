@@ -33,8 +33,8 @@ using namespace std;
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Check_Button.H>
 
-#include "lib/Dir.h"
-#include "lib/JobPreset.h"
+#include "lib/LibDLS/Dir.h"
+#include "lib/LibDLS/JobPreset.h"
 
 #include "fl_grid.h"
 #include "ViewViewData.h"

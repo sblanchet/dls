@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-#include "../lib/Export.h"
+#include <LibDLS/Export.h>
 
 #include "Channel.h"
 

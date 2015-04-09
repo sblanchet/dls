@@ -229,6 +229,7 @@ AC_CONFIG_FILES([
     fltkguis/Makefile
     fltkguis/images/Makefile
     lib/Makefile
+    lib/LibDLS/Makefile
     script/Makefile
     script/dlsd.service
     script/init.sh

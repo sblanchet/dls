@@ -31,9 +31,8 @@
 #include <fstream>
 using namespace std;
 
-/*****************************************************************************/
 
-#include "lib/globals.h"
+#include "lib/LibDLS/globals.h"
 #include "lib/XmlTag.h"
 
 #include "CtlJobPreset.h"
