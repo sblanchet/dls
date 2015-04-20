@@ -159,14 +159,19 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
         // Laufen alle Prozesse noch?
         _check_processes();
 
+        // check for terminated connections
+        _check_connections();
+
         if (process_type != MotherProcess || _exit) break;
 
         ret = select(max_fd + 1, &rfds, NULL, NULL, &tv);
         if (ret == -1) {
-            msg() << "select() failed: " << strerror(errno);
-            log(Error);
-            _exit = true;
-            _exit_error = true;
+            if (errno != EINTR) {
+                msg() << "select() failed: " << strerror(errno);
+                log(Error);
+                _exit = true;
+                _exit_error = true;
+            }
         }
 
         if (ret > 0 && FD_ISSET(_listen_fd, &rfds)) {
@@ -185,12 +190,18 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             msg() << "Accepted connection from " << addr_str;
             log(Info);
 
-            ret = write(cfd, "hallo\n", 6);
-            msg() << "write" << ret;
-            log(Warning);
+            Connection *conn = new Connection(cfd);
+            _connections.push_back(conn);
 
-            sleep(2);
-            close(cfd);
+            int ret = conn->start_thread();
+            if (ret) {
+                _connections.pop_back();
+
+                msg() << "Failed to create connection: " << strerror(ret);
+                log(Error);
+
+                delete conn;
+            }
         }
     }
 
@@ -915,6 +926,26 @@ std::string ProcMother::_format_address(const struct sockaddr *sa)
     }
 
     return str.str();
+}
+
+/*****************************************************************************/
+
+void ProcMother::_check_connections()
+{
+    list<Connection *>::iterator i = _connections.begin();
+
+    while (i != _connections.end()) {
+        list<Connection *>::iterator cur = i++;
+
+        Connection *conn = *cur;
+        if (conn->thread_finished()) {
+            msg() << "Thread terminated.";
+            log(Info);
+
+            delete conn;
+            _connections.erase(cur);
+        }
+    }
 }
 
 /*****************************************************************************/

@@ -32,6 +32,7 @@ using namespace std;
 /*****************************************************************************/
 
 #include "JobPreset.h"
+#include "Connection.h"
 #include "globals.h"
 
 /*****************************************************************************/
@@ -59,6 +60,8 @@ private:
     bool _exit; /**< true, wenn der Prozess beendet werden soll */
     bool _exit_error; /**< true, wenn Beendigung mit Fehler erfolgen soll */
     int _listen_fd; /**< Listening socket. */
+    list<Connection *> _connections; /**< List of incoming network
+                                       connections. */
 
     void _empty_spool();
     void _check_jobs();
@@ -73,6 +76,7 @@ private:
     unsigned int _processes_running();
     int _prepare_socket(const char *);
     static std::string _format_address(const struct sockaddr *);
+    void _check_connections();
 };
 
 /*****************************************************************************/

@@ -44,7 +44,8 @@ dlsd_LDFLAGS = \
 	-L$(builddir)/../lib/.libs \
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
-	$(PDCOM_LDFLAGS)
+	$(PDCOM_LDFLAGS) \
+	-pthread
 
 dlsd_LDADD = \
 	@FFTW3_LIBS@ \
@@ -56,6 +57,7 @@ dlsd_LDADD = \
 dlsd_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 dlsd_SOURCES = \
+	Connection.cpp \
 	Job.cpp \
 	JobPreset.cpp \
 	Logger.cpp \
@@ -67,6 +69,7 @@ dlsd_SOURCES = \
 #------------------------------------------------------------------------------
 
 noinst_HEADERS = \
+	Connection.h \
 	Job.h \
 	JobPreset.h \
 	Logger.h \
