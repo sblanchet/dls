@@ -16,6 +16,7 @@ configure
 daemon/.deps
 daemon/.libs
 daemon/dlsd
+daemon/dls_data
 dls.spec
 doku/dls_doku.aux
 doku/dls_doku.dvi
@@ -54,6 +55,8 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 mingw*-config.cache
+proto/dls.pb.cc
+proto/dls.pb.h
 script/Makefile
 script/Makefile.in
 script/dlsd.service
