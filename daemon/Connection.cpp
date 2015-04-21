@@ -25,7 +25,8 @@
 #include <sys/select.h>
 #include <string.h>
 
-#include <Connection.h>
+#include "Connection.h"
+#include "proto/dls.pb.h"
 
 #include <iostream>
 using namespace std;
@@ -81,16 +82,31 @@ int Connection::thread_finished()
 
 /*****************************************************************************/
 
+void *Connection::_run_static(void *arg)
+{
+    Connection *conn = (Connection *) arg;
+    return conn->_run();
+}
+
+/*****************************************************************************/
+
 void *Connection::_run()
 {
-    fd_set rfds;
+    fd_set rfds, wfds;
     int max_fd = -1, ret;
     char buf[1024];
 
+    _send_hello();
+
     while (_running) {
         FD_ZERO(&rfds);
+        FD_ZERO(&wfds);
         FD_SET(_fd, &rfds);
         max_fd = _fd;
+
+        if (!_ostream.eof()) {
+            FD_SET(_fd, &wfds);
+        }
 
         ret = select(max_fd + 1, &rfds, NULL, NULL, NULL);
         if (ret == -1) {
@@ -120,6 +136,27 @@ void *Connection::_run()
                 cerr << string(buf, ret) << endl;
             }
         }
+
+        if (ret > 0 && FD_ISSET(_fd, &wfds)) {
+            _ostream.read(buf, sizeof(buf));
+            int to_write = _ostream.gcount();
+            int written = 0;
+            ret = write(_fd, buf, to_write);
+            if (ret == -1) {
+                if (errno != EINTR) {
+                    char str[1024];
+                    strerror_r(errno, str, sizeof(str));
+                    cerr << "write() failed: " << str << endl;
+                    _running = false;
+                }
+            }
+            if (ret >= 0) {
+                written = ret;
+            }
+            for (int i = to_write - 1; i >= written; i--) {
+                _ostream.putback(buf[i]);
+            }
+        }
     }
 
     close(_fd);
@@ -128,10 +165,12 @@ void *Connection::_run()
 
 /*****************************************************************************/
 
-void *Connection::_run_static(void *arg)
+int Connection::_send_hello()
 {
-    Connection *conn = (Connection *) arg;
-    return conn->_run();
+    DlsProto::Hello msg;
+    msg.set_revision(REVISION);
+    msg.set_protocol_version(1);
+    msg.SerializeToOstream(&_ostream);
 }
 
 /*****************************************************************************/
