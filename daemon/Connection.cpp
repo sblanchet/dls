@@ -25,6 +25,7 @@
 #include <sys/select.h>
 #include <string.h>
 
+#include "config.h"
 #include "Connection.h"
 #include "proto/dls.pb.h"
 
@@ -93,22 +94,21 @@ void *Connection::_run_static(void *arg)
 void *Connection::_run()
 {
     fd_set rfds, wfds;
-    int max_fd = -1, ret;
-    char buf[1024];
+    int ret;
 
     _send_hello();
 
     while (_running) {
         FD_ZERO(&rfds);
-        FD_ZERO(&wfds);
         FD_SET(_fd, &rfds);
-        max_fd = _fd;
 
+        FD_ZERO(&wfds);
         if (!_ostream.eof()) {
+            // something to write
             FD_SET(_fd, &wfds);
         }
 
-        ret = select(max_fd + 1, &rfds, NULL, NULL, NULL);
+        ret = select(_fd + 1, &rfds, &wfds, NULL, NULL);
         if (ret == -1) {
             if (errno != EINTR) {
                 char str[1024];
@@ -118,43 +118,12 @@ void *Connection::_run()
             }
         }
 
-        if (ret > 0 && FD_ISSET(_fd, &rfds)) {
-            ret = read(_fd, buf, sizeof(buf));
-            if (ret < 0) {
-                if (errno != EINTR) {
-                    char str[1024];
-                    strerror_r(errno, str, sizeof(str));
-                    cerr << "select() failed: " << str << endl;
-                    _running = false;
-                }
+        if (ret > 0) { // file descriptors ready
+            if (FD_ISSET(_fd, &rfds)) {
+                _receive();
             }
-            else if (ret == 0) {
-                // connection closed by foreign host
-                _running = false;
-            }
-            else { // ret > 0
-                cerr << string(buf, ret) << endl;
-            }
-        }
-
-        if (ret > 0 && FD_ISSET(_fd, &wfds)) {
-            _ostream.read(buf, sizeof(buf));
-            int to_write = _ostream.gcount();
-            int written = 0;
-            ret = write(_fd, buf, to_write);
-            if (ret == -1) {
-                if (errno != EINTR) {
-                    char str[1024];
-                    strerror_r(errno, str, sizeof(str));
-                    cerr << "write() failed: " << str << endl;
-                    _running = false;
-                }
-            }
-            if (ret >= 0) {
-                written = ret;
-            }
-            for (int i = to_write - 1; i >= written; i--) {
-                _ostream.putback(buf[i]);
+            if (FD_ISSET(_fd, &wfds)) {
+                _send();
             }
         }
     }
@@ -168,9 +137,68 @@ void *Connection::_run()
 int Connection::_send_hello()
 {
     DlsProto::Hello msg;
+    msg.set_version(PACKAGE_VERSION);
     msg.set_revision(REVISION);
     msg.set_protocol_version(1);
     msg.SerializeToOstream(&_ostream);
+}
+
+/*****************************************************************************/
+
+void Connection::_send()
+{
+    char buf[1024];
+
+    _ostream.read(buf, sizeof(buf));
+
+    int to_write = _ostream.gcount();
+    int ret = write(_fd, buf, to_write);
+    if (ret == -1) {
+        if (errno != EINTR) {
+            char str[1024];
+            strerror_r(errno, str, sizeof(str));
+            cerr << "write() failed: " << str << endl;
+            _running = false;
+        }
+    }
+
+    // put unsent bytes back in the stream
+    int written = max(ret, 0);
+    for (int i = to_write - 1; i >= written; i--) {
+        _ostream.putback(buf[i]);
+    }
+}
+
+/*****************************************************************************/
+
+void Connection::_receive()
+{
+    char buf[1024];
+
+    int ret = read(_fd, buf, sizeof(buf));
+    if (ret < 0) {
+        if (errno != EINTR) {
+            char str[1024];
+            strerror_r(errno, str, sizeof(str));
+            cerr << "read() failed: " << str << endl;
+            _running = false;
+        }
+    }
+    else if (ret == 0) {
+        // connection closed by foreign host
+        cerr << "Closed by remote host." << endl;
+        _running = false;
+    }
+    else { // ret > 0
+        _process(string(buf, ret));
+    }
+}
+
+/*****************************************************************************/
+
+void Connection::_process(const string &rec)
+{
+    cout << "+" << rec << "-" << endl;
 }
 
 /*****************************************************************************/
