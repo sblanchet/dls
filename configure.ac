@@ -228,8 +228,9 @@ AC_CONFIG_FILES([
     dls.spec
     fltkguis/Makefile
     fltkguis/images/Makefile
-    lib/Makefile
     lib/LibDLS/Makefile
+    lib/Makefile
+    proto/Makefile
     script/Makefile
     script/dlsd.service
     script/init.sh
