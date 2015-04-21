@@ -52,7 +52,7 @@ dlsd_LDADD = \
 	-ldls \
 	@ZLIB_LIBS@ \
 	$(PDCOM_LIBS) \
-	-lm
+	-lm -lprotobuf
 
 dlsd_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
@@ -64,6 +64,7 @@ dlsd_SOURCES = \
 	ProcLogger.cpp \
 	ProcMother.cpp \
 	globals.cpp \
+	$(builddir)/../proto/dls.pb.cc \
 	main.cpp
 
 #------------------------------------------------------------------------------
