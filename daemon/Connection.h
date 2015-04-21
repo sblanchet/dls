@@ -25,6 +25,7 @@
 /*****************************************************************************/
 
 #include <pthread.h>
+#include <sstream>
 
 /*****************************************************************************/
 
@@ -36,18 +37,20 @@ public:
     Connection(int);
     ~Connection();
 
-	int start_thread();
-	int thread_finished();
-	int return_code() const { return _ret; }
+    int start_thread();
+    int thread_finished();
+    int return_code() const { return _ret; }
 
 private:
-	int _fd;
+    int _fd;
     pthread_t _thread;
-	int _ret; /**< Return value. */
+    int _ret; /**< Return value. */
     bool _running;
+    std::stringstream _ostream;
 
-	static void *_run_static(void *);
-	void *_run();
+    static void *_run_static(void *);
+    void *_run();
+    int _send_hello();
 };
 
 /*****************************************************************************/

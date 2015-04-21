@@ -36,7 +36,7 @@ endif
 dlsd_CXXFLAGS = -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dlsd_CXXFLAGS += -I$(topsrcdir)
 dlsd_LDFLAGS = -L$(builddir)/../lib/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
-dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm -lpthread
+dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm -lpthread -lprotobuf
 dlsd_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 dlsd_SOURCES = \
@@ -47,6 +47,7 @@ dlsd_SOURCES = \
 	ProcLogger.cpp \
 	ProcMother.cpp \
 	globals.cpp \
+	$(builddir)/../proto/dls.pb.cc \
 	main.cpp
 
 #------------------------------------------------------------------------------
