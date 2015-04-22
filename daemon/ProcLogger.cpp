@@ -707,7 +707,6 @@ void ProcLogger::_create_pid_file()
 {
     stringstream pid_file_name;
     fstream new_pid_file, old_pid_file;
-    pid_t pid;
     struct stat stat_buf;
 
     pid_file_name << _dls_dir << "/job" << dlsd_job_id << "/" << DLS_PID_FILE;
