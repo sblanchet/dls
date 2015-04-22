@@ -63,25 +63,25 @@ using namespace LibDLS;
 */
 
 ProcLogger::ProcLogger(
-		const string &dls_dir,
-		unsigned int job_id
-		):
-	Process(),
-	_dls_dir(dls_dir),
-	_job_id(job_id),
-	_job(this, _dls_dir),
+        const string &dls_dir,
+        unsigned int job_id
+        ):
+    Process(),
+    _dls_dir(dls_dir),
+    _job_id(job_id),
+    _job(this, _dls_dir),
     _socket(-1),
-	_write_request(false),
+    _write_request(false),
     _sig_hangup(sig_hangup),
     _sig_child(sig_child),
     _sig_usr1(sig_usr1),
     _exit(false),
     _exit_code(E_DLS_SUCCESS),
-	_state(Connecting),
+    _state(Connecting),
     _receiving_data(false),
     _trigger(NULL)
 {
-	readOnly = true; // from PdCom::Process: disable writing
+    readOnly = true; // from PdCom::Process: disable writing
 
     openlog("dlsd_logger", LOG_PID, LOG_DAEMON);
 }
@@ -205,12 +205,12 @@ void ProcLogger::_start()
 
     // Verbindung zu MSR schliessen
     close(_socket);
-	_socket = -1;
+    _socket = -1;
 
     msg() << "Connection to " << _job.preset()->source() << " closed.";
     log(Info);
 
-	reset(); // PdCom::Process
+    reset(); // PdCom::Process
 
     try {
         _job.finish();
@@ -239,74 +239,74 @@ bool ProcLogger::_connect_socket()
 {
     const char *host = _job.preset()->source().c_str();
 
-	stringstream service;
-	service << _job.preset()->port();
+    stringstream service;
+    service << _job.preset()->port();
 
-	struct addrinfo hints = {};
-	hints.ai_family = AF_UNSPEC; // IPv4 or IPv6
-	hints.ai_socktype = SOCK_STREAM; // TCP
-	hints.ai_protocol = 0; // any protocol
-	hints.ai_flags =
-		AI_ADDRCONFIG & // return address types if local interface exists
-		AI_NUMERICSERV; // service always numeric
+    struct addrinfo hints = {};
+    hints.ai_family = AF_UNSPEC; // IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_protocol = 0; // any protocol
+    hints.ai_flags =
+        AI_ADDRCONFIG & // return address types if local interface exists
+        AI_NUMERICSERV; // service always numeric
 
-	struct addrinfo *result = NULL;
+    struct addrinfo *result = NULL;
 
-	int ret = getaddrinfo(host, service.str().c_str(), &hints, &result);
+    int ret = getaddrinfo(host, service.str().c_str(), &hints, &result);
 
-	if (ret) {
+    if (ret) {
         msg() << "Could not resolve \"" << host << ":" << service.str()
-			<< "\": " << gai_strerror(ret);
+            << "\": " << gai_strerror(ret);
         log(Error);
         return false;
     }
 
-	struct addrinfo *rp;
+    struct addrinfo *rp;
 
-	for (rp = result; rp != NULL; rp = rp->ai_next) {
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
 #ifdef DEBUG_CONNECT
         msg() << "Trying socket(family=" << rp->ai_family
-			<< ", type=" << rp->ai_socktype
-			<< ", protocol=" << rp->ai_protocol << ")...";
-		log(Info);
+            << ", type=" << rp->ai_socktype
+            << ", protocol=" << rp->ai_protocol << ")...";
+        log(Info);
 #endif
 
-		_socket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if (_socket == -1) {
+        _socket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (_socket == -1) {
 #ifdef DEBUG_CONNECT
-			msg() << "Failed: " << strerror(errno);
-			log(Error);
+            msg() << "Failed: " << strerror(errno);
+            log(Error);
 #endif
-			continue;
-		}
+            continue;
+        }
 
 #ifdef DEBUG_CONNECT
         msg() << "Trying connect(addr=" << rp->ai_addr
-			<< ", len=" << rp->ai_addrlen;
-		log(Info);
+            << ", len=" << rp->ai_addrlen;
+        log(Info);
 #endif
 
-		if (::connect(_socket, rp->ai_addr, rp->ai_addrlen) != -1) {
-			break; // success
-		}
+        if (::connect(_socket, rp->ai_addr, rp->ai_addrlen) != -1) {
+            break; // success
+        }
 
-		close(_socket);
-		_socket = -1;
+        close(_socket);
+        _socket = -1;
 
 #ifdef DEBUG_CONNECT
         msg() << "Could not connect: " << strerror(errno) << endl;
         log(Error);
 #endif
-	}
+    }
 
-	freeaddrinfo(result);
+    freeaddrinfo(result);
 
-	if (!rp) {
+    if (!rp) {
         msg() << "Failed to connect: " << strerror(errno) << endl;
         log(Error);
 
         return false;
-	}
+    }
 
     msg() << "Connected to \"" << host << ":" << service.str() << "\"" << ".";
     log(Info);
@@ -342,8 +342,8 @@ void ProcLogger::_read_write_socket()
         FD_SET(_socket, &read_fds);
 
         if (_write_request) {
-			FD_SET(_socket, &write_fds);
-		}
+            FD_SET(_socket, &write_fds);
+        }
 
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
@@ -356,36 +356,36 @@ void ProcLogger::_read_write_socket()
                 _read_socket();
                 if (_exit) {
                     break;
-				}
+                }
             }
 
             if (FD_ISSET(_socket, &write_fds)) {
-				int ret = writeReady();
-				if (ret < 0) {
+                int ret = writeReady();
+                if (ret < 0) {
                     _exit = true;
                     _exit_code = E_DLS_ERROR_RESTART;
                     msg() << "Sending data failed: " << strerror(errno);
                     log(Error);
-				} else if (!ret) {
-					// No more data to send
-					_write_request = false;
-				}
+                } else if (!ret) {
+                    // No more data to send
+                    _write_request = false;
+                }
             }
         }
         else if (select_ret == -1 && errno != EINTR) {
-			_exit = true;
-			_exit_code = E_DLS_ERROR_RESTART;
-			msg() << "Error " << errno << " in select()!";
-			log(Error);
-			break;
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
+            msg() << "Error " << errno << " in select()!";
+            log(Error);
+            break;
         }
 
         // Auf gesetzte Signale überprüfen
         _check_signals();
 
         if (_exit) {
-			break;
-		}
+            break;
+        }
 
         // Watchdog
         _do_watchdogs();
@@ -421,25 +421,25 @@ void ProcLogger::_read_socket()
 
     if (ret > 0) {
 #ifdef DEBUG_REC
-		cerr << "read: " << string(buf, ret) << endl;
+        cerr << "read: " << string(buf, ret) << endl;
 #endif
         try {
             newData(buf, ret);
         }
-		catch (PdCom::Exception &e) {
-			_exit = true;
-			_exit_code = E_DLS_ERROR_RESTART;
+        catch (PdCom::Exception &e) {
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
 
             msg() << "newData() failed: " << e.what()
-				<< ", last data: " << string(buf, ret);
+                << ", last data: " << string(buf, ret);
         }
 
     } else if (ret < 0) {
         if (errno != EINTR) {
-			_exit = true;
-			_exit_code = E_DLS_ERROR_RESTART;
-			msg() << "Error in recv(): " << strerror(errno);
-			log(Error);
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
+            msg() << "Error in recv(): " << strerror(errno);
+            log(Error);
         }
     } else { // ret == 0
         _exit = true;
@@ -780,23 +780,23 @@ bool ProcLogger::clientInteraction(
 
     for (it = interactionList.begin(); it != interactionList.end(); it++) {
         if (it->prompt == "Username") {
-			struct passwd *passwd = getpwuid(getuid());
-			if (passwd) {
+            struct passwd *passwd = getpwuid(getuid());
+            if (passwd) {
                 it->response = passwd->pw_name;
-			}
+            }
         }
-		else if (it->prompt == "Hostname") {
-			char hostname[256];
-			if (!gethostname(hostname, sizeof(hostname))) {
-				it->response = hostname;
-			}
+        else if (it->prompt == "Hostname") {
+            char hostname[256];
+            if (!gethostname(hostname, sizeof(hostname))) {
+                it->response = hostname;
+            }
         }
-		else if (it->prompt == "Application") {
-			stringstream ident;
-			ident << "dlsd-" << PACKAGE_VERSION
-				<< "-r" << REVISION
-				<< ", job " << _job_id;
-			it->response = ident.str();
+        else if (it->prompt == "Application") {
+            stringstream ident;
+            ident << "dlsd-" << PACKAGE_VERSION
+                << "-r" << REVISION
+                << ", job " << _job_id;
+            it->response = ident.str();
         }
     }
 
@@ -807,24 +807,24 @@ bool ProcLogger::clientInteraction(
 
 void ProcLogger::sigConnected()
 {
-	if (_job.preset()->trigger() == "") { // no trigger variable
-		_state = Data;
+    if (_job.preset()->trigger() == "") { // no trigger variable
+        _state = Data;
         _last_receive_time.set_now();
         _receiving_data = false;
-		_job.start_logging();
+        _job.start_logging();
 
-		msg() << "Start logging.";
+        msg() << "Start logging.";
         log(Info);
-	}
-	else { // trigger variable
-		_state = Waiting;
+    }
+    else { // trigger variable
+        _state = Waiting;
 
-		msg() << "Waiting for trigger \"";
-		msg() << _job.preset()->trigger() << "\"...";
+        msg() << "Waiting for trigger \"";
+        msg() << _job.preset()->trigger() << "\"...";
         log(Info);
 
         _subscribe_trigger();
-	}
+    }
 }
 
 /****************************************************************************/
@@ -832,9 +832,9 @@ void ProcLogger::sigConnected()
 void ProcLogger::sendRequest()
 {
 #ifdef DEBUG_SEND
-	cerr << __func__ << "()" << endl;
+    cerr << __func__ << "()" << endl;
 #endif
-	_write_request = true;
+    _write_request = true;
 }
 
 /****************************************************************************/
@@ -842,9 +842,9 @@ void ProcLogger::sendRequest()
 int ProcLogger::sendData(const char *buf, size_t len)
 {
 #ifdef DEBUG_SEND
-	cerr << __func__ << "(): " << string(buf, len) << endl;
+    cerr << __func__ << "(): " << string(buf, len) << endl;
 #endif
-	return ::write(_socket, buf, len);
+    return ::write(_socket, buf, len);
 }
 
 /****************************************************************************/
@@ -883,15 +883,15 @@ void ProcLogger::processMessage(
             break;
     }
 
-	msg() << _job.preset()->source() << ":" << _job.preset()->port()
+    msg() << _job.preset()->source() << ":" << _job.preset()->port()
         << ": " << t.to_str()
-		<< ", " << displayType
-		<< ": " << message;
-	log(Info);
+        << ", " << displayType
+        << ": " << message;
+    log(Info);
 
     /* Unfortunately, processMessage is defined constant in PdCom::Process. */
     ProcLogger *logger = (ProcLogger *) this;
-	logger->_job.message(t, storeType, message);
+    logger->_job.message(t, storeType, message);
 }
 
 /****************************************************************************/
@@ -905,8 +905,8 @@ void ProcLogger::protocolLog(
         return;
     }
 
-	msg() << "PdCom: " << message;
-	log(Info);
+    msg() << "PdCom: " << message;
+    log(Info);
 }
 
 /*****************************************************************************/

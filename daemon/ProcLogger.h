@@ -47,7 +47,7 @@ using namespace std;
 */
 
 class ProcLogger:
-	private PdCom::Process,
+    private PdCom::Process,
     private PdCom::Subscriber // for trigger variable
 {
 public:
@@ -56,9 +56,9 @@ public:
 
     int start();
 
-	PdCom::Variable *findVariable(const std::string &path) const {
-		return PdCom::Process::findVariable(path);
-	}
+    PdCom::Variable *findVariable(const std::string &path) const {
+        return PdCom::Process::findVariable(path);
+    }
 
     void notify_error(int);
     void notify_data(void);
@@ -68,17 +68,17 @@ private:
     unsigned int _job_id;
     Job _job;
     int _socket;
-	bool _write_request;
+    bool _write_request;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
     unsigned int _sig_usr1;
     bool _exit;
     int _exit_code;
-	enum {
-		Connecting,
-		Waiting,
-		Data
-	} _state;
+    enum {
+        Connecting,
+        Waiting,
+        Data
+    } _state;
     LibDLS::Time _quota_start_time;
     LibDLS::Time _last_watchdog_time;
     LibDLS::Time _last_receive_time;
@@ -98,19 +98,19 @@ private:
     void _remove_pid_file();
     void _flush();
 
-	// PdCom::Process
-	bool clientInteraction(const std::string &, const std::string &,
-			const std::string &, std::list<ClientInteraction> &);
-	void sigConnected();
-	void sendRequest();
-	int sendData(const char *, size_t);
-	void processMessage(const PdCom::Time &, LogLevel_t, unsigned int,
-			const std::string &) const;
-	void protocolLog(LogLevel_t, const std::string &) const;
+    // PdCom::Process
+    bool clientInteraction(const std::string &, const std::string &,
+            const std::string &, std::list<ClientInteraction> &);
+    void sigConnected();
+    void sendRequest();
+    int sendData(const char *, size_t);
+    void processMessage(const PdCom::Time &, LogLevel_t, unsigned int,
+            const std::string &) const;
+    void protocolLog(LogLevel_t, const std::string &) const;
 
-	// from PdCom::Subscriber()
+    // from PdCom::Subscriber()
     void notify(PdCom::Variable *);
-	void notifyDelete(PdCom::Variable *);
+    void notifyDelete(PdCom::Variable *);
 };
 
 /*****************************************************************************/
