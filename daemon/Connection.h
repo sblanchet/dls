@@ -50,7 +50,7 @@ private:
 
     static void *_run_static(void *);
     void *_run();
-    int _send_hello();
+    void _send_hello();
     void _send();
     void _receive();
     void _process(const std::string &);
