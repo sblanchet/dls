@@ -69,7 +69,7 @@ DLSProcLogger::DLSProcLogger(
 	_write_request(false),
     _sig_hangup(sig_hangup),
     _sig_child(sig_child),
-    _sig_usr1 = sig_usr1;
+    _sig_usr1(sig_usr1),
     _exit(false),
     _exit_code(E_DLS_SUCCESS),
 	_state(Connecting),
@@ -668,8 +668,6 @@ void DLSProcLogger::_flush()
 {
     int fork_ret;
 
-    _first_data_time.set_null();
-
     if ((fork_ret = fork()) == -1) {
         _exit = true;
         _exit_code = E_DLS_ERROR_RESTART;
@@ -689,7 +687,8 @@ void DLSProcLogger::_flush()
     else {
         // Alle Daten vergessen. Diese werden vom anderen
         // Zweig gespeichert.
-        _job->discard_data();
+        _job.discard();
+        _quota_start_time.set_null();
     }
 }
 
