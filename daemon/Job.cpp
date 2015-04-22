@@ -47,13 +47,13 @@ using namespace LibDLS;
    \param dls_dir DLS-Datenverzeichnis
 */
 Job::Job(
-		ProcLogger *parent_proc,
-		const string &dls_dir
-		):
-	_parent_proc(parent_proc),
-	_dls_dir(dls_dir),
-	_id_gen(0),
-	_logging_started(false),
+        ProcLogger *parent_proc,
+        const string &dls_dir
+        ):
+    _parent_proc(parent_proc),
+    _dls_dir(dls_dir),
+    _id_gen(0),
+    _logging_started(false),
     _msg_chunk_created(false)
 {
 }
@@ -113,8 +113,8 @@ void Job::start_logging()
 void Job::change_logging()
 {
     if (_logging_started) {
-		_sync_loggers(slVerbose);
-	}
+        _sync_loggers(slVerbose);
+    }
 }
 
 /*****************************************************************************/
@@ -177,7 +177,7 @@ void Job::_sync_loggers(SyncLoggerMode mode)
 
             if (_add_logger(&(*channel_i))) {
                 add_count++;
-			}
+            }
         }
         else if (*channel_i != *logger->channel_preset()) {
             if (mode == slVerbose) {
@@ -186,14 +186,14 @@ void Job::_sync_loggers(SyncLoggerMode mode)
             }
 
             _loggers.remove(logger);
-			_stop_logger(logger);
+            _stop_logger(logger);
             delete logger;
 
-			if (_add_logger(&(*channel_i))) {
-				chg_count++;
-			}
-		}
-	}
+            if (_add_logger(&(*channel_i))) {
+                chg_count++;
+            }
+        }
+    }
 
     // search for logger to remove
     logger_i = _loggers.begin();
@@ -264,13 +264,13 @@ void Job::_sync_loggers(SyncLoggerMode mode)
 
 bool Job::_add_logger(const ChannelPreset *preset)
 {
-	PdCom::Variable *pv = _parent_proc->findVariable(preset->name);
+    PdCom::Variable *pv = _parent_proc->findVariable(preset->name);
 
-	if (!pv) {
-		msg() << "Channel \"" << preset->name << "\" does not exist!";
-		log(Error);
-		return false;
-	}
+    if (!pv) {
+        msg() << "Channel \"" << preset->name << "\" does not exist!";
+        log(Error);
+        return false;
+    }
 
     Logger *logger;
 
