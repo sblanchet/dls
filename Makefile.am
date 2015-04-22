@@ -22,10 +22,10 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = \
+	proto \
+	lib \
 	daemon \
 	fltkguis \
-	lib \
-	proto \
 	script \
 	tool
 
