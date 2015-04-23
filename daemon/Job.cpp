@@ -48,13 +48,14 @@ using namespace LibDLS;
 */
 Job::Job(
         ProcLogger *parent_proc,
-        const string &dls_dir
+        unsigned int job_id
         ):
     _parent_proc(parent_proc),
-    _dls_dir(dls_dir),
+    _id(job_id),
     _id_gen(0),
     _logging_started(false),
-    _msg_chunk_created(false)
+    _msg_chunk_created(false),
+    _messages(this)
 {
 }
 
@@ -78,16 +79,16 @@ Job::~Job()
    \throw EJob Fehler während des Importierens
 */
 
-void Job::import(unsigned int job_id)
+void Job::import()
 {
-    try
-    {
-        _preset.import(_dls_dir, job_id);
+    try {
+        _preset.import(_parent_proc->dir(), _id);
     }
-    catch (EJobPreset &e)
-    {
+    catch (EJobPreset &e) {
         throw EJob("Importing job preset: " + e.msg);
     }
+
+    _messages.import();
 }
 
 /*****************************************************************************/
@@ -102,6 +103,7 @@ void Job::start_logging()
 {
     _logging_started = true;
     _sync_loggers(slQuiet);
+    _messages.subscribe(_parent_proc);
 }
 
 /*****************************************************************************/
@@ -275,7 +277,7 @@ bool Job::_add_logger(const ChannelPreset *preset)
     Logger *logger;
 
     try {
-        logger = new Logger(this, preset, _dls_dir, pv);
+        logger = new Logger(this, preset, _parent_proc->dir(), pv);
     }
     catch (ELogger &e)
     {
@@ -360,6 +362,17 @@ void Job::notify_error(int code)
 void Job::notify_data()
 {
     _parent_proc->notify_data();
+}
+
+/*****************************************************************************/
+
+/** Returns the job directory.
+ */
+std::string Job::dir() const
+{
+    stringstream d;
+    d << _parent_proc->dir() << "/job" << _preset.id();
+    return d.str();
 }
 
 /*****************************************************************************/
@@ -501,6 +514,12 @@ void Job::message(Time time, const string &type, const string &message)
     MessageIndexRecord index_record;
     struct stat stat_buf;
 
+    msg() << _preset.source() << ":" << _preset.port()
+        << ": " << time.to_str()
+        << ", " << type
+        << ": " << message;
+    log(Info);
+
 #ifdef DEBUG
     msg() << "Message! Time: " << time;
     log(Debug);
@@ -515,7 +534,7 @@ void Job::message(Time time, const string &type, const string &message)
         _message_file.close();
         _message_index.close();
 
-        dirname << _dls_dir << "/job" << _preset.id() << "/messages";
+        dirname << dir() << "/messages";
 
         // Existiert das Message-Verzeichnis?
         if (stat(dirname.str().c_str(), &stat_buf) == -1) {

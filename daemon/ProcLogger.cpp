@@ -68,8 +68,7 @@ ProcLogger::ProcLogger(
         ):
     Process(),
     _dls_dir(dls_dir),
-    _job_id(job_id),
-    _job(this, _dls_dir),
+    _job(this, job_id),
     _socket(-1),
     _write_request(false),
     _sig_hangup(sig_hangup),
@@ -171,7 +170,7 @@ void ProcLogger::_start()
 {
     try {
         // Auftragsdaten importieren
-        _job.import(_job_id);
+        _job.import();
     }
     catch (EJob &e) {
         _exit_code = E_DLS_ERROR; // no restart, invalid configuration
@@ -543,7 +542,7 @@ void ProcLogger::_check_signals()
 void ProcLogger::_reload()
 {
     try {
-        _job.import(_job_id);
+        _job.import();
     }
     catch (EJob &e) {
         _exit = true;
@@ -794,7 +793,7 @@ bool ProcLogger::clientInteraction(
             stringstream ident;
             ident << "dlsd-" << PACKAGE_VERSION
                 << "-r" << REVISION
-                << ", job " << _job_id;
+                << ", job " << _job.id();
             it->response = ident.str();
         }
     }
@@ -843,7 +842,12 @@ int ProcLogger::sendData(const char *buf, size_t len)
 #ifdef DEBUG_SEND
     cerr << __func__ << "(): " << string(buf, len) << endl;
 #endif
-    return ::write(_socket, buf, len);
+    int ret = ::write(_socket, buf, len);
+#ifdef DEBUG_SEND
+    cerr << __func__ << "() returned " << ret << endl;
+#endif
+
+    return ret;
 }
 
 /****************************************************************************/
@@ -856,40 +860,31 @@ void ProcLogger::processMessage(
         ) const
 {
     Time t;
-    string storeType, displayType;
+    string storeType;
 
     t.from_dbl_time(time);
 
     switch (level) {
         case LogError:
             storeType = "error";
-            displayType = "Error";
             break;
         case LogWarn:
             storeType = "warn";
-            displayType = "Warning";
             break;
         case LogInfo:
             storeType = "info";
-            displayType = "Information";
             break;
         case LogDebug:
             storeType = "info";
-            displayType = "Debug";
+            break;
         default:
             storeType = "info";
-            displayType = "Unknown";
             break;
     }
 
-    msg() << _job.preset()->source() << ":" << _job.preset()->port()
-        << ": " << t.to_str()
-        << ", " << displayType
-        << ": " << message;
-    log(Info);
-
     /* Unfortunately, processMessage is defined constant in PdCom::Process. */
     ProcLogger *logger = (ProcLogger *) this;
+
     logger->_job.message(t, storeType, message);
 }
 
