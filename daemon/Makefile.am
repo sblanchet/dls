@@ -31,7 +31,9 @@ endif
 
 #------------------------------------------------------------------------------
 
-dlsd_CPPFLAGS = -DREVISION=\"$(REV)\"
+dlsd_CPPFLAGS = \
+	-DREVISION=\"$(REV)\" \
+	$(XML_CPPFLAGS)
 
 dlsd_CXXFLAGS = \
 	-Wall \
@@ -52,19 +54,22 @@ dlsd_LDADD = \
 	-ldls \
 	@ZLIB_LIBS@ \
 	$(PDCOM_LIBS) \
+	$(XML_LIBS) \
 	-lm -lprotobuf
 
 dlsd_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 dlsd_SOURCES = \
+	$(builddir)/../proto/dls.pb.cc \
 	Connection.cpp \
 	Job.cpp \
 	JobPreset.cpp \
 	Logger.cpp \
+	Message.cpp \
+	MessageList.cpp \
 	ProcLogger.cpp \
 	ProcMother.cpp \
 	globals.cpp \
-	$(builddir)/../proto/dls.pb.cc \
 	main.cpp
 
 #------------------------------------------------------------------------------
@@ -74,6 +79,8 @@ noinst_HEADERS = \
 	Job.h \
 	JobPreset.h \
 	Logger.h \
+	Message.h \
+	MessageList.h \
 	ProcLogger.h \
 	ProcMother.h \
 	SaverGenT.h \
