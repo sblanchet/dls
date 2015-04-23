@@ -46,6 +46,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
 AC_CHECK_PDCOM
+AM_PATH_XML2
 
 #------------------------------------------------------------------------------
 # Daemon

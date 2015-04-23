@@ -47,7 +47,7 @@ using namespace std;
 */
 
 class ProcLogger:
-    private PdCom::Process,
+    public PdCom::Process,
     private PdCom::Subscriber // for trigger variable
 {
 public:
@@ -63,9 +63,10 @@ public:
     void notify_error(int);
     void notify_data(void);
 
+    std::string dir() const { return _dls_dir; }
+
 private:
     string _dls_dir;
-    unsigned int _job_id;
     Job _job;
     int _socket;
     bool _write_request;
