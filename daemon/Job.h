@@ -37,6 +37,7 @@ using namespace std;
 #include "globals.h"
 #include "Logger.h"
 #include "JobPreset.h"
+#include "MessageList.h"
 
 /*****************************************************************************/
 
@@ -71,10 +72,10 @@ public:
 class Job
 {
 public:
-    Job(ProcLogger *, const string &);
+    Job(ProcLogger *, unsigned int);
     ~Job();
 
-    void import(unsigned int);
+    void import();
 
     //@{
     void start_logging();
@@ -96,10 +97,13 @@ public:
     void notify_error(int);
     void notify_data();
 
+    unsigned int id() const { return _id; }
+    std::string dir() const;
+
 private:
     ProcLogger * const _parent_proc; /**< Zeiger auf den besitzenden
                                     Logging-Prozess */
-    string _dls_dir; /**< DLS-Datenverzeichnis */
+    const unsigned int _id; /**< Job ID. */
     JobPreset _preset; /**< Auftragsvorgaben */
     list<Logger *> _loggers; /**< Zeigerliste aller aktiven Logger */
     unsigned int _id_gen; /**< Sequenz für die ID-Generierung */
@@ -113,6 +117,7 @@ private:
                                 Message-Chunk gibt. */
     string _msg_chunk_dir; /**< Pfad des aktuellen Message-
                               Chunks-Verzeichnisses */
+    MessageList _messages; /**< List of messages. */
     //@}
 
     void _clear_loggers();
