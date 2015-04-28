@@ -2073,7 +2073,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                 }
 
                 if (xc + MSG_ROW_HEIGHT / 2 + 2 <= rect.width()) {
-                    QString label(msg->text.c_str());
+                    QString label = QString::fromUtf8(msg->text.c_str());
                     QRect textRect(rect);
                     textRect.setLeft(
                             rect.left() + xc + MSG_ROW_HEIGHT / 2 + 2);
@@ -2651,10 +2651,17 @@ void GraphWorker::doWork()
 
     graph->rwLockSections.unlock();
 
+    // get system language
+    QString lang = QLocale::system().name().left(2).toLower();
+    if (lang == "c") {
+        lang = "en";
+    }
+
     for (set<LibDLS::Job *>::const_iterator job = jobSet.begin();
             job != jobSet.end(); job++) {
         list<LibDLS::Job::Message> msgs =
-            (*job)->load_msg(graph->getStart(), graph->getEnd());
+            (*job)->load_msg(graph->getStart(), graph->getEnd(),
+                    lang.toLocal8Bit().constData());
         for (list<LibDLS::Job::Message>::const_iterator msg = msgs.begin();
                 msg != msgs.end(); msg++) {
             messages.append(*msg);

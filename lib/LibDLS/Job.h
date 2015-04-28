@@ -37,24 +37,24 @@
 
 namespace LibDLS {
 
+class BaseMessageList;
+
 /****************************************************************************/
 
-/**
-   Exception eines DLSJob-Objektes
-*/
-
-class JobException : public Exception
+/** Job exception.
+ */
+class JobException:
+	public Exception
 {
 public:
-    JobException(const std::string &pmsg) : Exception(pmsg) {};
+    JobException(const std::string &pmsg):
+		Exception(pmsg) {};
 };
 
 /****************************************************************************/
 
-/**
-   Darstellung eines Kanals in der Anzeige
-*/
-
+/** Measuring job.
+ */
 class Job
 {
 public:
@@ -88,19 +88,21 @@ public:
             TypeCount
         };
         Type type;
-        std::string text;
+        std::string text; /**< Message text coded in UTF-8. */
 
         bool operator<(const Message &other) const {
             return time < other.time;
         }
     };
 
-    std::list<Message> load_msg(Time, Time) const;
+    std::list<Message> load_msg(Time, Time,
+            std::string = std::string()) const;
 
 private:
     std::string _path; /**< Job path. */
     JobPreset _preset; /**< Job preset. */
     std::list<Channel> _channels; /**< List of recorded channels. */
+	BaseMessageList *_messages; /**< List of messages. */
 };
 
 /*****************************************************************************/

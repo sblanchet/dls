@@ -54,7 +54,7 @@ BaseMessageList::~BaseMessageList()
 
 /** Return message file path.
  */
-std::string BaseMessageList::path(const string &job_path) const
+std::string BaseMessageList::path(const string &job_path)
 {
 	return job_path + "/plainmessages.xml";
 }
@@ -63,7 +63,7 @@ std::string BaseMessageList::path(const string &job_path) const
 
 /** Check, if message file exists.
  */
-bool BaseMessageList::exists(const string &job_path) const
+bool BaseMessageList::exists(const string &job_path)
 {
 	struct stat buf;
 	int ret = stat(path(job_path).c_str(), &buf);
@@ -121,7 +121,18 @@ void BaseMessageList::import(const string &job_path)
                 throw Exception("Failed to import message: " + e.msg);
             }
 
-            _messages.push_back(message);
+			pair<map<string, BaseMessage *>::iterator, bool> ret;
+			ret = _messages.insert(
+					pair<string, BaseMessage *>(message->path(), message));
+			if (ret.second == false) {
+				// already existing
+				stringstream err;
+				err << "Duplicate message path: " << message->path();
+				delete message;
+                _clear();
+				xmlFreeDoc(doc);
+                throw Exception(err.str());
+			}
         }
     }
 
@@ -136,7 +147,7 @@ unsigned int BaseMessageList::count() const
 {
 	unsigned int c = 0;
 
-    for (list<BaseMessage *>::const_iterator i = _messages.begin();
+    for (map<string, BaseMessage *>::const_iterator i = _messages.begin();
             i != _messages.end(); i++) {
         c++;
     }
@@ -146,13 +157,39 @@ unsigned int BaseMessageList::count() const
 
 /****************************************************************************/
 
+/** Find a message matching a path.
+ */
+const BaseMessage *BaseMessageList::findPath(const std::string &p) const
+{
+	map<string, BaseMessage *>::const_iterator it;
+	it = _messages.find(p);
+
+	if (it != _messages.end()) {
+		return it->second;
+	}
+	else {
+		return NULL;
+	}
+}
+
+/****************************************************************************/
+
+/** Construct a new message.
+ */
+BaseMessage *BaseMessageList::newMessage(xmlNode *node)
+{
+	return new BaseMessage(node);
+}
+
+/****************************************************************************/
+
 /** Clear the messages.
  */
 void BaseMessageList::_clear()
 {
-    for (list<BaseMessage *>::iterator i = _messages.begin();
+    for (map<string, BaseMessage *>::iterator i = _messages.begin();
             i != _messages.end(); i++) {
-        delete *i;
+        delete i->second;
     }
 
     _messages.clear();

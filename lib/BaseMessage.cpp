@@ -54,6 +54,23 @@ BaseMessage::BaseMessage(
     }
     _path = data;
     xmlFree(data);
+
+    for (xmlNode *curNode = node->children;
+            curNode; curNode = curNode->next) {
+        if (curNode->type != XML_ELEMENT_NODE) {
+            continue;
+        }
+        if (string((const char *) curNode->name) == "Text") {
+            loadTranslations(curNode, _text);
+        }
+    }
+
+#if 0
+    string a = "  a  b\tc  ";
+    cerr << a << "1--" << _simplified(a) << "##" << endl;
+    a = "a  b\tc";
+    cerr << a << "2--" << _simplified(a) << "##" << endl;
+#endif
 }
 
 /****************************************************************************/
@@ -62,6 +79,31 @@ BaseMessage::BaseMessage(
  */
 BaseMessage::~BaseMessage()
 {
+}
+
+/****************************************************************************/
+
+std::string BaseMessage::text(const std::string &lang) const
+{
+    TranslationMap::const_iterator it;
+
+    if (lang == "") { // not specified. Try "en", otherwise first.
+        it = _text.find("en");
+        if (it != _text.end()) {
+            return it->second;
+        }
+        if (!_text.empty()) {
+            return _text.begin()->second;
+        }
+    }
+    else { // lang specified
+        it = _text.find(lang);
+        if (it != _text.end()) {
+            return it->second;
+        }
+    }
+
+    return string();
 }
 
 /****************************************************************************/
@@ -86,6 +128,76 @@ BaseMessage::Type BaseMessage::_typeFromString(const std::string &str)
     stringstream err;
     err << "Invalid message type " << str;
     throw Exception(err.str());
+}
+
+/****************************************************************************/
+
+/** Simplify XML content.
+ *
+ * Replaces all sequences of '\t', '\n', '\v', '\f', '\r', and ' ' with a
+ * single space.
+ */
+std::string BaseMessage::_simplified(
+        const std::string &input
+        )
+{
+    unsigned int i = 0;
+    string output;
+    bool space_inserted = false;
+
+    // skip whitespace at beginning
+    while (i < input.size() && isspace(input[i])) {
+        i++;
+    }
+
+    for (; i < input.size(); i++) {
+        if (isspace(input[i])) {
+            if (!space_inserted) {
+                output += ' ';
+                space_inserted = true;
+            }
+        }
+        else {
+            output += input[i];
+            space_inserted = false;
+        }
+    }
+
+    // remove whitespace at end
+    if (output.size() > 0 && isspace(output[output.size() - 1])) {
+        output = output.substr(0, output.size() - 1);
+    }
+
+    return output;
+}
+
+/****************************************************************************/
+
+/** Processes a TextNode XML element.
+ */
+void BaseMessage::loadTranslations(
+        xmlNode *node, /**< XML node. */
+        TranslationMap &map /**< Translation map. */
+        )
+{
+    for (xmlNode *curNode = node->children;
+            curNode; curNode = curNode->next) {
+        if (curNode->type != XML_ELEMENT_NODE
+                || string((const char *) curNode->name) != "Translation") {
+            continue;
+        }
+
+        char *lang = (char *) xmlGetProp(curNode, (const xmlChar *) "lang");
+        if (!lang) {
+            throw Exception("Translation missing lang attribute!");
+        }
+        char *content = (char *) xmlNodeGetContent(curNode);
+        if (content) {
+            map[lang] = _simplified(content);
+            xmlFree(content);
+        }
+        xmlFree(lang);
+    }
 }
 
 /****************************************************************************/

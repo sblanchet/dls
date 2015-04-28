@@ -27,7 +27,7 @@
 #include <libxml/parser.h>
 
 #include <string>
-#include <list>
+#include <map>
 
 #include "lib/LibDLS/Exception.h"
 
@@ -47,10 +47,11 @@ public:
     BaseMessageList();
     virtual ~BaseMessageList();
 
-	std::string path(const std::string &) const;
-    bool exists(const std::string &) const;
+	static std::string path(const std::string &);
+    static bool exists(const std::string &);
     void import(const std::string &);
 	unsigned int count() const;
+	const BaseMessage *findPath(const std::string &) const;
 
     /** Exception.
      */
@@ -63,9 +64,9 @@ public:
     };
 
 protected:
-	std::list<BaseMessage *> _messages; /**< Messages. */
+	std::map<std::string, BaseMessage *> _messages; /**< Messages. */
 
-	virtual BaseMessage *newMessage(xmlNode *) = 0;
+	virtual BaseMessage *newMessage(xmlNode *);
 
 private:
     void _clear();
