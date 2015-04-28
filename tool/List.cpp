@@ -73,11 +73,11 @@ int list_main(int argc, char *argv[])
 
 int list_jobs(Directory *dir)
 {
-    list<Job>::iterator job_i;
+    list<Job *>::iterator job_i;
 
     for (job_i = dir->jobs().begin(); job_i != dir->jobs().end(); job_i++) {
-        cout << " " << setw(4) << job_i->preset().id()
-             << "  " << job_i->preset().description() << endl;
+        cout << " " << setw(4) << (*job_i)->preset().id()
+             << "  " << (*job_i)->preset().description() << endl;
     }
 
     return 0;

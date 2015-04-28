@@ -42,12 +42,19 @@ Directory::~Directory()
 
 /*****************************************************************************/
 
+bool compare_job_id(Job *first, Job *second)
+{
+	return first->id() < second->id();
+}
+
+/*****************************************************************************/
+
 void Directory::import(const string &path) // importLocal
 {
     stringstream str;
     DIR *dir;
     struct dirent *dir_ent;
-    Job job;
+    Job *job;
     string dir_name;
     unsigned int job_id;
 
@@ -77,14 +84,17 @@ void Directory::import(const string &path) // importLocal
             continue;
         }
 
+		job = new Job();
+
         try {
-            job.import(_path, job_id);
+            job->import(_path, job_id);
         }
         catch (JobException &e) {
 			stringstream err;
             err << "WARNING: Failed to import job "
                  << job_id << ": " << e.msg;
 			log(err.str());
+			delete job;
             continue;
         }
 
@@ -95,17 +105,19 @@ void Directory::import(const string &path) // importLocal
     closedir(dir);
 
     // Nach Job-ID sortieren
-    _jobs.sort();
+    _jobs.sort(compare_job_id);
 }
 
 /*****************************************************************************/
 
 Job *Directory::job(unsigned int index)
 {
-    list<Job>::iterator job_i;
+    list<Job *>::iterator job_i;
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++, index--) {
-        if (!index) return &(*job_i);
+        if (!index) {
+			return *job_i;
+		}
     }
 
     return NULL;
@@ -115,10 +127,12 @@ Job *Directory::job(unsigned int index)
 
 Job *Directory::find_job(unsigned int job_id)
 {
-    list<Job>::iterator job_i;
+    list<Job *>::iterator job_i;
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
-        if (job_i->id() == job_id) return &(*job_i);
+        if ((*job_i)->id() == job_id) {
+			return *job_i;
+		}
     }
 
     return NULL;
