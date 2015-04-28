@@ -38,7 +38,7 @@ endif
 
 dls_ctl_CXXFLAGS = -Wall -fPIE -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@
 dls_ctl_LDFLAGS = -pie -L$(builddir)/../lib/.libs -pthread
-dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls
+dls_ctl_LDADD = @FLTK_LDFLAGS@ -ldls $(XML_LIBS)
 dls_ctl_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 if ENABLE_FLTK
@@ -66,7 +66,7 @@ dls_view_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FLTK_CPPFLAGS@ \
 	@FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_view_LDFLAGS = -L$(builddir)/../lib/.libs \
 	@FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ -pthread
-dls_view_LDADD = @FLTK_LDFLAGS@ -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
+dls_view_LDADD = @FLTK_LDFLAGS@ -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@ $(XML_LIBS)
 dls_view_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 dls_view_SOURCES = \

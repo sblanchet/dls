@@ -37,30 +37,12 @@ Message::Message(
         MessageList *list,
         xmlNode *node
         ):
+	BaseMessage(node),
     _parent_list(list),
-    _type(Information),
     _var(NULL),
     _value(0.0),
     _data_present(false)
 {
-    char *data;
-    string str;
-
-    data = (char *) xmlGetProp(node, (const xmlChar *) "type");
-    if (!data) {
-        throw Exception("Missing type attribute!");
-    }
-    str = data;
-    xmlFree(data);
-
-    _type = _typeFromString(str);
-
-    data = (char *) xmlGetProp(node, (const xmlChar *) "variable");
-    if (!data) {
-        throw Exception("Missing variable attribute!");
-    }
-    _path = data;
-    xmlFree(data);
 }
 
 /****************************************************************************/
@@ -84,10 +66,10 @@ void Message::subscribe(PdCom::Process *process)
         _var->unsubscribe(this);
     }
 
-    _var = process->findVariable(_path);
+    _var = process->findVariable(path());
 
     if (!_var) {
-        msg() << "Message variable " << _path << " not found!";
+        msg() << "Message variable " << path() << " not found!";
         log(::Error);
         return;
     }
@@ -108,30 +90,6 @@ void Message::subscribe(PdCom::Process *process)
 
 /****************************************************************************/
 
-/** Converts a message type string to the appropriate #Type.
- */
-Message::Type Message::_typeFromString(const std::string &str)
-{
-    if (str == "Information") {
-        return Information;
-    }
-    if (str == "Warning") {
-        return Warning;
-    }
-    if (str == "Error") {
-        return Error;
-    }
-    if (str == "Critical") {
-        return Critical;
-    }
-
-    stringstream err;
-    err << "Invalid message type " << str;
-    throw Exception(err.str());
-}
-
-/****************************************************************************/
-
 void Message::notify(PdCom::Variable *var)
 {
     if (var != _var) {
@@ -147,7 +105,7 @@ void Message::notify(PdCom::Variable *var)
         time.from_dbl_time(t);
         string storeType;
 
-        switch (_type) {
+        switch (type()) {
             case Information:
                 storeType = "info";
                 break;
@@ -165,7 +123,7 @@ void Message::notify(PdCom::Variable *var)
                 break;
         }
 
-        _parent_list->store_message(time, storeType, _path);
+        _parent_list->store_message(time, storeType, path());
     }
 
     _value = new_value;

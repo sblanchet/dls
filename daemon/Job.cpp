@@ -77,16 +77,44 @@ Job::~Job()
    \throw EJob Fehler während des Importierens
 */
 
-void Job::import(unsigned int id)
+void Job::import(unsigned int job_id)
 {
     try {
-        _preset.import(_parent_proc->dls_dir(), id);
+        _preset.import(_parent_proc->dls_dir(), job_id);
     }
     catch (EJobPreset &e) {
         throw EJob("Importing job preset: " + e.msg);
     }
 
-    _messages.import();
+	bool exists;
+
+	try {
+		exists = _messages.exists(path());
+	}
+	catch (LibDLS::BaseMessageList::Exception &e) {
+		msg() << "Failed to check for message file "
+			<< _messages.path(path()) << ": " << e.msg;
+		log(Error);
+		return;
+	}
+
+	if (exists) {
+		try {
+			_messages.import(path());
+		}
+		catch (LibDLS::BaseMessageList::Exception &e) {
+			msg() << "Failed to import messages: " << e.msg;
+			log(Error);
+		}
+
+		msg() << "Imported " << _messages.count() << " messages from "
+			<< _messages.path(".") << ".";
+		log(Info);
+	}
+	else {
+		msg() << "Message file " << _messages.path(".") << " not found.";
+		log(Info);
+	}
 }
 
 /*****************************************************************************/

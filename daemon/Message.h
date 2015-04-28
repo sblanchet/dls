@@ -24,12 +24,10 @@
 
 /*****************************************************************************/
 
-#include <libxml/parser.h>
-
 #include <pdcom/Process.h>
 #include <pdcom/Subscriber.h>
 
-#include "lib/LibDLS/Exception.h"
+#include "lib/BaseMessage.h"
 
 class MessageList;
 
@@ -38,6 +36,7 @@ class MessageList;
 /** Message
  */
 class Message:
+    public LibDLS::BaseMessage,
     public PdCom::Subscriber
 {
 public:
@@ -46,36 +45,11 @@ public:
 
     void subscribe(PdCom::Process *);
 
-    /** Message type.
-     */
-    enum Type {
-        Information, /**< Non-critical information. */
-        Warning, /**< Warning, that does not influence
-                   the process flow. */
-        Error, /**< Error, that influences the process flow. */
-        Critical /**< Critical error, that makes the process
-                   unable to run. */
-    };
-
-    /** Exception.
-     */
-    class Exception:
-        public LibDLS::Exception
-    {
-        public:
-            Exception(string pmsg):
-                LibDLS::Exception(pmsg) {};
-    };
-
 private:
     MessageList * const _parent_list;
-    Type _type;
-    std::string _path;
     PdCom::Variable *_var;
     double _value;
     bool _data_present;
-
-    static Type _typeFromString(const std::string &);
 
     virtual void notify(PdCom::Variable *);
     virtual void notifyDelete(PdCom::Variable *);
@@ -84,5 +58,3 @@ private:
 /*****************************************************************************/
 
 #endif
-
-

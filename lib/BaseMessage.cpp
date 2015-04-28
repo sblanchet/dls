@@ -20,65 +20,72 @@
  ****************************************************************************/
 
 #include <sstream>
+#include <iostream>
 using namespace std;
 
-#include <libxml/parser.h>
-
-#include "MessageList.h"
-#include "Message.h"
-#include "Job.h"
+#include "BaseMessage.h"
+#include "BaseMessageList.h"
+using namespace LibDLS;
 
 /****************************************************************************/
 
 /** Constructor.
  */
-MessageList::MessageList(
-        Job *job
+BaseMessage::BaseMessage(
+        xmlNode *node
         ):
-    _parent_job(job)
+    _type(Information)
 {
+    char *data;
+    string str;
+
+    data = (char *) xmlGetProp(node, (const xmlChar *) "type");
+    if (!data) {
+        throw Exception("Missing type attribute!");
+    }
+    str = data;
+    xmlFree(data);
+
+    _type = _typeFromString(str);
+
+    data = (char *) xmlGetProp(node, (const xmlChar *) "variable");
+    if (!data) {
+        throw Exception("Missing variable attribute!");
+    }
+    _path = data;
+    xmlFree(data);
 }
 
 /****************************************************************************/
 
 /** Destructor.
  */
-MessageList::~MessageList()
+BaseMessage::~BaseMessage()
 {
 }
 
 /****************************************************************************/
 
-/** Construct a new message.
+/** Converts a message type string to the appropriate #Type.
  */
-LibDLS::BaseMessage *MessageList::newMessage(xmlNode *node)
+BaseMessage::Type BaseMessage::_typeFromString(const std::string &str)
 {
-	Message *message = new Message(this, node);
-	LibDLS::BaseMessage *bmsg = static_cast<LibDLS::BaseMessage *>(message);
-	return bmsg;
-}
-
-/****************************************************************************/
-
-/** Subscribe variables.
- */
-void MessageList::subscribe(PdCom::Process *process)
-{
-    for (list<LibDLS::BaseMessage *>::iterator i = _messages.begin();
-            i != _messages.end(); i++) {
-		Message *message = static_cast<Message *>(*i);
-        message->subscribe(process);
+    if (str == "Information") {
+        return Information;
     }
-}
+    if (str == "Warning") {
+        return Warning;
+    }
+    if (str == "Error") {
+        return Error;
+    }
+    if (str == "Critical") {
+        return Critical;
+    }
 
-/****************************************************************************/
-
-/** Store a message.
- */
-void MessageList::store_message(LibDLS::Time time, const std::string &type,
-        const std::string &msg)
-{
-    _parent_job->message(time, type, msg);
+    stringstream err;
+    err << "Invalid message type " << str;
+    throw Exception(err.str());
 }
 
 /****************************************************************************/

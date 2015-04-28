@@ -19,43 +19,65 @@
  *
  *****************************************************************************/
 
-#ifndef MessageListH
-#define MessageListH
+#ifndef LibDLSBaseMessageH
+#define LibDLSBaseMessageH
 
 /*****************************************************************************/
 
-#include <list>
-using namespace std;
+#include <libxml/parser.h>
 
-#include <pdcom/Process.h>
+#include "LibDLS/Exception.h"
 
-#include "lib/LibDLS/Time.h"
-#include "lib/BaseMessageList.h"
+namespace LibDLS {
 
-/*****************************************************************************/
-
-class Job;
+class MessageList;
 
 /*****************************************************************************/
 
-/** Message list.
+/** Message base class.
  */
-class MessageList:
-	public LibDLS::BaseMessageList
+class BaseMessage
 {
 public:
-    MessageList(Job *);
-    virtual ~MessageList();
+    BaseMessage(xmlNode *);
+    virtual ~BaseMessage();
 
-	LibDLS::BaseMessage *newMessage(xmlNode *);
+    /** Message type.
+     */
+    enum Type {
+        Information, /**< Non-critical information. */
+        Warning, /**< Warning, that does not influence
+                   the process flow. */
+        Error, /**< Error, that influences the process flow. */
+        Critical /**< Critical error, that makes the process
+                   unable to run. */
+    };
 
-    void subscribe(PdCom::Process *);
-    void store_message(LibDLS::Time, const std::string &, const std::string &);
+    /** Exception.
+     */
+    class Exception:
+        public LibDLS::Exception
+    {
+        public:
+            Exception(string pmsg):
+                LibDLS::Exception(pmsg) {};
+    };
+
+protected:
+    Type type() const { return _type; }
+    const std::string &path() const { return _path; }
 
 private:
-    Job * const _parent_job; /**< Parent job. */
+    Type _type;
+    std::string _path;
+
+    static Type _typeFromString(const std::string &);
 };
+
+} // namespace LibDLS
 
 /*****************************************************************************/
 
 #endif
+
+
