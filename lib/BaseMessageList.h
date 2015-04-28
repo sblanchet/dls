@@ -19,42 +19,59 @@
  *
  *****************************************************************************/
 
-#ifndef MessageListH
-#define MessageListH
+#ifndef LibDLSBaseMessageListH
+#define LibDLSBaseMessageListH
 
 /*****************************************************************************/
 
+#include <libxml/parser.h>
+
+#include <string>
 #include <list>
-using namespace std;
 
-#include <pdcom/Process.h>
-
-#include "lib/LibDLS/Time.h"
-#include "lib/BaseMessageList.h"
+#include "lib/LibDLS/Exception.h"
 
 /*****************************************************************************/
 
-class Job;
+namespace LibDLS {
+
+class BaseMessage;
 
 /*****************************************************************************/
 
 /** Message list.
  */
-class MessageList:
-	public LibDLS::BaseMessageList
+class BaseMessageList
 {
 public:
-    MessageList(Job *);
-    virtual ~MessageList();
+    BaseMessageList();
+    virtual ~BaseMessageList();
 
-	LibDLS::BaseMessage *newMessage(xmlNode *);
+	std::string path(const std::string &) const;
+    bool exists(const std::string &) const;
+    void import(const std::string &);
+	unsigned int count() const;
 
-    void subscribe(PdCom::Process *);
-    void store_message(LibDLS::Time, const std::string &, const std::string &);
+    /** Exception.
+     */
+    class Exception:
+        public LibDLS::Exception
+    {
+        public:
+            Exception(string pmsg):
+                LibDLS::Exception(pmsg) {};
+    };
+
+protected:
+	std::list<BaseMessage *> _messages; /**< Messages. */
+
+	virtual BaseMessage *newMessage(xmlNode *) = 0;
 
 private:
-    Job * const _parent_job; /**< Parent job. */
+    void _clear();
 };
+
+} // namespace LibDLS
 
 /*****************************************************************************/
 

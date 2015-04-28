@@ -34,7 +34,7 @@ endif
 dls_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dls_LDFLAGS = -L$(builddir)/../lib/.libs @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
 			  -pthread
-dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@
+dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@ $(XML_LIBS)
 dls_DEPENDENCIES = $(builddir)/../lib/libdls.la
 
 dls_SOURCES = \
