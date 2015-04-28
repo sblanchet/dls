@@ -43,12 +43,12 @@ using namespace LibDLS;
 */
 
 JobPreset::JobPreset():
+    _id(0),
+	_running(false),
+    _quota_time(0),
+    _quota_size(0),
     _port(MSR_PORT)
 {
-    _id = 0;
-    _running = false;
-    _quota_time = 0;
-    _quota_size = 0;
 }
 
 /*****************************************************************************/
@@ -240,7 +240,7 @@ bool JobPreset::channel_exists(const string &name) const
 
    \returns String
    \see _id
-   \see _name
+   \see _description
 */
 
 string JobPreset::id_desc() const

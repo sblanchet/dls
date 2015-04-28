@@ -193,8 +193,8 @@ int main(int argc, char **argv)
         if (process_type == LoggingProcess)
         {
             // Erfassungsprozess starten
-            logger_process = new ProcLogger(dls_dir, dlsd_job_id);
-            exit_code = logger_process->start();
+            logger_process = new ProcLogger(dls_dir);
+            exit_code = logger_process->start(dlsd_job_id);
             delete logger_process;
         }
         else

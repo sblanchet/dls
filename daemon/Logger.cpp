@@ -271,7 +271,7 @@ void Logger::_acquire_channel_dir()
     unsigned int index, highest_index = 0;
     XmlTag tag;
 
-    job_dir_name << _dls_dir << "/job" << _parent_job->preset()->id();
+    job_dir_name << _dls_dir << "/job" << _parent_job->id();
 
     if (!(dir = opendir(job_dir_name.str().c_str()))) {
         err << "Failed to open job directory \""

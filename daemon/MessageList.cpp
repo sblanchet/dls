@@ -59,7 +59,7 @@ void MessageList::import()
     _clear();
 
     // Dateinamen konstruieren
-    file_name << _parent_job->dir() << "/plainmessages.xml";
+    file_name << _parent_job->path() << "/plainmessages.xml";
 
     xmlDocPtr doc = xmlParseFile(file_name.str().c_str());
 

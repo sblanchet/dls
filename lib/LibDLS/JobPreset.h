@@ -28,12 +28,10 @@
 
 #include <string>
 #include <vector>
-using namespace std;
 
 /*****************************************************************************/
 
 #include "Exception.h"
-#include "Time.h"
 #include "ChannelPreset.h"
 
 /*****************************************************************************/
@@ -42,14 +40,14 @@ namespace LibDLS {
 
 /*****************************************************************************/
 
-/**
-   Exception eines JobPreset-Objektes
-*/
-
-class EJobPreset : public Exception
+/** Job preset exception.
+ */
+class EJobPreset:
+    public Exception
 {
-public:
-    EJobPreset(const string &pmsg) : Exception(pmsg) {};
+    public:
+        EJobPreset(const std::string &pmsg):
+            Exception(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -66,173 +64,33 @@ public:
     JobPreset();
     ~JobPreset();
 
-    void import(const string &, unsigned int);
+    void import(const std::string &, unsigned int);
 
-    unsigned int id() const;
-    const string &description() const;
-    string id_desc() const;
-    const string &owner() const;
-    bool running() const;
-    uint64_t quota_time() const;
-    uint64_t quota_size() const;
-    const string &source() const;
-    uint16_t port() const;
-    const string &trigger() const;
-    const vector<ChannelPreset> *channels() const;
-    bool channel_exists(const string &) const;
+    unsigned int id() const { return _id; }
+    const std::string &description() const { return _description; }
+    std::string id_desc() const;
+    const std::string &owner() const { return _owner; }
+    bool running() const { return _running; }
+    uint64_t quota_time() const { return _quota_time; }
+    uint64_t quota_size() const { return _quota_size; }
+    const std::string &source() const { return _source; }
+    uint16_t port() const { return _port; }
+    const std::string &trigger() const { return _trigger; }
+    const vector<ChannelPreset> *channels() const { return &_channels; }
+    bool channel_exists(const std::string &) const;
 
 protected:
-    unsigned int _id; /**< Auftrags-ID */
-    string _description; /**< Beschreibender Name des Auftrages */
-    string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
+    unsigned int _id; /**< Job ID. */
+    std::string _description; /**< Beschreibender Name des Auftrages */
+    std::string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
     bool _running; /**< Soll erfasst werden? */
     uint64_t _quota_time; /**< Auftrags-Quota nach Zeit */
     uint64_t _quota_size; /**< Auftrags-Quota nach Datengröße */
-    string _source; /**< IP-Adresse oder Hostname der Datenquelle */
+    std::string _source; /**< IP-Adresse oder Hostname der Datenquelle */
     uint16_t _port; /**< Port der Datenquelle. */
-    string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
+    std::string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
     vector<ChannelPreset> _channels; /**< Liste der Kanalvorgaben */
 };
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf die ID
-
-   \returns Auftrags-ID
-   \see _id
-*/
-
-inline unsigned int JobPreset::id() const
-{
-    return _id;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf die Beschreibung
-
-   \returns Beschreibung
-   \see _description
-*/
-
-inline const string &JobPreset::description() const
-{
-    return _description;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf das Besitzer-Attribut
-
-   \returns Besitzername
-   \see _owner
-*/
-
-inline const string &JobPreset::owner() const
-{
-    return _owner;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf den Sollzustand
-
-   \returns Sollzustand
-   \see _running
-*/
-
-inline bool JobPreset::running() const
-{
-    return _running;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf die Adresse der Datenquelle
-
-   \returns IP-Adresse oder Hostname der Datenquelle
-   \see _source
-*/
-
-inline const string &JobPreset::source() const
-{
-    return _source;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf den Port der Datenquelle
-
-   \returns Port der Datenquelle
-   \see _port
-*/
-
-inline uint16_t JobPreset::port() const
-{
-    return _port;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf den Trigger-Attribut
-
-   \returns Name des triggerparameters, oder "", wenn kein Trigger
-   \see _trigger
-*/
-
-inline const string &JobPreset::trigger() const
-{
-    return _trigger;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf das Zeit-Quota-Attribut
-
-   \returns Quota-Größe
-   \see _quota_time
-*/
-
-inline uint64_t JobPreset::quota_time() const
-{
-    return _quota_time;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf das Daten-Quota-Attribut
-
-   \returns Quota-Größe
-   \see _quota_size
-*/
-
-inline uint64_t JobPreset::quota_size() const
-{
-    return _quota_size;
-}
-
-/*****************************************************************************/
-
-/**
-   Ermöglicht Lesezugriff auf den Vektor der Kanalvorgaben
-
-   \returns Konstanter Zeiger auf den Vektor der Kanalvorgaben
-   \see _channels
-*/
-
-inline const vector<ChannelPreset> *JobPreset::channels() const
-{
-    return &_channels;
-}
 
 /*****************************************************************************/
 

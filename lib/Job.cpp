@@ -45,8 +45,7 @@ using namespace LibDLS;
    Constructor
 */
 
-Job::Job():
-    _id(0)
+Job::Job()
 {
 }
 
@@ -75,7 +74,6 @@ void Job::import(const string &dls_path, /**< DLS directory path */
     job_dir << dls_path << "/job" << job_id;
 
     _path = job_dir.str();
-    _id = job_id;
     _channels.clear();
 
     try {
@@ -217,7 +215,7 @@ set<LibDLS::Channel *> LibDLS::Job::find_channels_by_name(
 
 bool LibDLS::Job::operator<(const Job &right) const
 {
-    return preset().id() < right.preset().id();
+    return _preset.id() < right._preset.id();
 }
 
 /*****************************************************************************/

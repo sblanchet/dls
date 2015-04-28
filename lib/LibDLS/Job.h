@@ -27,7 +27,6 @@
 #include <string>
 #include <list>
 #include <set>
-using namespace std;
 
 #include "Exception.h"
 #include "Time.h"
@@ -47,7 +46,7 @@ namespace LibDLS {
 class JobException : public Exception
 {
 public:
-    JobException(const string &pmsg) : Exception(pmsg) {};
+    JobException(const std::string &pmsg) : Exception(pmsg) {};
 };
 
 /****************************************************************************/
@@ -62,17 +61,17 @@ public:
     Job();
     ~Job();
 
-    void import(const string &, unsigned int);
+    void import(const std::string &, unsigned int);
     void fetch_channels();
 
-    list<Channel> &channels();
+    std::list<Channel> &channels() { return _channels; }
     Channel *channel(unsigned int);
     Channel *find_channel(unsigned int);
-    set<Channel *> find_channels_by_name(const std::string &);
+    std::set<Channel *> find_channels_by_name(const std::string &);
 
-    const string &path() const;
-    unsigned int id() const;
-    const JobPreset &preset() const;
+    const std::string &path() const { return _path; }
+    unsigned int id() const { return _preset.id(); }
+    const JobPreset &preset() const { return _preset; }
 
     bool operator<(const Job &) const;
 
@@ -89,67 +88,20 @@ public:
             TypeCount
         };
         Type type;
-        string text;
+        std::string text;
 
         bool operator<(const Message &other) const {
             return time < other.time;
         }
     };
 
-    list<Message> load_msg(Time, Time) const;
+    std::list<Message> load_msg(Time, Time) const;
 
 private:
-    string _path; /**< DLS job directory path */
-    unsigned int _id; /**< Job index. */
-    JobPreset _preset; /**< job preset */
-    list<Channel> _channels; /**< list of recorded channels */
+    std::string _path; /**< Job path. */
+    JobPreset _preset; /**< Job preset. */
+    std::list<Channel> _channels; /**< List of recorded channels. */
 };
-
-/****************************************************************************/
-
-/**
-   Returns the job's path.
-   \return job path
-*/
-
-inline const string &Job::path() const
-{
-    return _path;
-}
-
-/****************************************************************************/
-
-/**
-   Returns the job's ID.
-   \return job ID
-*/
-
-inline unsigned int Job::id() const
-{
-    return _id;
-}
-
-/****************************************************************************/
-
-/**
-*/
-
-inline const JobPreset &Job::preset() const
-{
-    return _preset;
-}
-
-/****************************************************************************/
-
-/**
-   Returns the list of channels.
-   \return list of channels
-*/
-
-inline list<Channel> &Job::channels()
-{
-    return _channels;
-}
 
 /*****************************************************************************/
 
