@@ -27,7 +27,6 @@
 #include <string>
 #include <list>
 #include <sstream>
-using namespace std;
 
 /*****************************************************************************/
 
@@ -51,10 +50,10 @@ class ProcLogger:
     private PdCom::Subscriber // for trigger variable
 {
 public:
-    ProcLogger(const string &, unsigned int);
+    ProcLogger(const std::string &);
     ~ProcLogger();
 
-    int start();
+    int start(unsigned int);
 
     PdCom::Variable *findVariable(const std::string &path) const {
         return PdCom::Process::findVariable(path);
@@ -63,10 +62,10 @@ public:
     void notify_error(int);
     void notify_data(void);
 
-    std::string dir() const { return _dls_dir; }
+    std::string dls_dir() const { return _dls_dir; }
 
 private:
-    string _dls_dir;
+	std::string _dls_dir;
     Job _job;
     int _socket;
     bool _write_request;
@@ -86,7 +85,7 @@ private:
     bool _receiving_data;
     PdCom::Variable *_trigger;
 
-    void _start();
+    void _start(unsigned int);
     bool _connect_socket();
     void _read_write_socket();
     void _read_socket();

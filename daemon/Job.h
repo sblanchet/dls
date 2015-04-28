@@ -72,10 +72,10 @@ public:
 class Job
 {
 public:
-    Job(ProcLogger *, unsigned int);
+    Job(ProcLogger *);
     ~Job();
 
-    void import();
+    void import(unsigned int);
 
     //@{
     void start_logging();
@@ -97,13 +97,12 @@ public:
     void notify_error(int);
     void notify_data();
 
-    unsigned int id() const { return _id; }
-    std::string dir() const;
+    unsigned int id() const { return _preset.id(); }
+    std::string path() const;
 
 private:
     ProcLogger * const _parent_proc; /**< Zeiger auf den besitzenden
                                     Logging-Prozess */
-    const unsigned int _id; /**< Job ID. */
     JobPreset _preset; /**< Auftragsvorgaben */
     list<Logger *> _loggers; /**< Zeigerliste aller aktiven Logger */
     unsigned int _id_gen; /**< Sequenz für die ID-Generierung */

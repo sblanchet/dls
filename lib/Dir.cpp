@@ -118,7 +118,7 @@ Job *Directory::find_job(unsigned int job_id)
     list<Job>::iterator job_i;
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
-        if (job_i->preset().id() == job_id) return &(*job_i);
+        if (job_i->id() == job_id) return &(*job_i);
     }
 
     return NULL;

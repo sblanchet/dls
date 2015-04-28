@@ -47,11 +47,9 @@ using namespace LibDLS;
    \param dls_dir DLS-Datenverzeichnis
 */
 Job::Job(
-        ProcLogger *parent_proc,
-        unsigned int job_id
+        ProcLogger *parent_proc
         ):
     _parent_proc(parent_proc),
-    _id(job_id),
     _id_gen(0),
     _logging_started(false),
     _msg_chunk_created(false),
@@ -79,10 +77,10 @@ Job::~Job()
    \throw EJob Fehler während des Importierens
 */
 
-void Job::import()
+void Job::import(unsigned int id)
 {
     try {
-        _preset.import(_parent_proc->dir(), _id);
+        _preset.import(_parent_proc->dls_dir(), id);
     }
     catch (EJobPreset &e) {
         throw EJob("Importing job preset: " + e.msg);
@@ -277,7 +275,7 @@ bool Job::_add_logger(const ChannelPreset *preset)
     Logger *logger;
 
     try {
-        logger = new Logger(this, preset, _parent_proc->dir(), pv);
+        logger = new Logger(this, preset, _parent_proc->dls_dir(), pv);
     }
     catch (ELogger &e)
     {
@@ -368,10 +366,10 @@ void Job::notify_data()
 
 /** Returns the job directory.
  */
-std::string Job::dir() const
+std::string Job::path() const
 {
     stringstream d;
-    d << _parent_proc->dir() << "/job" << _preset.id();
+    d << _parent_proc->dls_dir() << "/job" << _preset.id();
     return d.str();
 }
 
@@ -534,7 +532,7 @@ void Job::message(Time time, const string &type, const string &message)
         _message_file.close();
         _message_index.close();
 
-        dirname << dir() << "/messages";
+        dirname << path() << "/messages";
 
         // Existiert das Message-Verzeichnis?
         if (stat(dirname.str().c_str(), &stat_buf) == -1) {

@@ -63,12 +63,11 @@ using namespace LibDLS;
 */
 
 ProcLogger::ProcLogger(
-        const string &dls_dir,
-        unsigned int job_id
+        const string &dls_dir
         ):
     Process(),
     _dls_dir(dls_dir),
-    _job(this, job_id),
+    _job(this),
     _socket(-1),
     _write_request(false),
     _sig_hangup(sig_hangup),
@@ -100,7 +99,7 @@ ProcLogger::~ProcLogger()
    \return Exit-Code
 */
 
-int ProcLogger::start()
+int ProcLogger::start(unsigned int job_id)
 {
     msg() << "Process started for job " << dlsd_job_id << "!";
     log(Info);
@@ -110,7 +109,7 @@ int ProcLogger::start()
     if (!_exit) {
 
         // Ablauf starten
-        _start();
+        _start(job_id);
 
         if (process_type == LoggingProcess) {
             // PID-Datei wieder entfernen
@@ -166,11 +165,11 @@ void ProcLogger::notify_data()
    Starten des Logging-Prozesses (intern)
 */
 
-void ProcLogger::_start()
+void ProcLogger::_start(unsigned int job_id)
 {
     try {
         // Auftragsdaten importieren
-        _job.import();
+        _job.import(job_id);
     }
     catch (EJob &e) {
         _exit_code = E_DLS_ERROR; // no restart, invalid configuration
@@ -542,7 +541,7 @@ void ProcLogger::_check_signals()
 void ProcLogger::_reload()
 {
     try {
-        _job.import();
+        _job.import(_job.id());
     }
     catch (EJob &e) {
         _exit = true;
@@ -607,7 +606,7 @@ void ProcLogger::_do_watchdogs()
     _last_watchdog_time.set_now();
 
     stringstream dir_name;
-    dir_name << _dls_dir << "/job" << _job.preset()->id();
+    dir_name << _dls_dir << "/job" << _job.id();
 
     fstream watchdog_file;
     watchdog_file.open((dir_name.str() + "/watchdog").c_str(), ios::out);
