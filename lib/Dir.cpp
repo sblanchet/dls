@@ -38,6 +38,11 @@ Directory::Directory()
 
 Directory::~Directory()
 {
+    list<Job *>::iterator job_i;
+
+    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+        delete *job_i;
+    }
 }
 
 /*****************************************************************************/
