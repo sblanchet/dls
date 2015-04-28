@@ -62,13 +62,13 @@ class Directory
         //void importNetwork(const string &);
 
         const string &path() const { return _path; }
-        list<Job> &jobs() { return _jobs; }
+        list<Job *> &jobs() { return _jobs; }
         Job *job(unsigned int);
         Job *find_job(unsigned int);
 
     private:
         string _path; /**< path to DLS data directory */
-        list<Job> _jobs; /**< list of jobs */
+        list<Job *> _jobs; /**< list of jobs */
 };
 
 /****************************************************************************/

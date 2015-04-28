@@ -29,9 +29,9 @@ Dir::Dir(
     Node(NULL),
     dir(dir)
 {
-    for (list<LibDLS::Job>::iterator j = dir->jobs().begin();
+    for (list<LibDLS::Job *>::iterator j = dir->jobs().begin();
             j != dir->jobs().end(); j++) {
-        Job *job = new Job(this, &*j);
+        Job *job = new Job(this, *j);
         jobs.push_back(job);
     }
 }

@@ -124,7 +124,7 @@ ViewDialogMain::~ViewDialogMain()
 
 void ViewDialogMain::show()
 {
-    list<LibDLS::Job>::const_iterator job_i;
+    list<LibDLS::Job *>::const_iterator job_i;
 
     try {
         _dls_dir.import(_dls_dir_path);
@@ -137,7 +137,7 @@ void ViewDialogMain::show()
     for (job_i = _dls_dir.jobs().begin();
          job_i != _dls_dir.jobs().end();
          job_i++) {
-        _choice_job->add(job_i->preset().id_desc().c_str());
+        _choice_job->add((*job_i)->preset().id_desc().c_str());
     }
 
     if (_dls_dir.jobs().empty()) {
