@@ -21,8 +21,9 @@
 
 #include <fcntl.h>
 #include <dirent.h>
+#include <errno.h>
+#include <string.h>
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
 using namespace std;
@@ -36,16 +37,17 @@ using namespace std;
 #include "XmlParser.h"
 #include "IndexT.h"
 #include "File.h"
+#include "BaseMessageList.h"
+#include "BaseMessage.h"
 
 using namespace LibDLS;
 
 /*****************************************************************************/
 
-/**
-   Constructor
-*/
-
-Job::Job()
+/** Constructor.
+ */
+Job::Job():
+	_messages(new BaseMessageList())
 {
 }
 
@@ -57,6 +59,7 @@ Job::Job()
 
 Job::~Job()
 {
+	delete _messages;
 }
 
 /*****************************************************************************/
@@ -85,6 +88,36 @@ void Job::import(const string &dls_path, /**< DLS directory path */
 		log(err.str());
         return;
     }
+
+	bool exists;
+
+	try {
+		exists = _messages->exists(_path);
+	}
+	catch (LibDLS::BaseMessageList::Exception &e) {
+		stringstream err;
+		err << "Failed to check for message file "
+			<< _messages->path(_path) << ": " << e.msg;
+		log(err.str());
+		return;
+	}
+
+	if (exists) {
+		try {
+			_messages->import(_path);
+		}
+		catch (LibDLS::BaseMessageList::Exception &e) {
+			stringstream err;
+			err << "Failed to import messages: " << e.msg;
+			log(err.str());
+		}
+
+#if 0
+		stringstream msg;
+		msg << "Imported " << _messages->count() << " messages.";
+		log(msg.str());
+#endif
+	}
 }
 
 /*****************************************************************************/
@@ -226,14 +259,17 @@ bool LibDLS::Job::operator<(const Job &right) const
  * \param end Endzeit des Bereiches
  */
 list<LibDLS::Job::Message> LibDLS::Job::load_msg(
-        Time start,
-        Time end
+        Time start, /**< Start time. */
+        Time end, /**< End time. */
+        std::string lang /**< Language for message translations. If empty,
+                           "en" is tried, otherwise the first available
+                           translation is used. */
         ) const
 {
     IndexT<MessageIndexRecord> index;
     MessageIndexRecord index_record;
     File file;
-    RingBuffer ring(10000);
+    RingBuffer ring(10000); // FIXME
     XmlParser xml;
     list<Message> ret;
     Message msg;
@@ -251,10 +287,12 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 
     // Das Message-Verzeichnis öffnen
     if (!(dir = opendir(msg_dir.str().c_str()))) {
-		stringstream err;
-        err << "ERROR: Failed to open message directory \""
-             << msg_dir.str() << "\".";
-		log(err.str());
+		if (errno != ENOENT) {
+			stringstream err;
+			err << "ERROR: Failed to open message directory \""
+				<< msg_dir.str() << "\":" << strerror(errno);
+			log(err.str());
+		}
         return ret;
     }
 
@@ -430,6 +468,15 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 					log(err.str());
                     msg.type = Message::Unknown;
                 }
+
+                // lookup message text
+				const BaseMessage *m = _messages->findPath(msg.text);
+				if (m) {
+                    string text = m->text(lang);
+                    if (text != "") {
+                        msg.text = text;
+                    }
+				}
 
                 ret.push_back(msg);
             }

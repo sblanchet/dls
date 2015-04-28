@@ -24,6 +24,8 @@
 
 /*****************************************************************************/
 
+#include <map>
+
 #include <libxml/parser.h>
 
 #include "LibDLS/Exception.h"
@@ -53,6 +55,10 @@ public:
                    unable to run. */
     };
 
+    Type type() const { return _type; }
+    const std::string &path() const { return _path; }
+    std::string text(const std::string &) const;
+
     /** Exception.
      */
     class Exception:
@@ -63,15 +69,15 @@ public:
                 LibDLS::Exception(pmsg) {};
     };
 
-protected:
-    Type type() const { return _type; }
-    const std::string &path() const { return _path; }
-
 private:
     Type _type;
     std::string _path;
+    typedef std::map<std::string, std::string> TranslationMap;
+    TranslationMap _text;
 
     static Type _typeFromString(const std::string &);
+    static std::string _simplified(const std::string &);
+    static void loadTranslations(xmlNode *, TranslationMap &);
 };
 
 } // namespace LibDLS

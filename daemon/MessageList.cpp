@@ -64,9 +64,9 @@ LibDLS::BaseMessage *MessageList::newMessage(xmlNode *node)
  */
 void MessageList::subscribe(PdCom::Process *process)
 {
-    for (list<LibDLS::BaseMessage *>::iterator i = _messages.begin();
+    for (map<string, LibDLS::BaseMessage *>::iterator i = _messages.begin();
             i != _messages.end(); i++) {
-		Message *message = static_cast<Message *>(*i);
+		Message *message = static_cast<Message *>(i->second);
         message->subscribe(process);
     }
 }
