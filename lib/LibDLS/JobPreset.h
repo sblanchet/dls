@@ -60,36 +60,39 @@ class EJobPreset:
 
 class JobPreset
 {
-public:
-    JobPreset();
-    ~JobPreset();
+    public:
+        JobPreset();
+        ~JobPreset();
 
-    void import(const std::string &, unsigned int);
+        void import(const std::string &, unsigned int);
 
-    unsigned int id() const { return _id; }
-    const std::string &description() const { return _description; }
-    std::string id_desc() const;
-    const std::string &owner() const { return _owner; }
-    bool running() const { return _running; }
-    uint64_t quota_time() const { return _quota_time; }
-    uint64_t quota_size() const { return _quota_size; }
-    const std::string &source() const { return _source; }
-    uint16_t port() const { return _port; }
-    const std::string &trigger() const { return _trigger; }
-    const vector<ChannelPreset> *channels() const { return &_channels; }
-    bool channel_exists(const std::string &) const;
+        unsigned int id() const { return _id; }
+        const std::string &description() const { return _description; }
+        std::string id_desc() const;
+        const std::string &owner() const { return _owner; }
+        bool running() const { return _running; }
+        uint64_t quota_time() const { return _quota_time; }
+        uint64_t quota_size() const { return _quota_size; }
+        const std::string &source() const { return _source; }
+        uint16_t port() const { return _port; }
+        const std::string &trigger() const { return _trigger; }
+        const std::vector<ChannelPreset> *channels() const {
+            return &_channels;
+        }
+        bool channel_exists(const std::string &) const;
 
-protected:
-    unsigned int _id; /**< Job ID. */
-    std::string _description; /**< Beschreibender Name des Auftrages */
-    std::string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
-    bool _running; /**< Soll erfasst werden? */
-    uint64_t _quota_time; /**< Auftrags-Quota nach Zeit */
-    uint64_t _quota_size; /**< Auftrags-Quota nach Datengröße */
-    std::string _source; /**< IP-Adresse oder Hostname der Datenquelle */
-    uint16_t _port; /**< Port der Datenquelle. */
-    std::string _trigger; /**< Name des Trigger-Parameters, andernfalls leer */
-    vector<ChannelPreset> _channels; /**< Liste der Kanalvorgaben */
+    protected:
+        unsigned int _id; /**< Job ID. */
+        std::string _description; /**< Beschreibender Name des Auftrages */
+        std::string _owner; /**< Besitzer des Auftrages \todo Nicht genutzt */
+        bool _running; /**< Soll erfasst werden? */
+        uint64_t _quota_time; /**< Auftrags-Quota nach Zeit */
+        uint64_t _quota_size; /**< Auftrags-Quota nach Datengröße */
+        std::string _source; /**< IP-Adresse oder Hostname der Datenquelle */
+        uint16_t _port; /**< Port der Datenquelle. */
+        std::string _trigger; /**< Name des Trigger-Parameters, andernfalls
+                                leer */
+        std::vector<ChannelPreset> _channels; /**< Liste der Kanalvorgaben */
 };
 
 /*****************************************************************************/

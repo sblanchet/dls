@@ -46,9 +46,9 @@ class BaseMessageList;
 class JobException:
 	public Exception
 {
-public:
-    JobException(const std::string &pmsg):
-		Exception(pmsg) {};
+    public:
+        JobException(const std::string &pmsg):
+            Exception(pmsg) {};
 };
 
 /****************************************************************************/
@@ -57,52 +57,52 @@ public:
  */
 class Job
 {
-public:
-    Job();
-    ~Job();
+    public:
+        Job();
+        ~Job();
 
-    void import(const std::string &, unsigned int);
-    void fetch_channels();
+        void import(const std::string &, unsigned int);
+        void fetch_channels();
 
-    std::list<Channel> &channels() { return _channels; }
-    Channel *channel(unsigned int);
-    Channel *find_channel(unsigned int);
-    std::set<Channel *> find_channels_by_name(const std::string &);
+        std::list<Channel> &channels() { return _channels; }
+        Channel *channel(unsigned int);
+        Channel *find_channel(unsigned int);
+        std::set<Channel *> find_channels_by_name(const std::string &);
 
-    const std::string &path() const { return _path; }
-    unsigned int id() const { return _preset.id(); }
-    const JobPreset &preset() const { return _preset; }
+        const std::string &path() const { return _path; }
+        unsigned int id() const { return _preset.id(); }
+        const JobPreset &preset() const { return _preset; }
 
-    bool operator<(const Job &) const;
+        bool operator<(const Job &) const;
 
-    struct Message
-    {
-        Time time;
-        enum Type {
-            Unknown = -1,
-            Info,
-            Warning,
-            Error,
-            Critical,
-            Broadcast,
-            TypeCount
+        struct Message
+        {
+            Time time;
+            enum Type {
+                Unknown = -1,
+                Info,
+                Warning,
+                Error,
+                Critical,
+                Broadcast,
+                TypeCount
+            };
+            Type type;
+            std::string text; /**< Message text coded in UTF-8. */
+
+            bool operator<(const Message &other) const {
+                return time < other.time;
+            }
         };
-        Type type;
-        std::string text; /**< Message text coded in UTF-8. */
 
-        bool operator<(const Message &other) const {
-            return time < other.time;
-        }
-    };
+        std::list<Message> load_msg(Time, Time,
+                std::string = std::string()) const;
 
-    std::list<Message> load_msg(Time, Time,
-            std::string = std::string()) const;
-
-private:
-    std::string _path; /**< Job path. */
-    JobPreset _preset; /**< Job preset. */
-    std::list<Channel> _channels; /**< List of recorded channels. */
-	BaseMessageList *_messages; /**< List of messages. */
+    private:
+        std::string _path; /**< Job path. */
+        JobPreset _preset; /**< Job preset. */
+        std::list<Channel> _channels; /**< List of recorded channels. */
+        BaseMessageList *_messages; /**< List of messages. */
 };
 
 /*****************************************************************************/
