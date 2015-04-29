@@ -26,7 +26,7 @@ Job::Job(
 {
     job->fetch_channels();
 
-    for (list<LibDLS::Channel>::iterator ch = job->channels().begin();
+    for (std::list<LibDLS::Channel>::iterator ch = job->channels().begin();
             ch != job->channels().end(); ch++) {
         Channel *c = new Channel(this, &*ch);
         channels.push_back(c);

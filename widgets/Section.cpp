@@ -615,7 +615,7 @@ void Section::getRange(bool &valid, LibDLS::Time &start, LibDLS::Time &end)
 /****************************************************************************/
 
 void Section::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
-        int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
+        int width, GraphWorker *worker, std::set<LibDLS::Job *> &jobSet)
 {
     rwLockLayers.lockForRead();
 

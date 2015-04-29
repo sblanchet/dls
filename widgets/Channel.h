@@ -72,7 +72,7 @@ class Channel:
             LibDLS::Time start;
             LibDLS::Time end;
         };
-        vector<TimeRange> chunkRanges();
+        std::vector<TimeRange> chunkRanges();
         bool getRange(LibDLS::Time &, LibDLS::Time &);
 
         int rowCount() const;
@@ -84,7 +84,7 @@ class Channel:
     private:
         LibDLS::Channel * const ch;
         QReadWriteLock rwlock;
-        vector<TimeRange> lastRanges;
+        std::vector<TimeRange> lastRanges;
 
         static bool range_before(const TimeRange &, const TimeRange &);
 
