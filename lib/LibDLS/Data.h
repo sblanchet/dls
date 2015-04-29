@@ -24,9 +24,7 @@
 
 /*****************************************************************************/
 
-#include <iostream>
 #include <vector>
-using namespace std;
 
 #include "globals.h"
 #include "Time.h"
@@ -35,103 +33,60 @@ namespace LibDLS {
 
 /*************************************************************************/
 
-/**
-   Block of data values.
-*/
-
+/** Block of data values.
+ */
 class Data
 {
-public:
-    Data();
-    Data(const Data &);
-    ~Data();
+    public:
+        Data();
+        Data(const Data &);
+        ~Data();
 
-    template <class T>
-    void import(Time, Time, MetaType, unsigned int,
-            unsigned int, unsigned int &, T*, unsigned int);
+        template <class T>
+            void import(Time, Time, MetaType, unsigned int,
+                    unsigned int, unsigned int &, T*, unsigned int);
 
-    void push_back(const Data &);
+        void push_back(const Data &);
 
-    Time start_time() const;
-    Time end_time() const;
-    Time time_per_value() const;
-    MetaType meta_type() const;
-    unsigned int meta_level() const;
+        Time start_time() const { return _start_time; }
+        Time end_time() const {
+            return _start_time + _time_per_value * _data.size();
+        }
+        Time time_per_value() const { return _time_per_value; }
+        MetaType meta_type() const { return _meta_type; }
+        unsigned int meta_level() const { return _meta_level; }
 
-    size_t size() const;
-    double value(unsigned int) const;
-    Time time(unsigned int) const;
+        size_t size() const { return _data.size(); }
+        double value(unsigned int index) const { return _data[index]; }
+        Time time(unsigned int index) const {
+            return _start_time + _time_per_value * index;
+        }
 
-    int calc_min_max(double *, double *) const;
+        int calc_min_max(double *, double *) const;
 
-protected:
-    Time _start_time;
-    Time _time_per_value;
-    MetaType _meta_type;
-    unsigned int _meta_level;
-    vector<double> _data;
+    protected:
+        Time _start_time;
+        Time _time_per_value;
+        MetaType _meta_type;
+        unsigned int _meta_level;
+        std::vector<double> _data;
 };
 
 /*****************************************************************************/
 
-/**
-   Returns the start time of the data block.
-   \return start time
-*/
-
-inline Time LibDLS::Data::start_time() const
-{
-    return _start_time;
-}
-
-/*****************************************************************************/
-
-/**
-*/
-
-inline Time LibDLS::Data::time_per_value() const
-{
-    return _time_per_value;
-}
-
-/*****************************************************************************/
-
-/**
-*/
-
-inline MetaType LibDLS::Data::meta_type() const
-{
-    return _meta_type;
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the meta level of the data block.
-   \return level
-*/
-
-inline unsigned int LibDLS::Data::meta_level() const
-{
-    return _meta_level;
-}
-
-/*****************************************************************************/
-
-/**
-   Imports data block properties.
-*/
-
+/** Imports data block properties.
+ */
 template <class T>
-void LibDLS::Data::import(Time time,
-                          Time tpv,
-                          MetaType meta_type,
-                          unsigned int meta_level,
-                          unsigned int decimation,
-                          unsigned int &decimationCounter,
-                          T *data,
-                          unsigned int size
-                          )
+void LibDLS::Data::import(
+        Time time,
+        Time tpv,
+        MetaType meta_type,
+        unsigned int meta_level,
+        unsigned int decimation,
+        unsigned int &decimationCounter,
+        T *data,
+        unsigned int size
+        )
 {
     unsigned int i;
 
@@ -149,48 +104,6 @@ void LibDLS::Data::import(Time time,
             decimationCounter--;
         }
     }
-}
-
-/*****************************************************************************/
-
-/**
-   Returns the time of the last data value.
-   \return end time
-*/
-
-inline Time LibDLS::Data::end_time() const
-{
-    return _start_time + _time_per_value * _data.size();
-}
-
-/*****************************************************************************/
-
-/**
-*/
-
-inline size_t LibDLS::Data::size() const
-{
-    return _data.size();
-}
-
-/*****************************************************************************/
-
-/**
-*/
-
-inline double LibDLS::Data::value(unsigned int index) const
-{
-    return _data[index];
-}
-
-/*****************************************************************************/
-
-/**
-*/
-
-inline Time LibDLS::Data::time(unsigned int index) const
-{
-    return _start_time + _time_per_value * index;
 }
 
 /*****************************************************************************/

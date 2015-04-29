@@ -26,7 +26,6 @@
 
 #include <string>
 #include <list>
-using namespace std;
 
 #include "Exception.h"
 #include "Job.h"
@@ -43,7 +42,7 @@ class DirectoryException:
     public Exception
 {
     public:
-        DirectoryException(const string &pmsg):
+        DirectoryException(const std::string &pmsg):
             Exception(pmsg) {};
 };
 
@@ -57,18 +56,16 @@ class Directory
         Directory();
         ~Directory();
 
-        void import(const string &);
-        //void importLocal(const string &);
-        //void importNetwork(const string &);
+        void import(const std::string &);
 
-        const string &path() const { return _path; }
-        list<Job *> &jobs() { return _jobs; }
+        const std::string &path() const { return _path; }
+        std::list<Job *> &jobs() { return _jobs; }
         Job *job(unsigned int);
         Job *find_job(unsigned int);
 
     private:
-        string _path; /**< path to DLS data directory */
-        list<Job *> _jobs; /**< list of jobs */
+        std::string _path; /**< path to DLS data directory */
+        std::list<Job *> _jobs; /**< list of jobs */
 };
 
 /****************************************************************************/

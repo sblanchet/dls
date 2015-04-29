@@ -25,7 +25,6 @@
 /*****************************************************************************/
 
 #include <string>
-using namespace std;
 
 /*****************************************************************************/
 
@@ -42,54 +41,49 @@ class XmlTag;
 
 /*****************************************************************************/
 
-/**
-   Exception eines ChannelPreset-Objektes
-*/
-
-class EChannelPreset: public Exception
+/** Channel preset exception.
+ */
+class EChannelPreset:
+    public Exception
 {
-public:
-    EChannelPreset(const string &pmsg): Exception(pmsg) {};
+    public:
+        EChannelPreset(const std::string &pmsg):
+            Exception(pmsg) {};
 };
 
 /*****************************************************************************/
 
-/**
-   Kanalvorgabe
-
-   Enthält Kanalname, Abtastrate, Blockgröße, Meta-Vorgaben
-   und das Format, in dem die Daten gespeichert werden sollen.
-*/
-
+/** Channel preset.
+ *
+ * Enthält Kanalname, Abtastrate, Blockgröße, Meta-Vorgaben und das Format, in
+ * dem die Daten gespeichert werden sollen.
+ */
 class ChannelPreset
 {
-public:
-    ChannelPreset();
-    ~ChannelPreset();
+    public:
+        ChannelPreset();
+        ~ChannelPreset();
 
-    bool operator!=(const ChannelPreset &) const;
+        bool operator!=(const ChannelPreset &) const;
 
-    void read_from_tag(const XmlTag *);
-    void write_to_tag(XmlTag *) const;
+        void read_from_tag(const XmlTag *);
+        void write_to_tag(XmlTag *) const;
 
-    void clear();
+        void clear();
 
-    string name;                   /**< Kanalname */
-    double sample_frequency; /**< Abtastrate, mit der aufgezeichnet
-                                      werden soll */
-    unsigned int block_size;       /**< Blockgröße, mit der aufgezeichnet
-                                      werden soll */
-    unsigned int meta_mask;        /**< Bitmaske mit den aufzuzeichnenden
-                                      Meta-Typen */
-    unsigned int meta_reduction;   /**< Meta-Untersetzung */
-    int format_index;              /**< Index des Formates zum Speichern
-                                      der Daten */
-    unsigned int mdct_block_size;  /**< Blockgröße für MDCT */
-    double accuracy;               /**< Genauigkeit von verlustbehafteten
-                                      Kompressionen */
-
-    ChannelType type;          /**< Datentyp des Kanals (nur für
-                                     MDCT-Prüfung) */
+        std::string name; /**< Kanalname */
+        double sample_frequency; /**< Abtastrate, mit der aufgezeichnet werden
+                                   soll */
+        unsigned int block_size; /**< Blockgröße, mit der aufgezeichnet werden
+                                   soll */
+        unsigned int meta_mask; /**< Bitmaske mit den aufzuzeichnenden
+                                  Meta-Typen */
+        unsigned int meta_reduction; /**< Meta-Untersetzung */
+        int format_index; /**< Index des Formates zum Speichern der Daten */
+        unsigned int mdct_block_size; /**< Blockgröße für MDCT */
+        double accuracy; /**< Genauigkeit von verlustbehafteten Kompressionen
+                          */
+        ChannelType type; /**< Datentyp des Kanals (nur für MDCT-Prüfung) */
 };
 
 /*****************************************************************************/

@@ -25,7 +25,6 @@
 /*****************************************************************************/
 
 #include <fstream>
-using namespace std;
 
 #include "Exception.h"
 #include "Channel.h"
@@ -38,10 +37,11 @@ namespace LibDLS
 
     /*************************************************************************/
 
-    class ExportException : public Exception
+    class ExportException:
+        public Exception
     {
     public:
-        ExportException(const string &pmsg) : Exception(pmsg) {};
+        ExportException(const std::string &pmsg): Exception(pmsg) {};
     };
 
     /*************************************************************************/
@@ -64,39 +64,41 @@ namespace LibDLS
         Export();
         virtual ~Export();
 
-        virtual void begin(const Channel &, const string &,
-                const string & = string()) = 0;
+        virtual void begin(const Channel &, const std::string &,
+                const std::string & = std::string()) = 0;
         virtual void data(const Data *) = 0;
         virtual void end() = 0;
     };
 
     /*************************************************************************/
 
-    class ExportAscii : public Export
+    class ExportAscii:
+        public Export
     {
     public:
         ExportAscii();
         ~ExportAscii();
 
-        void begin(const Channel &, const string &,
-                const string & = string());
+        void begin(const Channel &, const std::string &,
+                const std::string & = std::string());
         void data(const Data *);
         void end();
 
     private:
-        ofstream _file;
+        std::ofstream _file;
     };
 
     /*************************************************************************/
 
-    class ExportMat4 : public Export
+    class ExportMat4:
+        public Export
     {
     public:
         ExportMat4();
         ~ExportMat4();
 
-        void begin(const Channel &, const string &,
-                const string & = string());
+        void begin(const Channel &, const std::string &,
+                const std::string & = std::string());
         void data(const Data *);
         void end();
 
