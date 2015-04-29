@@ -54,7 +54,13 @@ int list_main(int argc, char *argv[])
     list_get_environment();
     list_get_options(argc, argv);
 
-    dls_dir.import(dls_dir_path);
+    try {
+        dls_dir.import(dls_dir_path);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Import failed: " << e.msg << endl;
+        return 1;
+    }
 
     if (!job_id) {
         return list_jobs(&dls_dir);
