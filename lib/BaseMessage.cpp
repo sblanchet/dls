@@ -168,6 +168,10 @@ std::string BaseMessage::_simplified(
         output = output.substr(0, output.size() - 1);
     }
 
+#if 0
+    cerr << "--" << output << "--" << endl;
+#endif
+
     return output;
 }
 
