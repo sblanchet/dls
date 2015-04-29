@@ -905,7 +905,7 @@ void Graph::print()
     QRect timeScaleRect(page);
     timeScaleRect.setLeft(scaleWidth);
 
-    set<LibDLS::Job *> jobSet;
+    std::set<LibDLS::Job *> jobSet;
 
     rwLockSections.lockForRead();
 
@@ -1179,7 +1179,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     QRect msgSplitterRect(contentsRect());
     msgSplitterRect.setTop(
             contentsRect().bottom() + 1 - messageAreaHeight - splitterWidth);
-    msgSplitterRect.setHeight(max(splitterWidth, MIN_TOUCH_HEIGHT));
+    msgSplitterRect.setHeight(std::max(splitterWidth, MIN_TOUCH_HEIGHT));
 
     bool last = mouseOverMsgSplitter;
     mouseOverMsgSplitter =
@@ -1210,7 +1210,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         if (next != sections.end()) {
             height += (*next)->legendHeight();
         }
-        height = max(height, MIN_TOUCH_HEIGHT);
+        height = std::max(height, MIN_TOUCH_HEIGHT);
         splitterRect.setHeight(height);
         if (splitterRect.contains(event->pos())) {
             sec = *s;
@@ -2631,7 +2631,7 @@ void GraphWorker::clearData()
 
 void GraphWorker::doWork()
 {
-    set<LibDLS::Job *> jobSet;
+    std::set<LibDLS::Job *> jobSet;
 
     messages.clear();
 
@@ -2657,13 +2657,13 @@ void GraphWorker::doWork()
         lang = "en";
     }
 
-    for (set<LibDLS::Job *>::const_iterator job = jobSet.begin();
+    for (std::set<LibDLS::Job *>::const_iterator job = jobSet.begin();
             job != jobSet.end(); job++) {
-        list<LibDLS::Job::Message> msgs =
+        std::list<LibDLS::Job::Message> msgs =
             (*job)->load_msg(graph->getStart(), graph->getEnd(),
                     lang.toLocal8Bit().constData());
-        for (list<LibDLS::Job::Message>::const_iterator msg = msgs.begin();
-                msg != msgs.end(); msg++) {
+        for (std::list<LibDLS::Job::Message>::const_iterator msg =
+                msgs.begin(); msg != msgs.end(); msg++) {
             messages.append(*msg);
         }
     }

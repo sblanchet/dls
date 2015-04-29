@@ -284,7 +284,7 @@ void Layer::setPrecision(int p)
 /****************************************************************************/
 
 void Layer::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
-        int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
+        int width, GraphWorker *worker, std::set<LibDLS::Job *> &jobSet)
 {
 #if 0
     qDebug() << __func__ << start.to_str().c_str()
@@ -742,7 +742,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
         double xScale) const
 {
     double xp, prev_xp;
-    vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
+    std::vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
     LibDLS::Time last_end;
     QColor gapColor(255, 255, 220, 127);
 
@@ -750,7 +750,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
 
     // check if chunks overlap
     last_end.set_null();
-    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
+    for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
          range != ranges.end();
          range++) {
         if (range->start <= last_end) {
@@ -764,7 +764,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
         last_end = range->end;
     }
 
-    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
+    for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
          range != ranges.end(); range++) {
         if (range->end < section->getGraph()->getStart()) {
             continue;
@@ -777,7 +777,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
 
     prev_xp = -1;
 
-    for (vector<Channel::TimeRange>::iterator range =
+    for (std::vector<Channel::TimeRange>::iterator range =
             relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
