@@ -66,6 +66,9 @@ class Directory
     private:
         std::string _path; /**< path to DLS data directory */
         std::list<Job *> _jobs; /**< list of jobs */
+
+        void _importLocal(const std::string &);
+        void _importNetwork(const std::string &, const std::string &);
 };
 
 /****************************************************************************/
