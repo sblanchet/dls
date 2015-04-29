@@ -217,6 +217,14 @@ AM_CONDITIONAL(ENABLE_TOOL, test "x$enabletool" = "x1")
 AC_SUBST(ENABLE_TOOL, [$enabletool])
 
 #------------------------------------------------------------------------------
+# uriparser
+#------------------------------------------------------------------------------
+
+URIPARSER_MISSING="Please install uriparser."
+AC_CHECK_LIB(uriparser, uriParseUriA,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+AC_CHECK_HEADER(uriparser/Uri.h,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+
+#------------------------------------------------------------------------------
 
 AC_DEFINE([BINDIR], [], [Fully expanded binary directory.])
 AX_DEFINE_DIR([BINDIR], [bindir])

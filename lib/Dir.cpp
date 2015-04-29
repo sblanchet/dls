@@ -21,9 +21,12 @@
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 #include <dirent.h>
+
+#include <uriparser/Uri.h>
 
 #include "LibDLS/Dir.h"
 using namespace LibDLS;
@@ -54,7 +57,134 @@ bool compare_job_id(Job *first, Job *second)
 
 /*****************************************************************************/
 
-void Directory::import(const string &path) // importLocal
+std::string uriTextRange(const UriTextRangeA &range)
+{
+    if (range.first) {
+        return string(range.first, range.afterLast - range.first);
+    }
+
+    return string();
+}
+
+/*****************************************************************************/
+
+std::string uriPathSegment(const UriPathSegmentA *p)
+{
+    stringstream str;
+    bool first = true;
+
+    while (p) {
+        if (first) {
+            first = false;
+        }
+        else {
+            str << "/";
+        }
+        str << uriTextRange(p->text);
+        p = p->next;
+    }
+    return str.str();
+}
+
+/*****************************************************************************/
+
+#if 0
+std::string debugHost(const UriHostDataA &h) {
+    stringstream str;
+    if (h.ip4) {
+        str << "ip4";
+    }
+    if (h.ip6) {
+        str << "ip6";
+    }
+    str << uriTextRange(h.ipFuture);
+    return str.str();
+}
+#endif
+
+/*****************************************************************************/
+
+void Directory::import(const string &uriText)
+{
+    UriParserStateA state;
+    UriUriA uri;
+
+    state.uri = &uri;
+    if (uriParseUriA(&state, uriText.c_str()) != URI_SUCCESS) {
+        stringstream err;
+        err << "Failed to parse URI \"" << uriText << "\"!";
+        throw DirectoryException(err.str());
+    }
+
+#if 0
+    cerr << "scheme " << uriTextRange(uri.scheme) << endl;
+    cerr << "userinfo " << uriTextRange(uri.userInfo) << endl;
+    cerr << "hostText " << uriTextRange(uri.hostText) << endl;
+    cerr << "hostData " << debugHost(uri.hostData) << endl;
+    cerr << "portText " << uriTextRange(uri.portText) << endl;
+    cerr << "pathHead " << uriPathSegment(uri.pathHead) << endl;
+    cerr << "pathTail " << uriPathSegment(uri.pathTail) << endl;
+    cerr << "abs " << (uri.absolutePath ? "yes" : "no") << endl;
+#endif
+
+    string scheme = uriTextRange(uri.scheme);
+    std::transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
+
+    string path = uriPathSegment(uri.pathHead);
+    string host = uriTextRange(uri.hostText);
+    string port = uriTextRange(uri.portText);
+
+    uriFreeUriMembersA(&uri);
+
+    if (scheme == "" || scheme == "file") {
+        _importLocal(path);
+    }
+    else if (scheme == "dls") {
+        _importNetwork(host, port);
+    }
+    else {
+        stringstream err;
+        err << "Unsupported URI scheme \"" << scheme << "\"!";
+        throw DirectoryException(err.str());
+    }
+
+    // Nach Job-ID sortieren
+    _jobs.sort(compare_job_id);
+}
+
+/*****************************************************************************/
+
+Job *Directory::job(unsigned int index)
+{
+    list<Job *>::iterator job_i;
+
+    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++, index--) {
+        if (!index) {
+			return *job_i;
+		}
+    }
+
+    return NULL;
+}
+
+/*****************************************************************************/
+
+Job *Directory::find_job(unsigned int job_id)
+{
+    list<Job *>::iterator job_i;
+
+    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
+        if ((*job_i)->id() == job_id) {
+			return *job_i;
+		}
+    }
+
+    return NULL;
+}
+
+/*****************************************************************************/
+
+void Directory::_importLocal(const string &path)
 {
     stringstream str;
     DIR *dir;
@@ -108,39 +238,33 @@ void Directory::import(const string &path) // importLocal
 
     // Verzeichnis schliessen
     closedir(dir);
-
-    // Nach Job-ID sortieren
-    _jobs.sort(compare_job_id);
 }
 
 /*****************************************************************************/
 
-Job *Directory::job(unsigned int index)
+void Directory::_importNetwork(const string &host, const string &portStr)
 {
-    list<Job *>::iterator job_i;
+    uint16_t port;
 
-    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++, index--) {
-        if (!index) {
-			return *job_i;
-		}
+    if (portStr == "") {
+        port = 0xD150;
+    }
+    else {
+        stringstream str;
+        str.exceptions(ios::badbit | ios::failbit);
+
+        try {
+            str << portStr;
+            str >> port;
+        }
+        catch (...) {
+            stringstream err;
+            err << "Invalid port \"" << portStr << "\"!";
+            throw DirectoryException(err.str());
+        }
     }
 
-    return NULL;
-}
-
-/*****************************************************************************/
-
-Job *Directory::find_job(unsigned int job_id)
-{
-    list<Job *>::iterator job_i;
-
-    for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
-        if ((*job_i)->id() == job_id) {
-			return *job_i;
-		}
-    }
-
-    return NULL;
+    cerr << "Connecting to " << host << " on port " << port << endl;
 }
 
 /*****************************************************************************/
