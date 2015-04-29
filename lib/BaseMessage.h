@@ -73,7 +73,7 @@ private:
     Type _type;
     std::string _path;
     typedef std::map<std::string, std::string> TranslationMap;
-    TranslationMap _text;
+    TranslationMap _text; /**< Translated texts in UTF-8 encoding. */
 
     static Type _typeFromString(const std::string &);
     static std::string _simplified(const std::string &);
