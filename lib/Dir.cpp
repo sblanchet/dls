@@ -131,6 +131,10 @@ void Directory::import(const string &uriText)
     std::transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
 
     string path = uriPathSegment(uri.pathHead);
+    if (uri.absolutePath) {
+        path = "/" + path;
+    }
+
     string host = uriTextRange(uri.hostText);
     string port = uriTextRange(uri.portText);
 
