@@ -71,7 +71,7 @@ Directory::~Directory()
 
 bool compare_job_id(Job *first, Job *second)
 {
-	return first->id() < second->id();
+    return first->id() < second->id();
 }
 
 /*****************************************************************************/
@@ -191,8 +191,8 @@ Job *Directory::job(unsigned int index)
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++, index--) {
         if (!index) {
-			return *job_i;
-		}
+            return *job_i;
+        }
     }
 
     return NULL;
@@ -206,8 +206,8 @@ Job *Directory::find_job(unsigned int job_id)
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
         if ((*job_i)->id() == job_id) {
-			return *job_i;
-		}
+            return *job_i;
+        }
     }
 
     return NULL;
@@ -247,17 +247,17 @@ void Directory::_importLocal()
             continue;
         }
 
-		job = new Job();
+        job = new Job();
 
         try {
             job->import(_path, job_id);
         }
         catch (JobException &e) {
-			stringstream err;
+            stringstream err;
             err << "WARNING: Failed to import job "
                  << job_id << ": " << e.msg;
-			log(err.str());
-			delete job;
+            log(err.str());
+            delete job;
             continue;
         }
 
@@ -275,6 +275,9 @@ void Directory::_importNetwork()
     if (_fd == -1) {
         _connect();
     }
+
+    _send_dir_info();
+    _recv_dir_info();
 }
 
 /*****************************************************************************/
@@ -332,12 +335,12 @@ void Directory::_connect()
     }
 
     /* read hello message */
-    _receive_hello();
+    _recv_hello();
 }
 
 /*****************************************************************************/
 
-void Directory::_receive_hello()
+string Directory::_recv_message()
 {
     char rcvbuf[1024];
     int ret;
@@ -365,8 +368,71 @@ void Directory::_receive_hello()
         break;
     }
 
+    return string(rcvbuf, ret);
+}
+
+/*****************************************************************************/
+
+void Directory::_send_message(const DlsProto::Request &req)
+{
+    string str;
+    req.SerializeToString(&str);
+
+    int ret, to_write = str.size(), off = 0;
+
+    while (to_write > 0) {
+        ret = write(_fd, str.c_str() + off, to_write);
+        if (ret < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            close(_fd);
+            _fd = -1;
+            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
+            stringstream err;
+            err << "write() failed: " << str;
+            throw DirectoryException(err.str());
+        }
+
+        to_write -= ret;
+        off += ret;
+    }
+}
+
+/*****************************************************************************/
+
+void Directory::_recv_hello()
+{
+    string rec = _recv_message();
     DlsProto::Hello msg;
-    msg.ParseFromString(string(rcvbuf, ret));
+    msg.ParseFromString(rec);
+
+    stringstream str;
+    str << "Received hello from DLS " << msg.version()
+        << " " << msg.revision() << " protocol version "
+        << msg.protocol_version() << ".";
+    log(str.str());
+}
+
+/*****************************************************************************/
+
+void Directory::_send_dir_info()
+{
+    DlsProto::Request req;
+    req.mutable_dir_info();
+
+    _send_message(req);
+}
+
+/*****************************************************************************/
+
+void Directory::_recv_dir_info()
+{
+    string rec = _recv_message();
+
+    DlsProto::Hello msg;
+    msg.ParseFromString(rec);
 
     stringstream str;
     str << "Received hello from DLS " << msg.version()

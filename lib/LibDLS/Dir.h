@@ -32,6 +32,10 @@
 
 /****************************************************************************/
 
+namespace DlsProto {
+    class Request;
+}
+
 namespace LibDLS {
 
 /****************************************************************************/
@@ -84,7 +88,12 @@ class Directory
         void _importNetwork();
 
         void _connect();
-        void _receive_hello();
+        std::string _recv_message();
+        void _send_message(const DlsProto::Request &);
+
+        void _recv_hello();
+        void _send_dir_info();
+        void _recv_dir_info();
 };
 
 /****************************************************************************/
