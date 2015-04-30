@@ -28,17 +28,22 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <uriparser/Uri.h>
 
 #include "LibDLS/Dir.h"
+
+#include "proto/dls.pb.h"
 
 using namespace std;
 using namespace LibDLS;
 
 /*****************************************************************************/
 
-Directory::Directory()
+Directory::Directory():
+    _access(Unknown),
+    _fd(-1)
 {
 }
 
@@ -46,6 +51,15 @@ Directory::Directory()
 
 Directory::~Directory()
 {
+    if (_fd != -1) {
+        {
+            stringstream msg;
+            msg << "Disconnecting.";
+            log(msg.str());
+        }
+        close(_fd);
+    }
+
     list<Job *>::iterator job_i;
 
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
@@ -111,6 +125,8 @@ std::string debugHost(const UriHostDataA &h) {
 
 void Directory::import(const string &uriText)
 {
+    _jobs.clear();
+
     UriParserStateA state;
     UriUriA uri;
 
@@ -135,23 +151,29 @@ void Directory::import(const string &uriText)
     string scheme = uriTextRange(uri.scheme);
     std::transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
 
-    string path = uriPathSegment(uri.pathHead);
+    _path = uriPathSegment(uri.pathHead);
     if (uri.absolutePath) {
-        path = "/" + path;
+        _path = "/" + _path;
     }
 
-    string host = uriTextRange(uri.hostText);
-    string port = uriTextRange(uri.portText);
+    _host = uriTextRange(uri.hostText);
+    _port = uriTextRange(uri.portText);
+    if (_port == "") {
+        _port = "53584";
+    }
 
     uriFreeUriMembersA(&uri);
 
     if (scheme == "" || scheme == "file") {
-        _importLocal(path);
+        _access = Local;
+        _importLocal();
     }
     else if (scheme == "dls") {
-        _importNetwork(host, port);
+        _access = Network;
+        _importNetwork();
     }
     else {
+        _access = Unknown;
         stringstream err;
         err << "Unsupported URI scheme \"" << scheme << "\"!";
         throw DirectoryException(err.str());
@@ -193,7 +215,7 @@ Job *Directory::find_job(unsigned int job_id)
 
 /*****************************************************************************/
 
-void Directory::_importLocal(const string &path)
+void Directory::_importLocal()
 {
     stringstream str;
     DIR *dir;
@@ -203,9 +225,6 @@ void Directory::_importLocal(const string &path)
     unsigned int job_id;
 
     str.exceptions(ios::failbit | ios::badbit);
-
-    _path = path;
-    _jobs.clear();
 
     if (!(dir = opendir(_path.c_str()))) {
         stringstream err;
@@ -251,13 +270,22 @@ void Directory::_importLocal(const string &path)
 
 /*****************************************************************************/
 
-void Directory::_importNetwork(const string &host, string port)
+void Directory::_importNetwork()
 {
-    if (port == "") {
-        port = "53584";
+    if (_fd == -1) {
+        _connect();
     }
+}
 
-    cerr << "Connecting to " << host << " on port " << port << endl;
+/*****************************************************************************/
+
+void Directory::_connect()
+{
+    {
+        stringstream msg;
+        msg << "Connecting to " << _host << " on port " << _port;
+        log(msg.str());
+    }
 
     /* Obtain address(es) matching host/port */
 
@@ -267,10 +295,10 @@ void Directory::_importNetwork(const string &host, string port)
     hints.ai_socktype = SOCK_STREAM; /* Stream socket */
 
     struct addrinfo *result;
-    int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &result);
+    int ret = getaddrinfo(_host.c_str(), _port.c_str(), &hints, &result);
     if (ret) {
         stringstream err;
-        err << "Faield to get address info: " << gai_strerror(ret);
+        err << "Failed to get address info: " << gai_strerror(ret);
         throw DirectoryException(err.str());
     }
 
@@ -295,8 +323,56 @@ void Directory::_importNetwork(const string &host, string port)
         throw DirectoryException("Connection failed!");
     }
 
-    cerr << "connected" << endl;
-    close(fd);
+    _fd = fd;
+
+    {
+        stringstream msg;
+        msg << "Connected.";
+        log(msg.str());
+    }
+
+    /* read hello message */
+    _receive_hello();
+}
+
+/*****************************************************************************/
+
+void Directory::_receive_hello()
+{
+    char rcvbuf[1024];
+    int ret;
+
+    while (1) {
+        ret = read(_fd, rcvbuf, sizeof(rcvbuf));
+        if (ret < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            close(_fd);
+            _fd = -1;
+            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
+            stringstream err;
+            err << "read() failed: " << str;
+            throw DirectoryException(err.str());
+        }
+        else if (ret == 0) {
+            close(_fd);
+            _fd = -1;
+            throw DirectoryException("Connection closed by remote host.");
+        }
+
+        break;
+    }
+
+    DlsProto::Hello msg;
+    msg.ParseFromString(string(rcvbuf, ret));
+
+    stringstream str;
+    str << "Received hello from DLS " << msg.version()
+        << " " << msg.revision() << " protocol version "
+        << msg.protocol_version() << ".";
+    log(str.str());
 }
 
 /*****************************************************************************/
