@@ -22,13 +22,18 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-using namespace std;
 
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
 
 #include <uriparser/Uri.h>
 
 #include "LibDLS/Dir.h"
+
+using namespace std;
 using namespace LibDLS;
 
 /*****************************************************************************/
@@ -246,30 +251,52 @@ void Directory::_importLocal(const string &path)
 
 /*****************************************************************************/
 
-void Directory::_importNetwork(const string &host, const string &portStr)
+void Directory::_importNetwork(const string &host, string port)
 {
-    uint16_t port;
-
-    if (portStr == "") {
-        port = 0xD150;
-    }
-    else {
-        stringstream str;
-        str.exceptions(ios::badbit | ios::failbit);
-
-        try {
-            str << portStr;
-            str >> port;
-        }
-        catch (...) {
-            stringstream err;
-            err << "Invalid port \"" << portStr << "\"!";
-            throw DirectoryException(err.str());
-        }
+    if (port == "") {
+        port = "53584";
     }
 
     cerr << "Connecting to " << host << " on port " << port << endl;
+
+    /* Obtain address(es) matching host/port */
+
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+
+    struct addrinfo *result;
+    int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &result);
+    if (ret) {
+        stringstream err;
+        err << "Faield to get address info: " << gai_strerror(ret);
+        throw DirectoryException(err.str());
+    }
+
+    struct addrinfo *rp;
+    int fd;
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (fd == -1) {
+            continue;
+        }
+
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) != -1) {
+            break;
+        }
+
+        ::close(fd);
+    }
+
+    freeaddrinfo(result);
+
+    if (!rp) {
+        throw DirectoryException("Connection failed!");
+    }
+
+    cerr << "connected" << endl;
+    close(fd);
 }
 
 /*****************************************************************************/
-
