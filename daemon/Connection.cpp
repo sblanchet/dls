@@ -28,13 +28,15 @@
 #include "config.h"
 #include "Connection.h"
 #include "proto/dls.pb.h"
+#include "ProcMother.h"
 
 #include <iostream>
 using namespace std;
 
 /*****************************************************************************/
 
-Connection::Connection(int fd):
+Connection::Connection(ProcMother *parent_proc, int fd):
+    _parent_proc(parent_proc),
     _fd(fd),
     _ret(0),
     _running(true)
@@ -195,7 +197,47 @@ void Connection::_receive()
 
 void Connection::_process(const string &rec)
 {
-    cout << "+" << rec << "-" << endl;
+    DlsProto::Request req;
+    req.ParseFromString(rec);
+
+    cerr << "Received request." << endl
+        << "    dir_info: " << (req.has_dir_info() ? "yes" : "no") << endl;
+
+    if (req.has_dir_info()) {
+        _process_dir_info(req.dir_info());
+    }
+}
+
+/*****************************************************************************/
+
+void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
+{
+    _dir.import(_parent_proc->dls_dir());
+
+    DlsProto::Response res;
+    DlsProto::DirInfoResponse *dir_info = res.mutable_dir_info();
+    dir_info->set_path(_parent_proc->dls_dir());
+
+    /* Jobs */
+    for (list<LibDLS::Job *>::const_iterator job_i = _dir.jobs().begin();
+            job_i != _dir.jobs().end(); job_i++) {
+        DlsProto::JobInfo *job_info = dir_info->add_job();
+        LibDLS::Job *job = (*job_i);
+        job_info->set_id(job->id());
+
+        /* Channels */
+        for (list<LibDLS::Channel>::const_iterator ch_i =
+                job->channels().begin();
+                ch_i != job->channels().end(); ch_i++) {
+            DlsProto::ChannelInfo *ch_info = job_info->add_channel();
+            ch_info->set_id(ch_i->dir_index());
+            ch_info->set_name(ch_i->name());
+            ch_info->set_unit(ch_i->unit());
+            ch_info->set_type((DlsProto::ChannelType) ch_i->type());
+        }
+    }
+
+    res.SerializeToOstream(&_ostream);
 }
 
 /*****************************************************************************/

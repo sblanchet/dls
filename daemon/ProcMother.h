@@ -53,6 +53,8 @@ public:
 
     int start(const string &, bool, const std::string &);
 
+    const std::string &dls_dir() const { return _dls_dir; }
+
 private:
     string _dls_dir; /**< DLS-Datenverzeichnis */
     list<JobPreset> _jobs; /**< Liste von Auftragsvorgaben */

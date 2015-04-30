@@ -190,7 +190,7 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             msg() << "Accepted connection from " << addr_str;
             log(Info);
 
-            Connection *conn = new Connection(cfd);
+            Connection *conn = new Connection(this, cfd);
             _connections.push_back(conn);
 
             int ret = conn->start_thread();

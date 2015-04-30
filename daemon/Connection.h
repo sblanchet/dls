@@ -27,6 +27,11 @@
 #include <pthread.h>
 #include <sstream>
 
+#include "lib/LibDLS/Dir.h"
+#include "proto/dls.pb.h"
+
+class ProcMother;
+
 /*****************************************************************************/
 
 /** Incoming network connection.
@@ -34,7 +39,7 @@
 class Connection
 {
 public:
-    Connection(int);
+    Connection(ProcMother *, int);
     ~Connection();
 
     int start_thread();
@@ -42,11 +47,13 @@ public:
     int return_code() const { return _ret; }
 
 private:
+    ProcMother * const _parent_proc;
     int _fd;
     pthread_t _thread;
     int _ret; /**< Return value. */
     bool _running;
     std::stringstream _ostream;
+    LibDLS::Directory _dir;
 
     static void *_run_static(void *);
     void *_run();
@@ -54,6 +61,7 @@ private:
     void _send();
     void _receive();
     void _process(const std::string &);
+    void _process_dir_info(const DlsProto::DirInfoRequest &);
 };
 
 /*****************************************************************************/
