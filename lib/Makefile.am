@@ -28,9 +28,10 @@ lib_LTLIBRARIES = libdls.la
 libdls_la_CXXFLAGS = -Wall @FFTW3_CFLAGS@ @ZLIB_CFLAGS@ $(XML_CPPFLAGS)
 libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
 	-version-info @LIBDLS_VERSION@
-libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm
+libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm -lprotobuf
 
 libdls_la_SOURCES = \
+	$(builddir)/../proto/dls.pb.cc \
 	Base64.cpp \
 	BaseMessage.cpp \
 	BaseMessageList.cpp \

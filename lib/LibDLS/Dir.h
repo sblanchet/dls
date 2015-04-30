@@ -64,11 +64,27 @@ class Directory
         Job *find_job(unsigned int);
 
     private:
-        std::string _path; /**< path to DLS data directory */
+        enum {
+            Unknown,
+            Local,
+            Network
+        } _access; /**< Access type. */
+
+        /* Local access. */
+        std::string _path; /**< Path to DLS data directory. */
+
+        /* Network access */
+        std::string _host; /**< Host name/address. */
+        std::string _port; /**< Port number / service name. */
+        int _fd; /**< Socket file descriptor. */
+
         std::list<Job *> _jobs; /**< list of jobs */
 
-        void _importLocal(const std::string &);
-        void _importNetwork(const std::string &, std::string);
+        void _importLocal();
+        void _importNetwork();
+
+        void _connect();
+        void _receive_hello();
 };
 
 /****************************************************************************/
