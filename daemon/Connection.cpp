@@ -111,7 +111,7 @@ void *Connection::_run()
         ret = select(_fd + 1, &rfds, &wfds, NULL, NULL);
         if (ret == -1) {
             if (errno != EINTR) {
-                char buf[1024], *str = strerror_r(errno, buf, sizeof(buf));
+                char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
                 cerr << "select() failed: " << str << endl;
                 _running = false;
             }
@@ -154,7 +154,7 @@ void Connection::_send()
     int ret = write(_fd, sndbuf, to_write);
     if (ret == -1) {
         if (errno != EINTR) {
-            char buf[1024], *str = strerror_r(errno, buf, sizeof(buf));
+            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
             cerr << "write() failed: " << str << endl;
             _running = false;
         }
@@ -176,7 +176,7 @@ void Connection::_receive()
     int ret = read(_fd, rcvbuf, sizeof(rcvbuf));
     if (ret < 0) {
         if (errno != EINTR) {
-            char buf[1024], *str = strerror_r(errno, buf, sizeof(buf));
+            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
             cerr << "read() failed: " << str << endl;
             _running = false;
         }
