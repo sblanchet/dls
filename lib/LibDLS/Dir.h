@@ -68,7 +68,7 @@ class Directory
         std::list<Job *> _jobs; /**< list of jobs */
 
         void _importLocal(const std::string &);
-        void _importNetwork(const std::string &, const std::string &);
+        void _importNetwork(const std::string &, std::string);
 };
 
 /****************************************************************************/
