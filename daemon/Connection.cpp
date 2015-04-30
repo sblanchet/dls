@@ -146,12 +146,12 @@ void Connection::_send_hello()
 
 void Connection::_send()
 {
-    char buf[1024];
+    char sndbuf[1024];
 
-    _ostream.read(buf, sizeof(buf));
+    _ostream.read(sndbuf, sizeof(sndbuf));
 
     int to_write = _ostream.gcount();
-    int ret = write(_fd, buf, to_write);
+    int ret = write(_fd, sndbuf, to_write);
     if (ret == -1) {
         if (errno != EINTR) {
             char buf[1024], *str = strerror_r(errno, buf, sizeof(buf));
@@ -163,7 +163,7 @@ void Connection::_send()
     // put unsent bytes back in the stream
     int written = max(ret, 0);
     for (int i = to_write - 1; i >= written; i--) {
-        _ostream.putback(buf[i]);
+        _ostream.putback(sndbuf[i]);
     }
 }
 
@@ -171,9 +171,9 @@ void Connection::_send()
 
 void Connection::_receive()
 {
-    char buf[1024];
+    char rcvbuf[1024];
 
-    int ret = read(_fd, buf, sizeof(buf));
+    int ret = read(_fd, rcvbuf, sizeof(rcvbuf));
     if (ret < 0) {
         if (errno != EINTR) {
             char buf[1024], *str = strerror_r(errno, buf, sizeof(buf));
@@ -187,7 +187,7 @@ void Connection::_receive()
         _running = false;
     }
     else { // ret > 0
-        _process(string(buf, ret));
+        _process(string(rcvbuf, ret));
     }
 }
 
