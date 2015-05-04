@@ -25,6 +25,8 @@
 #include <sys/select.h>
 #include <string.h>
 
+#include <google/protobuf/io/coded_stream.h>
+
 #include "config.h"
 #include "Connection.h"
 #include "proto/dls.pb.h"
@@ -38,6 +40,8 @@ using namespace std;
 Connection::Connection(ProcMother *parent_proc, int fd):
     _parent_proc(parent_proc),
     _fd(fd),
+    _fis(fd),
+    _fos(fd),
     _ret(0),
     _running(true)
 {
@@ -47,6 +51,7 @@ Connection::Connection(ProcMother *parent_proc, int fd):
 
 Connection::~Connection()
 {
+    close(_fd);
 }
 
 /*****************************************************************************/
@@ -95,7 +100,7 @@ void *Connection::_run_static(void *arg)
 
 void *Connection::_run()
 {
-    fd_set rfds, wfds;
+    fd_set rfds;
     int ret;
 
     _send_hello();
@@ -104,13 +109,7 @@ void *Connection::_run()
         FD_ZERO(&rfds);
         FD_SET(_fd, &rfds);
 
-        FD_ZERO(&wfds);
-        if (!_ostream.eof()) {
-            // something to write
-            FD_SET(_fd, &wfds);
-        }
-
-        ret = select(_fd + 1, &rfds, &wfds, NULL, NULL);
+        ret = select(_fd + 1, &rfds, NULL, NULL, NULL);
         if (ret == -1) {
             if (errno != EINTR) {
                 char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
@@ -123,14 +122,37 @@ void *Connection::_run()
             if (FD_ISSET(_fd, &rfds)) {
                 _receive();
             }
-            if (FD_ISSET(_fd, &wfds)) {
-                _send();
-            }
         }
     }
 
-    close(_fd);
-    return (void *) 88;
+    return (void *) 0;
+}
+
+/*****************************************************************************/
+
+void Connection::_send(const google::protobuf::Message &msg)
+{
+    string str;
+    msg.SerializeToString(&str);
+
+    {
+        google::protobuf::io::CodedOutputStream os(&_fos);
+        os.WriteVarint32(msg.ByteSize());
+        if (os.HadError()) {
+            cerr << "os.WriteVarint32() failed!" << endl;
+            _running = false;
+            return;
+        }
+
+        os.WriteString(str);
+        if (os.HadError()) {
+            cerr << "os.WriteString() failed!" << endl;
+            _running = false;
+            return;
+        }
+    }
+
+    _fos.Flush();
 }
 
 /*****************************************************************************/
@@ -141,56 +163,32 @@ void Connection::_send_hello()
     msg.set_version(PACKAGE_VERSION);
     msg.set_revision(REVISION);
     msg.set_protocol_version(1);
-    msg.SerializeToOstream(&_ostream);
-}
-
-/*****************************************************************************/
-
-void Connection::_send()
-{
-    char sndbuf[1024];
-
-    _ostream.read(sndbuf, sizeof(sndbuf));
-
-    int to_write = _ostream.gcount();
-    int ret = write(_fd, sndbuf, to_write);
-    if (ret == -1) {
-        if (errno != EINTR) {
-            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
-            cerr << "write() failed: " << str << endl;
-            _running = false;
-        }
-    }
-
-    // put unsent bytes back in the stream
-    int written = max(ret, 0);
-    for (int i = to_write - 1; i >= written; i--) {
-        _ostream.putback(sndbuf[i]);
-    }
+    _send(msg);
 }
 
 /*****************************************************************************/
 
 void Connection::_receive()
 {
-    char rcvbuf[1024];
+    google::protobuf::io::CodedInputStream ci(&_fis);
 
-    int ret = read(_fd, rcvbuf, sizeof(rcvbuf));
-    if (ret < 0) {
-        if (errno != EINTR) {
-            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
-            cerr << "read() failed: " << str << endl;
-            _running = false;
-        }
-    }
-    else if (ret == 0) {
-        // connection closed by foreign host
-        cerr << "Closed by remote host." << endl;
+    uint32_t size;
+    bool success = ci.ReadVarint32(&size);
+    if (!success) {
+        cerr << "ReadVarint32() failed!" << endl;
         _running = false;
+        return;
     }
-    else { // ret > 0
-        _process(string(rcvbuf, ret));
+
+    string str;
+    success = ci.ReadString(&str, size);
+    if (!success) {
+        cerr << "ReadString() failed!" << endl;
+        _running = false;
+        return;
     }
+
+    _process(str);
 }
 
 /*****************************************************************************/
@@ -237,7 +235,7 @@ void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
         }
     }
 
-    res.SerializeToOstream(&_ostream);
+    _send(res);
 }
 
 /*****************************************************************************/

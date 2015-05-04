@@ -43,7 +43,9 @@ using namespace LibDLS;
 
 Directory::Directory():
     _access(Unknown),
-    _fd(-1)
+    _fd(-1),
+    _fis(NULL),
+    _fos(NULL)
 {
 }
 
@@ -51,17 +53,9 @@ Directory::Directory():
 
 Directory::~Directory()
 {
-    if (_fd != -1) {
-        {
-            stringstream msg;
-            msg << "Disconnecting.";
-            log(msg.str());
-        }
-        close(_fd);
-    }
+    _disconnect();
 
     list<Job *>::iterator job_i;
-
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
         delete *job_i;
     }
@@ -272,10 +266,7 @@ void Directory::_importLocal()
 
 void Directory::_importNetwork()
 {
-    if (_fd == -1) {
-        _connect();
-    }
-
+    _connect();
     _send_dir_info();
     _recv_dir_info();
 }
@@ -284,6 +275,10 @@ void Directory::_importNetwork()
 
 void Directory::_connect()
 {
+    if (_fd != -1) {
+        return;
+    }
+
     {
         stringstream msg;
         msg << "Connecting to " << _host << " on port " << _port;
@@ -326,6 +321,22 @@ void Directory::_connect()
         throw DirectoryException("Connection failed!");
     }
 
+
+    try {
+        _fis = new google::protobuf::io::FileInputStream(fd);
+    }
+    catch (...) {
+        ::close(fd);
+    }
+
+    try {
+        _fos = new google::protobuf::io::FileOutputStream(fd);
+    }
+    catch (...) {
+        delete _fis;
+        ::close(fd);
+    }
+
     _fd = fd;
 
     {
@@ -340,35 +351,48 @@ void Directory::_connect()
 
 /*****************************************************************************/
 
-string Directory::_recv_message()
+void Directory::_disconnect()
 {
-    char rcvbuf[1024];
-    int ret;
-
-    while (1) {
-        ret = read(_fd, rcvbuf, sizeof(rcvbuf));
-        if (ret < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-
-            close(_fd);
-            _fd = -1;
-            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
-            stringstream err;
-            err << "read() failed: " << str;
-            throw DirectoryException(err.str());
-        }
-        else if (ret == 0) {
-            close(_fd);
-            _fd = -1;
-            throw DirectoryException("Connection closed by remote host.");
-        }
-
-        break;
+    if (_fd == -1) {
+        return;
     }
 
-    return string(rcvbuf, ret);
+    {
+        stringstream msg;
+        msg << "Disconnecting.";
+        log(msg.str());
+    }
+
+    delete _fis;
+    delete _fos;
+    close(_fd);
+}
+
+/*****************************************************************************/
+
+string Directory::_recv_message()
+{
+    google::protobuf::io::CodedInputStream ci(_fis);
+
+    uint32_t size;
+    bool success = ci.ReadVarint32(&size);
+    if (!success) {
+        _disconnect();
+        stringstream err;
+        err << "ReadVarint32() failed!";
+        throw DirectoryException(err.str());
+    }
+
+    string str;
+    success = ci.ReadString(&str, size);
+    if (!success) {
+        _disconnect();
+        stringstream err;
+        err << "ReadString() failed!";
+        throw DirectoryException(err.str());
+    }
+
+    return str;
 }
 
 /*****************************************************************************/
@@ -378,26 +402,13 @@ void Directory::_send_message(const DlsProto::Request &req)
     string str;
     req.SerializeToString(&str);
 
-    int ret, to_write = str.size(), off = 0;
-
-    while (to_write > 0) {
-        ret = write(_fd, str.c_str() + off, to_write);
-        if (ret < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-
-            close(_fd);
-            _fd = -1;
-            char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
-            stringstream err;
-            err << "write() failed: " << str;
-            throw DirectoryException(err.str());
-        }
-
-        to_write -= ret;
-        off += ret;
+    {
+        google::protobuf::io::CodedOutputStream os(_fos);
+        os.WriteVarint32(req.ByteSize());
+        os.WriteString(str);
     }
+
+    _fos->Flush();
 }
 
 /*****************************************************************************/
@@ -406,7 +417,13 @@ void Directory::_recv_hello()
 {
     string rec = _recv_message();
     DlsProto::Hello msg;
-    msg.ParseFromString(rec);
+    bool success = msg.ParseFromString(rec);
+    if (!success) {
+        _disconnect();
+        stringstream err;
+        err << "ParseFromString() failed!";
+        throw DirectoryException(err.str());
+    }
 
     stringstream str;
     str << "Received hello from DLS " << msg.version()
@@ -431,13 +448,17 @@ void Directory::_recv_dir_info()
 {
     string rec = _recv_message();
 
-    DlsProto::Hello msg;
-    msg.ParseFromString(rec);
+    DlsProto::DirInfoResponse msg;
+    bool success = msg.ParseFromString(rec);
+    if (!success) {
+        _disconnect();
+        stringstream err;
+        err << "ParseFromString() failed!";
+        throw DirectoryException(err.str());
+    }
 
     stringstream str;
-    str << "Received hello from DLS " << msg.version()
-        << " " << msg.revision() << " protocol version "
-        << msg.protocol_version() << ".";
+    str << "Received DirInfoResponse." << endl;
     log(str.str());
 }
 

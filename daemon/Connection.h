@@ -27,6 +27,8 @@
 #include <pthread.h>
 #include <sstream>
 
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
 #include "lib/LibDLS/Dir.h"
 #include "proto/dls.pb.h"
 
@@ -48,17 +50,18 @@ public:
 
 private:
     ProcMother * const _parent_proc;
-    int _fd;
+    const int _fd;
+    google::protobuf::io::FileInputStream _fis;
+    google::protobuf::io::FileOutputStream _fos;
     pthread_t _thread;
     int _ret; /**< Return value. */
     bool _running;
-    std::stringstream _ostream;
     LibDLS::Directory _dir;
 
     static void *_run_static(void *);
     void *_run();
+    void _send(const google::protobuf::Message &);
     void _send_hello();
-    void _send();
     void _receive();
     void _process(const std::string &);
     void _process_dir_info(const DlsProto::DirInfoRequest &);

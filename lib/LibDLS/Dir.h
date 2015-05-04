@@ -27,6 +27,8 @@
 #include <string>
 #include <list>
 
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
 #include "Exception.h"
 #include "Job.h"
 
@@ -81,6 +83,8 @@ class Directory
         std::string _host; /**< Host name/address. */
         std::string _port; /**< Port number / service name. */
         int _fd; /**< Socket file descriptor. */
+        google::protobuf::io::FileInputStream *_fis;
+        google::protobuf::io::FileOutputStream *_fos;
 
         std::list<Job *> _jobs; /**< list of jobs */
 
@@ -88,6 +92,7 @@ class Directory
         void _importNetwork();
 
         void _connect();
+        void _disconnect();
         std::string _recv_message();
         void _send_message(const DlsProto::Request &);
 
