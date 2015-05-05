@@ -233,7 +233,18 @@ void Directory::network_request(
         req.SerializeToString(&str);
         google::protobuf::io::CodedOutputStream os(_fos);
         os.WriteVarint32(req.ByteSize());
+        if (os.HadError()) {
+            stringstream err;
+            err << "os.WriteVarint32() failed!";
+            throw DirectoryException(err.str());
+        }
+
         os.WriteString(str);
+        if (os.HadError()) {
+            stringstream err;
+            err << "os.WriteString() failed!";
+            throw DirectoryException(err.str());
+        }
     }
 
     _fos->Flush();
@@ -454,7 +465,7 @@ void Directory::_receive_message(google::protobuf::Message &msg)
         throw DirectoryException(err.str());
     }
 
-#if 1
+#if DEBUG_PROTO
     cerr << "Received message with " << size << " bytes:" << endl;
     cerr << msg.DebugString() << endl;
 #endif
