@@ -65,7 +65,9 @@ private:
     void _receive();
     void _process(const std::string &);
     void _process_dir_info(const DlsProto::DirInfoRequest &);
-    void _process_fetch_channels(uint32_t);
+    void _process_job_request(const DlsProto::JobRequest &);
+    void _process_channel_request(LibDLS::Job *,
+            const DlsProto::ChannelRequest &);
 };
 
 /*****************************************************************************/

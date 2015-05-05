@@ -135,7 +135,7 @@ void Connection::_send(const google::protobuf::Message &msg)
     string str;
     msg.SerializeToString(&str);
 
-#if 0
+#if DEBUG_PROTO
     cerr << "Sending message with " << msg.ByteSize() << " bytes: " << endl;
     cerr << msg.DebugString() << endl;
 #endif
@@ -203,15 +203,17 @@ void Connection::_process(const string &rec)
     DlsProto::Request req;
     req.ParseFromString(rec);
 
-    cerr << "Received request." << endl
-        << "    dir_info: " << (req.has_dir_info() ? "yes" : "no") << endl;
+#if DEBUG_PROTO
+    cerr << "Received request with " << rec.size() << " bytes: " << endl;
+    cerr << req.DebugString() << endl;
+#endif
 
     if (req.has_dir_info()) {
         _process_dir_info(req.dir_info());
     }
 
-    if (req.has_fetch_channels()) {
-        _process_fetch_channels(req.fetch_channels());
+    if (req.has_job_request()) {
+        _process_job_request(req.job_request());
     }
 }
 
@@ -228,22 +230,64 @@ void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
 
 /*****************************************************************************/
 
-void Connection::_process_fetch_channels(uint32_t job_id)
+void Connection::_process_job_request(const DlsProto::JobRequest &req)
 {
-    LibDLS::Job *job = _dir.find_job(job_id);
-    DlsProto::Response res;
+    LibDLS::Job *job = _dir.find_job(req.id());
 
     if (!job) {
+        DlsProto::Response res;
         stringstream str;
-        str << "Job " << job_id << " not found!";
+        str << "Job " << req.id() << " not found!";
         DlsProto::Error *err = res.mutable_error();
         err->set_message(str.str());
-    }
-    else {
-        job->fetch_channels();
+        _send(res);
+        return;
     }
 
-    _send(res);
+    if (req.fetch_channels()) {
+        job->fetch_channels();
+        DlsProto::Response res;
+        DlsProto::DirInfo *dir_info = res.mutable_dir_info();
+        DlsProto::JobInfo *job_info = dir_info->add_job();
+        job->set_job_info(job_info, false);
+        _send(res);
+    }
+
+    if (req.has_channel_request()) {
+        _process_channel_request(job, req.channel_request());
+    }
+}
+
+/*****************************************************************************/
+
+void Connection::_process_channel_request(
+        LibDLS::Job *job,
+        const DlsProto::ChannelRequest &req
+        )
+{
+    LibDLS::Channel *channel = job->find_channel(req.id());
+
+    if (!channel) {
+        stringstream str;
+        str << "Channel " << req.id()
+            << " not found in job " << job->id() << "!";
+        DlsProto::Response res;
+        DlsProto::Error *err = res.mutable_error();
+        err->set_message(str.str());
+        _send(res);
+        return;
+    }
+
+    if (req.fetch_chunks()) {
+        channel->fetch_chunks();
+        DlsProto::Response res;
+        DlsProto::DirInfo *dir_info = res.mutable_dir_info();
+        DlsProto::JobInfo *job_info = dir_info->add_job();
+        DlsProto::ChannelInfo *channel_info = job_info->add_channel();
+        channel_info->set_id(channel->dir_index());
+        channel->set_chunk_info(channel_info);
+        _send(res);
+    }
 }
 
 /*****************************************************************************/

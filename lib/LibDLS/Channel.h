@@ -98,6 +98,7 @@ public:
     }
 
     void set_channel_info(DlsProto::ChannelInfo *) const;
+    void set_chunk_info(DlsProto::ChannelInfo *) const;
 
 private:
     Job * const _job; /**< Parent job. */
@@ -111,6 +112,9 @@ private:
     ChunkMap _chunks; /**< list of chunks */
     Time _range_start; /**< start of channel data range */
     Time _range_end; /**< end of channel data range */
+
+    void _fetch_chunks_local();
+    void _fetch_chunks_network();
 
     Channel();
 };

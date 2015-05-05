@@ -50,7 +50,7 @@ using namespace LibDLS;
 /** Constructor.
  */
 Job::Job(Directory *dir):
-    _parent_dir(dir),
+    _dir(dir),
     _messages(new BaseMessageList())
 {
 }
@@ -61,7 +61,7 @@ Job::Job(
         Directory *dir,
         const DlsProto::JobInfo &job_info
         ):
-    _parent_dir(dir),
+    _dir(dir),
     _messages(new BaseMessageList())
 {
     _preset.import_from(job_info.preset());
@@ -151,12 +151,16 @@ void Job::import(const string &dls_path, /**< DLS directory path */
 
 void Job::fetch_channels()
 {
-    if (_parent_dir->access() == Directory::Local) {
+    _channels.clear();
+
+    if (_dir->access() == Directory::Local) {
         _fetch_channels_local();
     }
     else {
         _fetch_channels_network();
     }
+
+    _channels.sort();
 }
 
 /*************************************************************************/
@@ -486,9 +490,11 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 
 /*****************************************************************************/
 
-void Job::set_job_info(DlsProto::JobInfo *job_info) const
+void Job::set_job_info(DlsProto::JobInfo *job_info, bool preset) const
 {
-    _preset.set_job_preset_info(job_info->mutable_preset());
+    if (preset) {
+        _preset.set_job_preset_info(job_info->mutable_preset());
+    }
 
     /* Channels */
     for (list<LibDLS::Channel>::const_iterator ch_i = _channels.begin();
@@ -509,8 +515,6 @@ void Job::_fetch_channels_local()
     Channel channel(this);
 
     str.exceptions(ios::failbit | ios::badbit);
-
-    _channels.clear();
 
     if (!(dir = opendir(_path.c_str()))) {
         stringstream err;
@@ -547,7 +551,6 @@ void Job::_fetch_channels_local()
         _channels.push_back(channel);
     }
 
-    _channels.sort();
 
     closedir(dir);
 }
@@ -559,15 +562,26 @@ void Job::_fetch_channels_network()
     DlsProto::Request req;
     DlsProto::Response res;
 
-    req.set_fetch_channels(_preset.id());
+    DlsProto::JobRequest *job_req = req.mutable_job_request();
+    job_req->set_id(_preset.id());
+    job_req->set_fetch_channels(true);
 
-    _parent_dir->network_request(req, res);
+    _dir->network_request(req, res);
 
     if (res.has_error()) {
         cerr << "Error response: " << res.error().message() << endl;
+        return;
     }
 
-    cerr << "ack" << endl;
+    const DlsProto::DirInfo &dir_info = res.dir_info();
+    const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
+
+    google::protobuf::RepeatedPtrField<DlsProto::ChannelInfo>::const_iterator
+        ch_i;
+    for (ch_i = job_info.channel().begin();
+            ch_i != job_info.channel().end(); ch_i++) {
+        _channels.push_back(Channel(this, *ch_i));
+    }
 }
 
 /*****************************************************************************/

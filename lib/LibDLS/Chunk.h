@@ -32,6 +32,10 @@
 
 /*****************************************************************************/
 
+namespace DlsProto {
+    class ChunkInfo;
+}
+
 namespace LibDLS {
 
 /*****************************************************************************/
@@ -72,6 +76,7 @@ class Chunk
 {
     public:
         Chunk();
+        Chunk(const DlsProto::ChunkInfo &);
         virtual ~Chunk();
 
         void import(const std::string &, ChannelType);
@@ -88,6 +93,8 @@ class Chunk
 
         bool operator<(const Chunk &) const;
         bool operator==(const Chunk &) const;
+
+        void set_chunk_info(DlsProto::ChunkInfo *) const;
 
     protected:
         std::string _dir; /**< Chunk-Verzeichnis */
