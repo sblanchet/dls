@@ -54,6 +54,7 @@ libdls_la_SOURCES = \
 #------------------------------------------------------------------------------
 
 noinst_HEADERS = \
+	$(builddir)/../proto/dls.pb.h \
 	Base64.h \
 	BaseMessage.h \
 	BaseMessageList.h \
