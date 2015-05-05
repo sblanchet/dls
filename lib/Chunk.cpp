@@ -38,6 +38,8 @@ using namespace std;
 #include "RingBufferT.h"
 #include "CompressionT.h"
 
+#include "proto/dls.pb.h"
+
 #include "LibDLS/Channel.h"
 #include "LibDLS/Chunk.h"
 using namespace LibDLS;
@@ -55,6 +57,20 @@ Chunk::Chunk():
     _mdct_block_size(0),
     _type(TUNKNOWN),
     _incomplete(true)
+{
+}
+
+/*****************************************************************************/
+
+Chunk::Chunk(const DlsProto::ChunkInfo &info):
+    _sample_frequency(0.0),
+    _meta_reduction(0),
+    _format_index(0),
+    _mdct_block_size(0),
+	_start(info.start()),
+	_end(info.end()),
+    _type(TUNKNOWN),
+    _incomplete(false)
 {
 }
 
@@ -843,6 +859,14 @@ bool Chunk::operator<(const Chunk &other) const
 bool Chunk::operator==(const Chunk &other) const
 {
     return _start == other._start && _end == other._end;
+}
+
+/*****************************************************************************/
+
+void Chunk::set_chunk_info(DlsProto::ChunkInfo *chunk_info) const
+{
+	chunk_info->set_start(_start.to_uint64());
+	chunk_info->set_end(_end.to_uint64());
 }
 
 /*****************************************************************************/

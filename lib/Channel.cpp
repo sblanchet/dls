@@ -33,6 +33,7 @@ using namespace std;
 #include "LibDLS/Chunk.h"
 #include "LibDLS/Job.h"
 #include "LibDLS/Channel.h"
+#include "LibDLS/Dir.h"
 
 #include "proto/dls.pb.h"
 
@@ -145,6 +146,95 @@ void Channel::import(
 
 /*****************************************************************************/
 
+void Channel::fetch_chunks()
+{
+    if (_job->dir()->access() == Directory::Local) {
+        _fetch_chunks_local();
+    }
+    else {
+        _fetch_chunks_network();
+    }
+}
+
+/*****************************************************************************/
+
+/**
+   Loads data values of the specified time range and resolution.
+
+   If \a min_values is non-zero, the smallest resolution is chosen, that
+   contains at least \a min_values for the requested range.
+
+   Otherwise, all values (the maximum resolution) is loaded.
+
+   The data are passed via the callback function.
+*/
+
+void Channel::fetch_data(Time start, /**< start of requested time range */
+                         Time end, /**< end of requested time range */
+                         unsigned int min_values, /**< minimal number */
+                         DataCallback cb, /**< callback */
+                         void *cb_data, /**< arbitrary callback parameter */
+                         unsigned int decimation /**< Decimation. */
+                         ) const
+{
+#if DEBUG_TIMING
+    Time ts, te;
+    ts.set_now();
+#endif
+
+    ChunkMap::const_iterator chunk_i;
+    RingBuffer ring(100000);
+
+    if (start < end) {
+        for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
+            chunk_i->second.fetch_data(start, end,
+                    min_values, &ring, cb, cb_data, decimation);
+        }
+    }
+
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_data " << ts.diff_str_to(te);
+    log(msg.str());
+#endif
+}
+
+/*****************************************************************************/
+
+/**
+   Returns true, if this channel has exactly the same chunk times
+   as the other channel.
+   \return true, if channels have the same chunks.
+*/
+
+bool Channel::has_same_chunks_as(const Channel &other) const
+{
+    return _chunks == other._chunks;
+}
+
+/*****************************************************************************/
+
+void Channel::set_channel_info(DlsProto::ChannelInfo *channel_info) const
+{
+    channel_info->set_id(_dir_index);
+    channel_info->set_name(_name);
+    channel_info->set_unit(_unit);
+    channel_info->set_type((DlsProto::ChannelType) _type);
+}
+
+/*****************************************************************************/
+
+void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
+{
+    for (ChunkMap::const_iterator chunk_i = _chunks.begin();
+            chunk_i != _chunks.end(); chunk_i++) {
+        chunk_i->second.set_chunk_info(channel_info->add_chunk());
+    }
+}
+
+/*****************************************************************************/
+
 /**
    Lädt die Liste der Chunks und importiert deren Eigenschaften
 
@@ -152,7 +242,7 @@ void Channel::import(
    \param job_id Auftrags-ID
 */
 
-void Channel::fetch_chunks()
+void Channel::_fetch_chunks_local()
 {
     DIR *dir;
     struct dirent *dir_ent;
@@ -249,69 +339,40 @@ void Channel::fetch_chunks()
 
 /*****************************************************************************/
 
-/**
-   Loads data values of the specified time range and resolution.
-
-   If \a min_values is non-zero, the smallest resolution is chosen, that
-   contains at least \a min_values for the requested range.
-
-   Otherwise, all values (the maximum resolution) is loaded.
-
-   The data are passed via the callback function.
-*/
-
-void Channel::fetch_data(Time start, /**< start of requested time range */
-                         Time end, /**< end of requested time range */
-                         unsigned int min_values, /**< minimal number */
-                         DataCallback cb, /**< callback */
-                         void *cb_data, /**< arbitrary callback parameter */
-                         unsigned int decimation /**< Decimation. */
-                         ) const
+void Channel::_fetch_chunks_network()
 {
-#if DEBUG_TIMING
-    Time ts, te;
-    ts.set_now();
-#endif
+    DlsProto::Request req;
+    DlsProto::Response res;
 
-    ChunkMap::const_iterator chunk_i;
-    RingBuffer ring(100000);
+    DlsProto::JobRequest *job_req = req.mutable_job_request();
+    job_req->set_id(_job->id());
+    DlsProto::ChannelRequest *ch_req = job_req->mutable_channel_request();
+    ch_req->set_id(_dir_index);
+    ch_req->set_fetch_chunks(true);
 
-    if (start < end) {
-        for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
-            chunk_i->second.fetch_data(start, end,
-                    min_values, &ring, cb, cb_data, decimation);
-        }
+    _job->dir()->network_request(req, res);
+
+    if (res.has_error()) {
+        cerr << "Error response: " << res.error().message() << endl;
+        return;
     }
 
-#if DEBUG_TIMING
-    te.set_now();
-    stringstream msg;
-    msg << "fetch_data " << ts.diff_str_to(te);
-    log(msg.str());
-#endif
-}
+    const DlsProto::DirInfo &dir_info = res.dir_info();
+    const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
+    const DlsProto::ChannelInfo &ch_info = job_info.channel(0); // FIXME check
 
-/*****************************************************************************/
-
-/**
-   Returns true, if this channel has exactly the same chunk times
-   as the other channel.
-   \return true, if channels have the same chunks.
-*/
-
-bool Channel::has_same_chunks_as(const Channel &other) const
-{
-    return _chunks == other._chunks;
-}
-
-/*****************************************************************************/
-
-void Channel::set_channel_info(DlsProto::ChannelInfo *ch_info) const
-{
-    ch_info->set_id(_dir_index);
-    ch_info->set_name(_name);
-    ch_info->set_unit(_unit);
-    ch_info->set_type((DlsProto::ChannelType) _type);
+    google::protobuf::RepeatedPtrField<DlsProto::ChunkInfo>::const_iterator
+        ch_info_i;
+    for (ch_info_i = ch_info.chunk().begin();
+            ch_info_i != ch_info.chunk().end(); ch_info_i++) {
+        uint64_t start = ch_info_i->start();
+        ChunkMap::iterator chunk_i = _chunks.find(start);
+        if (chunk_i == _chunks.end()) {
+            Chunk new_chunk = Chunk(*ch_info_i);
+            pair<int64_t, Chunk> val(start, new_chunk);
+            _chunks.insert(val);
+        }
+    }
 }
 
 /*****************************************************************************/

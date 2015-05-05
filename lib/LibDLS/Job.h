@@ -36,6 +36,7 @@
 /****************************************************************************/
 
 namespace DlsProto {
+    class Response;
     class JobInfo;
 }
 
@@ -104,10 +105,11 @@ class Job
         std::list<Message> load_msg(Time, Time,
                 std::string = std::string()) const;
 
-        void set_job_info(DlsProto::JobInfo *) const;
+        void set_job_info(DlsProto::JobInfo *, bool = true) const;
+        Directory *dir() const { return _dir; }
 
     private:
-        Directory * const _parent_dir; /**< Parent directory. */
+        Directory * const _dir; /**< Parent directory. */
         std::string _path; /**< Job path. */
         JobPreset _preset; /**< Job preset. */
         std::list<Channel> _channels; /**< List of recorded channels. */
