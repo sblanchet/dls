@@ -34,6 +34,8 @@ using namespace std;
 #include "LibDLS/Dir.h"
 #include "LibDLS/Job.h"
 
+#include "proto/dls.pb.h"
+
 #include "XmlParser.h"
 #include "IndexT.h"
 #include "File.h"
@@ -504,5 +506,17 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
     return ret;
 }
 
+/*****************************************************************************/
+
+void Job::set_job_info(DlsProto::JobInfo *job_info) const
+{
+    job_info->set_id(_preset.id());
+
+    /* Channels */
+    for (list<LibDLS::Channel>::const_iterator ch_i = _channels.begin();
+            ch_i != _channels.end(); ch_i++) {
+        ch_i->set_channel_info(job_info->add_channel());
+    }
+}
 
 /*****************************************************************************/

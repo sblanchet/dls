@@ -35,6 +35,10 @@
 
 /****************************************************************************/
 
+namespace DlsProto {
+    class JobInfo;
+}
+
 namespace LibDLS {
 
 class BaseMessageList;
@@ -97,6 +101,8 @@ class Job
 
         std::list<Message> load_msg(Time, Time,
                 std::string = std::string()) const;
+
+        void set_job_info(DlsProto::JobInfo *) const;
 
     private:
         std::string _path; /**< Job path. */

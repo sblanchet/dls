@@ -34,6 +34,8 @@ using namespace std;
 #include "LibDLS/Job.h"
 #include "LibDLS/Channel.h"
 
+#include "proto/dls.pb.h"
+
 #include "XmlParser.h"
 using namespace LibDLS;
 
@@ -289,6 +291,16 @@ void Channel::fetch_data(Time start, /**< start of requested time range */
 bool Channel::has_same_chunks_as(const Channel &other) const
 {
     return _chunks == other._chunks;
+}
+
+/*****************************************************************************/
+
+void Channel::set_channel_info(DlsProto::ChannelInfo *ch_info) const
+{
+    ch_info->set_id(_dir_index);
+    ch_info->set_name(_name);
+    ch_info->set_unit(_unit);
+    ch_info->set_type((DlsProto::ChannelType) _type);
 }
 
 /*****************************************************************************/
