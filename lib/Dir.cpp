@@ -395,6 +395,10 @@ string Directory::_recv_message()
         throw DirectoryException(err.str());
     }
 
+#if 0
+    cerr << "Received message with " << size << " bytes." << endl;
+#endif
+
     string str;
     success = ci.ReadString(&str, size);
     if (!success) {
@@ -460,8 +464,8 @@ void Directory::_recv_dir_info()
 {
     string rec = _recv_message();
 
-    DlsProto::DirInfo dir_info;
-    bool success = dir_info.ParseFromString(rec);
+    DlsProto::Response res;
+    bool success = res.ParseFromString(rec);
     if (!success) {
         _disconnect();
         stringstream err;
@@ -469,9 +473,22 @@ void Directory::_recv_dir_info()
         throw DirectoryException(err.str());
     }
 
-    stringstream str;
-    str << "Received DirInfoResponse." << endl;
-    log(str.str());
+    if (!res.has_dir_info()) {
+        // FIXME missing dir_info; process other message!
+    }
+
+    const DlsProto::DirInfo &dir_info = res.dir_info();
+
+    _jobs.clear();
+
+    _path = dir_info.path();
+
+    google::protobuf::RepeatedPtrField<DlsProto::JobInfo>::const_iterator
+        job_i;
+    for (job_i = dir_info.job().begin();
+            job_i != dir_info.job().end(); job_i++) {
+        _jobs.push_back(new Job(*job_i));
+    }
 }
 
 /*****************************************************************************/

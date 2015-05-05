@@ -38,8 +38,20 @@ message DirInfo {
 }
 
 message JobInfo {
-    required uint32 id = 1;
+    required JobPresetInfo preset = 1;
     repeated ChannelInfo channel = 2;
+}
+
+message JobPresetInfo {
+    required uint32 id = 1;
+    optional string description = 2;
+    optional bool running = 3;
+    optional uint64 quota_time = 4;
+    optional uint64 quota_size = 5;
+    optional string source = 6;
+    optional uint32 port = 7; // no uint16 available
+    optional string trigger = 8;
+    // FIXME channels
 }
 
 message ChannelInfo {

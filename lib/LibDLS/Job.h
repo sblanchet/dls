@@ -63,6 +63,7 @@ class Job
 {
     public:
         Job();
+        Job(const DlsProto::JobInfo &);
         ~Job();
 
         void import(const std::string &, unsigned int);
