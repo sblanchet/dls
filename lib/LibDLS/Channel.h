@@ -69,6 +69,7 @@ class Channel
 {
 public:
     Channel(Job *);
+    Channel(Job *, const DlsProto::ChannelInfo &);
     ~Channel();
 
     Job *getJob() const { return _job; }

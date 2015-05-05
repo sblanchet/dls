@@ -36,6 +36,10 @@
 
 /*****************************************************************************/
 
+namespace DlsProto {
+	class JobPresetInfo;
+}
+
 namespace LibDLS {
 
 /*****************************************************************************/
@@ -65,6 +69,7 @@ class JobPreset
         ~JobPreset();
 
         void import(const std::string &, unsigned int);
+        void import_from(const DlsProto::JobPresetInfo &);
 
         unsigned int id() const { return _id; }
         const std::string &description() const { return _description; }
@@ -80,6 +85,7 @@ class JobPreset
             return &_channels;
         }
         bool channel_exists(const std::string &) const;
+        void set_job_preset_info(DlsProto::JobPresetInfo *) const;
 
     protected:
         unsigned int _id; /**< Job ID. */

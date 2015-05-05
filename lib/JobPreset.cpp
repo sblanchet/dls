@@ -32,6 +32,8 @@ using namespace std;
 #include "LibDLS/globals.h"
 #include "LibDLS/JobPreset.h"
 
+#include "proto/dls.pb.h"
+
 #include "XmlParser.h"
 
 using namespace LibDLS;
@@ -44,7 +46,7 @@ using namespace LibDLS;
 
 JobPreset::JobPreset():
     _id(0),
-	_running(false),
+    _running(false),
     _quota_time(0),
     _quota_size(0),
     _port(MSR_PORT)
@@ -212,6 +214,23 @@ void JobPreset::import(const string &dls_dir, unsigned int id)
 
 /*****************************************************************************/
 
+void JobPreset::import_from(const DlsProto::JobPresetInfo &info)
+{
+    _id = info.id();
+    _description = info.description();
+    _running = info.running();
+    _quota_time = info.quota_time();
+    _quota_size = info.quota_size();
+    _source = info.source();
+    _port = info.port();
+    _trigger = info.trigger();
+
+    _channels.clear();
+    // FIXME channels
+}
+
+/*****************************************************************************/
+
 /**
    Prüfen, ob ein bestimmter Kanal in den Vorgaben existiert
 
@@ -250,6 +269,22 @@ string JobPreset::id_desc() const
     ret << "(" << _id << ") " << _description;
 
     return ret.str();
+}
+
+/*****************************************************************************/
+
+void JobPreset::set_job_preset_info(DlsProto::JobPresetInfo *info) const
+{
+    info->set_id(_id);
+    info->set_description(_description);
+    info->set_running(_running);
+    info->set_quota_time(_quota_time);
+    info->set_quota_size(_quota_size);
+    info->set_source(_source);
+    info->set_port(_port);
+    info->set_trigger(_trigger);
+
+    // FIXME channels
 }
 
 /*****************************************************************************/
