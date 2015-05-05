@@ -209,6 +209,10 @@ void Connection::_process(const string &rec)
     if (req.has_dir_info()) {
         _process_dir_info(req.dir_info());
     }
+
+    if (req.has_fetch_channels()) {
+        _process_fetch_channels(req.fetch_channels());
+    }
 }
 
 /*****************************************************************************/
@@ -219,6 +223,26 @@ void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
 
     DlsProto::Response res;
     _dir.set_dir_info(res.mutable_dir_info());
+    _send(res);
+}
+
+/*****************************************************************************/
+
+void Connection::_process_fetch_channels(uint32_t job_id)
+{
+    LibDLS::Job *job = _dir.find_job(job_id);
+    DlsProto::Response res;
+
+    if (!job) {
+        stringstream str;
+        str << "Job " << job_id << " not found!";
+        DlsProto::Error *err = res.mutable_error();
+        err->set_message(str.str());
+    }
+    else {
+        job->fetch_channels();
+    }
+
     _send(res);
 }
 

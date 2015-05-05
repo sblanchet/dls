@@ -28,6 +28,7 @@
 #include <list>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/message.h>
 
 #include "Exception.h"
 #include "Job.h"
@@ -36,6 +37,7 @@
 
 namespace DlsProto {
     class Request;
+    class Response;
     class DirInfo;
 }
 
@@ -72,12 +74,17 @@ class Directory
 
         void set_dir_info(DlsProto::DirInfo *) const;
 
-    private:
-        enum {
+        enum Access {
             Unknown,
             Local,
             Network
-        } _access; /**< Access type. */
+        }; /**< Access type. */
+        Access access() const { return _access; }
+
+        void network_request(const DlsProto::Request &, DlsProto::Response &);
+
+    private:
+        Access _access;
 
         /* Local access. */
         std::string _path; /**< Path to DLS data directory. */
@@ -96,12 +103,8 @@ class Directory
 
         void _connect();
         void _disconnect();
-        std::string _recv_message();
-        void _send_message(const DlsProto::Request &);
-
-        void _recv_hello();
-        void _send_dir_info();
-        void _recv_dir_info();
+        void _receive_message(google::protobuf::Message &);
+        void _receive_hello();
 };
 
 /****************************************************************************/

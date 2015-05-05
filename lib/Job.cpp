@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 /*****************************************************************************/
@@ -48,14 +49,19 @@ using namespace LibDLS;
 
 /** Constructor.
  */
-Job::Job():
+Job::Job(Directory *dir):
+    _parent_dir(dir),
     _messages(new BaseMessageList())
 {
 }
 
 /*****************************************************************************/
 
-Job::Job(const DlsProto::JobInfo &job_info):
+Job::Job(
+        Directory *dir,
+        const DlsProto::JobInfo &job_info
+        ):
+    _parent_dir(dir),
     _messages(new BaseMessageList())
 {
     _preset.import_from(job_info.preset());
@@ -145,55 +151,12 @@ void Job::import(const string &dls_path, /**< DLS directory path */
 
 void Job::fetch_channels()
 {
-    stringstream str;
-    DIR *dir;
-    struct dirent *dir_ent;
-    string channel_dir_name;
-    int channel_index;
-    Channel channel(this);
-
-    str.exceptions(ios::failbit | ios::badbit);
-
-    _channels.clear();
-
-    if (!(dir = opendir(_path.c_str()))) {
-        stringstream err;
-        err << "ERROR: Failed to open job directory \"" << _path << "\".";
-        log(err.str());
-        return;
+    if (_parent_dir->access() == Directory::Local) {
+        _fetch_channels_local();
     }
-
-    while ((dir_ent = readdir(dir))) {
-        channel_dir_name = dir_ent->d_name;
-        if (channel_dir_name.find("channel")) continue;
-
-        str.str("");
-        str.clear();
-        str << channel_dir_name.substr(7);
-
-        try {
-            str >> channel_index;
-        }
-        catch (...) {
-            continue;
-        }
-
-        try {
-            channel.import(_path + "/" + channel_dir_name, channel_index);
-        }
-        catch (ChannelException &e) {
-            stringstream err;
-            err << "WARNING: " << e.msg;
-            log(err.str());
-            continue;
-        }
-
-        _channels.push_back(channel);
+    else {
+        _fetch_channels_network();
     }
-
-    _channels.sort();
-
-    closedir(dir);
 }
 
 /*************************************************************************/
@@ -532,6 +495,79 @@ void Job::set_job_info(DlsProto::JobInfo *job_info) const
             ch_i != _channels.end(); ch_i++) {
         ch_i->set_channel_info(job_info->add_channel());
     }
+}
+
+/*****************************************************************************/
+
+void Job::_fetch_channels_local()
+{
+    stringstream str;
+    DIR *dir;
+    struct dirent *dir_ent;
+    string channel_dir_name;
+    int channel_index;
+    Channel channel(this);
+
+    str.exceptions(ios::failbit | ios::badbit);
+
+    _channels.clear();
+
+    if (!(dir = opendir(_path.c_str()))) {
+        stringstream err;
+        err << "ERROR: Failed to open job directory \"" << _path << "\".";
+        log(err.str());
+        return;
+    }
+
+    while ((dir_ent = readdir(dir))) {
+        channel_dir_name = dir_ent->d_name;
+        if (channel_dir_name.find("channel")) continue;
+
+        str.str("");
+        str.clear();
+        str << channel_dir_name.substr(7);
+
+        try {
+            str >> channel_index;
+        }
+        catch (...) {
+            continue;
+        }
+
+        try {
+            channel.import(_path + "/" + channel_dir_name, channel_index);
+        }
+        catch (ChannelException &e) {
+            stringstream err;
+            err << "WARNING: " << e.msg;
+            log(err.str());
+            continue;
+        }
+
+        _channels.push_back(channel);
+    }
+
+    _channels.sort();
+
+    closedir(dir);
+}
+
+/*****************************************************************************/
+
+void Job::_fetch_channels_network()
+{
+    DlsProto::Request req;
+    DlsProto::Response res;
+
+    req.set_fetch_channels(_preset.id());
+
+    _parent_dir->network_request(req, res);
+
+    if (res.has_error()) {
+        cerr << "Error response: " << res.error().message() << endl;
+    }
+
+    cerr << "ack" << endl;
 }
 
 /*****************************************************************************/

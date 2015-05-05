@@ -20,6 +20,7 @@ message Hello {
 
 message Request {
     optional DirInfoRequest dir_info = 1;
+    optional uint32 fetch_channels = 2; // fetch channels from job ID
 }
 
 message DirInfoRequest {
@@ -30,6 +31,7 @@ message DirInfoRequest {
 
 message Response {
     optional DirInfo dir_info = 1;
+    optional Error error = 2;
 }
 
 message DirInfo {
@@ -60,6 +62,10 @@ message ChannelInfo {
     optional string unit = 3;
     required ChannelType type = 4;
     optional bool recording = 5;
+}
+
+message Error {
+    optional string message = 1;
 }
 
 //---------------------------------------------------------------------------

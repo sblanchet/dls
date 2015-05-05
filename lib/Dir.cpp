@@ -221,6 +221,28 @@ void Directory::set_dir_info(DlsProto::DirInfo *dir_info) const
 
 /*****************************************************************************/
 
+void Directory::network_request(
+        const DlsProto::Request &req,
+        DlsProto::Response &res
+        )
+{
+    _connect();
+
+    {
+        string str;
+        req.SerializeToString(&str);
+        google::protobuf::io::CodedOutputStream os(_fos);
+        os.WriteVarint32(req.ByteSize());
+        os.WriteString(str);
+    }
+
+    _fos->Flush();
+
+    _receive_message(res);
+}
+
+/*****************************************************************************/
+
 void Directory::_importLocal()
 {
     stringstream str;
@@ -253,7 +275,7 @@ void Directory::_importLocal()
             continue;
         }
 
-        job = new Job();
+        job = new Job(this);
 
         try {
             job->import(_path, job_id);
@@ -278,9 +300,29 @@ void Directory::_importLocal()
 
 void Directory::_importNetwork()
 {
-    _connect();
-    _send_dir_info();
-    _recv_dir_info();
+    DlsProto::Request req;
+    DlsProto::Response res;
+
+    req.mutable_dir_info();
+
+    network_request(req, res);
+
+    if (!res.has_dir_info()) {
+        // FIXME missing dir_info; process other message!
+    }
+
+    const DlsProto::DirInfo &dir_info = res.dir_info();
+
+    _jobs.clear();
+
+    _path = dir_info.path();
+
+    google::protobuf::RepeatedPtrField<DlsProto::JobInfo>::const_iterator
+        job_i;
+    for (job_i = dir_info.job().begin();
+            job_i != dir_info.job().end(); job_i++) {
+        _jobs.push_back(new Job(this, *job_i));
+    }
 }
 
 /*****************************************************************************/
@@ -358,7 +400,7 @@ void Directory::_connect()
     }
 
     /* read hello message */
-    _recv_hello();
+    _receive_hello();
 }
 
 /*****************************************************************************/
@@ -382,7 +424,7 @@ void Directory::_disconnect()
 
 /*****************************************************************************/
 
-string Directory::_recv_message()
+void Directory::_receive_message(google::protobuf::Message &msg)
 {
     google::protobuf::io::CodedInputStream ci(_fis);
 
@@ -395,12 +437,8 @@ string Directory::_recv_message()
         throw DirectoryException(err.str());
     }
 
-#if 0
-    cerr << "Received message with " << size << " bytes." << endl;
-#endif
-
-    string str;
-    success = ci.ReadString(&str, size);
+    string rec;
+    success = ci.ReadString(&rec, size);
     if (!success) {
         _disconnect();
         stringstream err;
@@ -408,87 +446,33 @@ string Directory::_recv_message()
         throw DirectoryException(err.str());
     }
 
-    return str;
-}
-
-/*****************************************************************************/
-
-void Directory::_send_message(const DlsProto::Request &req)
-{
-    string str;
-    req.SerializeToString(&str);
-
-    {
-        google::protobuf::io::CodedOutputStream os(_fos);
-        os.WriteVarint32(req.ByteSize());
-        os.WriteString(str);
-    }
-
-    _fos->Flush();
-}
-
-/*****************************************************************************/
-
-void Directory::_recv_hello()
-{
-    string rec = _recv_message();
-    DlsProto::Hello hello;
-    bool success = hello.ParseFromString(rec);
+    success = msg.ParseFromString(rec);
     if (!success) {
         _disconnect();
         stringstream err;
         err << "ParseFromString() failed!";
         throw DirectoryException(err.str());
     }
+
+#if 1
+    cerr << "Received message with " << size << " bytes:" << endl;
+    cerr << msg.DebugString() << endl;
+#endif
+}
+
+/*****************************************************************************/
+
+void Directory::_receive_hello()
+{
+    DlsProto::Hello hello;
+
+    _receive_message(hello);
 
     stringstream str;
     str << "Received hello from DLS " << hello.version()
         << " " << hello.revision() << " protocol version "
         << hello.protocol_version() << ".";
     log(str.str());
-}
-
-/*****************************************************************************/
-
-void Directory::_send_dir_info()
-{
-    DlsProto::Request req;
-    req.mutable_dir_info();
-
-    _send_message(req);
-}
-
-/*****************************************************************************/
-
-void Directory::_recv_dir_info()
-{
-    string rec = _recv_message();
-
-    DlsProto::Response res;
-    bool success = res.ParseFromString(rec);
-    if (!success) {
-        _disconnect();
-        stringstream err;
-        err << "ParseFromString() failed!";
-        throw DirectoryException(err.str());
-    }
-
-    if (!res.has_dir_info()) {
-        // FIXME missing dir_info; process other message!
-    }
-
-    const DlsProto::DirInfo &dir_info = res.dir_info();
-
-    _jobs.clear();
-
-    _path = dir_info.path();
-
-    google::protobuf::RepeatedPtrField<DlsProto::JobInfo>::const_iterator
-        job_i;
-    for (job_i = dir_info.job().begin();
-            job_i != dir_info.job().end(); job_i++) {
-        _jobs.push_back(new Job(*job_i));
-    }
 }
 
 /*****************************************************************************/
