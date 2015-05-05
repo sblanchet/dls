@@ -135,6 +135,11 @@ void Connection::_send(const google::protobuf::Message &msg)
     string str;
     msg.SerializeToString(&str);
 
+#if 0
+    cerr << "Sending message with " << msg.ByteSize() << " bytes: " << endl;
+    cerr << msg.DebugString() << endl;
+#endif
+
     {
         google::protobuf::io::CodedOutputStream os(&_fos);
         os.WriteVarint32(msg.ByteSize());
