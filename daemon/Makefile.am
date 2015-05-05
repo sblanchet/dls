@@ -32,10 +32,12 @@ endif
 #------------------------------------------------------------------------------
 
 dlsd_CPPFLAGS = \
+	$(CPPFLAGS) \
 	-DREVISION=\"$(REV)\" \
 	$(XML_CPPFLAGS)
 
 dlsd_CXXFLAGS = \
+	$(CXXFLAGS) \
 	-Wall \
 	-I$(topsrcdir) \
 	@FFTW3_CFLAGS@ \
