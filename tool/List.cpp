@@ -106,12 +106,25 @@ int list_chunks(Job *job)
     Channel *channel;
     list<unsigned int>::iterator index_i;
 
-    job->fetch_channels();
+    try {
+        job->fetch_channels();
+    }
+    catch (Exception &e) {
+        cerr << "Failed to fetch channels: " << e.msg << endl;
+        return 1;
+    }
 
     for (channel_i = job->channels().begin();
          channel_i != job->channels().end();
          channel_i++) {
-        channel_i->fetch_chunks();
+
+        try {
+            channel_i->fetch_chunks();
+        }
+        catch (ChannelException &e) {
+            cerr << "Failed to fetch chunks: " << e.msg << endl;
+            return 1;
+        }
 
         // group channels with same chunks together
         same_chunks_found = false;
