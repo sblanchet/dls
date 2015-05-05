@@ -57,10 +57,10 @@ Channel::Channel(Job *job):
 
 Channel::Channel(Job *job, const DlsProto::ChannelInfo &info):
     _job(job),
-	_dir_index(info.id()),
-	_name(info.name()),
-	_unit(info.unit()),
-	_type((ChannelType) info.type())
+    _dir_index(info.id()),
+    _name(info.name()),
+    _unit(info.unit()),
+    _type((ChannelType) info.type())
 {
 }
 
