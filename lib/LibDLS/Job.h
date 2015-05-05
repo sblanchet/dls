@@ -41,6 +41,7 @@ namespace DlsProto {
 
 namespace LibDLS {
 
+class Directory;
 class BaseMessageList;
 
 /****************************************************************************/
@@ -48,7 +49,7 @@ class BaseMessageList;
 /** Job exception.
  */
 class JobException:
-	public Exception
+    public Exception
 {
     public:
         JobException(const std::string &pmsg):
@@ -62,8 +63,8 @@ class JobException:
 class Job
 {
     public:
-        Job();
-        Job(const DlsProto::JobInfo &);
+        Job(Directory *);
+        Job(Directory *, const DlsProto::JobInfo &);
         ~Job();
 
         void import(const std::string &, unsigned int);
@@ -106,10 +107,16 @@ class Job
         void set_job_info(DlsProto::JobInfo *) const;
 
     private:
+        Directory * const _parent_dir; /**< Parent directory. */
         std::string _path; /**< Job path. */
         JobPreset _preset; /**< Job preset. */
         std::list<Channel> _channels; /**< List of recorded channels. */
         BaseMessageList *_messages; /**< List of messages. */
+
+        void _fetch_channels_local();
+        void _fetch_channels_network();
+
+        Job(); // private
 };
 
 /*****************************************************************************/

@@ -65,6 +65,7 @@ private:
     void _receive();
     void _process(const std::string &);
     void _process_dir_info(const DlsProto::DirInfoRequest &);
+    void _process_fetch_channels(uint32_t);
 };
 
 /*****************************************************************************/
