@@ -29,10 +29,10 @@ message DirInfoRequest {
 //---------------------------------------------------------------------------
 
 message Response {
-    optional DirInfoResponse dir_info = 1;
+    optional DirInfo dir_info = 1;
 }
 
-message DirInfoResponse {
+message DirInfo {
     optional string path = 1;
     repeated JobInfo job = 2;
 }

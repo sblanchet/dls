@@ -209,6 +209,18 @@ Job *Directory::find_job(unsigned int job_id)
 
 /*****************************************************************************/
 
+void Directory::set_dir_info(DlsProto::DirInfo *dir_info) const
+{
+    dir_info->set_path(_path);
+
+    for (list<LibDLS::Job *>::const_iterator job_i = _jobs.begin();
+            job_i != _jobs.end(); job_i++) {
+        (*job_i)->set_job_info(dir_info->add_job());
+    }
+}
+
+/*****************************************************************************/
+
 void Directory::_importLocal()
 {
     stringstream str;
@@ -416,8 +428,8 @@ void Directory::_send_message(const DlsProto::Request &req)
 void Directory::_recv_hello()
 {
     string rec = _recv_message();
-    DlsProto::Hello msg;
-    bool success = msg.ParseFromString(rec);
+    DlsProto::Hello hello;
+    bool success = hello.ParseFromString(rec);
     if (!success) {
         _disconnect();
         stringstream err;
@@ -426,9 +438,9 @@ void Directory::_recv_hello()
     }
 
     stringstream str;
-    str << "Received hello from DLS " << msg.version()
-        << " " << msg.revision() << " protocol version "
-        << msg.protocol_version() << ".";
+    str << "Received hello from DLS " << hello.version()
+        << " " << hello.revision() << " protocol version "
+        << hello.protocol_version() << ".";
     log(str.str());
 }
 
@@ -448,8 +460,8 @@ void Directory::_recv_dir_info()
 {
     string rec = _recv_message();
 
-    DlsProto::DirInfoResponse msg;
-    bool success = msg.ParseFromString(rec);
+    DlsProto::DirInfo dir_info;
+    bool success = dir_info.ParseFromString(rec);
     if (!success) {
         _disconnect();
         stringstream err;

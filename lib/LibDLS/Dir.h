@@ -36,6 +36,7 @@
 
 namespace DlsProto {
     class Request;
+    class DirInfo;
 }
 
 namespace LibDLS {
@@ -68,6 +69,8 @@ class Directory
         std::list<Job *> &jobs() { return _jobs; }
         Job *job(unsigned int);
         Job *find_job(unsigned int);
+
+        void set_dir_info(DlsProto::DirInfo *) const;
 
     private:
         enum {

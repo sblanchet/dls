@@ -34,6 +34,10 @@
 
 /****************************************************************************/
 
+namespace DlsProto {
+    class ChannelInfo;
+}
+
 namespace LibDLS {
 
 /****************************************************************************/
@@ -91,6 +95,8 @@ public:
     bool operator<(const Channel &other) const {
         return _dir_index < other._dir_index;
     }
+
+    void set_channel_info(DlsProto::ChannelInfo *) const;
 
 private:
     Job * const _job; /**< Parent job. */
