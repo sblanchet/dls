@@ -30,6 +30,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <google/protobuf/io/coded_stream.h>
+
 #include <uriparser/Uri.h>
 
 #include "LibDLS/Dir.h"
