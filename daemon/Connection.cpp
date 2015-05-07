@@ -221,7 +221,24 @@ void Connection::_process(const string &rec)
 
 void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
 {
-    _dir.import(_parent_proc->dls_dir());
+    string path;
+    if (req.path() != "") {
+        path = req.path();
+    }
+    else {
+        path = _parent_proc->dls_dir();
+    }
+
+    try {
+        _dir.import(path);
+    }
+    catch (LibDLS::DirectoryException &e) {
+        DlsProto::Response res;
+        DlsProto::Error *err = res.mutable_error();
+        err->set_message(e.msg);
+        _send(res);
+        return;
+    }
 
     DlsProto::Response res;
     _dir.set_dir_info(res.mutable_dir_info());

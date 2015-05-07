@@ -320,8 +320,8 @@ void Directory::_importNetwork()
 
     network_request(req, res);
 
-    if (!res.has_dir_info()) {
-        // FIXME missing dir_info; process other message!
+    if (res.has_error()) {
+        throw DirectoryException(res.error().message());
     }
 
     const DlsProto::DirInfo &dir_info = res.dir_info();
