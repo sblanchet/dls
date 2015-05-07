@@ -147,15 +147,14 @@ void Directory::import(const string &uriText)
     string scheme = uriTextRange(uri.scheme);
     std::transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
 
-    _path = uriPathSegment(uri.pathHead);
-    if (uri.absolutePath) {
-        _path = "/" + _path;
-    }
-
     _host = uriTextRange(uri.hostText);
     _port = uriTextRange(uri.portText);
     if (_port == "") {
         _port = "53584";
+    }
+    _path = uriPathSegment(uri.pathHead);
+    if (uri.absolutePath) {
+        _path = "/" + _path;
     }
 
     uriFreeUriMembersA(&uri);
@@ -316,7 +315,8 @@ void Directory::_importNetwork()
     DlsProto::Request req;
     DlsProto::Response res;
 
-    req.mutable_dir_info();
+    DlsProto::DirInfoRequest *dir_req = req.mutable_dir_info();
+    dir_req->set_path(_path);
 
     network_request(req, res);
 
@@ -433,6 +433,7 @@ void Directory::_disconnect()
     delete _fis;
     delete _fos;
     close(_fd);
+    _fd = -1;
 }
 
 /*****************************************************************************/
