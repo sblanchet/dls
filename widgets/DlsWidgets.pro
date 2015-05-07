@@ -76,7 +76,7 @@ win32 {
     QMAKE_LFLAGS += -shared
 }
 
-LIBS += -L$$PWD/../lib/.libs -L$$OUT_PWD/../lib/.libs -ldls -lfftw3 -lz
+LIBS += -L$$PWD/../lib/.libs -L$$OUT_PWD/../lib/.libs -ldls -lfftw3 -lz -lxml2
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target
