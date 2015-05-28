@@ -44,6 +44,7 @@ public:
     ~Message();
 
     void subscribe(PdCom::Process *);
+    void unsubscribe();
 
 private:
     MessageList * const _parent_list;

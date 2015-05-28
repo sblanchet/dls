@@ -50,6 +50,7 @@ public:
 	LibDLS::BaseMessage *newMessage(xmlNode *);
 
     void subscribe(PdCom::Process *);
+    void unsubscribe();
     void store_message(LibDLS::Time, const std::string &, const std::string &);
 
 private:

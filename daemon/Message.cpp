@@ -51,9 +51,7 @@ Message::Message(
  */
 Message::~Message()
 {
-    if (_var) {
-        _var->unsubscribe(this);
-    }
+    unsubscribe();
 }
 
 /****************************************************************************/
@@ -62,9 +60,7 @@ Message::~Message()
  */
 void Message::subscribe(PdCom::Process *process)
 {
-    if (_var) {
-        _var->unsubscribe(this);
-    }
+    unsubscribe();
 
     _var = process->findVariable(path());
 
@@ -78,11 +74,31 @@ void Message::subscribe(PdCom::Process *process)
 
     try {
         _var->subscribe(this, 0.0);
-        _var->poll(this);
     }
     catch (PdCom::Exception &e) {
         msg() << "Message variable subscription failed!";
         log(::Error);
+        _var = NULL;
+        return;
+    }
+
+    try {
+        _var->poll(this);
+    }
+    catch (PdCom::Exception &e) {
+        msg() << "Message poll failed!";
+        log(::Error);
+        unsubscribe();
+    }
+}
+
+/****************************************************************************/
+
+/** Unsubscribe from variable.
+ */
+void Message::unsubscribe()
+{
+    if (_var) {
         _var->unsubscribe(this);
         _var = NULL;
     }
