@@ -294,6 +294,12 @@ void get_options(int argc, char **argv)
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
     }
 
+    if (strcmp(user_name, "") == 0) { // no user specified
+        if ((env = getenv(ENV_DLS_USER)) != 0) {
+            strncpy(user_name, env, 100);
+        }
+    }
+
     // make dls_dir absolute
     if (!dls_dir.size() || dls_dir[0] != '/')
         dls_dir = string(working_dir) + "/" + dls_dir;
