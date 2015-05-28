@@ -142,6 +142,7 @@ void Job::change_logging()
 {
     if (_logging_started) {
         _sync_loggers(slVerbose);
+        _messages.subscribe(_parent_proc);
     }
 }
 
@@ -166,6 +167,7 @@ void Job::stop_logging()
     }
 
     _clear_loggers();
+    _messages.unsubscribe();
 }
 
 /*****************************************************************************/

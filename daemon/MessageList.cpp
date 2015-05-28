@@ -73,6 +73,19 @@ void MessageList::subscribe(PdCom::Process *process)
 
 /****************************************************************************/
 
+/** Unsubscribe variables.
+ */
+void MessageList::unsubscribe()
+{
+    for (map<string, LibDLS::BaseMessage *>::iterator i = _messages.begin();
+            i != _messages.end(); i++) {
+		Message *message = static_cast<Message *>(i->second);
+        message->unsubscribe();
+    }
+}
+
+/****************************************************************************/
+
 /** Store a message.
  */
 void MessageList::store_message(LibDLS::Time time, const std::string &type,
