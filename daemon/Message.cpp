@@ -62,6 +62,11 @@ void Message::subscribe(PdCom::Process *process)
 {
     unsubscribe();
 
+#if 0
+    msg() << __func__ << "() " << path();
+    log(::Info);
+#endif
+
     _var = process->findVariable(path());
 
     if (!_var) {
@@ -99,6 +104,10 @@ void Message::subscribe(PdCom::Process *process)
 void Message::unsubscribe()
 {
     if (_var) {
+#if 0
+        msg() << __func__ << "(): " << path();
+        log(::Info);
+#endif
         _var->unsubscribe(this);
         _var = NULL;
     }
