@@ -237,6 +237,26 @@ bool LibDLS::Job::operator<(const Job &right) const
 
 /*****************************************************************************/
 
+static std::string dls_message_type_strings[] = {
+    "Unknown",
+    "Info",
+    "Warning",
+    "Error",
+    "Critical",
+    "Broadcast"
+};
+
+const std::string &LibDLS::Job::Message::type_str() const
+{
+    Type t(type);
+    if (type < Unknown || type >= TypeCount) {
+        t = Unknown;
+    }
+    return dls_message_type_strings[t + 1];
+}
+
+/*****************************************************************************/
+
 /** Lädt Nachrichten im angegebenen Zeitbereich.
  *
  * \param start Anfangszeit des Bereiches

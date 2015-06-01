@@ -100,6 +100,8 @@ class Job
             bool operator<(const Message &other) const {
                 return time < other.time;
             }
+
+            const std::string &type_str() const;
         };
 
         std::list<Message> load_msg(Time, Time,
