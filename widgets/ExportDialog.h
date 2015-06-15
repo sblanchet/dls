@@ -72,6 +72,8 @@ class ExportWorker:
         bool cancelled() const { return cancelRequested; }
         bool successful() const { return success; }
 
+        const QSet<QtDls::Channel *> &getChannels() const { return channels; }
+
     public slots:
         void doWork();
 
