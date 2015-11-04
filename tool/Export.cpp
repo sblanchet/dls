@@ -112,11 +112,17 @@ int export_main(int argc, char *argv[])
 
     export_get_environment();
     export_get_options(argc, argv);
-    if (!quiet)
-        term_width = terminal_width();
 
-    if (export_ascii) exporters.push_back(new ExportAscii());
-    if (export_matlab) exporters.push_back(new ExportMat4());
+    if (!quiet) {
+        term_width = terminal_width();
+    }
+
+    if (export_ascii) {
+        exporters.push_back(new ExportAscii());
+    }
+    if (export_matlab) {
+        exporters.push_back(new ExportMat4());
+    }
 
     if (exporters.empty()) {
         cerr << "ERROR: No exporters active! Enable at least one." << endl;

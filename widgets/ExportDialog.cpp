@@ -138,6 +138,13 @@ void ExportDialog::accept()
         << "           duration: "
         << graph->getStart().diff_str_to(graph->getEnd()).c_str() << "\n\n";
 
+    QSet<Channel *>::const_iterator channel;
+    for (channel = worker.getChannels().begin();
+            channel != worker.getChannels().end(); channel++) {
+        str << "channel" << (*channel)->dirIndex()
+            << ": " << (*channel)->name() << "\n";
+    }
+
     infoFile.close();
 
     worker.setDirectory(dir);
