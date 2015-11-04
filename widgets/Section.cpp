@@ -38,12 +38,21 @@ using QtDls::Channel;
 
 /****************************************************************************/
 
+/* Default colors, taken from Ethan Schoonover's Solarized colorscheme
+ * see http://ethanschoonover.com/solarized
+ */
 const QColor Section::colorList[] = {
-    Qt::blue,
-    Qt::red,
-    Qt::darkGreen,
-    Qt::black
+    QColor( 38, 139, 210), // blue
+    QColor(220,  50,  47), // red
+    QColor(133, 153,   0), // green
+    QColor(181, 137,   0), // yellow
+    QColor(211,  54, 130), // magenta
+    QColor(108, 113, 196), // violet (close to blue)
+    QColor( 42, 161, 152), // cyan
+    QColor(203,  75,  22), // orange (close to red)
 };
+
+#define NUM_COLORS (sizeof(colorList) / sizeof(QColor))
 
 /****************************************************************************/
 
@@ -631,9 +640,9 @@ void Section::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
 
 QColor Section::nextColor()
 {
-    unsigned int used[sizeof(colorList) / sizeof(QColor)];
+    unsigned int used[NUM_COLORS];
 
-    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+    for (unsigned int i = 0; i < NUM_COLORS; i++) {
         used[i] = 0;
     }
 
@@ -644,7 +653,7 @@ QColor Section::nextColor()
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor);
+        for (unsigned int i = 0; i < NUM_COLORS;
                 i++) {
             if (colorList[i] == (*l)->getColor()) {
                 used[i]++;
@@ -660,19 +669,18 @@ QColor Section::nextColor()
 
     // find minimum
     unsigned int min = max;
-    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+    for (unsigned int i = 0; i < NUM_COLORS; i++) {
         if (used[i] < min) {
             min = used[i];
         }
     }
 
     // return first in list that is least used
-    for (unsigned int i = 0; i < sizeof(colorList) / sizeof(QColor); i++) {
+    for (unsigned int i = 0; i < NUM_COLORS; i++) {
         if (used[i] == min) {
             return colorList[i];
         }
     }
-
 
     return Qt::blue;
 }
