@@ -33,12 +33,12 @@ AC_INIT([dls],[1.3.1],[fp@igh-essen.com])
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
-m4_ifdef([AC_CONFIG_MACRO_DIR], AC_CONFIG_MACRO_DIR([m4]))
-
-AC_SUBST(LIBDLS_VERSION, [1:0:0])
+# support older autotools versions
+ifdef([AC_CONFIG_MACRO_DIR], AC_CONFIG_MACRO_DIR([m4]))
+ifdef([AS_HELP_STRING], [], [AC_DEFUN([AS_HELP_STRING])])
 
 # automake >= 1.12 needs AM_PROG_AR, older versions don't know it
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_CXX
 AC_PROG_LIBTOOL
@@ -46,6 +46,8 @@ AC_PREFIX_DEFAULT([/opt/etherlab])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
+
+AC_SUBST(LIBDLS_VERSION, [1:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon
