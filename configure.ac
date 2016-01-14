@@ -31,8 +31,9 @@
 #
 AC_INIT([dls],[1.3.1],[fp@igh-essen.com])
 AC_CONFIG_AUX_DIR([autoconf])
-AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
+
+m4_ifdef([AC_CONFIG_MACRO_DIR], AC_CONFIG_MACRO_DIR([m4]))
 
 AC_SUBST(LIBDLS_VERSION, [2:0:0])
 
