@@ -474,7 +474,7 @@ string read_basename(pid_t pid)
     }
 
     char name[256], *cur = name, byte;
-    int counter = 0;
+    unsigned int counter = 0;
     do { // read basename
         size_t ret = fread(&byte, 1, 1, file);
         if (ret != 1) {
