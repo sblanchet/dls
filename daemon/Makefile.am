@@ -45,7 +45,7 @@ dlsd_CXXFLAGS = \
 	$(PDCOM_CPPFLAGS)
 
 dlsd_LDFLAGS = \
-	-L$(builddir)/../lib/.libs \
+	-L$(top_builddir)/lib \
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
 	$(PDCOM_LDFLAGS) \
@@ -59,10 +59,10 @@ dlsd_LDADD = \
 	$(XML_LIBS) \
 	-lm -lprotobuf
 
-dlsd_DEPENDENCIES = $(builddir)/../lib/libdls.la
+dlsd_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dlsd_SOURCES = \
-	$(builddir)/../proto/dls.pb.cc \
+	$(top_builddir)/proto/dls.pb.cc \
 	Connection.cpp \
 	Job.cpp \
 	JobPreset.cpp \
