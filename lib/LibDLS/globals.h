@@ -122,8 +122,7 @@ extern const char *format_strings[FORMAT_COUNT];
 
 /*****************************************************************************/
 
-#pragma pack(push)
-#pragma pack(1)
+#pragma pack(push, 1)
 
 /**
    Index-Record für einen Datendatei-Index innerhalb eines Chunks
