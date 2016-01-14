@@ -134,7 +134,7 @@ void *Connection::_run()
 
 /*****************************************************************************/
 
-int Connection::_send_hello()
+void Connection::_send_hello()
 {
     DlsProto::Hello msg;
     msg.set_version(PACKAGE_VERSION);
