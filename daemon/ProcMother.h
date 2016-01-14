@@ -32,8 +32,11 @@ using namespace std;
 /*****************************************************************************/
 
 #include "JobPreset.h"
-#include "Connection.h"
 #include "globals.h"
+
+#ifdef DLS_SERVER
+#include "Connection.h"
+#endif
 
 /*****************************************************************************/
 
@@ -61,9 +64,11 @@ private:
     unsigned int _sig_child; /**< Zähler für empfangene SIGCHLD-Signale */
     bool _exit; /**< true, wenn der Prozess beendet werden soll */
     bool _exit_error; /**< true, wenn Beendigung mit Fehler erfolgen soll */
+#ifdef DLS_SERVER
     int _listen_fd; /**< Listening socket. */
     list<Connection *> _connections; /**< List of incoming network
                                        connections. */
+#endif
 
     void _empty_spool();
     void _check_jobs();
@@ -76,9 +81,11 @@ private:
     void _check_processes();
     JobPreset *_job_exists(unsigned int);
     unsigned int _processes_running();
+#ifdef DLS_SERVER
     int _prepare_socket(const char *);
     static std::string _format_address(const struct sockaddr *);
     void _check_connections();
+#endif
 };
 
 /*****************************************************************************/
