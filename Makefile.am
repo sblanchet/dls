@@ -21,8 +21,13 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = \
-	proto \
+SUBDIRS =
+
+if ENABLE_SERVER
+SUBDIRS += proto
+endif
+
+SUBDIRS += \
 	lib \
 	daemon \
 	fltkguis \

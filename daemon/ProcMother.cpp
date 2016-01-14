@@ -127,9 +127,11 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
     // Anfangs einmal alle Aufträge laden
     _check_jobs();
 
+#ifdef DLS_SERVER
     if (!no_bind && _prepare_socket(service.c_str())) {
         return -1;
     }
+#endif
 
     while (!_exit) {
         fd_set rfds;
@@ -138,10 +140,12 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
 
         FD_ZERO(&rfds);
 
+#ifdef DLS_SERVER
         if (_listen_fd != -1) {
             FD_SET(_listen_fd, &rfds);
             max_fd = _listen_fd;
         }
+#endif
 
         tv.tv_sec = JOB_CHECK_INTERVAL;
         tv.tv_usec = 0;
@@ -159,8 +163,10 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
         // Laufen alle Prozesse noch?
         _check_processes();
 
+#ifdef DLS_SERVER
         // check for terminated connections
         _check_connections();
+#endif
 
         if (process_type != MotherProcess || _exit) break;
 
@@ -174,6 +180,7 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             }
         }
 
+#ifdef DLS_SERVER
         if (ret > 0 && FD_ISSET(_listen_fd, &rfds)) {
             struct sockaddr_storage peer_addr;
             std::string addr_str;
@@ -203,6 +210,7 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
                 delete conn;
             }
         }
+#endif
     }
 
     if (process_type == MotherProcess) {
@@ -216,10 +224,12 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
         log(Info);
     }
 
+#ifdef DLS_SERVER
     if (_listen_fd != -1) {
         close(_listen_fd);
         _listen_fd = -1;
     }
+#endif
 
     return _exit_error ? -1 : 0;
 }
@@ -828,6 +838,8 @@ unsigned int ProcMother::_processes_running()
 
 /*****************************************************************************/
 
+#ifdef DLS_SERVER
+
 int ProcMother::_prepare_socket(const char *service)
 {
     int ret;
@@ -948,4 +960,5 @@ void ProcMother::_check_connections()
     }
 }
 
+#endif
 /*****************************************************************************/
