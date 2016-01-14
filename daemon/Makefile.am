@@ -57,13 +57,11 @@ dlsd_LDADD = \
 	@ZLIB_LIBS@ \
 	$(PDCOM_LIBS) \
 	$(XML_LIBS) \
-	-lm -lprotobuf
+	-lm
 
 dlsd_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dlsd_SOURCES = \
-	$(top_builddir)/proto/dls.pb.cc \
-	Connection.cpp \
 	Job.cpp \
 	JobPreset.cpp \
 	Logger.cpp \
@@ -73,6 +71,13 @@ dlsd_SOURCES = \
 	ProcMother.cpp \
 	globals.cpp \
 	main.cpp
+
+if ENABLE_SERVER
+dlsd_SOURCES += \
+	Connection.cpp \
+	$(top_builddir)/proto/dls.pb.cc
+dlsd_LDADD += -lprotobuf
+endif
 
 #------------------------------------------------------------------------------
 
