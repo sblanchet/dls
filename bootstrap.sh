@@ -27,6 +27,7 @@ set -e
 set -x
 
 touch ChangeLog
+mkdir -p autoconf
 autoreconf -i
 
 #------------------------------------------------------------------------------

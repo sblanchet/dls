@@ -218,6 +218,36 @@ AM_CONDITIONAL(ENABLE_TOOL, test "x$enabletool" = "x1")
 AC_SUBST(ENABLE_TOOL, [$enabletool])
 
 #------------------------------------------------------------------------------
+# TCP server functionality
+#------------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to build the DLS protocol server])
+
+AC_ARG_ENABLE([server],
+    AS_HELP_STRING([--enable-server], [Enable the server protocol]),
+    [
+        case "${enableval}" in
+            yes) enableserver=1
+                ;;
+            no) enableserver=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-tool])
+                ;;
+        esac
+    ],
+    [enableserver=1]
+)
+
+if test "x$enableserver" = "x1"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([DLS_SERVER], [1], [TCP server enabled])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_SERVER, test "x$enableserver" = "x1")
+
+#------------------------------------------------------------------------------
 
 AC_DEFINE([BINDIR], [], [Fully expanded binary directory.])
 AX_DEFINE_DIR([BINDIR], [bindir])

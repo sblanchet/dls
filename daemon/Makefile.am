@@ -34,19 +34,24 @@ endif
 dlsd_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
 dlsd_CXXFLAGS += -I$(top_srcdir)
 dlsd_LDFLAGS = -L$(top_builddir)/lib @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
-dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm -lpthread -lprotobuf
+dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm -lpthread
 dlsd_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dlsd_SOURCES = \
-	Connection.cpp \
 	Job.cpp \
 	JobPreset.cpp \
 	Logger.cpp \
 	ProcLogger.cpp \
 	ProcMother.cpp \
 	globals.cpp \
-	$(top_builddir)/proto/dls.pb.cc \
 	main.cpp
+
+if ENABLE_SERVER
+dlsd_SOURCES += \
+	Connection.cpp \
+	$(top_builddir)/proto/dls.pb.cc
+dlsd_LDADD += -lprotobuf
+endif
 
 #------------------------------------------------------------------------------
 
