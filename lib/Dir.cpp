@@ -34,8 +34,8 @@
 
 #include <uriparser/Uri.h>
 
+#include "config.h"
 #include "LibDLS/Dir.h"
-
 #include "proto/dls.pb.h"
 
 using namespace std;
@@ -228,6 +228,11 @@ void Directory::network_request(
         )
 {
     _connect();
+
+#ifdef DLS_PROTO_DEBUG
+    cerr << "Sending message with " << req.ByteSize() << " bytes:" << endl;
+    cerr << req.DebugString() << endl;
+#endif
 
     {
         string str;
@@ -468,7 +473,7 @@ void Directory::_receive_message(google::protobuf::Message &msg)
         throw DirectoryException(err.str());
     }
 
-#if DEBUG_PROTO
+#ifdef DLS_PROTO_DEBUG
     cerr << "Received message with " << size << " bytes:" << endl;
     cerr << msg.DebugString() << endl;
 #endif

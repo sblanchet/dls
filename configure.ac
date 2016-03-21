@@ -258,6 +258,34 @@ fi
 AM_CONDITIONAL(ENABLE_SERVER, test "x$enableserver" = "x1")
 
 #------------------------------------------------------------------------------
+# Enable protocol debugging
+#------------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to build with protocol debug output])
+
+AC_ARG_ENABLE([proto-debug],
+    AS_HELP_STRING([--enable-proto-debug], [Enable protocol debugging]),
+    [
+        case "${enableval}" in
+            yes) enableprotodebug=1
+                ;;
+            no) enableprotodebug=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-proto-debug])
+                ;;
+        esac
+    ],
+    [enableprotodebug=0]
+)
+
+if test "x$enableprotodebug" = "x1"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([DLS_PROTO_DEBUG], [1], [protocol debugging enabled])
+else
+    AC_MSG_RESULT([no])
+fi
+
+#------------------------------------------------------------------------------
 
 AC_DEFINE([BINDIR], [], [Fully expanded binary directory.])
 AX_DEFINE_DIR([BINDIR], [bindir])
