@@ -135,7 +135,7 @@ void Connection::_send(const google::protobuf::Message &msg)
     string str;
     msg.SerializeToString(&str);
 
-#if DEBUG_PROTO
+#ifdef DLS_PROTO_DEBUG
     cerr << "Sending message with " << msg.ByteSize() << " bytes: " << endl;
     cerr << msg.DebugString() << endl;
 #endif
@@ -203,7 +203,7 @@ void Connection::_process(const string &rec)
     DlsProto::Request req;
     req.ParseFromString(rec);
 
-#if DEBUG_PROTO
+#ifdef DLS_PROTO_DEBUG
     cerr << "Received request with " << rec.size() << " bytes: " << endl;
     cerr << req.DebugString() << endl;
 #endif
