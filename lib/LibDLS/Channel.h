@@ -115,6 +115,10 @@ private:
 
     void _fetch_chunks_local();
     void _fetch_chunks_network();
+    void _fetch_data_local(Time, Time, unsigned int,
+                    DataCallback, void *, unsigned int) const;
+    void _fetch_data_network(Time, Time, unsigned int,
+                    DataCallback, void *, unsigned int) const;
 
     Channel();
 };

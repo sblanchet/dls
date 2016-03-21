@@ -30,6 +30,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
 
+#include "config.h"
 #include "Exception.h"
 #include "Job.h"
 
@@ -61,6 +62,9 @@ class DirectoryException:
  */
 class Directory
 {
+    friend class Job;
+    friend class Channel;
+
     public:
         Directory();
         ~Directory();
@@ -80,8 +84,6 @@ class Directory
             Network
         }; /**< Access type. */
         Access access() const { return _access; }
-
-        void network_request(const DlsProto::Request &, DlsProto::Response &);
 
     private:
         Access _access;
@@ -103,7 +105,14 @@ class Directory
 
         void _connect();
         void _disconnect();
-        void _receive_message(google::protobuf::Message &);
+        void _network_request_sync(const DlsProto::Request &,
+                DlsProto::Response &);
+        void _send_message(const DlsProto::Request &);
+        void _receive_message(google::protobuf::Message &
+#ifdef DLS_PROTO_DEBUG
+                , bool debug = true
+#endif
+                );
         void _receive_hello();
 };
 

@@ -36,6 +36,14 @@ message JobRequest {
 message ChannelRequest {
     required uint32 id = 1;
     optional bool fetch_chunks = 2;
+    optional DataRequest data_request = 3;
+}
+
+message DataRequest {
+    required uint64 start = 1;
+    required uint64 end = 2;
+    optional uint32 min_values = 3;
+    optional uint32 decimation = 4;
 }
 
 //---------------------------------------------------------------------------
@@ -43,6 +51,8 @@ message ChannelRequest {
 message Response {
     optional Error error = 1;
     optional DirInfo dir_info = 2;
+    optional Data data = 3;
+    optional bool end_of_response = 4;
 }
 
 message DirInfo {
@@ -85,6 +95,14 @@ message Error {
     optional string message = 1;
 }
 
+message Data {
+    required uint64 start_time = 1;
+    required uint64 time_per_value = 2;
+    required MetaType meta_type = 3;
+    optional uint32 meta_level = 4;
+    repeated double value = 5;
+}
+
 //---------------------------------------------------------------------------
 
 enum ChannelType
@@ -100,6 +118,16 @@ enum ChannelType
     TULINT = 8;
     TFLT = 9;
     TDBL = 10;
+}
+
+//---------------------------------------------------------------------------
+
+enum MetaType
+{
+    MetaGen = 0;
+    MetaMean = 1; // deprecated
+    MetaMin = 2;
+    MetaMax = 3;
 }
 
 //---------------------------------------------------------------------------

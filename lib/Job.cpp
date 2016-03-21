@@ -586,7 +586,7 @@ void Job::_fetch_channels_network()
     job_req->set_id(_preset.id());
     job_req->set_fetch_channels(true);
 
-    _dir->network_request(req, res);
+    _dir->_network_request_sync(req, res);
 
     if (res.has_error()) {
         cerr << "Error response: " << res.error().message() << endl;
