@@ -30,7 +30,6 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
 
-#include "config.h"
 #include "Exception.h"
 #include "Job.h"
 
@@ -108,11 +107,7 @@ class Directory
         void _network_request_sync(const DlsProto::Request &,
                 DlsProto::Response &);
         void _send_message(const DlsProto::Request &);
-        void _receive_message(google::protobuf::Message &
-#ifdef DLS_PROTO_DEBUG
-                , bool debug = true
-#endif
-                );
+        void _receive_message(google::protobuf::Message &, bool debug = 1);
         void _receive_hello();
 };
 
