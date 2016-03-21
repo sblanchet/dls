@@ -170,44 +170,21 @@ void Channel::fetch_chunks()
    The data are passed via the callback function.
 */
 
-void Channel::fetch_data(Time start, /**< start of requested time range */
-                         Time end, /**< end of requested time range */
-                         unsigned int min_values, /**< minimal number */
-                         DataCallback cb, /**< callback */
-                         void *cb_data, /**< arbitrary callback parameter */
-                         unsigned int decimation /**< Decimation. */
-                         ) const
+void Channel::fetch_data(
+        Time start, /**< start of requested time range */
+        Time end, /**< end of requested time range */
+        unsigned int min_values, /**< minimal number */
+        DataCallback cb, /**< callback */
+        void *cb_data, /**< arbitrary callback parameter */
+        unsigned int decimation /**< Decimation. */
+        ) const
 {
-#if DEBUG_TIMING
-    Time ts, te;
-    ts.set_now();
-#endif
-
-    ChunkMap::const_iterator chunk_i;
-    RingBuffer ring(100000); // FIXME
-
-    //cerr << __func__ << " " << _name << " " << _type << endl;
-
-    if (start < end) {
-        try {
-            for (chunk_i = _chunks.begin(); chunk_i != _chunks.end();
-                    chunk_i++) {
-                chunk_i->second.fetch_data(start, end,
-                        min_values, &ring, cb, cb_data, decimation);
-            }
-        } catch (ChunkException &e) {
-            stringstream err;
-            err << "Failed to fetch data from chunk: " << e.msg;
-            throw ChannelException(err.str());
-        }
+    if (_job->dir()->access() == Directory::Local) {
+        _fetch_data_local(start, end, min_values, cb, cb_data, decimation);
     }
-
-#if DEBUG_TIMING
-    te.set_now();
-    stringstream msg;
-    msg << "fetch_data " << ts.diff_str_to(te);
-    log(msg.str());
-#endif
+    else {
+        _fetch_data_network(start, end, min_values, cb, cb_data, decimation);
+    }
 }
 
 /*****************************************************************************/
@@ -363,7 +340,7 @@ void Channel::_fetch_chunks_network()
     ch_req->set_id(_dir_index);
     ch_req->set_fetch_chunks(true);
 
-    _job->dir()->network_request(req, res);
+    _job->dir()->_network_request_sync(req, res);
 
     if (res.has_error()) {
         cerr << "Error response: " << res.error().message() << endl;
@@ -401,6 +378,102 @@ void Channel::_fetch_chunks_network()
                     _range_end = new_chunk.end();
                 }
             }
+        }
+    }
+}
+
+/*****************************************************************************/
+
+void Channel::_fetch_data_local(
+        Time start, /**< start of requested time range */
+        Time end, /**< end of requested time range */
+        unsigned int min_values, /**< minimal number */
+        DataCallback cb, /**< callback */
+        void *cb_data, /**< arbitrary callback parameter */
+        unsigned int decimation /**< Decimation. */
+        ) const
+{
+#if DEBUG_TIMING
+    Time ts, te;
+    ts.set_now();
+#endif
+
+    ChunkMap::const_iterator chunk_i;
+    RingBuffer ring(100000); // FIXME
+
+    //cerr << __func__ << " " << _name << " " << _type << endl;
+
+    if (start < end) {
+        try {
+            for (chunk_i = _chunks.begin(); chunk_i != _chunks.end();
+                    chunk_i++) {
+                chunk_i->second.fetch_data(start, end,
+                        min_values, &ring, cb, cb_data, decimation);
+            }
+        } catch (ChunkException &e) {
+            stringstream err;
+            err << "Failed to fetch data from chunk: " << e.msg;
+            throw ChannelException(err.str());
+        }
+    }
+
+#if DEBUG_TIMING
+    te.set_now();
+    stringstream msg;
+    msg << "fetch_data " << ts.diff_str_to(te);
+    log(msg.str());
+#endif
+}
+
+/*****************************************************************************/
+
+void Channel::_fetch_data_network(
+        Time start, /**< start of requested time range */
+        Time end, /**< end of requested time range */
+        unsigned int min_values, /**< minimal number */
+        DataCallback cb, /**< callback */
+        void *cb_data, /**< arbitrary callback parameter */
+        unsigned int decimation /**< Decimation. */
+        ) const
+{
+    DlsProto::Request req;
+    DlsProto::Response res;
+
+    DlsProto::JobRequest *job_req = req.mutable_job_request();
+    job_req->set_id(_job->id());
+    DlsProto::ChannelRequest *ch_req = job_req->mutable_channel_request();
+    ch_req->set_id(_dir_index);
+    DlsProto::DataRequest *data_req = ch_req->mutable_data_request();
+    data_req->set_start(start.to_uint64());
+    data_req->set_end(end.to_uint64());
+    data_req->set_min_values(min_values);
+    data_req->set_decimation(decimation);
+
+    _job->dir()->_send_message(req);
+
+    while(1) {
+        _job->dir()->_receive_message(res, 0);
+
+        if (res.has_error()) {
+            cerr << "Error response: " << res.error().message() << endl;
+            return;
+        }
+
+        if (res.has_end_of_response() && res.end_of_response()) {
+            cerr << "End of response." << endl;
+            return;
+        }
+
+        if (!res.has_data()) {
+            cerr << "Error: Expected data!" << endl;
+            return;
+        }
+
+        const DlsProto::Data &data_res = res.data();
+        Data *d = new Data(data_res);
+        int adopted = cb(d, cb_data);
+        if (!adopted) {
+            delete d;
         }
     }
 }

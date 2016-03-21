@@ -222,44 +222,6 @@ void Directory::set_dir_info(DlsProto::DirInfo *dir_info) const
 
 /*****************************************************************************/
 
-void Directory::network_request(
-        const DlsProto::Request &req,
-        DlsProto::Response &res
-        )
-{
-    _connect();
-
-#ifdef DLS_PROTO_DEBUG
-    cerr << "Sending message with " << req.ByteSize() << " bytes:" << endl;
-    cerr << req.DebugString() << endl;
-#endif
-
-    {
-        string str;
-        req.SerializeToString(&str);
-        google::protobuf::io::CodedOutputStream os(_fos);
-        os.WriteVarint32(req.ByteSize());
-        if (os.HadError()) {
-            stringstream err;
-            err << "os.WriteVarint32() failed!";
-            throw DirectoryException(err.str());
-        }
-
-        os.WriteString(str);
-        if (os.HadError()) {
-            stringstream err;
-            err << "os.WriteString() failed!";
-            throw DirectoryException(err.str());
-        }
-    }
-
-    _fos->Flush();
-
-    _receive_message(res);
-}
-
-/*****************************************************************************/
-
 void Directory::_importLocal()
 {
     stringstream str;
@@ -323,7 +285,7 @@ void Directory::_importNetwork()
     DlsProto::DirInfoRequest *dir_req = req.mutable_dir_info();
     dir_req->set_path(_path);
 
-    network_request(req, res);
+    _network_request_sync(req, res);
 
     if (res.has_error()) {
         throw DirectoryException(res.error().message());
@@ -443,7 +405,55 @@ void Directory::_disconnect()
 
 /*****************************************************************************/
 
-void Directory::_receive_message(google::protobuf::Message &msg)
+void Directory::_network_request_sync(
+        const DlsProto::Request &req,
+        DlsProto::Response &res
+        )
+{
+    _send_message(req);
+    _receive_message(res);
+}
+
+/*****************************************************************************/
+
+void Directory::_send_message(const DlsProto::Request &req)
+{
+    _connect();
+
+#ifdef DLS_PROTO_DEBUG
+    cerr << "Sending message with " << req.ByteSize() << " bytes:" << endl;
+    cerr << req.DebugString() << endl;
+#endif
+
+    {
+        string str;
+        req.SerializeToString(&str);
+        google::protobuf::io::CodedOutputStream os(_fos);
+        os.WriteVarint32(req.ByteSize());
+        if (os.HadError()) {
+            stringstream err;
+            err << "os.WriteVarint32() failed!";
+            throw DirectoryException(err.str());
+        }
+
+        os.WriteString(str);
+        if (os.HadError()) {
+            stringstream err;
+            err << "os.WriteString() failed!";
+            throw DirectoryException(err.str());
+        }
+    }
+
+    _fos->Flush();
+}
+
+/*****************************************************************************/
+
+void Directory::_receive_message(google::protobuf::Message &msg
+#ifdef DLS_PROTO_DEBUG
+        , bool debug
+#endif
+        )
 {
     google::protobuf::io::CodedInputStream ci(_fis);
 
@@ -474,8 +484,10 @@ void Directory::_receive_message(google::protobuf::Message &msg)
     }
 
 #ifdef DLS_PROTO_DEBUG
-    cerr << "Received message with " << size << " bytes:" << endl;
-    cerr << msg.DebugString() << endl;
+    if (debug) {
+        cerr << "Received message with " << size << " bytes:" << endl;
+        cerr << msg.DebugString() << endl;
+    }
 #endif
 }
 

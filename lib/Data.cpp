@@ -26,6 +26,8 @@ using namespace std;
 #include "LibDLS/Data.h"
 using namespace LibDLS;
 
+#include "proto/dls.pb.h"
+
 /*****************************************************************************/
 
 /**
@@ -47,6 +49,22 @@ Data::Data(const Data &o)
     _meta_type = o._meta_type;
     _meta_level = o._meta_level;
     _data = o._data;
+}
+
+/*****************************************************************************/
+
+/** Constructor from protocol message.
+*/
+Data::Data(const DlsProto::Data &d)
+{
+    _start_time = d.start_time();
+    _time_per_value = d.time_per_value();
+    _meta_type = (MetaType) d.meta_type();
+    _meta_level = d.meta_level();
+
+    for (int i = 0; i < d.value_size(); i++) {
+        _data.push_back(d.value(i));
+    }
 }
 
 /*****************************************************************************/

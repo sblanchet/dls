@@ -29,6 +29,10 @@
 #include "globals.h"
 #include "Time.h"
 
+namespace DlsProto {
+    class Data;
+}
+
 namespace LibDLS {
 
 /*************************************************************************/
@@ -40,6 +44,7 @@ class Data
     public:
         Data();
         Data(const Data &);
+        Data(const DlsProto::Data &);
         ~Data();
 
         template <class T>

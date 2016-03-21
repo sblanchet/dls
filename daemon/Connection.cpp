@@ -130,14 +130,22 @@ void *Connection::_run()
 
 /*****************************************************************************/
 
-void Connection::_send(const google::protobuf::Message &msg)
+void Connection::_send(
+        const google::protobuf::Message &msg
+#ifdef DLS_PROTO_DEBUG
+        , bool debug
+#endif
+        )
 {
     string str;
     msg.SerializeToString(&str);
 
 #ifdef DLS_PROTO_DEBUG
-    cerr << "Sending message with " << msg.ByteSize() << " bytes: " << endl;
-    cerr << msg.DebugString() << endl;
+    if (debug) {
+        cerr << "Sending message with "
+            << msg.ByteSize() << " bytes: " << endl
+            << msg.DebugString() << endl;
+    }
 #endif
 
     {
@@ -305,6 +313,52 @@ void Connection::_process_channel_request(
         channel->set_chunk_info(channel_info);
         _send(res);
     }
+
+    if (req.has_data_request()) {
+        const DlsProto::DataRequest &data_req = req.data_request();
+        unsigned int min_values = 0;
+        if (data_req.has_min_values()) {
+            min_values = data_req.min_values();
+        }
+        unsigned int decimation = 0;
+        if (data_req.has_decimation()) {
+            decimation = data_req.decimation();
+        }
+        channel->fetch_data(LibDLS::Time(data_req.start()),
+                LibDLS::Time(data_req.end()), min_values,
+                _static_data_callback, this, decimation);
+
+        DlsProto::Response res;
+        res.set_end_of_response(true);
+        _send(res);
+    }
+}
+
+/*****************************************************************************/
+
+int Connection::_static_data_callback(LibDLS::Data *data, void *cb_data)
+{
+    Connection *c = (Connection *) cb_data;
+    c->_data_callback(data);
+    return 0;
+}
+
+/*****************************************************************************/
+
+void Connection::_data_callback(LibDLS::Data *data)
+{
+    DlsProto::Response res;
+    DlsProto::Data *data_res = res.mutable_data();
+    data_res->set_start_time(data->start_time().to_int64());
+    data_res->set_time_per_value(data->time_per_value().to_int64());
+    data_res->set_meta_type((DlsProto::MetaType) data->meta_type());
+    data_res->set_meta_level(data->meta_level());
+
+    for (size_t i = 0; i < data->size(); i++) {
+        data_res->add_value(data->value(i));
+    }
+
+    _send(res, 0);
 }
 
 /*****************************************************************************/

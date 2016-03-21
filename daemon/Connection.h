@@ -29,6 +29,7 @@
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
+#include "config.h"
 #include "lib/LibDLS/Dir.h"
 #include "proto/dls.pb.h"
 
@@ -60,7 +61,11 @@ private:
 
     static void *_run_static(void *);
     void *_run();
-    void _send(const google::protobuf::Message &);
+    void _send(const google::protobuf::Message &
+#ifdef DLS_PROTO_DEBUG
+            , bool debug = 1
+#endif
+            );
     void _send_hello();
     void _receive();
     void _process(const std::string &);
@@ -68,6 +73,8 @@ private:
     void _process_job_request(const DlsProto::JobRequest &);
     void _process_channel_request(LibDLS::Job *,
             const DlsProto::ChannelRequest &);
+    static int _static_data_callback(LibDLS::Data *, void *);
+    void _data_callback(LibDLS::Data *);
 };
 
 /*****************************************************************************/
