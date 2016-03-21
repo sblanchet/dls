@@ -449,10 +449,9 @@ void Directory::_send_message(const DlsProto::Request &req)
 
 /*****************************************************************************/
 
-void Directory::_receive_message(google::protobuf::Message &msg
-#ifdef DLS_PROTO_DEBUG
-        , bool debug
-#endif
+void Directory::_receive_message(
+        google::protobuf::Message &msg,
+        bool debug
         )
 {
     google::protobuf::io::CodedInputStream ci(_fis);
