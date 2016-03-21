@@ -63,6 +63,7 @@ Channel::Channel(Job *job, const DlsProto::ChannelInfo &info):
     _unit(info.unit()),
     _type((ChannelType) info.type())
 {
+    //cerr << __func__ << " " << _name << " " << _type << endl;
 }
 
 /*****************************************************************************/
@@ -183,12 +184,21 @@ void Channel::fetch_data(Time start, /**< start of requested time range */
 #endif
 
     ChunkMap::const_iterator chunk_i;
-    RingBuffer ring(100000);
+    RingBuffer ring(100000); // FIXME
+
+    //cerr << __func__ << " " << _name << " " << _type << endl;
 
     if (start < end) {
-        for (chunk_i = _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
-            chunk_i->second.fetch_data(start, end,
-                    min_values, &ring, cb, cb_data, decimation);
+        try {
+            for (chunk_i = _chunks.begin(); chunk_i != _chunks.end();
+                    chunk_i++) {
+                chunk_i->second.fetch_data(start, end,
+                        min_values, &ring, cb, cb_data, decimation);
+            }
+        } catch (ChunkException &e) {
+            stringstream err;
+            err << "Failed to fetch data from chunk: " << e.msg;
+            throw ChannelException(err.str());
         }
     }
 
@@ -221,6 +231,8 @@ void Channel::set_channel_info(DlsProto::ChannelInfo *channel_info) const
     channel_info->set_name(_name);
     channel_info->set_unit(_unit);
     channel_info->set_type((DlsProto::ChannelType) _type);
+
+    //cerr << __func__ << _name << " type " << _type << endl;
 }
 
 /*****************************************************************************/
@@ -343,6 +355,7 @@ void Channel::_fetch_chunks_network()
 {
     DlsProto::Request req;
     DlsProto::Response res;
+    bool first = true;
 
     DlsProto::JobRequest *job_req = req.mutable_job_request();
     job_req->set_id(_job->id());
@@ -361,6 +374,9 @@ void Channel::_fetch_chunks_network()
     const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
     const DlsProto::ChannelInfo &ch_info = job_info.channel(0); // FIXME check
 
+    _range_start.set_null();
+    _range_end.set_null();
+
     google::protobuf::RepeatedPtrField<DlsProto::ChunkInfo>::const_iterator
         ch_info_i;
     for (ch_info_i = ch_info.chunk().begin();
@@ -368,9 +384,23 @@ void Channel::_fetch_chunks_network()
         uint64_t start = ch_info_i->start();
         ChunkMap::iterator chunk_i = _chunks.find(start);
         if (chunk_i == _chunks.end()) {
-            Chunk new_chunk = Chunk(*ch_info_i);
+            Chunk new_chunk = Chunk(*ch_info_i, _type);
             pair<int64_t, Chunk> val(start, new_chunk);
             _chunks.insert(val);
+
+            if (first) {
+                _range_start = new_chunk.start();
+                _range_end = new_chunk.end();
+                first = false;
+            }
+            else {
+                if (new_chunk.start() < _range_start) {
+                    _range_start = new_chunk.start();
+                }
+                if (new_chunk.end() > _range_end) {
+                    _range_end = new_chunk.end();
+                }
+            }
         }
     }
 }

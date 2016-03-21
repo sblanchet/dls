@@ -62,14 +62,14 @@ Chunk::Chunk():
 
 /*****************************************************************************/
 
-Chunk::Chunk(const DlsProto::ChunkInfo &info):
+Chunk::Chunk(const DlsProto::ChunkInfo &info, ChannelType type):
     _sample_frequency(0.0),
     _meta_reduction(0),
     _format_index(0),
     _mdct_block_size(0),
 	_start(info.start()),
 	_end(info.end()),
-    _type(TUNKNOWN),
+    _type(type),
     _incomplete(false)
 {
 }

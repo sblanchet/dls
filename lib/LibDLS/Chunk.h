@@ -76,7 +76,7 @@ class Chunk
 {
     public:
         Chunk();
-        Chunk(const DlsProto::ChunkInfo &);
+        Chunk(const DlsProto::ChunkInfo &, ChannelType);
         virtual ~Chunk();
 
         void import(const std::string &, ChannelType);
