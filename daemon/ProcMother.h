@@ -54,7 +54,7 @@ public:
     ProcMother();
     ~ProcMother();
 
-    int start(const string &, bool, const std::string &);
+    int start(const string &, bool, const std::string &, bool);
 
     const std::string &dls_dir() const { return _dls_dir; }
 
