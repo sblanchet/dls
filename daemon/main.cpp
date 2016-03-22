@@ -121,9 +121,11 @@ int main(int argc, char **argv)
     // Kommandozeilenparameter verarbeiten
     get_options(argc, argv);
 
-    // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
-    // schon ein Daemon läuft
-    check_running(&dls_dir);
+    if (!read_only) {
+        // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
+        // schon ein Daemon läuft
+        check_running(&dls_dir);
+    }
 
     // In einen Daemon verwandeln, wenn gewuenscht
     if (is_daemon) init_daemon();
@@ -170,8 +172,10 @@ int main(int argc, char **argv)
         }
     }
 
-    // PID-Datei erzeugen
-    create_pid_file(&dls_dir);
+    if (!read_only) {
+        // PID-Datei erzeugen
+        create_pid_file(&dls_dir);
+    }
 
     // Signalhandler installieren
     set_signal_handlers();
@@ -201,8 +205,10 @@ int main(int argc, char **argv)
         }
         else
         {
-            // PID-Datei der Mutterprozesses entfernen
-            remove_pid_file(&dls_dir);
+            if (!read_only) {
+                // PID-Datei des Mutterprozesses entfernen
+                remove_pid_file(&dls_dir);
+            }
         }
     }
     catch (LibDLS::Exception &e)
