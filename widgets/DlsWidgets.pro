@@ -43,7 +43,6 @@ else {
     QT += svg
 }
 
-DEPENDPATH += .
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
 
@@ -70,7 +69,8 @@ unix {
     }
 }
 
-INCLUDEPATH += . $$PWD/../lib
+INCLUDEPATH += $$PWD $$PWD/../lib
+DEPENDPATH += $$PWD $$PWD/../lib
 
 win32 {
     QMAKE_LFLAGS += -shared
