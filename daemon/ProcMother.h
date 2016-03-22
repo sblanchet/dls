@@ -85,6 +85,7 @@ private:
     int _prepare_socket(const char *);
     static std::string _format_address(const struct sockaddr *);
     void _check_connections();
+    void _clear_connections();
 #endif
 };
 
