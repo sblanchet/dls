@@ -56,7 +56,7 @@ message Response {
 }
 
 message DirInfo {
-    optional string path = 1;
+    //optional string path = 1;
     repeated JobInfo job = 2;
 }
 
@@ -127,7 +127,7 @@ enum MetaType
     MetaGen = 0;
     MetaMean = 1; // deprecated
     MetaMin = 2;
-    MetaMax = 3;
+    MetaMax = 4;
 }
 
 //---------------------------------------------------------------------------

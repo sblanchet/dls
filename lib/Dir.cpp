@@ -119,17 +119,16 @@ std::string debugHost(const UriHostDataA &h) {
 
 /*****************************************************************************/
 
-void Directory::import(const string &uriText)
+void Directory::set_uri(const string &uri_text)
 {
-    _jobs.clear();
+    _uri_text = uri_text;
 
-    UriParserStateA state;
     UriUriA uri;
-
+    UriParserStateA state;
     state.uri = &uri;
-    if (uriParseUriA(&state, uriText.c_str()) != URI_SUCCESS) {
+    if (uriParseUriA(&state, _uri_text.c_str()) != URI_SUCCESS) {
         stringstream err;
-        err << "Failed to parse URI \"" << uriText << "\"!";
+        err << "Failed to parse URI \"" << _uri_text << "\"!";
         throw DirectoryException(err.str());
     }
 
@@ -161,11 +160,9 @@ void Directory::import(const string &uriText)
 
     if (scheme == "" || scheme == "file") {
         _access = Local;
-        _importLocal();
     }
     else if (scheme == "dls") {
         _access = Network;
-        _importNetwork();
     }
     else {
         _access = Unknown;
@@ -173,9 +170,29 @@ void Directory::import(const string &uriText)
         err << "Unsupported URI scheme \"" << scheme << "\"!";
         throw DirectoryException(err.str());
     }
+}
+
+/*****************************************************************************/
+
+void Directory::import(const string &uri_text)
+{
+    _jobs.clear();
+
+    if (uri_text != "") {
+        set_uri(uri_text);
+    }
+
+    if (_access == Local) {
+        _importLocal();
+    }
+    else if (_access == Network) {
+        _importNetwork();
+    }
 
     // Nach Job-ID sortieren
     _jobs.sort(compare_job_id);
+
+    _notify_observers();
 }
 
 /*****************************************************************************/
@@ -212,12 +229,26 @@ Job *Directory::find_job(unsigned int job_id)
 
 void Directory::set_dir_info(DlsProto::DirInfo *dir_info) const
 {
-    dir_info->set_path(_path);
+    //dir_info->set_path(_path);
 
     for (list<LibDLS::Job *>::const_iterator job_i = _jobs.begin();
             job_i != _jobs.end(); job_i++) {
         (*job_i)->set_job_info(dir_info->add_job());
     }
+}
+
+/*****************************************************************************/
+
+void Directory::attach_observer(Observer *o)
+{
+    _observers.insert(o);
+}
+
+/*****************************************************************************/
+
+void Directory::remove_observer(Observer *o)
+{
+    _observers.erase(o);
 }
 
 /*****************************************************************************/
@@ -295,7 +326,7 @@ void Directory::_importNetwork()
 
     _jobs.clear();
 
-    _path = dir_info.path();
+    //_path = dir_info.path();
 
     google::protobuf::RepeatedPtrField<DlsProto::JobInfo>::const_iterator
         job_i;
@@ -503,6 +534,16 @@ void Directory::_receive_hello()
         << " " << hello.revision() << " protocol version "
         << hello.protocol_version() << ".";
     log(str.str());
+}
+
+/*****************************************************************************/
+
+void Directory::_notify_observers()
+{
+    std::set<Observer *>::iterator o;
+    for (o = _observers.begin(); o != _observers.end(); o++) {
+        (*o)->update();
+    }
 }
 
 /*****************************************************************************/

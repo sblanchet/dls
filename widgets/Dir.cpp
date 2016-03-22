@@ -24,22 +24,25 @@ using namespace QtDls;
 /*****************************************************************************/
 
 Dir::Dir(
+        Model *model,
         LibDLS::Directory *dir
         ):
     Node(NULL),
+    model(model),
     dir(dir)
 {
-    for (list<LibDLS::Job *>::iterator j = dir->jobs().begin();
-            j != dir->jobs().end(); j++) {
-        Job *job = new Job(this, *j);
-        jobs.push_back(job);
-    }
+    update_jobs();
+    dir->attach_observer(this);
 }
 
 /****************************************************************************/
 
 Dir::~Dir()
 {
+    dir->remove_observer(this);
+    model->prepareLayoutChange();
+    clear_jobs();
+    model->finishLayoutChange();
 }
 
 /****************************************************************************/
@@ -47,8 +50,24 @@ Dir::~Dir()
 QUrl Dir::url() const
 {
     QUrl u;
-    u.setScheme("file");
-    u.setPath(dir->path().c_str());
+
+    switch (dir->access()) {
+        case LibDLS::Directory::Local:
+            u.setScheme("file");
+            u.setPath(dir->path().c_str());
+            break;
+
+        case LibDLS::Directory::Network:
+            u.setScheme("dls");
+            u.setHost(dir->host().c_str());
+            //u.setPort(dir->port()); FIXME
+            u.setPath(dir->path().c_str());
+            break;
+
+        default:
+            break;
+    }
+
     return u;
 }
 
@@ -85,11 +104,43 @@ QVariant Dir::data(const QModelIndex &index, int role) const
         case 0:
             switch (role) {
                 case Qt::DisplayRole:
-                    ret = QApplication::translate("Dir", "Local directory %1")
-                        .arg(dir->path().c_str());
+                    switch (dir->access()) {
+                        case LibDLS::Directory::Local:
+                            ret = QApplication::translate("Dir",
+                                    "Local directory %1")
+                                .arg(dir->path().c_str());
+                            break;
+
+                        case LibDLS::Directory::Network:
+                            ret = QApplication::translate("Dir",
+                                    "Remote directory %1")
+                                .arg(url().toString());
+                            break;
+
+                        default:
+                            break;
+                    }
                     break;
                 case Qt::DecorationRole:
-                    ret = QIcon(":/DlsWidgets/images/drive-harddisk.svg");
+                    switch (dir->access()) {
+                        case LibDLS::Directory::Local:
+                            ret = QIcon(":/DlsWidgets/images/"
+                                    "drive-harddisk.svg");
+                            break;
+
+                        case LibDLS::Directory::Network:
+                            if (dir->connected()) {
+                                ret = QIcon(":/DlsWidgets/images/"
+                                        "Network-idle.svg");
+                            } else {
+                                ret = QIcon(":/DlsWidgets/images/"
+                                        "Network-error.svg");
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
                     break;
             }
             break;
@@ -116,6 +167,41 @@ void *Dir::child(int row) const
 int Dir::row(void *n) const
 {
     return jobs.indexOf((Job *) n);
+}
+
+/****************************************************************************/
+
+void Dir::update()
+{
+    update_jobs();
+}
+
+/****************************************************************************/
+
+void Dir::clear_jobs()
+{
+    for (QList<Job *>::iterator j = jobs.begin(); j != jobs.end(); j++) {
+        delete *j;
+    }
+
+    jobs.clear();
+}
+
+/****************************************************************************/
+
+void Dir::update_jobs()
+{
+    model->prepareLayoutChange();
+
+    clear_jobs();
+
+    for (list<LibDLS::Job *>::iterator j = dir->jobs().begin();
+            j != dir->jobs().end(); j++) {
+        Job *job = new QtDls::Job(this, *j);
+        jobs.push_back(job);
+    }
+
+    model->finishLayoutChange();
 }
 
 /****************************************************************************/

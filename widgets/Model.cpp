@@ -36,7 +36,7 @@ void Model::addLocalDir(
         LibDLS::Directory *d
         )
 {
-    Dir *dir = new Dir(d);
+    Dir *dir = new Dir(this, d);
     beginInsertRows(QModelIndex(), dirs.count(), dirs.count());
     dirs.push_back(dir);
     endInsertRows();
@@ -70,7 +70,8 @@ struct LocalChannel {
 
 QtDls::Channel *Model::getChannel(QUrl url)
 {
-    if (!url.scheme().isEmpty() && url.scheme() != "file") {
+    if (!url.scheme().isEmpty() && url.scheme() != "file"
+            && url.scheme() != "dls") {
         QString err = QString("URL scheme \"%1\" is not supported!")
             .arg(url.scheme());
         throw Exception(err);
@@ -103,6 +104,10 @@ QtDls::Channel *Model::getChannel(QUrl url)
         QStringList channelNameComp = comp.mid(i + 1);
         loc.channelName = "/" + channelNameComp.join("/");
         locList.append(loc);
+#if 0
+        qDebug() << "Locator" << loc.dirPath
+            << loc.jobId << loc.channelName;
+#endif
     }
 
     if (locList.empty()) {
@@ -133,15 +138,22 @@ QtDls::Channel *Model::getChannel(QUrl url)
     for (QList<LocalChannel>::iterator loc = locList.begin();
             loc != locList.end(); loc++) {
         LibDLS::Directory *d = new LibDLS::Directory();
+
+        QString uriText = url.toString(QUrl::RemovePath) + loc->dirPath;
+
+#if 0
+        qDebug() << "Trying new dir" << uriText;
+#endif
+
         try {
-            d->import(loc->dirPath.toUtf8().constData()); // FIXME enc?
+            d->import(uriText.toUtf8().constData()); // FIXME enc?
         }
         catch (LibDLS::DirectoryException &e) {
             delete d;
             continue;
         }
 
-        Dir *dir = new Dir(d);
+        Dir *dir = new Dir(this, d);
         Channel *ch = dir->findChannel(loc->jobId, loc->channelName);
 
         if (!ch) {
@@ -158,6 +170,33 @@ QtDls::Channel *Model::getChannel(QUrl url)
 
     QString err = QString("Channel %1 not found!").arg(url.toString());
     throw Exception(err);
+}
+
+/****************************************************************************/
+
+Model::NodeType Model::nodeType(const QModelIndex &index) const
+{
+    if (index.isValid()) {
+        Node *n = (Node *) index.internalPointer();
+        return n->type();
+    } else {
+        return InvalidNode;
+    }
+}
+
+/****************************************************************************/
+
+LibDLS::Directory *Model::dir(const QModelIndex &index)
+{
+    LibDLS::Directory *dir = NULL;
+
+    if (nodeType(index) == DirNode) {
+        Node *n = (Node *) index.internalPointer();
+        Dir *d = dynamic_cast<Dir *>(n);
+        dir = d->getDir();
+    }
+
+    return dir;
 }
 
 /****************************************************************************/
@@ -318,6 +357,20 @@ QMimeData *Model::mimeData(const QModelIndexList &indexes) const
 
     mimeData->setUrls(urls);
     return mimeData;
+}
+
+/*****************************************************************************/
+
+void Model::prepareLayoutChange()
+{
+    emit layoutAboutToBeChanged();
+}
+
+/*****************************************************************************/
+
+void Model::finishLayoutChange()
+{
+    emit layoutChanged();
 }
 
 /*****************************************************************************/
