@@ -1700,7 +1700,18 @@ void Graph::dropEvent(QDropEvent *event)
             continue;
         }
 
-        QtDls::Channel *ch = dropModel->getChannel(*url);
+        QtDls::Channel *ch;
+
+        try {
+            ch = dropModel->getChannel(*url);
+        }
+        catch (Model::Exception &e) {
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url->toString())
+                .arg(e.msg);
+            continue;
+        }
+
         if (ch) {
             s->appendLayer(ch);
         }
