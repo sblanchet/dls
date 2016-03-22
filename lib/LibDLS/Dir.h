@@ -57,6 +57,16 @@ class DirectoryException:
 
 /****************************************************************************/
 
+/** DLS Observer class.
+*/
+class Observer
+{
+    public:
+        virtual void update() = 0;
+};
+
+/****************************************************************************/
+
 /** DLS Data Directory.
  */
 class Directory
@@ -68,14 +78,9 @@ class Directory
         Directory();
         ~Directory();
 
-        void import(const std::string &);
-
-        const std::string &path() const { return _path; }
-        std::list<Job *> &jobs() { return _jobs; }
-        Job *job(unsigned int);
-        Job *find_job(unsigned int);
-
-        void set_dir_info(DlsProto::DirInfo *) const;
+        void set_uri(const std::string &);
+        const std::string &uri() const { return _uri_text; }
+        void import(const std::string & = std::string());
 
         enum Access {
             Unknown,
@@ -84,7 +89,23 @@ class Directory
         }; /**< Access type. */
         Access access() const { return _access; }
 
+        const std::string &path() const { return _path; }
+        const std::string &host() const { return _host; }
+        const std::string &port() const { return _port; }
+
+        bool connected() const { return _fd != -1; }
+
+        std::list<Job *> &jobs() { return _jobs; }
+        Job *job(unsigned int);
+        Job *find_job(unsigned int);
+
+        void set_dir_info(DlsProto::DirInfo *) const;
+
+        void attach_observer(Observer *);
+        void remove_observer(Observer *);
+
     private:
+        std::string _uri_text;
         Access _access;
 
         /* Local access. */
@@ -99,6 +120,8 @@ class Directory
 
         std::list<Job *> _jobs; /**< list of jobs */
 
+        std::set<Observer *> _observers;
+
         void _importLocal();
         void _importNetwork();
 
@@ -109,6 +132,8 @@ class Directory
         void _send_message(const DlsProto::Request &);
         void _receive_message(google::protobuf::Message &, bool debug = 1);
         void _receive_hello();
+
+        void _notify_observers();
 };
 
 /****************************************************************************/

@@ -43,18 +43,61 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButtonNewDir">
-          <property name="text">
-           <string>New Job</string>
-          </property>
-          <property name="icon">
-           <iconset resource="dlsgui.qrc">
-            <normaloff>:/images/document-new.svg</normaloff>:/images/document-new.svg</iconset>
-          </property>
-          <property name="shortcut">
-           <string>Ctrl+N</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QToolButton" name="toolButtonNewDir">
+            <property name="text">
+             <string>Add local datasource</string>
+            </property>
+            <property name="icon">
+             <iconset resource="dlsgui.qrc">
+              <normaloff>:/images/Folder.svg</normaloff>:/images/Folder.svg</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>40</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+N</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButtonNewUrl">
+            <property name="text">
+             <string>Add local datasource</string>
+            </property>
+            <property name="icon">
+             <iconset resource="dlsgui.qrc">
+              <normaloff>:/images/Folder-remote.svg</normaloff>:/images/Folder-remote.svg</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>40</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+U</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -68,7 +111,7 @@
      <x>0</x>
      <y>0</y>
      <width>1032</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -119,7 +162,8 @@
     <property name="title">
      <string>Datasource</string>
     </property>
-    <addaction name="actionAddDataSource"/>
+    <addaction name="actionAddLocalDataSource"/>
+    <addaction name="actionAddRemoteDataSource"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDatasource"/>
@@ -203,13 +247,22 @@
     <string>About dlsgui...</string>
    </property>
   </action>
-  <action name="actionAddDataSource">
+  <action name="actionAddLocalDataSource">
    <property name="icon">
     <iconset resource="dlsgui.qrc">
-     <normaloff>:/images/document-new.svg</normaloff>:/images/document-new.svg</iconset>
+     <normaloff>:/images/Folder.svg</normaloff>:/images/Folder.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Add Datasource...</string>
+    <string>&amp;Add local datasource...</string>
+   </property>
+  </action>
+  <action name="actionAddRemoteDataSource">
+   <property name="icon">
+    <iconset resource="dlsgui.qrc">
+     <normaloff>:/images/Folder-remote.svg</normaloff>:/images/Folder-remote.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Add remote datasource...</string>
    </property>
   </action>
  </widget>

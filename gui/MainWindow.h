@@ -68,6 +68,8 @@ class MainWindow:
         QAction **scriptActions;
         QProcess scriptProcess;
 
+        LibDLS::Directory *menuDir;
+
         void showEvent(QShowEvent *);
         void closeEvent(QCloseEvent *);
         void addRecentFile(const QString &);
@@ -82,17 +84,22 @@ class MainWindow:
         void openRecentFile();
         void on_actionSave_triggered();
         void on_actionSaveAs_triggered();
-        void on_actionAddDataSource_triggered();
+        void on_actionAddLocalDataSource_triggered();
+        void on_actionAddRemoteDataSource_triggered();
         void on_actionSettings_triggered();
         void on_actionLogWindow_triggered();
         void on_actionAboutDlsgui_triggered();
 
         void on_toolButtonNewDir_clicked();
+        void on_toolButtonNewUrl_clicked();
 
         void loggingCallback(const QString &);
         void execScript();
         void scriptFinished(int, QProcess::ExitStatus);
         void scriptError(QProcess::ProcessError);
+
+        void treeViewCustomContextMenu(const QPoint &);
+        void updateDirectory();
 };
 
 /****************************************************************************/

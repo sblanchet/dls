@@ -47,6 +47,8 @@ class Job:
         ~Job();
 
         QUrl url() const;
+		Model::NodeType type() const { return Model::JobNode; }
+
         Channel *findChannel(const QString &);
 
         class Exception
