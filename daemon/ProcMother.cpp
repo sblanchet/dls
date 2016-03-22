@@ -80,6 +80,10 @@ ProcMother::ProcMother()
 
 ProcMother::~ProcMother()
 {
+#ifdef DLS_SERVER
+    _clear_connections();
+#endif
+
     // Syslog schliessen
     closelog();
 }
@@ -960,5 +964,19 @@ void ProcMother::_check_connections()
     }
 }
 
+
+/*****************************************************************************/
+
+void ProcMother::_clear_connections()
+{
+    for (list<Connection *>::iterator i = _connections.begin();
+            i != _connections.end(); i++) {
+        delete *i;
+    }
+
+    _connections.clear();
+}
+
 #endif
+
 /*****************************************************************************/
