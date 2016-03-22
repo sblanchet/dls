@@ -5,7 +5,6 @@ vim: tw=78 spelllang=en spell
 
 * All
     - Synopsis in usage strings.
-    - Client/Server architecture.
     - Event-based variables
     - Move unit and type attributes into chunk.
 
@@ -13,16 +12,15 @@ vim: tw=78 spelllang=en spell
     - Table model for message list.
     - Store absolute path for recent files
     - Concept for relative signal paths.
-
-* dlsgui
-    - Table model for message list.
-    - Store absolute path for recent files
-    - Concept for relative signal paths.
+    - Concept for non-existing channels
+    - Show if channel is actually logged
+    - URI editor
+    - Show datasource and job (URI?) for channels in graph
 
 * dlsd:
-    - Port to PdCom (trigger via channel).
     - store the same signal with different settings (compression, sample
       rate).
+    - Protocol authentication
 
 * dls:
     - option -Q for really quiet
@@ -43,6 +41,8 @@ vim: tw=78 spelllang=en spell
 
 * lib:
 	- fetch_chunks(): delete non-existing chunks
+    - Protocol: Only transfer new/deleted chunks
+    - Port/Service FIXME
 
 * dls_view:
   - add shortcuts
@@ -57,3 +57,4 @@ vim: tw=78 spelllang=en spell
 * dls_ctl
   - search function in channel list
   - Qt
+  - Move functionality to dlsgui
