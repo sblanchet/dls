@@ -52,6 +52,7 @@ unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
 unsigned int sig_usr1 = 0;
 bool no_bind = false;
+bool read_only = false;
 std::string service(DEFAULT_PORT);
 ProcessType process_type = MotherProcess;
 unsigned int dlsd_job_id = 0;
@@ -187,7 +188,8 @@ int main(int argc, char **argv)
     {
         // Mutterprozess starten
         mother_process = new ProcMother();
-        exit_code = mother_process->start(dls_dir, no_bind, service);
+        exit_code = mother_process->start(dls_dir, no_bind, service,
+                read_only);
         delete mother_process;
 
         if (process_type == LoggingProcess)
@@ -228,7 +230,7 @@ void get_options(int argc, char **argv)
     char *env, *remainder;
 
     do {
-        c = getopt(argc, argv, "d:u:n:kw:bp:h");
+        c = getopt(argc, argv, "d:u:n:kw:bp:rh");
 
         switch (c) {
             case 'd':
@@ -271,6 +273,10 @@ void get_options(int argc, char **argv)
 
             case 'p':
                 service = optarg;
+                break;
+
+            case 'r':
+                read_only = true;
                 break;
 
             case 'h':
@@ -328,6 +334,7 @@ void print_usage()
         << "  -b            Do not bind to network socket." << endl
         << "  -p <port>     Listen port or service name. Default is "
         << DEFAULT_PORT << "." << endl
+        << "  -r            Read-only mode (no data logging)." << endl
         << "  -h            Show this help." << endl;
     exit(0);
 }

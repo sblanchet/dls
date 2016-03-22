@@ -107,7 +107,7 @@ ProcMother::~ProcMother()
 */
 
 int ProcMother::start(const string &dls_dir, bool no_bind,
-        const std::string &service)
+        const std::string &service, bool read_only)
 {
 #ifdef DEBUG
     int p;
@@ -125,8 +125,15 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
     msg() << "Using dir \"" << _dls_dir << "\"";
     log(Info);
 
-    // Spooling-Verzeichnis leeren
-    _empty_spool();
+    if (read_only) {
+        msg() << "Running in read-only mode. No data will be logged!";
+        log(Info);
+    }
+
+    if (!read_only) {
+        // Spooling-Verzeichnis leeren
+        _empty_spool();
+    }
 
     // Anfangs einmal alle Aufträge laden
     _check_jobs();
@@ -159,13 +166,15 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
 
         if (_exit) break;
 
-        // Hat sich im Spooling-Verzeichnis etwas getan?
-        _check_spool();
+        if (!read_only) {
+            // Hat sich im Spooling-Verzeichnis etwas getan?
+            _check_spool();
 
-        if (_exit) break;
+            if (_exit) break;
 
-        // Laufen alle Prozesse noch?
-        _check_processes();
+            // Laufen alle Prozesse noch?
+            _check_processes();
+        }
 
 #ifdef DLS_SERVER
         // check for terminated connections
