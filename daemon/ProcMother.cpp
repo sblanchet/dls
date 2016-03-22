@@ -230,6 +230,8 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
 
 #ifdef DLS_SERVER
     if (_listen_fd != -1) {
+        msg() << "Closing listening port " << _listen_fd << ".";
+        log(Info);
         close(_listen_fd);
         _listen_fd = -1;
     }
