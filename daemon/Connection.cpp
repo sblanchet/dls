@@ -358,7 +358,11 @@ void Connection::_data_callback(LibDLS::Data *data)
         data_res->add_value(data->value(i));
     }
 
-    _send(res, 0);
+    _send(res
+#ifdef DLS_PROTO_DEBUG
+            , 0
+#endif
+            );
 }
 
 /*****************************************************************************/
