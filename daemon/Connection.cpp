@@ -51,6 +51,7 @@ Connection::Connection(ProcMother *parent_proc, int fd):
 
 Connection::~Connection()
 {
+    cerr << "Closing connection " << _fd << "." << endl;
     close(_fd);
 }
 
