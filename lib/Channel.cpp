@@ -460,7 +460,6 @@ void Channel::_fetch_data_network(
         }
 
         if (res.has_end_of_response() && res.end_of_response()) {
-            cerr << "End of response." << endl;
             return;
         }
 
