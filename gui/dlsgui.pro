@@ -40,8 +40,8 @@ isEmpty(PREFIX) {
 
 unix {
     CONFIG += debug
-    LIBS += -L$$PWD/../widgets -lDlsWidgets
-    LIBS += -L$$PWD/../lib/.libs -ldls
+    LIBS += $$PWD/../widgets/libDlsWidgets.so
+    LIBS += $$PWD/../lib/.libs/libdls.so
     LIBS += -lfftw3 -lxml2 -lm -lz
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
