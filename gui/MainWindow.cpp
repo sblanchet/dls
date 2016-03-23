@@ -47,6 +47,7 @@ using namespace std;
 
 MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     QMainWindow(parent),
+    uriDialog(this),
     scriptActions(NULL),
     scriptProcess(this),
     menuDir(NULL)
@@ -437,11 +438,19 @@ void MainWindow::on_toolButtonNewDir_clicked()
     LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
-        dir->import(path.toLocal8Bit().constData());
-        model.addLocalDir(dir);
+        dir->set_uri(path.toLocal8Bit().constData());
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
         delete dir;
+        return;
+    }
+
+    model.addLocalDir(dir);
+
+    try {
+        dir->import();
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
     }
 }
 
@@ -449,10 +458,14 @@ void MainWindow::on_toolButtonNewDir_clicked()
 
 void MainWindow::on_toolButtonNewUrl_clicked()
 {
+    if (uriDialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
     LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
-        dir->set_uri("dls://localhost");
+        dir->set_uri(uriDialog.getUri().toString().toAscii().constData());
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
         delete dir;

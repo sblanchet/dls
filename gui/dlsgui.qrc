@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/drive-harddisk.svg</file>
+    <file>images/Network-idle.svg</file>
     <file>.qm/locale/dlsgui_de.qm</file>
     <file>images/Folder-remote.svg</file>
     <file>images/Folder.svg</file>
