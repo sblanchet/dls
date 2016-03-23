@@ -319,7 +319,8 @@ void Directory::_importNetwork()
     DlsProto::DirInfoRequest *dir_req = req.mutable_dir_info();
     dir_req->set_path(_path);
 
-    _network_request_sync(req, res);
+    _send_message(req);
+    _receive_message(res);
 
     if (res.has_error()) {
         _error_msg = res.error().message();
@@ -441,17 +442,6 @@ void Directory::_disconnect()
     delete _fos;
     close(_fd);
     _fd = -1;
-}
-
-/*****************************************************************************/
-
-void Directory::_network_request_sync(
-        const DlsProto::Request &req,
-        DlsProto::Response &res
-        )
-{
-    _send_message(req);
-    _receive_message(res);
 }
 
 /*****************************************************************************/
