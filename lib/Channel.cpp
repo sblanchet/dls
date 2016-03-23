@@ -338,7 +338,21 @@ void Channel::_fetch_chunks_network()
     ch_req->set_id(_dir_index);
     ch_req->set_fetch_chunks(true);
 
-    _job->dir()->_network_request_sync(req, res);
+    try {
+        _job->dir()->_send_message(req);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to request chunks: " << e.msg << endl;
+        return;
+    }
+
+    try {
+        _job->dir()->_receive_message(res);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to receive chunks: " << e.msg << endl;
+        return;
+    }
 
     if (res.has_error()) {
         cerr << "Error response: " << res.error().message() << endl;
@@ -449,10 +463,22 @@ void Channel::_fetch_data_network(
     data_req->set_min_values(min_values);
     data_req->set_decimation(decimation);
 
-    _job->dir()->_send_message(req);
+    try {
+        _job->dir()->_send_message(req);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to request data: " << e.msg << endl;
+        return;
+    }
 
     while(1) {
-        _job->dir()->_receive_message(res, 0);
+        try {
+            _job->dir()->_receive_message(res, 0);
+        }
+        catch (DirectoryException &e) {
+            cerr << "Failed to receive data: " << e.msg << endl;
+            return;
+        }
 
         if (res.has_error()) {
             cerr << "Error response: " << res.error().message() << endl;

@@ -132,8 +132,6 @@ class Directory
 
         void _connect();
         void _disconnect();
-        void _network_request_sync(const DlsProto::Request &,
-                DlsProto::Response &);
         void _send_message(const DlsProto::Request &);
         void _receive_message(google::protobuf::Message &, bool debug = 1);
         void _receive_hello();
