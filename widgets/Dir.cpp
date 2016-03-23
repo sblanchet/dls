@@ -104,6 +104,7 @@ QVariant Dir::data(const QModelIndex &index, int role) const
                             break;
                     }
                     break;
+
                 case Qt::DecorationRole:
                     switch (dir->access()) {
                         case LibDLS::Directory::Local:
@@ -124,6 +125,10 @@ QVariant Dir::data(const QModelIndex &index, int role) const
                         default:
                             break;
                     }
+                    break;
+
+                case Qt::ToolTipRole:
+                    ret = dir->error_msg().c_str();
                     break;
             }
             break;
