@@ -351,7 +351,7 @@ void Directory::_connect()
 
     {
         stringstream msg;
-        msg << "Connecting to " << _host << " on port " << _port;
+        msg << "Connecting to " << _host << " on port " << _port << ".";
         log(msg.str());
     }
 
