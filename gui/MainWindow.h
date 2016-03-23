@@ -30,6 +30,7 @@
 #include "LibDLS/Dir.h"
 
 #include "DlsWidgets/Model.h"
+#include "UriDialog.h"
 
 /****************************************************************************/
 
@@ -50,6 +51,7 @@ class MainWindow:
         QStringList recentFiles;
         QString currentFileName;
         LogWindow logWindow;
+        UriDialog uriDialog;
         struct Script {
             QString command;
             QString alias;

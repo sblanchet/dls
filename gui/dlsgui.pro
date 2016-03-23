@@ -60,20 +60,23 @@ HEADERS += \
     AboutDialog.h \
     LogWindow.h \
     MainWindow.h \
-    SettingsDialog.h
+    SettingsDialog.h \
+    UriDialog.h \
 
 SOURCES += \
     AboutDialog.cpp \
     LogWindow.cpp \
     MainWindow.cpp \
     SettingsDialog.cpp \
+    UriDialog.cpp \
     main.cpp
 
 FORMS += \
     AboutDialog.ui \
     LogWindow.ui \
     MainWindow.ui \
-    SettingsDialog.ui
+    SettingsDialog.ui \
+    UriDialog.ui
 
 RESOURCES += dlsgui.qrc
 
