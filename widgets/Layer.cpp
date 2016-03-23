@@ -743,40 +743,58 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
 {
     double xp, prev_xp;
     std::vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
-    LibDLS::Time last_end;
+    std::vector<Channel::TimeRange> overlap;
     QColor gapColor(255, 255, 220, 127);
+    QColor overlapColor(255, 0, 0, 127);
 
     ranges = channel->chunkRanges();
 
-    // check if chunks overlap
-    last_end.set_null();
+    // check if chunks overlap and identify relevant ranges
     for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
          range != ranges.end();
          range++) {
-        if (range->start <= last_end) {
-            QString msg;
-            QTextStream str(&msg);
-            str << "WARNING: Chunks overlapping in channel"
-                 << channel->name();
-            LibDLS::log(msg.toLocal8Bit().constData());
-            return;
-        }
-        last_end = range->end;
-    }
-
-    for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
-         range != ranges.end(); range++) {
         if (range->end < section->getGraph()->getStart()) {
             continue;
         }
         if (range->start > section->getGraph()->getEnd()) {
             break;
         }
-        relevant_chunk_ranges.push_back(*range);
+
+        bool not_overlapping = true;
+
+        if (!relevant_chunk_ranges.empty()) {
+            Channel::TimeRange &last = relevant_chunk_ranges.back();
+            if (range->start <= last.end) {
+
+                Channel::TimeRange lap;
+                lap.start = range->start;
+                if (range->end < last.end) {
+                    lap.end = range->end;
+                } else {
+                    lap.end = last.end;
+                    last.end = range->end; // extend last range
+                }
+                overlap.push_back(lap);
+                not_overlapping = false;
+            }
+        }
+
+        if (not_overlapping) {
+            relevant_chunk_ranges.push_back(*range);
+        }
+    }
+
+    if (!overlap.empty()) {
+        QString msg;
+        QTextStream str(&msg);
+        str << "WARNING: Chunks overlapping in channel"
+            << channel->name();
+        LibDLS::log(msg.toLocal8Bit().constData());
     }
 
     prev_xp = -1;
 
+    // draw gaps
     for (std::vector<Channel::TimeRange>::iterator range =
             relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
@@ -784,23 +802,42 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
 
         if (xp > prev_xp + 1) {
-            QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
+            QRect drawRect(rect.left() + (int) (prev_xp + 1.5),
                      rect.top(),
                      (int) (xp - prev_xp - 1),
                      rect.height());
-            painter.fillRect(gapRect, gapColor);
+            painter.fillRect(drawRect, gapColor);
         }
 
         prev_xp = (range->end -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
     }
 
+    // draw last gap
     if (rect.width() > prev_xp + 1) {
-        QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
+        QRect drawRect(rect.left() + (int) (prev_xp + 1.5),
                 rect.top(),
                 (int) (rect.width() - prev_xp - 1),
                 rect.height());
-        painter.fillRect(gapRect, gapColor);
+        painter.fillRect(drawRect, gapColor);
+    }
+
+    // draw overlaps
+    for (std::vector<Channel::TimeRange>::iterator range =
+            overlap.begin();
+         range != overlap.end(); range++) {
+        int xs = (range->start -
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
+        int xe = (range->end -
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
+        int w = xe - xs;
+        if (w < 1) {
+            w = 1;
+        }
+
+        QRect drawRect(rect.left() + xs, rect.top(),
+                w, rect.height());
+        painter.fillRect(drawRect, overlapColor);
     }
 }
 
