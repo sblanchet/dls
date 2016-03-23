@@ -75,12 +75,11 @@ class Directory
     friend class Channel;
 
     public:
-        Directory();
+        Directory(const std::string & = std::string());
         ~Directory();
 
         void set_uri(const std::string &);
         const std::string &uri() const { return _uri_text; }
-        void import(const std::string & = std::string());
 
         enum Access {
             Unknown,
@@ -92,6 +91,8 @@ class Directory
         const std::string &path() const { return _path; }
         const std::string &host() const { return _host; }
         const std::string &port() const { return _port; }
+
+        void import();
 
         bool connected() const { return _fd != -1; }
 

@@ -43,12 +43,13 @@ using namespace LibDLS;
 
 /*****************************************************************************/
 
-Directory::Directory():
+Directory::Directory(const std::string &uri_text):
     _access(Unknown),
     _fd(-1),
     _fis(NULL),
     _fos(NULL)
 {
+    set_uri(uri_text);
 }
 
 /*****************************************************************************/
@@ -174,13 +175,9 @@ void Directory::set_uri(const string &uri_text)
 
 /*****************************************************************************/
 
-void Directory::import(const string &uri_text)
+void Directory::import()
 {
     _jobs.clear();
-
-    if (uri_text != "") {
-        set_uri(uri_text);
-    }
 
     if (_access == Local) {
         _importLocal();
