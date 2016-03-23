@@ -127,7 +127,8 @@ void ViewDialogMain::show()
     list<LibDLS::Job *>::const_iterator job_i;
 
     try {
-        _dls_dir.import(_dls_dir_path);
+        _dls_dir.set_uri(_dls_dir_path);
+        _dls_dir.import();
     }
     catch (LibDLS::DirectoryException &e) {
         cerr << "Failed to import DLS directory." << endl;
