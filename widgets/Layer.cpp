@@ -744,7 +744,7 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
     double xp, prev_xp;
     std::vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
     std::vector<Channel::TimeRange> overlap;
-    QColor gapColor(255, 255, 220, 127);
+    QColor gapColor(0xff, 0xec, 0x6b, 127);
     QColor overlapColor(255, 0, 0, 127);
 
     ranges = channel->chunkRanges();
