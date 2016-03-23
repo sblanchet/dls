@@ -130,6 +130,8 @@ void Directory::set_uri(const string &uri_text)
     if (uriParseUriA(&state, _uri_text.c_str()) != URI_SUCCESS) {
         stringstream err;
         err << "Failed to parse URI \"" << _uri_text << "\"!";
+        _error_msg = err.str();
+        log(err.str());
         throw DirectoryException(err.str());
     }
 
@@ -169,6 +171,8 @@ void Directory::set_uri(const string &uri_text)
         _access = Unknown;
         stringstream err;
         err << "Unsupported URI scheme \"" << scheme << "\"!";
+        _error_msg = err.str();
+        log(err.str());
         throw DirectoryException(err.str());
     }
 }
@@ -264,6 +268,8 @@ void Directory::_importLocal()
     if (!(dir = opendir(_path.c_str()))) {
         stringstream err;
         err << "Failed to open DLS directory \"" << _path << "\"!";
+        _error_msg = err.str();
+        log(err.str());
         throw DirectoryException(err.str());
     }
 
@@ -316,6 +322,8 @@ void Directory::_importNetwork()
     _network_request_sync(req, res);
 
     if (res.has_error()) {
+        _error_msg = res.error().message();
+        log(_error_msg);
         throw DirectoryException(res.error().message());
     }
 
@@ -359,6 +367,8 @@ void Directory::_connect()
     if (ret) {
         stringstream err;
         err << "Failed to get address info: " << gai_strerror(ret);
+        _error_msg = err.str();
+        log(_error_msg);
         throw DirectoryException(err.str());
     }
 
@@ -380,7 +390,9 @@ void Directory::_connect()
     freeaddrinfo(result);
 
     if (!rp) {
-        throw DirectoryException("Connection failed!");
+        _error_msg = "Connection failed!";
+        log(_error_msg);
+        throw DirectoryException(_error_msg);
     }
 
 
@@ -490,6 +502,8 @@ void Directory::_receive_message(
         _disconnect();
         stringstream err;
         err << "ReadVarint32() failed!";
+        _error_msg = err.str();
+        log(_error_msg);
         throw DirectoryException(err.str());
     }
 
@@ -499,6 +513,8 @@ void Directory::_receive_message(
         _disconnect();
         stringstream err;
         err << "ReadString() failed!";
+        _error_msg = err.str();
+        log(_error_msg);
         throw DirectoryException(err.str());
     }
 
@@ -507,6 +523,8 @@ void Directory::_receive_message(
         _disconnect();
         stringstream err;
         err << "ParseFromString() failed!";
+        _error_msg = err.str();
+        log(_error_msg);
         throw DirectoryException(err.str());
     }
 

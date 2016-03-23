@@ -105,6 +105,8 @@ class Directory
         void attach_observer(Observer *);
         void remove_observer(Observer *);
 
+        const std::string &error_msg() const { return _error_msg; }
+
     private:
         std::string _uri_text;
         Access _access;
@@ -122,6 +124,8 @@ class Directory
         std::list<Job *> _jobs; /**< list of jobs */
 
         std::set<Observer *> _observers;
+
+        std::string _error_msg; /**< Last error message. */
 
         void _importLocal();
         void _importNetwork();
