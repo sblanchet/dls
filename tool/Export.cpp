@@ -131,7 +131,14 @@ int export_main(int argc, char *argv[])
     }
 
     try {
-        dls_dir.import(dls_dir_path);
+        dls_dir.set_uri(dls_dir_path);
+    } catch (DirectoryException &e) {
+        cerr << "ERROR: Passing URI: " << e.msg << endl;
+        exit(1);
+    }
+
+    try {
+        dls_dir.import();
     } catch (DirectoryException &e) {
         cerr << "ERROR: Importing DLS directory: " << e.msg << endl;
         exit(1);
