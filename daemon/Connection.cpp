@@ -239,7 +239,8 @@ void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
     }
 
     try {
-        _dir.import(path);
+        _dir.set_uri(path);
+        _dir.import();
     }
     catch (LibDLS::DirectoryException &e) {
         DlsProto::Response res;
