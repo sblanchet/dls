@@ -62,10 +62,11 @@ void Model::clear()
 
 /****************************************************************************/
 
-struct LocalChannel {
+struct ChannelLocator {
     QString dirPath;
     unsigned int jobId;
     QString channelName;
+    bool dirExists;
 };
 
 QtDls::Channel *Model::getChannel(QUrl url)
@@ -77,23 +78,21 @@ QtDls::Channel *Model::getChannel(QUrl url)
         throw Exception(err);
     }
 
-    // using local file path
-    QString path = url.path();
-
     /* the jobNNN component can show up multiple times in the URL path. To
      * determine, which one corresponds to the job directory, we must try, if
      * there is an existing dir for each one. If no existing directory was
-     * found, we have to search again for each occurrence of jobNNN. */
+     * found, we have to search again for the next occurrence of jobNNN. */
 
-    QList<LocalChannel> locList;
-    QStringList comp = path.split('/');
+    QList<ChannelLocator> locList;
+    QStringList comp = url.path().split('/');
 
     for (int i = 0; i < comp.size(); i++) {
         if (!comp[i].startsWith("job")) {
             continue;
         }
         QString rem = comp[i].mid(3);
-        LocalChannel loc;
+        ChannelLocator loc;
+        loc.dirExists = false;
         bool ok;
         loc.jobId = rem.toUInt(&ok, 10);
         if (!ok) {
@@ -111,19 +110,22 @@ QtDls::Channel *Model::getChannel(QUrl url)
     }
 
     if (locList.empty()) {
-        QString err = QString("Invalid URL: %1").arg(url.toString());
+        QString err = QString("URL %1 invalid because of missing job!")
+            .arg(url.toString());
         throw Exception(err);
     }
 
-    // try to find an existing local dir with matching path
+    // try to find an existing dir with matching path
 
-    for (QList<LocalChannel>::iterator loc = locList.begin();
+    for (QList<ChannelLocator>::iterator loc = locList.begin();
             loc != locList.end(); loc++) {
         for (QList<Dir *>::iterator d = dirs.begin(); d != dirs.end(); d++) {
             QString dirPath = (*d)->getDir()->path().c_str();
             if (loc->dirPath != dirPath) {
                 continue;
             }
+
+            loc->dirExists = true;
 
             QtDls::Channel *ch =
                 (*d)->findChannel(loc->jobId, loc->channelName);
@@ -133,37 +135,46 @@ QtDls::Channel *Model::getChannel(QUrl url)
         }
     }
 
-    // try to create new dirs for every valid combination
+    // try to create a new dir for each valid combination
 
-    for (QList<LocalChannel>::iterator loc = locList.begin();
+    for (QList<ChannelLocator>::iterator loc = locList.begin();
             loc != locList.end(); loc++) {
+        if (loc->dirExists) {
+            continue;
+        }
+
         LibDLS::Directory *d = new LibDLS::Directory();
-
         QString uriText = url.toString(QUrl::RemovePath) + loc->dirPath;
-
 #if 0
         qDebug() << "Trying new dir" << uriText;
 #endif
 
         try {
-            d->import(uriText.toUtf8().constData()); // FIXME enc?
+            d->set_uri(uriText.toUtf8().constData()); // FIXME enc?
         }
         catch (LibDLS::DirectoryException &e) {
+            qWarning() << "Invalid URL found: " << e.msg.c_str();
             delete d;
             continue;
         }
 
         Dir *dir = new Dir(this, d);
-        Channel *ch = dir->findChannel(loc->jobId, loc->channelName);
-
-        if (!ch) {
-            delete dir;
-            continue;
-        }
-
         beginInsertRows(QModelIndex(), dirs.count(), dirs.count());
         dirs.push_back(dir);
         endInsertRows();
+
+        try {
+            d->import();
+        }
+        catch (LibDLS::DirectoryException &e) {
+            continue;
+        }
+
+        Channel *ch = dir->findChannel(loc->jobId, loc->channelName);
+
+        if (!ch) {
+            continue;
+        }
 
         return ch;
     }
