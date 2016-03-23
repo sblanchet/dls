@@ -55,7 +55,15 @@ int list_main(int argc, char *argv[])
     list_get_options(argc, argv);
 
     try {
-        dls_dir.import(dls_dir_path);
+        dls_dir.set_uri(dls_dir_path);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Passing URI failed: " << e.msg << endl;
+        return 1;
+    }
+
+    try {
+        dls_dir.import();
     }
     catch (DirectoryException &e) {
         cerr << "Import failed: " << e.msg << endl;
