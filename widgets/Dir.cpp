@@ -50,24 +50,7 @@ Dir::~Dir()
 QUrl Dir::url() const
 {
     QUrl u;
-
-    switch (dir->access()) {
-        case LibDLS::Directory::Local:
-            u.setScheme("file");
-            u.setPath(dir->path().c_str());
-            break;
-
-        case LibDLS::Directory::Network:
-            u.setScheme("dls");
-            u.setHost(dir->host().c_str());
-            //u.setPort(dir->port()); FIXME
-            u.setPath(dir->path().c_str());
-            break;
-
-        default:
-            break;
-    }
-
+    u.setUrl(dir->uri().c_str());
     return u;
 }
 
