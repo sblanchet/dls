@@ -46,6 +46,10 @@ using namespace LibDLS;
 
 /*****************************************************************************/
 
+//#define DEBUG_DATA
+
+/*****************************************************************************/
+
 /**
   Constructor.
  */
@@ -170,10 +174,6 @@ void Chunk::fetch_data(
         unsigned int decimation
         ) const
 {
-    unsigned int level, decimationCounter = 0;
-    Data *data = NULL;
-    Time time_per_value, last;
-
     if (!decimation) {
         stringstream err;
         err << "Decimation may not be zero!";
@@ -185,14 +185,19 @@ void Chunk::fetch_data(
         return;
     }
 
-    level = _calc_optimal_level(start, end, min_values);
-    Time limit;
-    if (min_values > 0) {
-        limit = 2 * (end - start).to_int64() / min_values;
-    }
+    unsigned int level = _calc_optimal_level(start, end, min_values);
+    unsigned int decimationCounter = 0;
+    Data *data = NULL;
+    Time limit = (min_values > 0) ? 2 * (end - start).to_int64() / min_values : 0;
+    Time end_to_use = (end < _end) ? end : _end;
+    Time time_per_value, last;
 
     while(1) {
         time_per_value = _time_per_value(level);
+
+#ifdef DEBUG_DATA
+        cerr << "l=" << level << flush;
+#endif
 
         if (!level) {
             _fetch_level_data_wrapper(start, end, MetaGen, level,
@@ -207,13 +212,12 @@ void Chunk::fetch_data(
                     decimation, decimationCounter, last);
         }
 
-        Time diff_to_end = _end - last;
+        Time diff_to_end = end_to_use - last;
 
-#if 0
+#ifdef DEBUG_DATA
         {
             Time z;
-            cerr << "l=" << level
-                << " diff=" << last.diff_str_to(_end)
+            cerr << endl << "diff=" << z.diff_str_to(diff_to_end)
                 << " limit=" << z.diff_str_to(limit) << endl;
         }
 #endif
@@ -225,6 +229,7 @@ void Chunk::fetch_data(
                 diff_to_end > (int64_t) 0 &&
                 diff_to_end > limit) {
             level--;
+            start = last;
             continue;
         }
 
@@ -681,6 +686,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         if (comp->decompressed_length() > 0) {
             last = start_time +
                 time_per_value * (comp->decompressed_length() - 1);
+#ifdef DEBUG_DATA
+            cerr << "." << flush;
+#endif
         }
 
         // invoke data callback
@@ -708,6 +716,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         if (comp->decompressed_length() > 0) {
             last = start_time +
                 time_per_value * (comp->decompressed_length() - 1);
+#ifdef DEBUG_DATA
+            cerr << "." << flush;
+#endif
         }
 
         // invoke data callback
