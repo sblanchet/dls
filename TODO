@@ -10,12 +10,12 @@ vim: tw=78 spelllang=en spell
 
 * dlsgui
     - Table model for message list.
-    - Store absolute path for recent files
-    - Concept for relative signal paths.
     - Concept for non-existing channels
     - Show if channel is actually logged
-    - URI editor
     - Show datasource and job (URI?) for channels in graph
+    - Integrate dls_ctl functionality
+        - Available channels as tree with filter function
+    - Show signals as tree
 
 * dlsd:
     - store the same signal with different settings (compression, sample
@@ -41,20 +41,4 @@ vim: tw=78 spelllang=en spell
 
 * lib:
 	- fetch_chunks(): delete non-existing chunks
-    - Protocol: Only transfer new/deleted chunks
-    - Port/Service FIXME
-
-* dls_view:
-  - add shortcuts
-  - current time button 
-  - auto-Scrolling?
-  - graphical error messages at export
-  - Qt
-  - Update yellow chunk ranges on scrolling.
-  - date parser.
-  - multi-job and multi-host viewing.
-
-* dls_ctl
-  - search function in channel list
-  - Qt
-  - Move functionality to dlsgui
+    - Protocol: Only transfer new/deleted chunks, update chunks
