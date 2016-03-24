@@ -586,7 +586,21 @@ void Job::_fetch_channels_network()
     job_req->set_id(_preset.id());
     job_req->set_fetch_channels(true);
 
-    _dir->_network_request_sync(req, res);
+    try {
+        _dir->_send_message(req);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to request channels: " << e.msg << endl;
+        return;
+    }
+
+    try {
+        _dir->_receive_message(res);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to receive channels: " << e.msg << endl;
+        return;
+    }
 
     if (res.has_error()) {
         cerr << "Error response: " << res.error().message() << endl;
