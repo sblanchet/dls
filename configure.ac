@@ -49,7 +49,7 @@ AC_LIB_PREFIX
 AC_CHECK_PDCOM
 AM_PATH_XML2
 
-AC_SUBST(LIBDLS_VERSION, [2:0:0])
+AC_SUBST(LIBDLS_VERSION, [3:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon
