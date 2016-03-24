@@ -45,7 +45,6 @@ dlsd_CXXFLAGS = \
 	$(PDCOM_CPPFLAGS)
 
 dlsd_LDFLAGS = \
-	-L$(top_builddir)/lib \
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
 	$(PDCOM_LDFLAGS) \
@@ -53,7 +52,7 @@ dlsd_LDFLAGS = \
 
 dlsd_LDADD = \
 	@FFTW3_LIBS@ \
-	-ldls \
+	$(top_builddir)/lib/.libs/libdls.so \
 	@ZLIB_LIBS@ \
 	$(PDCOM_LIBS) \
 	$(XML_LIBS) \
