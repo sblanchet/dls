@@ -16,6 +16,7 @@ vim: tw=78 spelllang=en spell
     - Integrate dls_ctl functionality
         - Available channels as tree with filter function
     - Show signals as tree
+    - Fix URI file:// slash problem in UriDialog.cpp
 
 * dlsd:
     - store the same signal with different settings (compression, sample
