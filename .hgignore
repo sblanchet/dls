@@ -10,13 +10,14 @@ autoconf
 autom4te.cache
 config.h
 config.h.in
+config.h.in~
 config.log
 config.status
 configure
 daemon/.deps
 daemon/.libs
-daemon/dlsd
 daemon/dls_data
+daemon/dlsd
 dls.spec
 doku/dls_doku.aux
 doku/dls_doku.dvi
