@@ -172,7 +172,7 @@ void Chunk::fetch_data(
 {
     unsigned int level, decimationCounter = 0;
     Data *data = NULL;
-    Time time_per_value;
+    Time time_per_value, last;
 
     if (!decimation) {
         stringstream err;
@@ -181,22 +181,54 @@ void Chunk::fetch_data(
     }
 
     // The requested time range does not intersect the chunk's range.
-    if (start > _end || end < _start) return;
+    if (start > _end || end < _start) {
+        return;
+    }
 
     level = _calc_optimal_level(start, end, min_values);
-    time_per_value = _time_per_value(level);
+    Time limit;
+    if (min_values > 0) {
+        limit = 2 * (end - start).to_int64() / min_values;
+    }
 
-    if (!level) {
-        _fetch_level_data_wrapper(start, end, MetaGen, level,
-                                  time_per_value, ring, &data, cb, cb_data,
-                                  decimation, decimationCounter);
-    } else {
-        _fetch_level_data_wrapper(start, end, MetaMin, level,
-                                  time_per_value, ring, &data, cb, cb_data,
-                                  decimation, decimationCounter);
-        _fetch_level_data_wrapper(start, end, MetaMax, level,
-                                  time_per_value, ring, &data, cb, cb_data,
-                                  decimation, decimationCounter);
+    while(1) {
+        time_per_value = _time_per_value(level);
+
+        if (!level) {
+            _fetch_level_data_wrapper(start, end, MetaGen, level,
+                    time_per_value, ring, &data, cb, cb_data,
+                    decimation, decimationCounter, last);
+        } else {
+            _fetch_level_data_wrapper(start, end, MetaMin, level,
+                    time_per_value, ring, &data, cb, cb_data,
+                    decimation, decimationCounter, last);
+            _fetch_level_data_wrapper(start, end, MetaMax, level,
+                    time_per_value, ring, &data, cb, cb_data,
+                    decimation, decimationCounter, last);
+        }
+
+        Time diff_to_end = _end - last;
+
+#if 0
+        {
+            Time z;
+            cerr << "l=" << level
+                << " diff=" << last.diff_str_to(_end)
+                << " limit=" << z.diff_str_to(limit) << endl;
+        }
+#endif
+
+        // fetch deeper level, if last data are not close enough
+        // to chunk end
+        if (level > 0 &&
+                limit > (int64_t) 0 &&
+                diff_to_end > (int64_t) 0 &&
+                diff_to_end > limit) {
+            level--;
+            continue;
+        }
+
+        break;
     }
 }
 
@@ -218,63 +250,64 @@ void Chunk::_fetch_level_data_wrapper(Time start,
                                                                callback
                                                                parameter */
                                               unsigned int decimation,
-                                              unsigned int &decimationCounter
+                                              unsigned int &decimationCounter,
+                                              Time &last
                                               ) const
 {
     switch (_type) {
         case TCHAR:
             _fetch_level_data<char>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
-                                    decimation, decimationCounter);
+                                    decimation, decimationCounter, last);
             break;
         case TUCHAR:
             _fetch_level_data<unsigned char>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
-                                             decimationCounter);
+                                             decimationCounter, last);
             break;
         case TSHORT:
             _fetch_level_data<short>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
-                                     decimation, decimationCounter);
+                                     decimation, decimationCounter, last);
             break;
         case TUSHORT:
             _fetch_level_data<unsigned short>(start, end, meta_type, level,
                                               time_per_value, ring, data,
                                               cb, cb_data, decimation,
-                                              decimationCounter);
+                                              decimationCounter, last);
             break;
         case TINT:
             _fetch_level_data<int>(start, end, meta_type, level,
                                    time_per_value, ring, data, cb, cb_data,
-                                   decimation, decimationCounter);
+                                   decimation, decimationCounter, last);
             break;
         case TUINT:
             _fetch_level_data<unsigned int>(start, end, meta_type, level,
                                             time_per_value, ring, data,
                                             cb, cb_data, decimation,
-                                            decimationCounter);
+                                            decimationCounter, last);
             break;
         case TLINT:
             _fetch_level_data<long>(start, end, meta_type, level,
                                     time_per_value, ring, data, cb, cb_data,
-                                    decimation, decimationCounter);
+                                    decimation, decimationCounter, last);
             break;
         case TULINT:
             _fetch_level_data<unsigned long>(start, end, meta_type, level,
                                              time_per_value, ring, data,
                                              cb, cb_data, decimation,
-                                             decimationCounter);
+                                             decimationCounter, last);
             break;
         case TFLT:
             _fetch_level_data<float>(start, end, meta_type, level,
                                      time_per_value, ring, data, cb, cb_data,
-                                     decimation, decimationCounter);
+                                     decimation, decimationCounter, last);
             break;
         case TDBL:
             _fetch_level_data<double>(start, end, meta_type, level,
                                       time_per_value, ring, data, cb, cb_data,
-                                      decimation, decimationCounter);
+                                      decimation, decimationCounter, last);
             break;
 
         default: {
@@ -303,7 +336,8 @@ void Chunk::_fetch_level_data(Time start,
         void *cb_data, /**< arbitrary callback
                          parameter */
         unsigned int decimation,
-        unsigned int &decimationCounter
+        unsigned int &decimationCounter,
+        Time &last
         ) const
 {
     stringstream level_dir_name;
@@ -505,7 +539,8 @@ void Chunk::_fetch_level_data(Time start,
                         _process_data_tag(xml.tag(), index_record.start_time,
                                           meta_type, level, time_per_value,
                                           comp, data, cb, cb_data,
-                                          decimation, decimationCounter);
+                                          decimation, decimationCounter,
+                                          last);
                     } catch (EXmlTag &e) {
 						stringstream err;
                         err << "ERROR: Could not read block: " << e.msg;
@@ -584,7 +619,7 @@ void Chunk::_fetch_level_data(Time start,
                 _process_data_tag(xml.tag(), index_record.start_time,
                                   meta_type, level,
                                   time_per_value, comp, data, cb, data,
-                                  decimation, decimationCounter);
+                                  decimation, decimationCounter, last);
             }
             catch (EXmlTag &e) {
 				stringstream err;
@@ -617,7 +652,8 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         void *cb_data, /**< arbitrary callback
                          parameter */
         unsigned int decimation,
-        unsigned int &decimationCounter
+        unsigned int &decimationCounter,
+        Time &last
         ) const
 {
     unsigned int block_size;
@@ -642,6 +678,11 @@ void Chunk::_process_data_tag(const XmlTag *tag,
                 decimation, decimationCounter, comp->decompression_output(),
                 comp->decompressed_length());
 
+        if (comp->decompressed_length() > 0) {
+            last = start_time +
+                time_per_value * (comp->decompressed_length() - 1);
+        }
+
         // invoke data callback
         if (cb(*data, cb_data)) {
             // data structure adopted: forget its address.
@@ -663,6 +704,11 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         (*data)->import(start_time, time_per_value, meta_type, level,
                 decimation, decimationCounter, comp->decompression_output(),
                 comp->decompressed_length());
+
+        if (comp->decompressed_length() > 0) {
+            last = start_time +
+                time_per_value * (comp->decompressed_length() - 1);
+        }
 
         // invoke data callback
         if (cb(*data, cb_data)) {

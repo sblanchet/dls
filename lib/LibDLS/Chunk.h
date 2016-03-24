@@ -119,7 +119,8 @@ class Chunk
                 DataCallback,
                 void *,
                 unsigned int,
-                unsigned int &) const;
+                unsigned int &,
+                Time &) const;
 
         template <class T>
             void _fetch_level_data(Time, Time,
@@ -131,7 +132,8 @@ class Chunk
                     DataCallback,
                     void *,
                     unsigned int,
-                    unsigned int &) const;
+                    unsigned int &,
+                    Time &) const;
 
         template <class T>
             void _process_data_tag(const XmlTag *,
@@ -144,7 +146,8 @@ class Chunk
                     DataCallback,
                     void *,
                     unsigned int,
-                    unsigned int &) const;
+                    unsigned int &,
+                    Time &) const;
 };
 
 /*****************************************************************************/
