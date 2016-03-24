@@ -94,6 +94,8 @@ void UriDialog::on_comboBoxScheme_currentIndexChanged(int index)
             break;
     }
 
+    uri.setHost(net ? lineEditHost->text() : "");
+    uri.setPort(net ? spinBoxPort->value() : -1);
     lineEditHost->setEnabled(net);
     spinBoxPort->setEnabled(net);
     updateUri();
@@ -119,7 +121,7 @@ void UriDialog::on_spinBoxPort_valueChanged(int value)
 
 void UriDialog::on_lineEditPath_textEdited(const QString &text)
 {
-    uri.setPath(text);
+    uri.setPath('/' + text); // FIXME possible bug in QUrl
     updateUri();
 }
 
