@@ -12,7 +12,6 @@ vim: tw=78 spelllang=en spell
     - Table model for message list.
     - Concept for non-existing channels
     - Show if channel is actually logged
-    - Show datasource and job (URI?) for channels in graph
     - Integrate dls_ctl functionality
         - Available channels as tree with filter function
     - Show signals as tree
