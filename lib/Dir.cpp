@@ -124,6 +124,10 @@ void Directory::set_uri(const string &uri_text)
 {
     _uri_text = uri_text;
 
+#if 0
+    cerr << __func__ << "(" << uri_text << ")" << endl;
+#endif
+
     UriUriA uri;
     UriParserStateA state;
     state.uri = &uri;
@@ -158,6 +162,10 @@ void Directory::set_uri(const string &uri_text)
     if (uri.absolutePath) {
         _path = "/" + _path;
     }
+
+#if 0
+    cerr << "host=" << _host << " path=" << _path << endl;
+#endif
 
     uriFreeUriMembersA(&uri);
 
