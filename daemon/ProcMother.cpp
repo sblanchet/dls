@@ -60,12 +60,14 @@ using namespace std;
    die Verbindung zum syslogd
 */
 
-ProcMother::ProcMother()
+ProcMother::ProcMother():
+    _sig_child(0),
+    _exit(false),
+    _exit_error(false),
+#ifdef DLS_SERVER
+    _listen_fd(-1)
+#endif
 {
-    _sig_child = 0;
-    _exit = false;
-    _exit_error = false;
-
     // Syslog initialisieren
     openlog("dlsd_mother", LOG_PID, LOG_DAEMON);
 }
