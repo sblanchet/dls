@@ -240,8 +240,8 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
     }
 
 #ifdef DLS_SERVER
-    if (_listen_fd != -1) {
-        msg() << "Closing listening port " << _listen_fd << ".";
+    if (process_type == MotherProcess && _listen_fd != -1) {
+        msg() << "Closing listening port.";
         log(Info);
         close(_listen_fd);
         _listen_fd = -1;
@@ -894,6 +894,21 @@ int ProcMother::_prepare_socket(const char *service)
         ret = bind(_listen_fd, rp->ai_addr, rp->ai_addrlen);
         if (ret == 0) {
             // success
+
+            char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+            ret = getnameinfo(rp->ai_addr, rp->ai_addrlen,
+                    hbuf, sizeof(hbuf), sbuf, sizeof(sbuf),
+                    NI_NUMERICHOST | NI_NUMERICSERV);
+            if (ret) {
+                msg() << "Failed to get host/service names for bound socket: "
+                    << strerror(errno);
+                log(Warning);
+            }
+            else {
+                msg() << "Bound to " << hbuf << ":" << sbuf << ".";
+                log(Info);
+            }
+
             break;
         }
 
