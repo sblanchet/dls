@@ -66,6 +66,8 @@ class Q_DECL_EXPORT Model:
 
         LibDLS::Directory *dir(const QModelIndex &);
 
+        Channel *getChannel(QUrl);
+
         class Exception
         {
             public:
@@ -85,8 +87,6 @@ class Q_DECL_EXPORT Model:
         QMimeData *mimeData(const QModelIndexList &) const;
 
 	protected:
-        Channel *getChannel(QUrl);
-
         void prepareLayoutChange();
         void finishLayoutChange();
 
