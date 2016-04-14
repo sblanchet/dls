@@ -42,6 +42,10 @@ using namespace LibDLS;
 
 #define DEBUG_TIMING 0
 
+#if DEBUG_TIMING
+#include <iomanip>
+#endif
+
 /*****************************************************************************/
 
 /**
@@ -228,7 +232,8 @@ void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
    \param job_id Auftrags-ID
 */
 
-std::pair<std::set<Chunk *>, std::set<int64_t> > Channel::_fetch_chunks_local()
+std::pair<std::set<Chunk *>, std::set<int64_t> >
+Channel::_fetch_chunks_local()
 {
     DIR *dir;
     struct dirent *dir_ent;
@@ -352,6 +357,10 @@ Channel::_fetch_chunks_network()
     Chunk new_chunk;
     Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
+#if DEBUG_TIMING
+    Time ts;
+    ts.set_now();
+#endif
 
     DlsProto::JobRequest *job_req = req.mutable_job_request();
     job_req->set_id(_job->id());
@@ -437,6 +446,19 @@ Channel::_fetch_chunks_network()
         _chunks.erase(*rem_i);
     }
 
+#if DEBUG_TIMING
+    Time te;
+    te.set_now();
+    stringstream msg;
+    msg << __func__ << "() " << setw(20) << ts.diff_str_to(te);
+    if (res.has_response_time()) {
+        Time r(res.response_time());
+        Time z;
+        msg << " server: " << setw(20) << z.diff_str_to(r);
+    }
+    log(msg.str());
+    cerr << msg.str() << endl;
+#endif
     return ret;
 }
 
@@ -494,6 +516,10 @@ void Channel::_fetch_data_network(
 {
     DlsProto::Request req;
     DlsProto::Response res;
+#if DEBUG_TIMING
+    Time ts;
+    ts.set_now();
+#endif
 
     DlsProto::JobRequest *job_req = req.mutable_job_request();
     job_req->set_id(_job->id());
@@ -523,25 +549,25 @@ void Channel::_fetch_data_network(
             stringstream err;
             err << "Failed to receive data: " << e.msg;
             log(err.str());
-            return;
+            break;
         }
 
         if (res.has_error()) {
             stringstream err;
             err << "Error response: " << res.error().message();
             log(err.str());
-            return;
+            break;
         }
 
         if (res.has_end_of_response() && res.end_of_response()) {
-            return;
+            break;
         }
 
         if (!res.has_data()) {
             stringstream err;
             err << "Error: Expected data!";
             log(err.str());
-            return;
+            break;
         }
 
         const DlsProto::Data &data_res = res.data();
@@ -551,6 +577,20 @@ void Channel::_fetch_data_network(
             delete d;
         }
     }
+
+#if DEBUG_TIMING
+    Time te;
+    te.set_now();
+    stringstream msg;
+    msg << __func__ << "() " << setw(22) << ts.diff_str_to(te);
+    if (res.has_response_time()) {
+        Time r(res.response_time());
+        Time z;
+        msg << " server: " << setw(20) << z.diff_str_to(r);
+    }
+    log(msg.str());
+    cerr << msg.str() << endl;
+#endif
 }
 
 /*****************************************************************************/
