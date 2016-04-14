@@ -671,6 +671,7 @@ void MainWindow::updateDirectory()
     }
 
     dlsGraph->connectChannels(&model);
+    dlsGraph->loadData();
 }
 
 /****************************************************************************/
