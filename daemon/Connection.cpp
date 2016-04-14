@@ -306,13 +306,41 @@ void Connection::_process_channel_request(
     }
 
     if (req.fetch_chunks()) {
-        channel->fetch_chunks();
+        pair<set<LibDLS::Chunk *>, set<int64_t> > updated_removed;
+
+        try {
+            updated_removed = channel->fetch_chunks();
+        }
+        catch (LibDLS::ChannelException &e) {
+            stringstream str;
+            str << "fetch_chunks(): " << e.msg;
+            DlsProto::Response res;
+            DlsProto::Error *err = res.mutable_error();
+            err->set_message(str.str());
+            _send(res);
+            return;
+        }
+
         DlsProto::Response res;
         DlsProto::DirInfo *dir_info = res.mutable_dir_info();
         DlsProto::JobInfo *job_info = dir_info->add_job();
         DlsProto::ChannelInfo *channel_info = job_info->add_channel();
         channel_info->set_id(channel->dir_index());
-        channel->set_chunk_info(channel_info);
+
+        // add updated chunks
+        for (set<LibDLS::Chunk *>::const_iterator upd_i =
+                updated_removed.first.begin();
+                upd_i != updated_removed.first.end(); upd_i++) {
+            (*upd_i)->set_chunk_info(channel_info->add_chunk());
+        }
+
+        // add removed chunks
+        for (set<int64_t>::const_iterator rem_i =
+                updated_removed.second.begin();
+                rem_i != updated_removed.second.end(); rem_i++) {
+            channel_info->add_removed_chunks(*rem_i);
+        }
+
         _send(res);
     }
 

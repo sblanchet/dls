@@ -84,6 +84,7 @@ message ChannelInfo {
     optional ChannelType type = 4;
     optional bool recording = 5;
     repeated ChunkInfo chunk = 6;
+    repeated uint64 removed_chunks = 7;
 }
 
 message ChunkInfo {
