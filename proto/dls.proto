@@ -89,6 +89,7 @@ message ChannelInfo {
 message ChunkInfo {
     required uint64 start = 4;
     required uint64 end = 5;
+    optional bool incomplete = 6;
 }
 
 message Error {
