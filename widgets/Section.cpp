@@ -281,6 +281,8 @@ void Section::connectChannels(Model *model, const QDir &dir)
     }
 
     rwLockLayers.unlock();
+
+    updateLegend();
 }
 
 /****************************************************************************/
