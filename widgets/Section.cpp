@@ -602,9 +602,11 @@ void Section::getRange(bool &valid, LibDLS::Time &start, LibDLS::Time &end)
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        if (!(*l)->getChannel()->getRange(s, e)) {
+        Channel *ch = (*l)->getChannel();
+        if (!ch || !ch->getRange(s, e)) {
             continue;
         }
+
         if (valid) {
             if (s < start) {
                 start = s;
@@ -729,7 +731,9 @@ QSet<Channel *> Section::channels()
 
     for (QList<Layer *>::const_iterator l = layers.begin();
             l != layers.end(); l++) {
-        channels += (*l)->getChannel();
+        if ((*l)->getChannel()) {
+            channels += (*l)->getChannel();
+        }
     }
 
     rwLockLayers.unlock();

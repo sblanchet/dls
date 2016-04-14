@@ -61,6 +61,8 @@ class Q_DECL_EXPORT Layer
         void setChannel(QtDls::Channel *);
         QtDls::Channel *getChannel() const { return channel; };
 
+        const QString &getUrlString() const { return urlString; }
+
         void setName(const QString &);
         const QString &getName() const { return name; }
         void setUnit(const QString &);

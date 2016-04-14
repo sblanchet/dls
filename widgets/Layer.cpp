@@ -64,6 +64,7 @@ Layer::Layer(
         ):
     section(section),
     channel(o.channel),
+    urlString(o.urlString),
     name(o.name),
     unit(o.unit),
     color(o.color),
@@ -121,7 +122,7 @@ void Layer::load(const QDomElement &e, QtDls::Model *model, const QDir &dir)
     }
 
 #if 0
-    qDebug() << __func__ << urlString;
+    qDebug() << __func__ << this << urlString;
 #endif
 
     if (!url.isEmpty()) {
