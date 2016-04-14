@@ -3,13 +3,13 @@ dnl $Id$
 dnl
 dnl This file provides AC_CHECK_PDCOM, which defines the --with-pdcom-dir
 dnl command-line option and probes for libpdcom in that directory if it
-dnl is used.  
-dnl 
+dnl is used.
+dnl
 dnl If --with-pdcom-dir is not supplied, it probes in the default locations
-dnl /usr, /usr/local and /opt/etherlab.
+dnl /usr, /usr/local.
 dnl
 dnl It then makes sure that libpdcom will link, and exports PDCOM_LDFLAGS, 
-dnl PDCOM_CPPFLAGS, and PDCOM_LIBS 
+dnl PDCOM_CPPFLAGS, and PDCOM_LIBS
 
 AC_DEFUN([AC_CHECK_PDCOM], [
 
@@ -34,7 +34,7 @@ AC_ARG_WITH([pdcom-dir],
 AC_MSG_CHECKING([for $headerfile])
 if test "x$DIR" = x; then
     dnl if pdcom-dir was not specified, check default header location
-    for dir in /opt/etherlab /usr/local /usr ; do
+    for dir in /usr/local /usr ; do
         dirheader="$dir/include/$headerfile"
         if test -f $dirheader ; then
             found=yes
@@ -60,9 +60,9 @@ dnl Check for supplied libtool library
 if test "x$la_libfile" != x; then
     AC_MSG_CHECKING([for $la_libfile])
     la_LIBS=
-    for dir in "$DIR" /opt/etherlab /usr/local /usr; do
-        libdir="$dir/$acl_libdirstem"
-        lib_la="$libdir/$la_libfile"
+    for dir in "$DIR" /usr/local /usr; do
+        pdcom_libdir="$dir/$acl_libdirstem"
+        lib_la="$pdcom_libdir/$la_libfile"
         if test -f "$lib_la"; then
             la_LIBS="$lib_la"
             AC_MSG_RESULT([$la_LIBS])
@@ -78,12 +78,12 @@ if test "x$so_libfile" != x; then
     so_file=lib${so_libfile}.so
     AC_MSG_CHECKING([for $so_file])
     so_LIBS=
-    for dir in "$DIR" /opt/etherlab /usr/local /usr; do
-        libdir="$dir/$acl_libdirstem"
-        lib_so="$libdir/$so_file"
+    for dir in "$DIR" /usr/local /usr; do
+        pdcom_libdir="$dir/$acl_libdirstem"
+        lib_so="$pdcom_libdir/$so_file"
         if test -f "$lib_so"; then
             so_LIBS="-l$so_libfile"
-            so_LDFLAGS="-L$libdir -Wl,--rpath -Wl,$libdir"
+            so_LDFLAGS="-L$pdcom_libdir -Wl,--rpath -Wl,$pdcom_libdir"
             AC_MSG_RESULT([$lib_so])
             break;
         fi
