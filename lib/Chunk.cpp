@@ -74,7 +74,7 @@ Chunk::Chunk(const DlsProto::ChunkInfo &info, ChannelType type):
 	_start(info.start()),
 	_end(info.end()),
     _type(type),
-    _incomplete(false)
+    _incomplete(info.incomplete())
 {
 }
 
@@ -924,6 +924,7 @@ void Chunk::set_chunk_info(DlsProto::ChunkInfo *chunk_info) const
 {
 	chunk_info->set_start(_start.to_uint64());
 	chunk_info->set_end(_end.to_uint64());
+	chunk_info->set_incomplete(_incomplete);
 }
 
 /*****************************************************************************/
