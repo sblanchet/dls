@@ -928,3 +928,12 @@ void Chunk::set_chunk_info(DlsProto::ChunkInfo *chunk_info) const
 }
 
 /*****************************************************************************/
+
+void Chunk::update_from_chunk_info(const DlsProto::ChunkInfo &info)
+{
+    _start = info.start();
+    _end = info.end();
+    _incomplete = info.incomplete();
+}
+
+/*****************************************************************************/

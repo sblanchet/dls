@@ -146,13 +146,13 @@ void Channel::import(
 
 /*****************************************************************************/
 
-void Channel::fetch_chunks()
+std::pair<std::set<Chunk *>, std::set<int64_t> > Channel::fetch_chunks()
 {
     if (_job->dir()->access() == Directory::Local) {
-        _fetch_chunks_local();
+        return _fetch_chunks_local();
     }
     else {
-        _fetch_chunks_network();
+        return _fetch_chunks_network();
     }
 }
 
@@ -228,7 +228,7 @@ void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
    \param job_id Auftrags-ID
 */
 
-void Channel::_fetch_chunks_local()
+std::pair<std::set<Chunk *>, std::set<int64_t> > Channel::_fetch_chunks_local()
 {
     DIR *dir;
     struct dirent *dir_ent;
@@ -236,6 +236,8 @@ void Channel::_fetch_chunks_local()
     Chunk new_chunk, *chunk;
     bool first = true;
     int64_t dir_time;
+    set<int64_t> dir_chunks;
+    std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
 #if DEBUG_TIMING
     Time ts, te;
@@ -251,8 +253,6 @@ void Channel::_fetch_chunks_local()
         throw ChannelException(err.str());
     }
 
-    /* TODO: Delete chunks, if no existing any more. */
-
     while ((dir_ent = readdir(dir))) {
         dir_ent_name = dir_ent->d_name;
         if (dir_ent_name.find("chunk") != 0) {
@@ -264,8 +264,12 @@ void Channel::_fetch_chunks_local()
         str << dir_ent_name.substr(5);
         str >> dir_time;
 
+        // remember chunk time for later removal check
+        dir_chunks.insert(dir_time);
+
         ChunkMap::iterator chunk_i = _chunks.find(dir_time);
         if (chunk_i == _chunks.end()) {
+            // chunk not existing yet
             try {
                 new_chunk.import(path() + "/" + dir_ent_name, _type);
             }
@@ -277,8 +281,9 @@ void Channel::_fetch_chunks_local()
             }
 
             pair<int64_t, Chunk> val(dir_time, new_chunk);
-            pair<ChunkMap::iterator, bool> ret = _chunks.insert(val);
-            chunk = &ret.first->second;
+            pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
+            chunk = &ins_ret.first->second;
+            ret.first.insert(chunk);
         }
         else {
             // chunk existing
@@ -296,6 +301,7 @@ void Channel::_fetch_chunks_local()
                 log(err.str());
                 continue;
             }
+            ret.first.insert(chunk);
         }
 
         if (first) {
@@ -315,22 +321,38 @@ void Channel::_fetch_chunks_local()
 
     closedir(dir);
 
+
+    // check for removed chunks and erase them from map
+    ChunkMap::iterator ch_i = _chunks.begin();
+    while (ch_i != _chunks.end()) {
+        ChunkMap::iterator cur = ch_i++;
+        if (dir_chunks.find(cur->first) == dir_chunks.end()) {
+            ret.second.insert(cur->first);
+            _chunks.erase(cur);
+        }
+    }
+
 #if DEBUG_TIMING
     te.set_now();
     stringstream msg;
-    msg << "fetch_chunks " << ts.diff_str_to(te);
+    msg << __func__ << "() " << ts.diff_str_to(te);
     log(msg.str());
 #endif
+
+    return ret;
 }
 
 /*****************************************************************************/
 
-void Channel::_fetch_chunks_network()
+std::pair<std::set<Chunk *>, std::set<int64_t> >
+Channel::_fetch_chunks_network()
 {
     DlsProto::Request req;
     DlsProto::Response res;
     bool first = true;
-    Chunk new_chunk, *chunk;
+    Chunk new_chunk;
+    Chunk *chunk;
+    std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
     DlsProto::JobRequest *job_req = req.mutable_job_request();
     job_req->set_id(_job->id());
@@ -342,21 +364,27 @@ void Channel::_fetch_chunks_network()
         _job->dir()->_send_message(req);
     }
     catch (DirectoryException &e) {
-        cerr << "Failed to request chunks: " << e.msg << endl;
-        return;
+        stringstream err;
+        err << "Failed to request chunks: " << e.msg;
+        log(err.str());
+        return ret;
     }
 
     try {
         _job->dir()->_receive_message(res);
     }
     catch (DirectoryException &e) {
-        cerr << "Failed to receive chunks: " << e.msg << endl;
-        return;
+        stringstream err;
+        err << "Failed to receive chunks: " << e.msg;
+        log(err.str());
+        return ret;
     }
 
     if (res.has_error()) {
-        cerr << "Error response: " << res.error().message() << endl;
-        return;
+        stringstream err;
+        err << "Error response: " << res.error().message();
+        log(err.str());
+        return ret;
     }
 
     const DlsProto::DirInfo &dir_info = res.dir_info();
@@ -375,12 +403,14 @@ void Channel::_fetch_chunks_network()
         if (chunk_i == _chunks.end()) {
             new_chunk = Chunk(*ch_info_i, _type);
             pair<int64_t, Chunk> val(start, new_chunk);
-            _chunks.insert(val);
-            chunk = &new_chunk;
+            pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
+            chunk = &ins_ret.first->second;
         } else {
             // chunk existing
+            chunk_i->second.update_from_chunk_info(*ch_info_i);
             chunk = &chunk_i->second;
         }
+        ret.first.insert(chunk);
 
         if (first) {
             _range_start = chunk->start();
@@ -396,6 +426,15 @@ void Channel::_fetch_chunks_network()
             }
         }
     }
+
+    for (google::protobuf::RepeatedField<uint64_t>::const_iterator rem_i =
+            ch_info.removed_chunks().begin();
+            rem_i != ch_info.removed_chunks().end(); rem_i++) {
+        ret.second.insert(*rem_i);
+        _chunks.erase(*rem_i);
+    }
+
+    return ret;
 }
 
 /*****************************************************************************/
@@ -467,7 +506,9 @@ void Channel::_fetch_data_network(
         _job->dir()->_send_message(req);
     }
     catch (DirectoryException &e) {
-        cerr << "Failed to request data: " << e.msg << endl;
+        stringstream err;
+        err << "Failed to request data: " << e.msg;
+        log(err.str());
         return;
     }
 
@@ -476,12 +517,16 @@ void Channel::_fetch_data_network(
             _job->dir()->_receive_message(res, 0);
         }
         catch (DirectoryException &e) {
-            cerr << "Failed to receive data: " << e.msg << endl;
+            stringstream err;
+            err << "Failed to receive data: " << e.msg;
+            log(err.str());
             return;
         }
 
         if (res.has_error()) {
-            cerr << "Error response: " << res.error().message() << endl;
+            stringstream err;
+            err << "Error response: " << res.error().message();
+            log(err.str());
             return;
         }
 
@@ -490,7 +535,9 @@ void Channel::_fetch_data_network(
         }
 
         if (!res.has_data()) {
-            cerr << "Error: Expected data!" << endl;
+            stringstream err;
+            err << "Error: Expected data!";
+            log(err.str());
             return;
         }
 

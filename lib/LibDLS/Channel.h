@@ -26,6 +26,8 @@
 
 #include <string>
 #include <map>
+#include <utility> // pair
+#include <set>
 
 #include "Exception.h"
 #include "Time.h"
@@ -75,7 +77,7 @@ public:
     Job *getJob() const { return _job; }
 
     void import(const std::string &, unsigned int);
-    void fetch_chunks();
+    std::pair<std::set<Chunk *>, std::set<int64_t> > fetch_chunks();
     void fetch_data(Time, Time, unsigned int,
                     DataCallback, void *, unsigned int = 1) const;
 
@@ -113,8 +115,8 @@ private:
     Time _range_start; /**< start of channel data range */
     Time _range_end; /**< end of channel data range */
 
-    void _fetch_chunks_local();
-    void _fetch_chunks_network();
+    std::pair<std::set<Chunk *>, std::set<int64_t> > _fetch_chunks_local();
+    std::pair<std::set<Chunk *>, std::set<int64_t> > _fetch_chunks_network();
     void _fetch_data_local(Time, Time, unsigned int,
                     DataCallback, void *, unsigned int) const;
     void _fetch_data_network(Time, Time, unsigned int,
