@@ -366,7 +366,7 @@ bool Graph::load(const QString &path, Model *model)
 
     QFile file(path);
     QFileInfo fi(path);
-    QDir dir = fi.absoluteDir();
+    dir = fi.absoluteDir();
 
     if (!file.open(QFile::ReadOnly)) {
         qWarning() << tr("Failed to open %1!").arg(path);
@@ -519,6 +519,22 @@ bool Graph::save(const QString &path)
 
     file.close();
     return true;
+}
+
+/****************************************************************************/
+
+/** Tries to connect layers without channels to the given model.
+ */
+void Graph::connectChannels(Model *model)
+{
+    rwLockSections.lockForRead();
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->connectChannels(model, dir);
+    }
+
+    rwLockSections.unlock();
 }
 
 /****************************************************************************/
@@ -907,8 +923,6 @@ void Graph::print()
 
     std::set<LibDLS::Job *> jobSet;
 
-    rwLockSections.lockForRead();
-
     LibDLS::Time range = getEnd() - getStart();
 	int dataWidth = page.width() - scaleWidth;
 	int measurePos = -1;
@@ -919,6 +933,8 @@ void Graph::print()
 		measurePos =
 			(measureTime - getStart()).to_dbl_time() * xScale + 0.5;
 	}
+
+    rwLockSections.lockForRead();
 
     QList<Section *>::iterator first = sections.begin();
 

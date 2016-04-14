@@ -669,6 +669,8 @@ void MainWindow::updateDirectory()
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
     }
+
+    dlsGraph->connectChannels(&model);
 }
 
 /****************************************************************************/

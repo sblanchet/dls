@@ -99,23 +99,8 @@ Layer::~Layer()
 
 void Layer::load(const QDomElement &e, QtDls::Model *model, const QDir &dir)
 {
-    QUrl url;
-
     if (e.hasAttribute("url")) {
         urlString = e.attribute("url");
-        url = QUrl(urlString);
-        if (url.isValid()) {
-            // allow relative paths
-            if (url.scheme().isEmpty() || url.scheme() == "file") {
-                QString path = url.path();
-                if (QDir::isRelativePath(path)) {
-                    url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
-                }
-            }
-        }
-        else {
-            qWarning() << tr("Invalid URL in Layer element!");
-        }
     }
     else {
         qWarning() << tr("Layer element missing url attribute!");
@@ -125,16 +110,7 @@ void Layer::load(const QDomElement &e, QtDls::Model *model, const QDir &dir)
     qDebug() << __func__ << this << urlString;
 #endif
 
-    if (!url.isEmpty()) {
-        try {
-            channel = model->getChannel(url);
-        }
-        catch (QtDls::Model::Exception &e) {
-            qWarning() << tr("Failed to get channel %1: %2")
-                .arg(url.toString())
-                .arg(e.msg);
-        }
-    }
+    connectChannel(model, dir);
 
     QDomNodeList children = e.childNodes();
 
@@ -239,6 +215,48 @@ void Layer::save(QDomElement &e, QDomDocument &doc) const
     text = doc.createTextNode(num);
     elem.appendChild(text);
     layerElem.appendChild(elem);
+}
+
+/****************************************************************************/
+
+void Layer::connectChannel(QtDls::Model *model, const QDir &dir)
+{
+#if 0
+    qDebug() << __func__ << this << urlString;
+#endif
+
+    if (channel) {
+        return;
+    }
+
+    QUrl url;
+
+    url = QUrl(urlString);
+
+    if (url.isValid()) {
+        // allow relative paths
+        if (url.scheme().isEmpty() || url.scheme() == "file") {
+            QString path = url.path();
+            if (QDir::isRelativePath(path)) {
+                url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
+            }
+        }
+    }
+    else {
+        qWarning() << tr("Invalid URL %1!").arg(url.toString());
+        return;
+    }
+
+    if (!url.isEmpty()) {
+        try {
+            channel = model->getChannel(url);
+        }
+        catch (QtDls::Model::Exception &e) {
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url.toString())
+                .arg(e.msg);
+        }
+    }
 }
 
 /****************************************************************************/
@@ -795,11 +813,9 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
     QColor gapColor(0xff, 0xec, 0x6b, 127);
     QColor overlapColor(255, 0, 0, 127);
 
-    if (!channel) {
-        return;
+    if (channel) {
+        ranges = channel->chunkRanges();
     }
-
-    ranges = channel->chunkRanges();
 
     // check if chunks overlap and identify relevant ranges
     for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
