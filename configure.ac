@@ -42,7 +42,7 @@ ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_CXX
 AC_PROG_LIBTOOL
-AC_PREFIX_DEFAULT([/opt/etherlab])
+AC_PREFIX_DEFAULT([/usr/local])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
