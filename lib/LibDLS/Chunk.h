@@ -95,6 +95,7 @@ class Chunk
         bool operator==(const Chunk &) const;
 
         void set_chunk_info(DlsProto::ChunkInfo *) const;
+        void update_from_chunk_info(const DlsProto::ChunkInfo &);
 
     protected:
         std::string _dir; /**< Chunk-Verzeichnis */
