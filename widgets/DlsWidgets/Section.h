@@ -75,6 +75,8 @@ class Q_DECL_EXPORT Section
         void load(const QDomElement &, QtDls::Model *, const QDir &);
         void save(QDomElement &, QDomDocument &);
 
+        void connectChannels(QtDls::Model *, const QDir &);
+
         Graph *getGraph() { return graph; }
 
         bool getAutoScale() const { return autoScale; }

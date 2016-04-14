@@ -271,6 +271,20 @@ void Section::save(QDomElement &e, QDomDocument &doc)
 
 /****************************************************************************/
 
+void Section::connectChannels(Model *model, const QDir &dir)
+{
+    rwLockLayers.lockForRead();
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        (*l)->connectChannel(model, dir);
+    }
+
+    rwLockLayers.unlock();
+}
+
+/****************************************************************************/
+
 void Section::setAutoScale(bool a)
 {
     if (a != autoScale) {
