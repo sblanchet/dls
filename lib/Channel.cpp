@@ -349,7 +349,6 @@ Channel::_fetch_chunks_network()
 {
     DlsProto::Request req;
     DlsProto::Response res;
-    bool first = true;
     Chunk new_chunk;
     Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
@@ -391,9 +390,6 @@ Channel::_fetch_chunks_network()
     const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
     const DlsProto::ChannelInfo &ch_info = job_info.channel(0); // FIXME check
 
-    _range_start.set_null();
-    _range_end.set_null();
-
     google::protobuf::RepeatedPtrField<DlsProto::ChunkInfo>::const_iterator
         ch_info_i;
     for (ch_info_i = ch_info.chunk().begin();
@@ -411,20 +407,27 @@ Channel::_fetch_chunks_network()
             chunk = &chunk_i->second;
         }
         ret.first.insert(chunk);
+    }
 
-        if (first) {
-            _range_start = chunk->start();
-            _range_end = chunk->end();
-            first = false;
-        }
-        else {
-            if (chunk->start() < _range_start) {
-                _range_start = chunk->start();
+    // update time range
+    ChunkMap::const_iterator ch_i = _chunks.begin();
+    if (ch_i != _chunks.end()) {
+        _range_start = ch_i->second.start();
+        _range_end = ch_i->second.end();
+        ch_i++;
+
+        for (; ch_i != _chunks.end(); ch_i++) {
+            if (ch_i->second.start() < _range_start) {
+                _range_start = ch_i->second.start();
             }
-            if (chunk->end() > _range_end) {
-                _range_end = chunk->end();
+            if (ch_i->second.end() > _range_end) {
+                _range_end = ch_i->second.end();
             }
         }
+    }
+    else {
+        _range_start.set_null();
+        _range_end.set_null();
     }
 
     for (google::protobuf::RepeatedField<uint64_t>::const_iterator rem_i =
