@@ -33,6 +33,7 @@
 #include "ProcMother.h"
 
 #include <iostream>
+#include <typeinfo>
 using namespace std;
 
 /*****************************************************************************/
@@ -132,12 +133,23 @@ void *Connection::_run()
 /*****************************************************************************/
 
 void Connection::_send(
-        const google::protobuf::Message &msg
+        google::protobuf::Message &msg
 #ifdef DLS_PROTO_DEBUG
         , bool debug
 #endif
         )
 {
+    try {
+        DlsProto::Response &res = dynamic_cast<DlsProto::Response &>(msg);
+        if (_request_time != (int64_t) 0) {
+            LibDLS::Time t;
+            t.set_now();
+            res.set_response_time((t - _request_time).to_int64());
+        }
+    }
+    catch (bad_cast &e) {
+    }
+
     string str;
     msg.SerializeToString(&str);
 
@@ -201,6 +213,8 @@ void Connection::_receive()
         _running = false;
         return;
     }
+
+    _request_time.set_now();
 
     _process(str);
 }

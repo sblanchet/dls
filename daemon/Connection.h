@@ -58,10 +58,11 @@ private:
     int _ret; /**< Return value. */
     bool _running;
     LibDLS::Directory _dir;
+    LibDLS::Time _request_time;
 
     static void *_run_static(void *);
     void *_run();
-    void _send(const google::protobuf::Message &
+    void _send(google::protobuf::Message &
 #ifdef DLS_PROTO_DEBUG
             , bool debug = 1
 #endif
