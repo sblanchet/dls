@@ -38,7 +38,3 @@ vim: tw=78 spelllang=en spell
     - Status (replace dls_status).
     - getopt() long
     - show compression rate
-
-* lib:
-	- fetch_chunks(): delete non-existing chunks
-    - Protocol: Only transfer new/deleted chunks, update chunks
