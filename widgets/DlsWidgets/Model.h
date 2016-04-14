@@ -38,6 +38,7 @@ namespace LibDLS {
 namespace DLS {
 	class Graph;
 	class Section;
+	class Layer;
 }
 
 namespace QtDls {
@@ -50,6 +51,7 @@ class Q_DECL_EXPORT Model:
 {
 	friend class DLS::Graph;
 	friend class DLS::Section;
+	friend class DLS::Layer;
 	friend class Dir;
 
     public:

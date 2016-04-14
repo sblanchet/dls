@@ -28,6 +28,7 @@
 #include "DlsWidgets/Section.h"
 #include "DlsWidgets/Layer.h"
 #include "DlsWidgets/Graph.h"
+#include "DlsWidgets/Model.h"
 #include "Channel.h"
 
 using DLS::Section;
@@ -39,13 +40,11 @@ using QtDls::Channel;
 /** Constructor.
  */
 Layer::Layer(
-        Section *section,
-        QtDls::Channel *channel,
-        const QColor &c
+        Section *section
         ):
     section(section),
-    channel(channel),
-    color(c),
+    channel(NULL),
+    color(section->nextColor()),
     scale(1.0),
     offset(0.0),
     precision(-1),
@@ -53,9 +52,6 @@ Layer::Layer(
     maximum(0.0),
     extremaValid(false)
 {
-    if (!color.isValid()) {
-        color = section->nextColor();
-    }
 }
 
 /****************************************************************************/
@@ -100,8 +96,45 @@ Layer::~Layer()
 
 /****************************************************************************/
 
-void Layer::load(const QDomElement &e)
+void Layer::load(const QDomElement &e, QtDls::Model *model, const QDir &dir)
 {
+    QUrl url;
+
+    if (e.hasAttribute("url")) {
+        urlString = e.attribute("url");
+        url = QUrl(urlString);
+        if (url.isValid()) {
+            // allow relative paths
+            if (url.scheme().isEmpty() || url.scheme() == "file") {
+                QString path = url.path();
+                if (QDir::isRelativePath(path)) {
+                    url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
+                }
+            }
+        }
+        else {
+            qWarning() << tr("Invalid URL in Layer element!");
+        }
+    }
+    else {
+        qWarning() << tr("Layer element missing url attribute!");
+    }
+
+#if 0
+    qDebug() << __func__ << urlString;
+#endif
+
+    if (!url.isEmpty()) {
+        try {
+            channel = model->getChannel(url);
+        }
+        catch (QtDls::Model::Exception &e) {
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url.toString())
+                .arg(e.msg);
+        }
+    }
+
     QDomNodeList children = e.childNodes();
 
     for (int i = 0; i < children.size(); i++) {
@@ -169,8 +202,7 @@ void Layer::load(const QDomElement &e)
 void Layer::save(QDomElement &e, QDomDocument &doc) const
 {
     QDomElement layerElem = doc.createElement("Layer");
-    QUrl url = channel->url();
-    layerElem.setAttribute("url", url.toString());
+    layerElem.setAttribute("url", urlString);
     e.appendChild(layerElem);
 
     QDomElement elem = doc.createElement("Name");
@@ -206,6 +238,14 @@ void Layer::save(QDomElement &e, QDomDocument &doc) const
     text = doc.createTextNode(num);
     elem.appendChild(text);
     layerElem.appendChild(elem);
+}
+
+/****************************************************************************/
+
+void Layer::setChannel(QtDls::Channel *ch)
+{
+    channel = ch;
+    urlString = ch->url().toString();
 }
 
 /****************************************************************************/
@@ -291,6 +331,10 @@ void Layer::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
         << end.to_str().c_str() << width;
 #endif
 
+    if (!channel) {
+        return;
+    }
+
     worker->clearData();
     channel->fetchData(start, end, width,
             GraphWorker::dataCallback, worker, 1);
@@ -313,10 +357,13 @@ QString Layer::title() const
     QString ret;
 
     if (!name.isEmpty()) {
-        ret += name;
+        ret = name;
+    }
+    else if (channel) {
+        ret = channel->name();
     }
     else {
-        ret += channel->name();
+        ret = urlString;
     }
 
     if (!unit.isEmpty()) {
@@ -746,6 +793,10 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
     std::vector<Channel::TimeRange> overlap;
     QColor gapColor(0xff, 0xec, 0x6b, 127);
     QColor overlapColor(255, 0, 0, 127);
+
+    if (!channel) {
+        return;
+    }
 
     ranges = channel->chunkRanges();
 

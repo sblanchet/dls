@@ -48,14 +48,17 @@ class GraphWorker;
  */
 class Q_DECL_EXPORT Layer
 {
+    Q_DECLARE_TR_FUNCTIONS(Layer)
+
     public:
-        Layer(Section *, QtDls::Channel *, const QColor & = QColor());
+        Layer(Section *);
         Layer(const Layer &, Section *);
         virtual ~Layer();
 
-        void load(const QDomElement &);
+        void load(const QDomElement &, QtDls::Model *, const QDir &);
         void save(QDomElement &, QDomDocument &) const;
 
+        void setChannel(QtDls::Channel *);
         QtDls::Channel *getChannel() const { return channel; };
 
         void setName(const QString &);
@@ -109,7 +112,8 @@ class Q_DECL_EXPORT Layer
         };
     private:
         Section * const section;
-        QtDls::Channel * const channel;
+        QtDls::Channel *channel;
+        QString urlString;
         QString name;
         QString unit;
         QColor color;
@@ -132,6 +136,8 @@ class Q_DECL_EXPORT Layer
         void updateExtrema();
         void updateExtremaList(const QList<LibDLS::Data *> &, bool *);
         void drawGaps(QPainter &, const QRect &, double) const;
+
+        Layer(); // private
 };
 
 /****************************************************************************/

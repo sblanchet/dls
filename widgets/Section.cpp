@@ -580,7 +580,9 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
 
 Layer *Section::appendLayer(QtDls::Channel *ch)
 {
-    Layer *l = new Layer(this, ch);
+    Layer *l = new Layer(this);
+
+    l->setChannel(ch);
 
     rwLockLayers.lockForWrite();
     layers.append(l);
@@ -739,9 +741,16 @@ QSet<Channel *> Section::channels()
 
 void Section::updateLegend()
 {
-    QString html = "<html><head><meta http-equiv=\"Content-Type\" "
+    int pointSize = 8;
+
+    QString html = QString("<html><head><meta http-equiv=\"Content-Type\" "
         "content=\"text/html; charset=utf-8\"></head>"
-        "<body style=\"font-size: 8pt\">";
+        "<body style=\"font-size: %1pt\">").arg(pointSize);
+
+    QFont f(legend.defaultFont());
+    f.setPointSize(pointSize);
+    QFontMetrics fm(f);
+    int ascent = fm.ascent();
 
     bool first = true;
 
@@ -754,9 +763,21 @@ void Section::updateLegend()
         } else {
             html += ", ";
         }
-        html += "<span style=\"color: " + (*l)->getColor().name() + ";\">";
-        html += (*l)->title();
-        html += "</span>";
+
+        QString col, img;
+        if ((*l)->getChannel()) {
+            col = (*l)->getColor().name();
+        }
+        else {
+            col = "#555555";
+            img = QString("<img width=\"%1\" height=\"%1\" "
+                    "src=\":/DlsWidgets/images/dialog-error.svg\"/> ")
+                .arg(ascent);
+        }
+
+        html += "<nobr style=\"color: " + col + ";\">";
+        html += img + (*l)->title();
+        html += "</nobr>";
     }
 
     rwLockLayers.unlock();
@@ -858,47 +879,10 @@ void Section::loadLayers(const QDomElement &elem, Model *model,
             continue;
         }
 
-        if (!child.hasAttribute("url")) {
-            qWarning() << tr("Layer element missing url attribute!");
-            continue;
-        }
-
-        QUrl url = child.attribute("url");
-        if (!url.isValid()) {
-            qWarning() << tr("Invalid URL in Layer element!");
-            continue;
-        }
-
-        // allow relative paths
-        if (url.scheme().isEmpty() || url.scheme() == "file") {
-            QString path = url.path();
-            if (QDir::isRelativePath(path)) {
-                url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
-            }
-        }
-
-        QtDls::Channel *ch = NULL;
+        Layer *layer = new Layer(this);
 
         try {
-            ch = model->getChannel(url);
-        }
-        catch (Model::Exception &e) {
-            qWarning() << tr("Failed to get channel %1: %2")
-                .arg(url.toString())
-                .arg(e.msg);
-            continue;
-        }
-
-        if (!ch) {
-            qWarning() << tr("Failed to get channel %1!")
-                .arg(url.toString());
-            continue;
-        }
-
-        Layer *layer = new Layer(this, ch);
-
-        try {
-            layer->load(child);
+            layer->load(child, model, dir);
         } catch (Layer::Exception &e) {
             delete layer;
             qWarning() << tr("Failed to load layer: %1").arg(e.msg);
