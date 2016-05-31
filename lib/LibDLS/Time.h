@@ -29,6 +29,8 @@
 
 #include <ostream>
 
+#include "globals.h"
+
 /*****************************************************************************/
 
 namespace LibDLS {
@@ -42,7 +44,7 @@ namespace LibDLS {
    zur Speicherung der Mikrosekunden nach epoch.
 */
 
-class __declspec(dllexport) Time
+class DLS_EXPORT Time
 {
     friend std::ostream &operator <<(std::ostream &, const Time &);
 
