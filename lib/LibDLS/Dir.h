@@ -30,6 +30,10 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
 
+#ifdef _WIN32
+#include <ws2tcpip.h>
+#endif
+
 #include "globals.h"
 #include "Exception.h"
 #include "Job.h"
@@ -95,7 +99,13 @@ class DLS_EXPORT Directory
 
         void import();
 
-        bool connected() const { return _fd != -1; }
+        bool connected() const {
+#ifdef _WIN32
+            return _sock != INVALID_SOCKET;
+#else
+            return _fd != -1;
+#endif
+        }
 
         std::list<Job *> &jobs() { return _jobs; }
         Job *job(unsigned int);
@@ -118,7 +128,11 @@ class DLS_EXPORT Directory
         /* Network access */
         std::string _host; /**< Host name/address. */
         std::string _port; /**< Port number / service name. */
-        int _fd; /**< Socket file descriptor. */
+#ifdef _WIN32
+        SOCKET _sock;
+#else
+        int _sock;
+#endif
         google::protobuf::io::FileInputStream *_fis;
         google::protobuf::io::FileOutputStream *_fos;
 
