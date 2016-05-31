@@ -30,6 +30,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
 
+#include "globals.h"
 #include "Exception.h"
 #include "Job.h"
 
@@ -69,7 +70,7 @@ class Observer
 
 /** DLS Data Directory.
  */
-class __declspec(dllexport) Directory
+class DLS_EXPORT Directory
 {
     friend class Job;
     friend class Channel;
