@@ -69,7 +69,7 @@ class Observer
 
 /** DLS Data Directory.
  */
-class Directory
+class __declspec(dllexport) Directory
 {
     friend class Job;
     friend class Channel;
