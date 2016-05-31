@@ -74,9 +74,13 @@ DEPENDPATH += $$PWD $$PWD/../lib
 
 win32 {
     QMAKE_LFLAGS += -shared
+    LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -ws2_32
+}
+unix {
+    LIBS += $$OUT_PWD/../lib/.libs/libdls.so
 }
 
-LIBS += $$OUT_PWD/../lib/.libs/libdls.so -lfftw3 -lz -lxml2
+LIBS += -lfftw3 -lz -lxml2
 
 target.path = $$[QT_INSTALL_PLUGINS]/designer
 INSTALLS += target
