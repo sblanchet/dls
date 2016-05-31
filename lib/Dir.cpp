@@ -51,11 +51,32 @@ using namespace LibDLS;
 
 Directory::Directory(const std::string &uri_text):
     _access(Unknown),
-    _fd(-1),
+#ifdef _WIN32
+    _sock(INVALID_SOCKET),
+#else
+    _sock(-1),
+#endif
     _fis(NULL),
     _fos(NULL)
 {
     set_uri(uri_text);
+
+#ifdef _WIN32
+    WSADATA wsaData;
+    int err = WSAStartup(0x0202, &wsaData);
+    if (err != 0) {
+        stringstream err;
+        err << "WSAStartup() failed with error " << err << ".";
+        _error_msg = err.str();
+        log(err.str());
+        throw DirectoryException(err.str());
+    } else {
+        stringstream msg;
+        msg << "WSAStartup() initialized with version "
+            << hex << wsaData.wVersion << ".";
+        log(msg.str());
+    }
+#endif
 }
 
 /*****************************************************************************/
@@ -68,6 +89,10 @@ Directory::~Directory()
     for (job_i = _jobs.begin(); job_i != _jobs.end(); job_i++) {
         delete *job_i;
     }
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
 }
 
 /*****************************************************************************/
@@ -360,7 +385,7 @@ void Directory::_importNetwork()
 
 void Directory::_connect()
 {
-    if (_fd != -1) {
+    if (connected()) {
         return;
     }
 
@@ -388,18 +413,39 @@ void Directory::_connect()
     }
 
     struct addrinfo *rp;
-    int fd;
+    int sock;
     for (rp = result; rp != NULL; rp = rp->ai_next) {
-        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (fd == -1) {
+        sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (sock ==
+#ifdef _WIN32
+            INVALID_SOCKET
+#else
+            -1
+#endif
+           ) {
             continue;
         }
 
-        if (connect(fd, rp->ai_addr, rp->ai_addrlen) != -1) {
+#ifdef _WIN32
+        unsigned long arg = 0;
+        int ret = ioctlsocket(sock, FIONBIO, &arg);
+        if (ret) {
+            _error_msg = "Failed to set socket to blocking mode!";
+            log(_error_msg);
+            closesocket(sock);
+            throw DirectoryException(_error_msg);
+        }
+#endif
+
+        if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1) {
             break;
         }
 
-        ::close(fd);
+#ifdef _WIN32
+        closesocket(sock);
+#else
+        ::close(sock);
+#endif
     }
 
     freeaddrinfo(result);
@@ -412,21 +458,29 @@ void Directory::_connect()
 
 
     try {
-        _fis = new google::protobuf::io::FileInputStream(fd);
+        _fis = new google::protobuf::io::FileInputStream(sock);
     }
     catch (...) {
-        ::close(fd);
+#ifdef _WIN32
+        closesocket(sock);
+#else
+        ::close(sock);
+#endif
     }
 
     try {
-        _fos = new google::protobuf::io::FileOutputStream(fd);
+        _fos = new google::protobuf::io::FileOutputStream(sock);
     }
     catch (...) {
         delete _fis;
-        ::close(fd);
+#ifdef _WIN32
+        closesocket(sock);
+#else
+        ::close(sock);
+#endif
     }
 
-    _fd = fd;
+    _sock = sock;
 
     {
         stringstream msg;
@@ -442,7 +496,7 @@ void Directory::_connect()
 
 void Directory::_disconnect()
 {
-    if (_fd == -1) {
+    if (!connected()) {
         return;
     }
 
@@ -454,8 +508,13 @@ void Directory::_disconnect()
 
     delete _fis;
     delete _fos;
-    close(_fd);
-    _fd = -1;
+#ifdef _WIN32
+    closesocket(_sock);
+    _sock = INVALID_SOCKET;
+#else
+    close(_sock);
+    _sock = -1;
+#endif
 }
 
 /*****************************************************************************/
@@ -503,11 +562,13 @@ void Directory::_receive_message(
     uint32_t size;
     bool success = ci.ReadVarint32(&size);
     if (!success) {
-        _disconnect();
+        int eno = _fis->GetErrno();
         stringstream err;
-        err << "ReadVarint32() failed!";
+        err << "ReadVarint32() failed: " << strerror(eno)
+            << " (" << eno << ").";
         _error_msg = err.str();
         log(_error_msg);
+        _disconnect();
         throw DirectoryException(err.str());
     }
 
