@@ -74,7 +74,7 @@ DEPENDPATH += $$PWD $$PWD/../lib
 
 win32 {
     QMAKE_LFLAGS += -shared
-    LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -ws2_32
+    LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -lws2_32
 }
 unix {
     LIBS += $$OUT_PWD/../lib/.libs/libdls.so
@@ -88,9 +88,12 @@ INSTALLS += target
 unix {
     libraries.path = $${PREFIX}/lib$${LIBEXT}
     libraries.files = libDlsWidgets.so
-
-    INSTALLS += libraries
 }
+win32 {
+    libraries.path = $${PREFIX}/bin
+    libraries.files = release/DlsWidgets0.dll
+}
+INSTALLS += libraries
 
 unix:inst_headers.path = $${PREFIX}/include/DlsWidgets
 win32:inst_headers.path = "$${PREFIX}/include/DlsWidgets"
