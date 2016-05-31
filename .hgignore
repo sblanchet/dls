@@ -42,6 +42,8 @@ gui/Makefile.Release
 gui/debug
 gui/dlsgui
 gui/moc_*.cpp
+gui/object_script.dlsgui.Debug
+gui/object_script.dlsgui.Release
 gui/qrc_*.cpp
 gui/release
 gui/ui_*.h
