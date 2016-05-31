@@ -42,7 +42,7 @@ namespace LibDLS {
    zur Speicherung der Mikrosekunden nach epoch.
 */
 
-class Time
+class __declspec(dllexport) Time
 {
     friend std::ostream &operator <<(std::ostream &, const Time &);
 
