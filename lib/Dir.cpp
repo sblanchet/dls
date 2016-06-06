@@ -56,7 +56,7 @@ using namespace LibDLS;
 #define DLS_CLOSE_SOCKET ::close
 #endif
 
-//#define DEBUG
+//#define DEBUG_STREAM
 
 /*****************************************************************************/
 
@@ -73,7 +73,7 @@ class LibDLS::SocketInputStream:
         ): _sock(sock), _errno(0) {}
 
         int Read(void *buffer, int size) {
-#ifdef DEBUG
+#ifdef DEBUG_STREAM
             stringstream msg;
             msg << __func__ << "(" << size << ")";
 #endif
@@ -85,7 +85,7 @@ class LibDLS::SocketInputStream:
             bytes_read = read(_sock, buffer, size);
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_STREAM
             msg << ": " << bytes_read;
             log(msg.str());
 #endif
