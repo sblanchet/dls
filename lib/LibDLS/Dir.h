@@ -133,7 +133,6 @@ class DLS_EXPORT Directory
 #else
         int _sock;
 #endif
-        google::protobuf::io::FileInputStream *_fis;
         google::protobuf::io::FileOutputStream *_fos;
 
         std::list<Job *> _jobs; /**< list of jobs */
