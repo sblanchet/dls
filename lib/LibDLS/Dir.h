@@ -103,7 +103,7 @@ class DLS_EXPORT Directory
 #ifdef _WIN32
             return _sock != INVALID_SOCKET;
 #else
-            return _fd != -1;
+            return _sock != -1;
 #endif
         }
 
