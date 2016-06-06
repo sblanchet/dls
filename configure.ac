@@ -46,8 +46,10 @@ AC_PREFIX_DEFAULT([/usr/local])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
-AC_CHECK_PDCOM
 AM_PATH_XML2
+
+# check for PdCom
+LDFLAGS="$LDFLAGS -lpdcom"
 
 AC_SUBST(LIBDLS_VERSION, [3:0:0])
 
