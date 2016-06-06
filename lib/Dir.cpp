@@ -56,7 +56,7 @@ using namespace LibDLS;
 #define DLS_CLOSE_SOCKET ::close
 #endif
 
-#define DEBUG
+//#define DEBUG
 
 /*****************************************************************************/
 
@@ -506,32 +506,34 @@ void Directory::_connect()
     if (!rp) {
         _error_msg = "Connection failed!";
         log(_error_msg);
-        throw DirectoryException(_error_msg);
+        goto out_throw;
     }
 
     try {
         _sis = new SocketInputStream(sock);
     }
     catch (...) {
-        DLS_CLOSE_SOCKET(sock);
+        _error_msg = "Failed to create socket input stream!";
+        log(_error_msg);
+        goto out_sock;
     }
 
     try {
         _cisa = new google::protobuf::io::CopyingInputStreamAdaptor(_sis);
     }
     catch (...) {
-        delete _sis;
-        DLS_CLOSE_SOCKET(sock);
+        _error_msg = "Failed to create socket stream adapter!";
+        log(_error_msg);
+        goto out_sis;
     }
-
 
     try {
         _fos = new google::protobuf::io::FileOutputStream(sock);
     }
     catch (...) {
-        delete _cisa;
-        delete _sis;
-        DLS_CLOSE_SOCKET(sock);
+        _error_msg = "Failed to create file output stream!";
+        log(_error_msg);
+        goto out_cisa;
     }
 
     _sock = sock;
@@ -544,6 +546,16 @@ void Directory::_connect()
 
     /* read hello message */
     _receive_hello();
+    return;
+
+out_cisa:
+    delete _cisa;
+out_sis:
+    delete _sis;
+out_sock:
+    DLS_CLOSE_SOCKET(sock);
+out_throw:
+    throw DirectoryException(_error_msg);
 }
 
 /*****************************************************************************/
