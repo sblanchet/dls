@@ -37,6 +37,7 @@
 #include <errno.h>
 
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include <uriparser/Uri.h>
 
@@ -47,6 +48,63 @@
 using namespace std;
 using namespace LibDLS;
 
+#define DEBUG
+
+/*****************************************************************************/
+
+class SocketInputStream:
+    public google::protobuf::io::CopyingInputStream
+{
+    public:
+        SocketInputStream(
+#ifdef _WIN32
+                SOCKET sock
+#else
+                int sock
+#endif
+        ): _sock(sock), _errno(0) {}
+
+        int Read(void *buffer, int size) {
+#ifdef DEBUG
+            stringstream msg;
+            msg << __func__ << "(" << size << ")";
+#endif
+
+            ssize_t bytes_read;
+#ifdef _WIN32
+            bytes_read = recv(_sock, (char *) buffer, size, 0);
+#else
+            bytes_read = read(_sock, buffer, size);
+#endif
+
+#ifdef DEBUG
+            msg << ": " << bytes_read;
+            log(msg.str());
+#endif
+
+            if (bytes_read >= 0) {
+                return bytes_read;
+            } else {
+#ifdef _WIN32
+                _errno = WSAGetLastError();
+#else
+                _errno = errno;
+#endif
+                return -1;
+            }
+        }
+
+        int lastError() const { return _errno; }
+
+    private:
+#ifdef _WIN32
+        SOCKET _sock;
+#else
+        int _sock;
+#endif
+        int _errno;
+};
+
 /*****************************************************************************/
 
 Directory::Directory(const std::string &uri_text):
@@ -56,7 +114,6 @@ Directory::Directory(const std::string &uri_text):
 #else
     _sock(-1),
 #endif
-    _fis(NULL),
     _fos(NULL)
 {
     set_uri(uri_text);
@@ -456,23 +513,10 @@ void Directory::_connect()
         throw DirectoryException(_error_msg);
     }
 
-
-    try {
-        _fis = new google::protobuf::io::FileInputStream(sock);
-    }
-    catch (...) {
-#ifdef _WIN32
-        closesocket(sock);
-#else
-        ::close(sock);
-#endif
-    }
-
     try {
         _fos = new google::protobuf::io::FileOutputStream(sock);
     }
     catch (...) {
-        delete _fis;
 #ifdef _WIN32
         closesocket(sock);
 #else
@@ -506,7 +550,6 @@ void Directory::_disconnect()
         log(msg.str());
     }
 
-    delete _fis;
     delete _fos;
 #ifdef _WIN32
     closesocket(_sock);
@@ -557,15 +600,16 @@ void Directory::_receive_message(
         bool debug
         )
 {
-    google::protobuf::io::CodedInputStream ci(_fis);
+    SocketInputStream sis(_sock);
+    google::protobuf::io::CopyingInputStreamAdaptor cisa(&sis);
+    google::protobuf::io::CodedInputStream ci(&cisa);
 
     uint32_t size;
     bool success = ci.ReadVarint32(&size);
     if (!success) {
-        int eno = _fis->GetErrno();
         stringstream err;
-        err << "ReadVarint32() failed: " << strerror(eno)
-            << " (" << eno << ").";
+        err << "ReadVarint32() failed: " << strerror(sis.lastError())
+            << " (" << sis.lastError() << ").";
         _error_msg = err.str();
         log(_error_msg);
         _disconnect();
