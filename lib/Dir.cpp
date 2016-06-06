@@ -60,11 +60,12 @@ using namespace LibDLS;
 
 /*****************************************************************************/
 
-class LibDLS::SocketInputStream:
-    public google::protobuf::io::CopyingInputStream
+class LibDLS::SocketStream:
+    public google::protobuf::io::CopyingInputStream,
+    public google::protobuf::io::CopyingOutputStream
 {
     public:
-        SocketInputStream(
+        SocketStream(
 #ifdef _WIN32
                 SOCKET sock
 #else
@@ -102,6 +103,42 @@ class LibDLS::SocketInputStream:
             }
         }
 
+        bool Write(const void *buffer, int size) {
+            const char *buf = (const char *) buffer;
+#ifdef DEBUG_STREAM
+            stringstream msg;
+            msg << __func__ << "(" << size << ")";
+#endif
+
+            ssize_t bytes_written;
+            while (size > 0) {
+                bytes_written = send(_sock, buf, size, 0);
+
+                if (bytes_written < 0) {
+#ifdef _WIN32
+                    _errno = WSAGetLastError();
+#else
+                    _errno = errno;
+#endif
+                    return false;
+                }
+
+                if (bytes_written <= size) {
+                    size -= bytes_written;
+                    buf += bytes_written;
+                }
+                else {
+                    return false; // FIXME
+                }
+            }
+
+#ifdef DEBUG_STREAM
+            msg << ": " << bytes_written;
+            log(msg.str());
+#endif
+            return true;
+        }
+
         int lastError() const { return _errno; }
 
     private:
@@ -118,9 +155,9 @@ class LibDLS::SocketInputStream:
 Directory::Directory(const std::string &uri_text):
     _access(Unknown),
     _sock(DLS_INVALID_SOCKET),
-    _sis(NULL),
+    _sockstream(NULL),
     _cisa(NULL),
-    _fos(NULL)
+    _cosa(NULL)
 {
     set_uri(uri_text);
 
@@ -510,7 +547,7 @@ void Directory::_connect()
     }
 
     try {
-        _sis = new SocketInputStream(sock);
+        _sockstream = new SocketStream(sock);
     }
     catch (...) {
         _error_msg = "Failed to create socket input stream!";
@@ -519,19 +556,21 @@ void Directory::_connect()
     }
 
     try {
-        _cisa = new google::protobuf::io::CopyingInputStreamAdaptor(_sis);
+        _cisa =
+            new google::protobuf::io::CopyingInputStreamAdaptor(_sockstream);
     }
     catch (...) {
-        _error_msg = "Failed to create socket stream adapter!";
+        _error_msg = "Failed to create socket input stream adapter!";
         log(_error_msg);
-        goto out_sis;
+        goto out_stream;
     }
 
     try {
-        _fos = new google::protobuf::io::FileOutputStream(sock);
+        _cosa =
+            new google::protobuf::io::CopyingOutputStreamAdaptor(_sockstream);
     }
     catch (...) {
-        _error_msg = "Failed to create file output stream!";
+        _error_msg = "Failed to create socket output stream adapter!";
         log(_error_msg);
         goto out_cisa;
     }
@@ -550,8 +589,8 @@ void Directory::_connect()
 
 out_cisa:
     delete _cisa;
-out_sis:
-    delete _sis;
+out_stream:
+    delete _sockstream;
 out_sock:
     DLS_CLOSE_SOCKET(sock);
 out_throw:
@@ -572,9 +611,9 @@ void Directory::_disconnect()
         log(msg.str());
     }
 
+    delete _cosa;
     delete _cisa;
-    delete _sis;
-    delete _fos;
+    delete _sockstream;
     DLS_CLOSE_SOCKET(_sock);
     _sock = DLS_INVALID_SOCKET;
 }
@@ -593,7 +632,7 @@ void Directory::_send_message(const DlsProto::Request &req)
     {
         string str;
         req.SerializeToString(&str);
-        google::protobuf::io::CodedOutputStream os(_fos);
+        google::protobuf::io::CodedOutputStream os(_cosa);
         os.WriteVarint32(req.ByteSize());
         if (os.HadError()) {
             stringstream err;
@@ -609,7 +648,7 @@ void Directory::_send_message(const DlsProto::Request &req)
         }
     }
 
-    _fos->Flush();
+    _cosa->Flush();
 }
 
 /*****************************************************************************/
@@ -625,8 +664,8 @@ void Directory::_receive_message(
     bool success = ci.ReadVarint32(&size);
     if (!success) {
         stringstream err;
-        err << "ReadVarint32() failed: " << strerror(_sis->lastError())
-            << " (" << _sis->lastError() << ").";
+        err << "ReadVarint32() failed: " << strerror(_sockstream->lastError())
+            << " (" << _sockstream->lastError() << ").";
         _error_msg = err.str();
         log(_error_msg);
         _disconnect();

@@ -72,7 +72,7 @@ class Observer
 
 /****************************************************************************/
 
-class SocketInputStream;
+class SocketStream;
 
 /****************************************************************************/
 
@@ -137,8 +137,9 @@ class DLS_EXPORT Directory
 #else
         int _sock;
 #endif
-        SocketInputStream *_sis;
+        SocketStream *_sockstream;
         google::protobuf::io::CopyingInputStreamAdaptor *_cisa;
+        google::protobuf::io::CopyingOutputStreamAdaptor *_cosa;
         google::protobuf::io::FileOutputStream *_fos;
 
         std::list<Job *> _jobs; /**< list of jobs */
