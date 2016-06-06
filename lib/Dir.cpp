@@ -48,11 +48,19 @@
 using namespace std;
 using namespace LibDLS;
 
+#ifdef _WIN32
+#define DLS_INVALID_SOCKET INVALID_SOCKET
+#define DLS_CLOSE_SOCKET closesocket
+#else
+#define DLS_INVALID_SOCKET -1
+#define DLS_CLOSE_SOCKET ::close
+#endif
+
 #define DEBUG
 
 /*****************************************************************************/
 
-class SocketInputStream:
+class LibDLS::SocketInputStream:
     public google::protobuf::io::CopyingInputStream
 {
     public:
@@ -109,11 +117,9 @@ class SocketInputStream:
 
 Directory::Directory(const std::string &uri_text):
     _access(Unknown),
-#ifdef _WIN32
-    _sock(INVALID_SOCKET),
-#else
-    _sock(-1),
-#endif
+    _sock(DLS_INVALID_SOCKET),
+    _sis(NULL),
+    _cisa(NULL),
     _fos(NULL)
 {
     set_uri(uri_text);
@@ -473,13 +479,7 @@ void Directory::_connect()
     int sock;
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (sock ==
-#ifdef _WIN32
-            INVALID_SOCKET
-#else
-            -1
-#endif
-           ) {
+        if (sock == DLS_INVALID_SOCKET) {
             continue;
         }
 
@@ -489,7 +489,7 @@ void Directory::_connect()
         if (ret) {
             _error_msg = "Failed to set socket to blocking mode!";
             log(_error_msg);
-            closesocket(sock);
+            DLS_CLOSE_SOCKET(sock);
             throw DirectoryException(_error_msg);
         }
 #endif
@@ -498,11 +498,7 @@ void Directory::_connect()
             break;
         }
 
-#ifdef _WIN32
-        closesocket(sock);
-#else
-        ::close(sock);
-#endif
+        DLS_CLOSE_SOCKET(sock);
     }
 
     freeaddrinfo(result);
@@ -514,14 +510,28 @@ void Directory::_connect()
     }
 
     try {
+        _sis = new SocketInputStream(sock);
+    }
+    catch (...) {
+        DLS_CLOSE_SOCKET(sock);
+    }
+
+    try {
+        _cisa = new google::protobuf::io::CopyingInputStreamAdaptor(_sis);
+    }
+    catch (...) {
+        delete _sis;
+        DLS_CLOSE_SOCKET(sock);
+    }
+
+
+    try {
         _fos = new google::protobuf::io::FileOutputStream(sock);
     }
     catch (...) {
-#ifdef _WIN32
-        closesocket(sock);
-#else
-        ::close(sock);
-#endif
+        delete _cisa;
+        delete _sis;
+        DLS_CLOSE_SOCKET(sock);
     }
 
     _sock = sock;
@@ -550,14 +560,11 @@ void Directory::_disconnect()
         log(msg.str());
     }
 
+    delete _cisa;
+    delete _sis;
     delete _fos;
-#ifdef _WIN32
-    closesocket(_sock);
-    _sock = INVALID_SOCKET;
-#else
-    close(_sock);
-    _sock = -1;
-#endif
+    DLS_CLOSE_SOCKET(_sock);
+    _sock = DLS_INVALID_SOCKET;
 }
 
 /*****************************************************************************/
@@ -600,16 +607,14 @@ void Directory::_receive_message(
         bool debug
         )
 {
-    SocketInputStream sis(_sock);
-    google::protobuf::io::CopyingInputStreamAdaptor cisa(&sis);
-    google::protobuf::io::CodedInputStream ci(&cisa);
+    google::protobuf::io::CodedInputStream ci(_cisa);
 
     uint32_t size;
     bool success = ci.ReadVarint32(&size);
     if (!success) {
         stringstream err;
-        err << "ReadVarint32() failed: " << strerror(sis.lastError())
-            << " (" << sis.lastError() << ").";
+        err << "ReadVarint32() failed: " << strerror(_sis->lastError())
+            << " (" << _sis->lastError() << ").";
         _error_msg = err.str();
         log(_error_msg);
         _disconnect();
@@ -619,21 +624,21 @@ void Directory::_receive_message(
     string rec;
     success = ci.ReadString(&rec, size);
     if (!success) {
-        _disconnect();
         stringstream err;
         err << "ReadString() failed!";
         _error_msg = err.str();
         log(_error_msg);
+        _disconnect();
         throw DirectoryException(err.str());
     }
 
     success = msg.ParseFromString(rec);
     if (!success) {
-        _disconnect();
         stringstream err;
         err << "ParseFromString() failed!";
         _error_msg = err.str();
         log(_error_msg);
+        _disconnect();
         throw DirectoryException(err.str());
     }
 
