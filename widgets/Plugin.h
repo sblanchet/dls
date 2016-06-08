@@ -25,7 +25,13 @@
 #ifndef DLS_PLUGIN_H
 #define DLS_PLUGIN_H
 
+#include <qglobal.h>
+
+#if QT_VERSION >= 0x050000
+#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#else
 #include <QDesignerCustomWidgetInterface>
+#endif
 
 /****************************************************************************/
 
