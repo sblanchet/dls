@@ -31,11 +31,16 @@
 #include <QSvgRenderer>
 #include <QAction>
 #include <QScrollBar>
-#include <QtDesigner/QDesignerExportWidget>
 #include <QReadWriteLock>
 #include <QTouchEvent>
 #include <QUrl>
 #include <QDir>
+
+#if QT_VERSION >= 0x050000
+#include <QtUiPlugin/QDesignerExportWidget>
+#else
+#include <QtDesigner/QDesignerExportWidget>
+#endif
 
 #include <LibDLS/Job.h>
 
