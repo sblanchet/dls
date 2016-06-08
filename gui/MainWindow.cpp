@@ -465,7 +465,7 @@ void MainWindow::on_toolButtonNewUrl_clicked()
     LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
-        dir->set_uri(uriDialog.getUri().toString().toAscii().constData());
+        dir->set_uri(uriDialog.getUri().toString().toLatin1().constData());
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
         delete dir;
