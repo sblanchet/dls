@@ -29,7 +29,7 @@
 # - make dist-bzip2
 # - add tag release-x.x.x
 #
-AC_INIT([dls],[1.3.1],[fp@igh-essen.com])
+AC_INIT([dls],[1.4.0-rc1],[fp@igh.de])
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
