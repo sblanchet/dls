@@ -26,4 +26,6 @@ all-local: $(protobuf_sources)
 $(protobuf_sources): dls.proto
 	protoc $< --cpp_out=$(builddir)
 
+EXTRA_DIST = dls.proto
+
 #------------------------------------------------------------------------------

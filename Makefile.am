@@ -38,6 +38,9 @@ EXTRA_DIST = \
 	bootstrap.sh \
 	dls.spec \
 	dls.spec.in \
+	gui/AboutDialog.cpp \
+	gui/AboutDialog.h \
+	gui/AboutDialog.ui \
 	gui/LogWindow.cpp \
 	gui/LogWindow.h \
 	gui/LogWindow.ui \
@@ -47,22 +50,31 @@ EXTRA_DIST = \
 	gui/SettingsDialog.cpp \
 	gui/SettingsDialog.h \
 	gui/SettingsDialog.ui \
+	gui/UriDialog.cpp \
+	gui/UriDialog.h \
+	gui/UriDialog.ui \
 	gui/dlsgui-mime.xml \
 	gui/dlsgui.desktop \
 	gui/dlsgui.pro \
 	gui/dlsgui.qrc \
 	gui/dlsgui.rc \
 	gui/dlsgui_de.ts \
-	gui/images/document-new.svg \
-	gui/images/document-open.svg \
+	gui/images/Folder-remote.svg \
+	gui/images/Folder.svg \
+	gui/images/Network-idle.svg \
 	gui/images/dlsgui-view.png \
 	gui/images/dlsgui-view.svg \
 	gui/images/dlsgui.ico \
 	gui/images/dlsgui.png \
 	gui/images/dlsgui.svg \
+	gui/images/document-new.svg \
+	gui/images/document-open.svg \
 	gui/images/document-save-as.svg \
 	gui/images/document-save.svg \
+	gui/images/drive-harddisk.svg \
+	gui/images/etherlabsign.svg \
 	gui/images/system-log-out.svg \
+	gui/images/view-refresh.svg \
 	gui/main.cpp \
 	gui/modeltest.cpp \
 	gui/modeltest.h \
@@ -110,6 +122,8 @@ EXTRA_DIST = \
 	widgets/ValueScale.cpp \
 	widgets/WidgetCollection.cpp \
 	widgets/WidgetCollection.h \
+	widgets/images/Network-error.svg \
+	widgets/images/Network-idle.svg \
 	widgets/images/dialog-error.svg \
 	widgets/images/dialog-information.svg \
 	widgets/images/dialog-warning.svg \
