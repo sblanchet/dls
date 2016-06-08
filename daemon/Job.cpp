@@ -41,23 +41,20 @@ using namespace LibDLS;
 
 /*****************************************************************************/
 
-/**
-   Konstruktor
+/** Konstruktor
 
    \param parent_proc Zeiger auf den besitzenden Logging-Prozess
    \param dls_dir DLS-Datenverzeichnis
 */
-
-Job::Job(ProcLogger *parent_proc, const string &dls_dir)
+Job::Job(
+        ProcLogger *parent_proc
+        ):
+    _parent_proc(parent_proc),
+    _id_gen(0),
+    _logging_started(false),
+    _msg_chunk_created(false),
+    _messages(this)
 {
-    stringstream dir;
-
-    _parent_proc = parent_proc;
-    _dls_dir = dls_dir;
-
-    _id_gen = 0;
-    _logging_started = false;
-    _msg_chunk_created = false;
 }
 
 /*****************************************************************************/
@@ -82,14 +79,42 @@ Job::~Job()
 
 void Job::import(unsigned int job_id)
 {
-    try
-    {
-        _preset.import(_dls_dir, job_id);
+    try {
+        _preset.import(_parent_proc->dls_dir(), job_id);
     }
-    catch (EJobPreset &e)
-    {
+    catch (EJobPreset &e) {
         throw EJob("Importing job preset: " + e.msg);
     }
+
+	bool exists;
+
+	try {
+		exists = _messages.exists(path());
+	}
+	catch (LibDLS::BaseMessageList::Exception &e) {
+		msg() << "Failed to check for message file "
+			<< _messages.path(path()) << ": " << e.msg;
+		log(Error);
+		return;
+	}
+
+	if (exists) {
+		try {
+			_messages.import(path());
+		}
+		catch (LibDLS::BaseMessageList::Exception &e) {
+			msg() << "Failed to import messages: " << e.msg;
+			log(Error);
+		}
+
+		msg() << "Imported " << _messages.count() << " messages from "
+			<< _messages.path(".") << ".";
+		log(Info);
+	}
+	else {
+		msg() << "Message file " << _messages.path(".") << " not found.";
+		log(Info);
+	}
 }
 
 /*****************************************************************************/
@@ -104,6 +129,7 @@ void Job::start_logging()
 {
     _logging_started = true;
     _sync_loggers(slQuiet);
+    _messages.subscribe(_parent_proc);
 }
 
 /*****************************************************************************/
@@ -114,7 +140,10 @@ void Job::start_logging()
 
 void Job::change_logging()
 {
-    if (_logging_started) _sync_loggers(slVerbose);
+    if (_logging_started) {
+        _sync_loggers(slVerbose);
+        _messages.subscribe(_parent_proc);
+    }
 }
 
 /*****************************************************************************/
@@ -132,13 +161,13 @@ void Job::stop_logging()
     _logging_started = false;
 
     logger_i = _loggers.begin();
-    while (logger_i != _loggers.end())
-    {
-        _remove_logger(*logger_i);
+    while (logger_i != _loggers.end()) {
+        _stop_logger(*logger_i);
         logger_i++;
     }
 
     _clear_loggers();
+    _messages.unsubscribe();
 }
 
 /*****************************************************************************/
@@ -159,32 +188,40 @@ void Job::_sync_loggers(SyncLoggerMode mode)
 {
     vector<ChannelPreset>::const_iterator channel_i;
     list<Logger *>::iterator logger_i, del_i;
-    Logger *found_logger;
     unsigned int add_count = 0, chg_count = 0, rem_count = 0;
 
-    if (!_logging_started) return;
+    if (!_logging_started) {
+        return;
+    }
 
     // add new loggers / delete existing loggers
     for (channel_i = _preset.channels()->begin();
             channel_i != _preset.channels()->end();
             channel_i++) {
-        if (!(found_logger = _logger_exists_for_channel(channel_i->name))) {
+        Logger *logger = _logger_exists_for_channel(channel_i->name);
+        if (!logger) {
             if (mode == slVerbose) {
                 msg() << "ADD \"" << channel_i->name << "\"";
                 log(Info);
             }
 
-            if (_add_logger(&(*channel_i)))
+            if (_add_logger(&(*channel_i))) {
                 add_count++;
+            }
         }
-        else if (*channel_i != *found_logger->channel_preset()) {
+        else if (*channel_i != *logger->channel_preset()) {
             if (mode == slVerbose) {
                 msg() << "CHANGE \"" << channel_i->name << "\"";
                 log(Info);
             }
 
-            if (_change_logger(found_logger, &(*channel_i)))
+            _loggers.remove(logger);
+            _stop_logger(logger);
+            delete logger;
+
+            if (_add_logger(&(*channel_i))) {
                 chg_count++;
+            }
         }
     }
 
@@ -202,11 +239,11 @@ void Job::_sync_loggers(SyncLoggerMode mode)
             log(Info);
         }
 
-        _remove_logger(*logger_i);
+        _stop_logger(*logger_i);
         rem_count++;
 
 #ifdef DEBUG
-        msg() << "_remove_logger() finished.";
+        msg() << "_stop_logger() finished.";
         log(Debug);
 #endif
 
@@ -252,86 +289,34 @@ void Job::_sync_loggers(SyncLoggerMode mode)
    zu verifizieren. Wenn diese in Ordnung sind, wird das
    Start-Kommando gesendet und der Logger der Liste angehängt.
 
-   \param channel Kanalvorgaben für den neuen Logger
+   \param preset Kanalvorgaben für den neuen Logger
 */
 
-bool Job::_add_logger(const ChannelPreset *channel)
+bool Job::_add_logger(const ChannelPreset *preset)
 {
-    Logger *new_logger = new Logger(this, channel, _dls_dir);
+    PdCom::Variable *pv = _parent_proc->findVariable(preset->name);
 
-    try
-    {
-        // Kanalparameter holen
-        new_logger->get_real_channel(_parent_proc->real_channels());
+    if (!pv) {
+        msg() << "Channel \"" << preset->name << "\" does not exist!";
+        log(Error);
+        return false;
+    }
 
-        // Kanalvorgaben auf Gültigkeit prüfen
-        new_logger->check_presettings();
+    Logger *logger;
 
-        // Saver-Objekt erstellen
-        new_logger->create_gen_saver();
-
-        // Startkommando senden
-        _parent_proc->send_command(new_logger->start_tag(channel));
-
-        // Alles ok, Logger in die Liste aufnehmen
-        _loggers.push_back(new_logger);
+    try {
+        logger = new Logger(this, preset, _parent_proc->dls_dir(), pv);
     }
     catch (ELogger &e)
     {
-        delete new_logger;
-
-        msg() << "Channel \"" << channel->name << "\": " << e.msg;
+        msg() << "Channel \"" << preset->name << "\": " << e.msg;
         log(Error);
 
         return false;
     }
 
-    return true;
-}
-
-/*****************************************************************************/
-
-/**
-   Ändert die Vorgaben für einen bestehenden Logger
-
-   Zuerst werden die neuen Vorgaben verifiziert. Wenn alles in
-   Ordnung ist, wird eine eindeutige ID generiert, die dann dem
-   erneuten Startkommando beigefügt wird. Die Änderung wird
-   vorgemerkt.
-   Wenn dan später die Bestätigung des msrd kommt, wird die
-   Änderung aktiv.
-
-   \param logger Der zu ändernde Logger
-   \param channel Die neuen Kanalvorgaben
-*/
-
-bool Job::_change_logger(Logger *logger,
-                            const ChannelPreset *channel)
-{
-    string id;
-
-    try
-    {
-        // Neue Vorgaben prüfen
-        logger->check_presettings(channel);
-
-        // ID generieren
-        id = _generate_id();
-
-        // Änderungskommando senden
-        _parent_proc->send_command(logger->start_tag(channel, id));
-
-        // Wartende Änderung vermerken
-        logger->set_change(channel, id);
-    }
-    catch (ELogger &e)
-    {
-        msg() << "Channel \"" << channel->name << "\": " << e.msg;
-        log(Error);
-
-        return false;
-    }
-
+    // Alles ok, Logger in die Liste aufnehmen
+    _loggers.push_back(logger);
     return true;
 }
 
@@ -349,119 +334,33 @@ bool Job::_change_logger(Logger *logger,
    \see sync_loggers()
 */
 
-void Job::_remove_logger(Logger *logger)
+void Job::_stop_logger(Logger *logger)
 {
 #ifdef DEBUG
-    msg() << "Removing logger...";
+    msg() << "Stopping logger...";
     log(Debug);
 #endif
 
-    _parent_proc->send_command(logger->stop_tag());
-
-    try
-    {
+    try {
         logger->finish();
     }
-    catch (ELogger &e)
-    {
+    catch (ELogger &e) {
         msg() << "Finishing channel \"";
         msg() << logger->channel_preset()->name << "\": " << e.msg;
         log(Error);
     }
 
 #ifdef DEBUG
-    msg() << "Logger removed.";
+    msg() << "Logger stopped.";
     log(Debug);
 #endif
 }
 
 /*****************************************************************************/
 
-/**
-   Führt eine vorgemerkte Änderung durch
-
-   Diese Methode muss vom Logging-Prozess aufgerufen werden,
-   sobald eine Kommandobestätigung a la <ack> eintrifft.
-   Dann wird überprüft, ob einer der Logger ein dazu passendes
-   Kommando gesendet hat. Wenn ja, wird die entsprechende Änderung
-   durchgeführt.
-
-   \param id Bestätigungs-ID aus dem <ack>-Tag
-*/
-
-void Job::ack_received(const string &id)
-{
-    list<Logger *>::iterator logger_i;
-
-    msg() << "Acknowledge received: \"" << id << "\"";
-    log(Info);
-
-    logger_i = _loggers.begin();
-    while (logger_i != _loggers.end())
-    {
-        if ((*logger_i)->change_is(id))
-        {
-            (*logger_i)->do_change();
-            return;
-        }
-        logger_i++;
-    }
-
-    msg() << "Change ID \"" << id << "\" does not exist!";
-    log(Warning);
-}
-
-/*****************************************************************************/
-
-/**
-   Verarbeitet empfangene Daten
-
-   Diese Methode nimmt empfangene Daten für einen bestimmten
-   Kanal auf, und gibt sie intern an den dafür zuständigen Logger
-   weiter.
-
-   \todo Effizientere Suche
-
-   \param time_of_last die Zeit des letzten Datenwertes im Block
-   \param channel_index Kanalindex aus dem <F>-Tag
-   \param data Empfangene Daten
-   \throw EJob Fehler während der Datenverarbeitung
-   \throw ETimeTolerance Zeittoleranzfehler!
-*/
-
-void Job::process_data(Time time_of_last,
-                          int channel_index,
-                          const string &data)
-{
-    list<Logger *>::iterator logger_i;
-
-    for (logger_i = _loggers.begin();
-            logger_i != _loggers.end();
-            logger_i++) {
-        if ((*logger_i)->real_channel()->index != channel_index)
-            continue;
-
-        try {
-            (*logger_i)->process_data(data, time_of_last);
-        }
-        catch (ELogger &e) {
-            throw EJob("Logger: " + e.msg);
-        }
-
-        return;
-    }
-
-    msg() << "Channel " << channel_index << " not required!";
-    log(Warning);
-}
-
-/*****************************************************************************/
-
-/**
-   Löscht alle Daten, die noch im Speicher sind
-*/
-
-void Job::discard_data()
+/** Löscht alle Daten, die noch im Speicher sind
+ */
+void Job::discard()
 {
     list<Logger *>::iterator logger_i;
 
@@ -469,11 +368,39 @@ void Job::discard_data()
     _msg_chunk_created = false;
 
     logger_i = _loggers.begin();
-    while (logger_i != _loggers.end())
-    {
-        (*logger_i)->discard_chunk();
+    while (logger_i != _loggers.end()) {
+        (*logger_i)->discard();
         logger_i++;
     }
+}
+
+/*****************************************************************************/
+
+/** Notifies the parent process about an error.
+ */
+void Job::notify_error(int code)
+{
+    _parent_proc->notify_error(code);
+}
+
+/*****************************************************************************/
+
+/** Notifies the parent process about received data.
+ */
+void Job::notify_data()
+{
+    _parent_proc->notify_data();
+}
+
+/*****************************************************************************/
+
+/** Returns the job directory.
+ */
+std::string Job::path() const
+{
+    stringstream d;
+    d << _parent_proc->dls_dir() << "/job" << _preset.id();
+    return d.str();
 }
 
 /*****************************************************************************/
@@ -514,15 +441,12 @@ uint64_t Job::data_size() const
    Diese Methode ruft ein "delete" für jeden Logger auf, auch wenn
    ein Fehler passiert. Das vermeidet Speicherlecks. Fehler
    werden am Schluss gesammelt ausgegeben.
-
-   \throw EJob Fehler beim Löschen ein oder mehrerer Logger
 */
 
 void Job::_clear_loggers()
 {
     list<Logger *>::iterator logger;
     stringstream err;
-    bool error = false;
 
     logger = _loggers.begin();
     while (logger != _loggers.end())
@@ -532,11 +456,6 @@ void Job::_clear_loggers()
     }
 
     _loggers.clear();
-
-    if (error)
-    {
-        throw EJob(err.str());
-    }
 }
 
 /*****************************************************************************/
@@ -552,34 +471,14 @@ Logger *Job::_logger_exists_for_channel(const string &name)
 {
     list<Logger *>::const_iterator logger = _loggers.begin();
 
-    while (logger != _loggers.end())
-    {
-        if ((*logger)->channel_preset()->name == name) return *logger;
+    while (logger != _loggers.end()) {
+        if ((*logger)->channel_preset()->name == name) {
+            return *logger;
+        }
         logger++;
     }
 
     return 0;
-}
-
-/*****************************************************************************/
-
-/**
-   Generiert eine eindeutige Kommando-ID
-
-   Die ID wird aus der Adresse des Auftrags-Objektes und einer
-   Sequenz-Nummer zusammengesetzt.
-
-   \return Generierte ID
-*/
-
-string Job::_generate_id()
-{
-    stringstream id;
-
-    // ID aus Adresse und Counter erzeugen
-    id << (unsigned long) this << "_" << ++_id_gen;
-
-    return id.str();
 }
 
 /*****************************************************************************/
@@ -637,34 +536,24 @@ void Job::finish()
    \param info_tag Info-Tag
 */
 
-void Job::message(const XmlTag *info_tag)
+void Job::message(Time time, const string &type, const string &message)
 {
     stringstream filename, dirname;
     MessageIndexRecord index_record;
-    Time time;
-    string tag;
     struct stat stat_buf;
 
-    try
-    {
-        // Zeit der Nachricht ermitteln
-        time.from_dbl_time(info_tag->att("time")->to_dbl());
-    }
-    catch (EXmlTag &e)
-    {
-        msg() << "Could not get message time. Tag: \"" << info_tag
-              << "\": " << e.msg;
-        log(Error);
-        return;
-    }
+    msg() << _preset.source() << ":" << _preset.port()
+        << ": " << time.to_str()
+        << ", " << type
+        << ": " << message;
+    log(Info);
 
 #ifdef DEBUG
     msg() << "Message! Time: " << time;
     log(Debug);
 #endif
 
-    if (!_msg_chunk_created)
-    {
+    if (!_msg_chunk_created) {
 #ifdef DEBUG
         msg() << "Creating new message chunk.";
         log(Debug);
@@ -673,14 +562,12 @@ void Job::message(const XmlTag *info_tag)
         _message_file.close();
         _message_index.close();
 
-        dirname << _dls_dir << "/job" << _preset.id() << "/messages";
+        dirname << path() << "/messages";
 
         // Existiert das Message-Verzeichnis?
-        if (stat(dirname.str().c_str(), &stat_buf) == -1)
-        {
+        if (stat(dirname.str().c_str(), &stat_buf) == -1) {
             // Messages-Verzeichnis anlegen
-            if (mkdir(dirname.str().c_str(), 0755) == -1)
-            {
+            if (mkdir(dirname.str().c_str(), 0755) == -1) {
                 msg() << "Could not create message directory: ";
                 msg() << " \"" << dirname.str() << "\"!";
                 log(Error);
@@ -690,8 +577,7 @@ void Job::message(const XmlTag *info_tag)
 
         dirname << "/chunk" << time;
 
-        if (mkdir(dirname.str().c_str(), 0755) != 0)
-        {
+        if (mkdir(dirname.str().c_str(), 0755) != 0) {
             msg() << "Could not create message chunk directory: ";
             msg() << " \"" << dirname.str() << "\"!";
             log(Error);
@@ -702,26 +588,21 @@ void Job::message(const XmlTag *info_tag)
         _msg_chunk_dir = dirname.str();
     }
 
-    if (!_message_file.open() || !_message_index.open())
-    {
+    if (!_message_file.open() || !_message_index.open()) {
         filename << _msg_chunk_dir << "/messages";
 
-        try
-        {
+        try {
             _message_file.open_read_append(filename.str().c_str());
-            _message_index.open_read_append((filename.str() + ".idx").c_str());
+            _message_index.open_read_append(
+                    (filename.str() + ".idx").c_str());
         }
-        catch (EFile &e)
-        {
-            msg() << "Could not open message file for message \"" << info_tag
-                  << "\": " << e.msg;
+        catch (EFile &e) {
+            msg() << "Failed to open message file:" << e.msg;
             log(Error);
             return;
         }
-        catch (EIndexT &e)
-        {
-            msg() << "Could not open message index for message \"" << info_tag
-                  << "\": " << e.msg;
+        catch (EIndexT &e) {
+            msg() << "Failed to open message index: " << e.msg;
             log(Error);
             return;
         }
@@ -731,24 +612,22 @@ void Job::message(const XmlTag *info_tag)
     index_record.time = time.to_uint64();
     index_record.position = _message_file.calc_size();
 
-    tag = info_tag->tag() + "\n";
+    stringstream tag;
 
-    try
-    {
-        _message_file.append(tag.c_str(), tag.length());
+    tag << "<" << type << " time=\"" << fixed << time.to_dbl_time()
+        << "\" text=\"" << message << "\"/>" << endl;
+
+    try {
+        _message_file.append(tag.str().c_str(), tag.str().size());
         _message_index.append_record(&index_record);
     }
-    catch (EFile &e)
-    {
-        msg() << "Could not write file for message \"" << info_tag
-              << "\": " << e.msg;
+    catch (EFile &e) {
+        msg() << "Could not write message file: " << e.msg;
         log(Error);
         return;
     }
-    catch (EIndexT &e)
-    {
-        msg() << "Could not write index for message \"" << info_tag
-              << "\": " << e.msg;
+    catch (EIndexT &e) {
+        msg() << "Could not write message index: " << e.msg;
         log(Error);
         return;
     }

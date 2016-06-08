@@ -47,8 +47,10 @@ using namespace std;
 
 MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     QMainWindow(parent),
+    uriDialog(this),
     scriptActions(NULL),
-    scriptProcess(this)
+    scriptProcess(this),
+    menuDir(NULL)
 {
     setupUi(this);
 
@@ -142,6 +144,9 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     dlsGraph->setDropModel(&model);
 
     treeView->setModel(&model);
+    treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(treeView, SIGNAL(customContextMenuRequested(const QPoint &)),
+            this, SLOT(treeViewCustomContextMenu(const QPoint &)));
 
     QString fileToLoad;
 
@@ -382,9 +387,16 @@ void MainWindow::on_actionSaveAs_triggered()
 
 /****************************************************************************/
 
-void MainWindow::on_actionAddDataSource_triggered()
+void MainWindow::on_actionAddLocalDataSource_triggered()
 {
     on_toolButtonNewDir_clicked();
+}
+
+/****************************************************************************/
+
+void MainWindow::on_actionAddRemoteDataSource_triggered()
+{
+    on_toolButtonNewUrl_clicked();
 }
 
 /****************************************************************************/
@@ -426,12 +438,47 @@ void MainWindow::on_toolButtonNewDir_clicked()
     LibDLS::Directory *dir = new LibDLS::Directory();
 
     try {
-        dir->import(path.toLocal8Bit().constData());
-        model.addLocalDir(dir);
+        dir->set_uri(path.toLocal8Bit().constData());
     } catch (LibDLS::DirectoryException &e) {
         qWarning() << e.msg.c_str();
         delete dir;
+        return;
     }
+
+    model.addLocalDir(dir);
+
+    try {
+        dir->import();
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
+}
+
+/****************************************************************************/
+
+void MainWindow::on_toolButtonNewUrl_clicked()
+{
+    if (uriDialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    LibDLS::Directory *dir = new LibDLS::Directory();
+
+    try {
+        dir->set_uri(uriDialog.getUri().toString().toAscii().constData());
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+        delete dir;
+        return;
+    }
+
+    try {
+        dir->import();
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
+
+    model.addLocalDir(dir);
 }
 
 /****************************************************************************/
@@ -591,6 +638,40 @@ void MainWindow::scriptError(
             tr("Failed to execute script: %1").arg(msg));
 
     updateScriptActions();
+}
+/****************************************************************************/
+
+void MainWindow::treeViewCustomContextMenu(const QPoint &point)
+{
+    QMenu *menu = new QMenu;
+    QModelIndex index = treeView->indexAt(point);
+
+    menuDir = model.dir(index);
+    if (!menuDir) {
+        return;
+    }
+
+    QAction *a = menu->addAction(tr("Update"), this, SLOT(updateDirectory()));
+    a->setIcon(QIcon(":/images/view-refresh.svg"));
+    menu->exec(treeView->viewport()->mapToGlobal(point));
+}
+
+/****************************************************************************/
+
+void MainWindow::updateDirectory()
+{
+    if (!menuDir) {
+        return;
+    }
+
+    try {
+        menuDir->import();
+    } catch (LibDLS::DirectoryException &e) {
+        qWarning() << e.msg.c_str();
+    }
+
+    dlsGraph->connectChannels(&model);
+    dlsGraph->loadData();
 }
 
 /****************************************************************************/

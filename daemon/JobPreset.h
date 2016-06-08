@@ -32,6 +32,7 @@ using namespace std;
 /*****************************************************************************/
 
 #include "lib/LibDLS/JobPreset.h"
+#include "lib/LibDLS/Time.h"
 
 /*****************************************************************************/
 
@@ -44,7 +45,8 @@ using namespace std;
    tun hat.
 */
 
-class JobPreset: public LibDLS::JobPreset
+class JobPreset:
+    public LibDLS::JobPreset
 {
 public:
     JobPreset();

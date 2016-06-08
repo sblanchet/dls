@@ -54,7 +54,9 @@ public:
     ProcMother();
     ~ProcMother();
 
-    int start(const string &, bool, const std::string &);
+    int start(const string &, bool, const std::string &, bool);
+
+    const std::string &dls_dir() const { return _dls_dir; }
 
 private:
     string _dls_dir; /**< DLS-Datenverzeichnis */
@@ -83,6 +85,7 @@ private:
     int _prepare_socket(const char *);
     static std::string _format_address(const struct sockaddr *);
     void _check_connections();
+    void _clear_connections();
 #endif
 };
 

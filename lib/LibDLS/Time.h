@@ -29,6 +29,8 @@
 
 #include <ostream>
 
+#include "globals.h"
+
 /*****************************************************************************/
 
 namespace LibDLS {
@@ -42,67 +44,67 @@ namespace LibDLS {
    zur Speicherung der Mikrosekunden nach epoch.
 */
 
-class Time
+class DLS_EXPORT Time
 {
     friend std::ostream &operator <<(std::ostream &, const Time &);
 
-public:
-    Time();
-    Time(int64_t);
-    Time(uint64_t);
-    Time(double);
-    Time(struct timeval *);
-    Time(struct tm *, unsigned int);
+    public:
+        Time();
+        Time(int64_t);
+        Time(uint64_t);
+        Time(double);
+        Time(struct timeval *);
+        Time(struct tm *, unsigned int);
 
-    void from_dbl_time(double);
-    void set_null();
-    void set_now();
-    int set_date(int, int = 1, int = 1, int = 0, int = 0, int = 0);
+        void from_dbl_time(double);
+        void set_null();
+        void set_now();
+        int set_date(int, int = 1, int = 1, int = 0, int = 0, int = 0);
 
-    Time &operator =(int64_t);
-    Time &operator =(uint64_t);
-    Time &operator =(double);
-    Time &operator =(struct timeval);
+        Time &operator =(int64_t);
+        Time &operator =(uint64_t);
+        Time &operator =(double);
+        Time &operator =(struct timeval);
 
-    bool operator ==(const Time &) const;
-    bool operator !=(const Time &) const;
-    bool operator <(const Time &) const;
-    bool operator >(const Time &) const;
-    bool operator <=(const Time &) const;
-    bool operator >=(const Time &) const;
-    bool is_null() const;
+        bool operator ==(const Time &) const;
+        bool operator !=(const Time &) const;
+        bool operator <(const Time &) const;
+        bool operator >(const Time &) const;
+        bool operator <=(const Time &) const;
+        bool operator >=(const Time &) const;
+        bool is_null() const;
 
-    Time operator +(const Time &) const;
-    Time &operator +=(const Time &);
-    Time operator -(const Time &) const;
-    Time operator *(int64_t) const;
+        Time operator +(const Time &) const;
+        Time &operator +=(const Time &);
+        Time operator -(const Time &) const;
+        Time operator *(int64_t) const;
 
-    double to_dbl() const;
-    double to_dbl_time() const;
-    int64_t to_int64() const;
-    uint64_t to_uint64() const;
-    time_t to_time_t() const;
-    std::string to_str() const;
-    struct timeval to_tv() const;
-    std::string to_real_time() const;
-    std::string format_time(const char *) const;
-    std::string to_rfc811_time() const;
-    std::string to_iso_time() const;
-    std::string diff_str_to(const Time &) const;
-    int year() const;
-    int month() const;
-    int day() const;
-    int hour() const;
-    int min() const;
-    int sec() const;
-    int day_of_week() const;
-    bool is_leap_year() const;
-    int month_days() const;
+        double to_dbl() const;
+        double to_dbl_time() const;
+        int64_t to_int64() const;
+        uint64_t to_uint64() const;
+        time_t to_time_t() const;
+        std::string to_str() const;
+        struct timeval to_tv() const;
+        std::string to_real_time() const;
+        std::string format_time(const char *) const;
+        std::string to_rfc811_time() const;
+        std::string to_iso_time() const;
+        std::string diff_str_to(const Time &) const;
+        int year() const;
+        int month() const;
+        int day() const;
+        int hour() const;
+        int min() const;
+        int sec() const;
+        int day_of_week() const;
+        bool is_leap_year() const;
+        int month_days() const;
 
-    static Time now();
+        static Time now();
 
-private:
-    int64_t _time; /**< Mikrosekunden nach epoch */
+    private:
+        int64_t _time; /**< Mikrosekunden nach epoch */
 };
 
 /*****************************************************************************/

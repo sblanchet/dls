@@ -52,6 +52,7 @@ unsigned int sig_hangup = 0;
 unsigned int sig_child = 0;
 unsigned int sig_usr1 = 0;
 bool no_bind = false;
+bool read_only = false;
 std::string service(DEFAULT_PORT);
 ProcessType process_type = MotherProcess;
 unsigned int dlsd_job_id = 0;
@@ -120,9 +121,11 @@ int main(int argc, char **argv)
     // Kommandozeilenparameter verarbeiten
     get_options(argc, argv);
 
-    // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
-    // schon ein Daemon läuft
-    check_running(&dls_dir);
+    if (!read_only) {
+        // Prüfen, ob auf dem gegebenen DLS-Verzeichnis
+        // schon ein Daemon läuft
+        check_running(&dls_dir);
+    }
 
     // In einen Daemon verwandeln, wenn gewuenscht
     if (is_daemon) init_daemon();
@@ -169,8 +172,10 @@ int main(int argc, char **argv)
         }
     }
 
-    // PID-Datei erzeugen
-    create_pid_file(&dls_dir);
+    if (!read_only) {
+        // PID-Datei erzeugen
+        create_pid_file(&dls_dir);
+    }
 
     // Signalhandler installieren
     set_signal_handlers();
@@ -187,20 +192,23 @@ int main(int argc, char **argv)
     {
         // Mutterprozess starten
         mother_process = new ProcMother();
-        exit_code = mother_process->start(dls_dir, no_bind, service);
+        exit_code = mother_process->start(dls_dir, no_bind, service,
+                read_only);
         delete mother_process;
 
         if (process_type == LoggingProcess)
         {
             // Erfassungsprozess starten
-            logger_process = new ProcLogger(dls_dir, dlsd_job_id);
-            exit_code = logger_process->start();
+            logger_process = new ProcLogger(dls_dir);
+            exit_code = logger_process->start(dlsd_job_id);
             delete logger_process;
         }
         else
         {
-            // PID-Datei der Mutterprozesses entfernen
-            remove_pid_file(&dls_dir);
+            if (!read_only) {
+                // PID-Datei des Mutterprozesses entfernen
+                remove_pid_file(&dls_dir);
+            }
         }
     }
     catch (LibDLS::Exception &e)
@@ -228,7 +236,7 @@ void get_options(int argc, char **argv)
     char *env, *remainder;
 
     do {
-        c = getopt(argc, argv, "d:u:n:kw:bp:h");
+        c = getopt(argc, argv, "d:u:n:kw:bp:rh");
 
         switch (c) {
             case 'd':
@@ -273,6 +281,10 @@ void get_options(int argc, char **argv)
                 service = optarg;
                 break;
 
+            case 'r':
+                read_only = true;
+                break;
+
             case 'h':
             case '?':
                 print_usage();
@@ -292,6 +304,12 @@ void get_options(int argc, char **argv)
     if (!dir_set) {
         // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
+    }
+
+    if (strcmp(user_name, "") == 0) { // no user specified
+        if ((env = getenv(ENV_DLS_USER)) != 0) {
+            strncpy(user_name, env, 100);
+        }
     }
 
     // make dls_dir absolute
@@ -322,6 +340,7 @@ void print_usage()
         << "  -b            Do not bind to network socket." << endl
         << "  -p <port>     Listen port or service name. Default is "
         << DEFAULT_PORT << "." << endl
+        << "  -r            Read-only mode (no data logging)." << endl
         << "  -h            Show this help." << endl;
     exit(0);
 }
@@ -487,7 +506,7 @@ string read_basename(pid_t pid)
             cur = name;
             counter = 0;
         }
-    } while (byte && counter++ < (sizeof(name) - 1));
+    } while (byte && counter++ < (int) (sizeof(name) - 1));
 
     name[counter] = 0;
     fclose(file);

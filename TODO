@@ -5,19 +5,22 @@ vim: tw=78 spelllang=en spell
 
 * All
     - Synopsis in usage strings.
-    - Client/Server architecture.
     - Event-based variables
     - Move unit and type attributes into chunk.
 
 * dlsgui
     - Table model for message list.
-    - Store absolute path for recent files
-    - Concept for relative signal paths.
+    - Concept for non-existing channels
+    - Show if channel is actually logged
+    - Integrate dls_ctl functionality
+        - Available channels as tree with filter function
+    - Show signals as tree
+    - Fix URI file:// slash problem in UriDialog.cpp
 
 * dlsd:
-    - Port to PdCom (trigger via channel).
     - store the same signal with different settings (compression, sample
       rate).
+    - Protocol authentication
 
 * dls:
     - option -Q for really quiet
@@ -37,18 +40,5 @@ vim: tw=78 spelllang=en spell
     - show compression rate
 
 * lib:
-	- fetch_chunks(): delete non-existing chunks
-
-* dls_view:
-  - add shortcuts
-  - current time button 
-  - auto-Scrolling?
-  - graphical error messages at export
-  - Qt
-  - Update yellow chunk ranges on scrolling.
-  - date parser.
-  - multi-job and multi-host viewing.
-
-* dls_ctl
-  - search function in channel list
-  - Qt
+    - Get rid of ring buffers to extract data (Channel.cpp)
+    - Fetch chunks and data in same network request

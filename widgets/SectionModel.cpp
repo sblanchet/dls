@@ -5,6 +5,7 @@
  ****************************************************************************/
 
 #include <QDebug>
+#include <QUrl>
 
 #include "SectionModel.h"
 #include "DlsWidgets/Section.h"
@@ -71,7 +72,12 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
         if (role == Qt::DisplayRole) {
             switch (index.column()) {
                 case 0:
-                    ret = layer->getChannel()->name();
+                    if (layer->getChannel()) {
+                        ret = layer->getChannel()->url().toString();
+                    }
+                    else {
+                        ret = layer->getUrlString();
+                    }
                     break;
                 case 1:
                     ret = layer->getName();
@@ -122,7 +128,12 @@ QVariant SectionModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::ToolTipRole) {
             switch (index.column()) {
                 case 0:
-                    ret = layer->getChannel()->name();
+                    if (layer->getChannel()) {
+                        ret = layer->getChannel()->name();
+                    }
+                    else {
+                        ret = layer->getUrlString();
+                    }
                     break;
                 case 1:
                     ret = layer->getName();

@@ -35,6 +35,12 @@ namespace LibDLS {
     class Directory;
 }
 
+namespace DLS {
+	class Graph;
+	class Section;
+	class Layer;
+}
+
 namespace QtDls {
 
 class Dir;
@@ -43,12 +49,22 @@ class Channel;
 class Q_DECL_EXPORT Model:
     public QAbstractItemModel
 {
+	friend class DLS::Graph;
+	friend class DLS::Section;
+	friend class DLS::Layer;
+	friend class Dir;
+
     public:
         Model();
         ~Model();
 
         void addLocalDir(LibDLS::Directory *);
         void clear();
+
+		enum NodeType { InvalidNode, DirNode, JobNode, ChannelNode };
+		NodeType nodeType(const QModelIndex &) const;
+
+        LibDLS::Directory *dir(const QModelIndex &);
 
         Channel *getChannel(QUrl);
 
@@ -69,6 +85,10 @@ class Q_DECL_EXPORT Model:
         Qt::ItemFlags flags(const QModelIndex &) const;
         QStringList mimeTypes() const;
         QMimeData *mimeData(const QModelIndexList &) const;
+
+	protected:
+        void prepareLayoutChange();
+        void finishLayoutChange();
 
     private:
         QList<Dir *> dirs;

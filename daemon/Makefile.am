@@ -31,16 +31,41 @@ endif
 
 #------------------------------------------------------------------------------
 
-dlsd_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
-dlsd_CXXFLAGS += -I$(top_srcdir)
-dlsd_LDFLAGS = -L$(top_builddir)/lib @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@
-dlsd_LDADD = @FFTW3_LIBS@ -ldls @ZLIB_LIBS@ -lm -lpthread
+dlsd_CPPFLAGS = \
+	$(CPPFLAGS) \
+	-DREVISION=\"$(REV)\" \
+	$(XML_CPPFLAGS)
+
+dlsd_CXXFLAGS = \
+	$(CXXFLAGS) \
+	-Wall \
+	-I$(topsrcdir) \
+	@FFTW3_CFLAGS@ \
+	@ZLIB_CFLAGS@ \
+	$(PDCOM_CPPFLAGS)
+
+dlsd_LDFLAGS = \
+	@FFTW3_LDFLAGS@ \
+	@ZLIB_LDFLAGS@ \
+	$(PDCOM_LDFLAGS) \
+	-pthread
+
+dlsd_LDADD = \
+	@FFTW3_LIBS@ \
+	$(top_builddir)/lib/.libs/libdls.so \
+	@ZLIB_LIBS@ \
+	$(PDCOM_LIBS) \
+	$(XML_LIBS) \
+	-lm
+
 dlsd_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dlsd_SOURCES = \
 	Job.cpp \
 	JobPreset.cpp \
 	Logger.cpp \
+	Message.cpp \
+	MessageList.cpp \
 	ProcLogger.cpp \
 	ProcMother.cpp \
 	globals.cpp \
@@ -60,6 +85,8 @@ noinst_HEADERS = \
 	Job.h \
 	JobPreset.h \
 	Logger.h \
+	Message.h \
+	MessageList.h \
 	ProcLogger.h \
 	ProcMother.h \
 	SaverGenT.h \

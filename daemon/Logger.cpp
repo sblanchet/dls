@@ -25,6 +25,10 @@ using namespace std;
 
 /*****************************************************************************/
 
+#include <pdcom/Variable.h>
+
+/*****************************************************************************/
+
 #include "lib/Base64.h"
 #include "lib/XmlParser.h"
 #include "lib/XmlTag.h"
@@ -50,22 +54,30 @@ using namespace LibDLS;
    \param dls_dir DLS-Datenverzeichnis
 */
 
-Logger::Logger(const Job *job,
-                     const ChannelPreset *channel_preset,
-                     const string &dls_dir)
+Logger::Logger(
+        Job *job,
+        const ChannelPreset *channel_preset,
+        const string &dls_dir,
+        PdCom::Variable *pv
+        ):
+    _parent_job(job),
+    _dls_dir(dls_dir),
+    _var(NULL),
+    _var_type(TUNKNOWN),
+    _channel_preset(*channel_preset),
+    _gen_saver(NULL),
+    _data_size(0),
+    _channel_dir_acquired(false),
+    _chunk_created(false),
+    _finished(true),
+    _discard_data(false)
 {
-    _parent_job = job;
-    _channel_preset = *channel_preset;
-    _dls_dir = dls_dir;
+#ifdef DEBUG
+    cerr << "Created logger " << this
+        << " for " << channel_preset->name << endl;
+#endif
 
-    _gen_saver = 0;
-    _change_in_progress = false;
-    _finished = true;
-
-    _channel_dir_acquired = false;
-    _chunk_created = false;
-
-    _data_size = 0;
+    _subscribe(pv);
 }
 
 /*****************************************************************************/
@@ -76,362 +88,82 @@ Logger::Logger(const Job *job,
 
 Logger::~Logger()
 {
-    if (_gen_saver) delete _gen_saver;
-}
-
-/*****************************************************************************/
-
-/**
-   Holt sich den zu den Vorgaben passenden msrd-Kanal
-
-   Die Liste der msrd-Kanäle wird auf den Namen des
-   Vorgabekanals hin durchsucht. Wird dieser gefunden, dann
-   werden die Eigenschaften des msrd-Kanals für spätere
-   Zwecke kopiert.
-
-   Da jetzt der Datentyp des Kanals bekannt ist, kann
-   jetzt eine Instanz der SaverGenT - Template-Klasse
-   gebildet und damit ein Saver-Objekt erzeugt werden.
-
-   \param channels Konstante Liste der msrd-Kanäle
-   \throw ELogger Kanal nicht gefunden, unbekannter Datentyp,
-   oder Fehler beim Erstellen des Saver-Objektes
-*/
-
-void Logger::get_real_channel(const list<RealChannel> *channels)
-{
-    stringstream err;
-    list<RealChannel>::const_iterator channel_i;
-
-    channel_i = channels->begin();
-    while (channel_i != channels->end())
-    {
-        if (channel_i->name == _channel_preset.name)
-        {
-            _real_channel = *channel_i;
-            return;
-        }
-
-        channel_i++;
+    if (_gen_saver) {
+        delete _gen_saver;
     }
 
-    err << "Channel \"" << _channel_preset.name << "\" does not exist!";
-    throw ELogger(err.str());
-}
-
-/*****************************************************************************/
-
-/**
-   Erstellt ein zu den Vorgaben passendes Saver-Objekt
-
-   Instanziert das SaverGenT-Template mit dem entsprechenden
-   Datentyp und erstellt dann die vorgegebene Meta-Saver.
-*/
-
-void Logger::create_gen_saver()
-{
-    if (_gen_saver) delete _gen_saver;
-    _gen_saver = 0;
-
-    try
-    {
-        switch (_real_channel.type)
-        {
-            case TCHAR:
-                _gen_saver = new SaverGenT<char>(this);
-                break;
-            case TUCHAR:
-                _gen_saver = new SaverGenT<unsigned char>(this);
-                break;
-            case TSHORT:
-                _gen_saver = new SaverGenT<short int>(this);
-                break;
-            case TUSHORT:
-                _gen_saver = new SaverGenT<unsigned short int>(this);
-                break;
-            case TINT:
-                _gen_saver = new SaverGenT<int>(this);
-                break;
-            case TUINT:
-                _gen_saver = new SaverGenT<unsigned int>(this);
-                break;
-            case TLINT:
-                _gen_saver = new SaverGenT<long>(this);
-                break;
-            case TULINT:
-                _gen_saver = new SaverGenT<unsigned long>(this);
-                break;
-            case TFLT:
-                _gen_saver = new SaverGenT<float>(this);
-                break;
-            case TDBL:
-                _gen_saver = new SaverGenT<double>(this);
-                break;
-
-            default: throw ELogger("Unknown data type!");
-        }
-    }
-    catch (ESaver &e)
-    {
-        throw ELogger("Constructing new saver: " + e.msg);
-    }
-    catch (...)
-    {
-        throw ELogger("Out of memory while constructing saver!");
-    }
-
-    if (_channel_preset.meta_mask & MetaMean)
-    {
-        _gen_saver->add_meta_saver(MetaMean);
-    }
-    if (_channel_preset.meta_mask & MetaMin)
-    {
-        _gen_saver->add_meta_saver(MetaMin);
-    }
-    if (_channel_preset.meta_mask & MetaMax)
-    {
-        _gen_saver->add_meta_saver(MetaMax);
-    }
-}
-
-/*****************************************************************************/
-
-/**
-   Verifiziert die angegebenen Vorgaben
-
-   -# Die Sampling-Frequenz muss größer 0 sein
-   -# Die Sampling-Frequenz darf den für den Kanal
-      angegebenen Maximalwert nicht übersteigen.
-   -# Die Sampling-Frequenz muss zu einer ganzzahligen Untersetzung führen.
-   -# blocksize * reduction < channel buffer size / 2!
-
-   \param channel Konstanter Zeiger auf zu prüfende Kanalvorgaben.
-   Weglassen dieses Parameters erwirkt die Prüfung der eigenen Vorgaben.
-   \throw ELogger Kanalvorgaben nicht in Ordnung
-*/
-
-void Logger::check_presettings(const ChannelPreset *channel) const
-{
-    unsigned int reduction, block_size;
-    stringstream err;
-
-    // Wenn keine Kanalvorgaben übergeben, eigene überprüfen
-    if (!channel) channel = &_channel_preset;
-
-    if (channel->sample_frequency <= 0.0) {
-        err << "Channel \"" << channel->name << "\": "
-            << "Invalid sample frequency "
-            << channel->sample_frequency << "!";
-        throw ELogger(err.str());
-    }
-
-    if (channel->sample_frequency > _real_channel.frequency) {
-        err << "Channel \"" << channel->name << "\": "
-            << "Sample frequency exceeds channel maximum"
-            << " (" << channel->sample_frequency << " / "
-            << _real_channel.frequency << " Hz)!";
-        throw ELogger(err.str());
-    }
-
-    reduction = (unsigned int)
-        (_real_channel.frequency / channel->sample_frequency + .5);
-    block_size = (unsigned int) (channel->sample_frequency + .5);
-    if (!block_size)
-        block_size = 1;
-
-    if (block_size * reduction > _real_channel.bufsize / 2) {
-        err << "Channel \""<< channel->name << "\": "
-            << "Buffer limit exceeded! "
-            << block_size * reduction << " > " << _real_channel.bufsize / 2;
-        throw ELogger(err.str());
-    }
-
-    if (channel->format_index == FORMAT_MDCT
-            && _real_channel.type != TFLT
-            && _real_channel.type != TDBL) {
-        err << "MDCT compression only for floating point channels!";
-        throw ELogger(err.str());
-    }
-}
-
-/*****************************************************************************/
-
-/**
- * Checks the given channel directory can be used for the current job.
- * \return non-zero, if the directory matches
- * \throw ELogger Failed to check.
- */
-
-int Logger::_channel_dir_matches(const string &dir_name) const
-{
-    stringstream err;
-    string channel_file_name;
-    fstream channel_file;
-    struct stat stat_buf;
-    XmlParser xml;
-    XmlTag channel_tag;
-
-    if (stat(dir_name.c_str(), &stat_buf) == -1) {
-        err << "Failed to stat() \"" << dir_name << "\": "
-            << strerror(errno);
-        throw ELogger(err.str());
-    }
-
-    if (!S_ISDIR(stat_buf.st_mode)) {
-        err << "\"" << dir_name << "\" is not a directory!";
-        throw ELogger(err.str());
-    }
-
-    channel_file_name = dir_name + "/channel.xml";
-    if (lstat(channel_file_name.c_str(), &stat_buf) == -1) {
-        err << "Failed to stat() \"" << channel_file_name << "\": "
-            << strerror(errno);
-        throw ELogger(err.str());
-    }
-
-    channel_file.open(channel_file_name.c_str(), ios::in);
-    if (!channel_file) {
-        err << "Failed to open() \"" << channel_file_name << "\": "
-            << strerror(errno);
-        throw ELogger(err.str());
-    }
-
-    try {
-        xml.parse(&channel_file, "dlschannel", dxttBegin);
-        channel_tag = *xml.parse(&channel_file, "channel", dxttSingle);
-        xml.parse(&channel_file, "dlschannel", dxttEnd);
-    }
-    catch (EXmlParser &e) {
-        err << "Parsing \"" << channel_file_name << "\": " << e.msg
-            << " tag: " << e.tag;
-        throw ELogger(err.str());
-    }
-
-    if (channel_tag.att("name")->to_str() != _channel_preset.name)
-        return 0;
-
-    if (channel_tag.att("unit")->to_str() != _real_channel.unit)
-        return 0;
-
-    if (channel_tag.att("type")->to_str()
-            != channel_type_to_str(_real_channel.type))
-        return 0;
-
-    return 1;
-}
-
-/*****************************************************************************/
-
-/**
-   Erzeugt den Startbefehl für die Erfassung des Kanals
-
-   \param channel Konstanter Zeiger auf die Kanalvorgabe
-   \param id ID, die dem Startbefehl beigefügt wird, um eine
-   Bestätigung zu bekommen. Kann weggelassen werden.
-   \return XML-Startbefehl
-*/
-
-string Logger::start_tag(const ChannelPreset *channel,
-                            const string &id) const
-{
-    stringstream tag;
-    unsigned int reduction;
-    unsigned int block_size;
-
-    reduction = (unsigned int)
-        (_real_channel.frequency / channel->sample_frequency + .5);
-    block_size = (unsigned int) (channel->sample_frequency + .5);
-    if (!block_size)
-        block_size = 1;
-
-    // Blocksize begrenzen (msrd kann nur 1024)
-    if (block_size > 1024)
-        block_size = 1024;
-
-#if 0
-    // Blocksize muss ein Teiler von Sample-Frequency sein!
-    if (fmod(channel->sample_frequency, block_size)) {
-        stringstream err;
-        err << "Block size (" << block_size << ")";
-        err << " doesn't match frequency (" << channel->sample_frequency
-            << ")!";
-        throw ELogger(err.str());
-    }
+#ifdef DEBUG
+    cerr << "Deleted logger " << this
+        << " for " << _channel_preset.name << endl;
 #endif
-
-    tag << "<xsad channels=\"" << _real_channel.index << "\""
-        << " reduction=\"" << reduction << "\""
-        << " blocksize=\"" << block_size << "\""
-        << " coding=\"Base64\"";
-    if (id != "") tag << " id=\"" << id << "\"";
-    tag << ">";
-
-    return tag.str();
 }
 
 /*****************************************************************************/
 
 /**
-   Erzeugt den Befehl zum Anhalten der Datenerfassung
+   Speichert wartende Daten
 
-   \returns XML-Stoppbefehl
+   Speichert alle Daten, die noch nicht im Dateisystem sind.
+
+   \throw ELogger Fehler beim Speichern - Datenverlust!
 */
 
-string Logger::stop_tag() const
+void Logger::finish()
 {
-    stringstream tag;
-
-    tag << "<xsod channels=\"" << _real_channel.index << "\">";
-    return tag.str();
-}
-
-/*****************************************************************************/
-
-/**
-   Nimmt erfasste Daten zum Speichern entgegen
-
-   Geht davon aus, dass die entgegengenommenen Daten
-   Base64-kodierte Binärdaten sind. Diese werden
-   dekodiert und intern dem Saver-Objekt übergeben.
-
-   \param data Konstante Referenz auf die Daten
-   \param time Zeitpunkt des letzten Einzelwertes
-   \throw ELogger Fehler beim Dekodieren oder Speichern
-   \throw ETimeTolerance Toleranzfehler! Prozess beenden!
-*/
-
-void Logger::process_data(const string &data, Time time)
-{
-    Base64 base64;
+    stringstream err;
+    bool error = false;
 #ifdef DEBUG
     Time start = Time::now();
 #endif
 
-    // Jetzt ist etwas im Gange
-    if (_finished) _finished = false;
+    _unsubscribe();
 
     try {
-        // Daten dekodieren
-        base64.decode(data.c_str(), data.length());
-    }
-    catch (EBase64 &e) {
-        throw ELogger("Base64 error: " + e.msg);
-    }
-
-    try {
-        // Daten an Saver übergeben
-        _gen_saver->process_data(base64.output(),
-                                 base64.output_size(),
-                                 time);
+        // Alle Daten speichern
+        if (_gen_saver) {
+            _gen_saver->flush();
+        }
     }
     catch (ESaver &e) {
-        throw ELogger("GenSaver: " + e.msg);
+        error = true;
+        err << "saver::flush(): " << e.msg;
+    }
+
+    // Chunk beenden
+    _chunk_created = false;
+
+    if (error) {
+        throw ELogger(err.str());
     }
 
 #ifdef DEBUG
-    cout << "Logger::process_data() for channel " << _real_channel.index
+    cout << "Logger::finish() for channel " << _real_channel.index
         << " took " << (Time::now() - start).to_dbl_time() << " s." << endl;
 #endif
+
+    _finished = true;
+}
+
+/*****************************************************************************/
+
+/**
+   Verwirft alle Daten und erstellt einen neuen Chunk
+
+   Diese Methode löscht alle Daten im Speicher. Sie sollte
+   nur mit Bedacht aufgerufen werden (z. B. in einem Zweig
+   nach einem fork(), wobei der andere Zweig die Daten speichert).
+*/
+
+void Logger::discard()
+{
+    // Vorgeben, dass noch keine Daten geschrieben wurden
+    _data_size = 0;
+
+    // Neuen Saver erstellen (löscht vorher den alten Saver)
+    _create_gen_saver();
+
+    // Vorgeben, dass noch kein Chunk existiert
+    _chunk_created = false;
 }
 
 /*****************************************************************************/
@@ -465,8 +197,9 @@ void Logger::create_chunk(Time time_of_first)
     }
 
     // acquire channel directory
-    if (!_channel_dir_acquired)
+    if (!_channel_dir_acquired) {
         _acquire_channel_dir();
+    }
 
     // create chunk directory
     dir_name << _channel_dir_name << "/chunk" << time_of_first;
@@ -524,7 +257,7 @@ void Logger::create_chunk(Time time_of_first)
 
 /**
  * Searches for a matching channel directory to store data.
- * If no matching directory is found, a new on is created.
+ * If no matching directory is found, a new one is created.
  * \throw ELogger Failed to create directory.
  */
 
@@ -538,7 +271,7 @@ void Logger::_acquire_channel_dir()
     unsigned int index, highest_index = 0;
     XmlTag tag;
 
-    job_dir_name << _dls_dir << "/job" << _parent_job->preset()->id();
+    job_dir_name << _dls_dir << "/job" << _parent_job->id();
 
     if (!(dir = opendir(job_dir_name.str().c_str()))) {
         err << "Failed to open job directory \""
@@ -580,13 +313,21 @@ void Logger::_acquire_channel_dir()
 
     closedir(dir);
 
-    if (_channel_dir_name != "") // found a matching directory
+    if (_channel_dir_name != "") { // found a matching directory
+#ifdef DEBUG
+        cerr << "Using existing " << _channel_dir_name << endl;
+#endif
         return;
+    }
 
     index_stream.clear();
     index_stream.str("");
     index_stream << (highest_index + 1);
     channel_dir_name = job_dir_name.str() + "/channel" + index_stream.str();
+
+#ifdef DEBUG
+    cerr << "Creating " << channel_dir_name << endl;
+#endif
 
     if (mkdir(channel_dir_name.c_str(), 0755)) {
         err << "Failed to create channel directory \""
@@ -611,8 +352,8 @@ void Logger::_acquire_channel_dir()
     tag.clear();
     tag.title("channel");
     tag.push_att("name", _channel_preset.name);
-    tag.push_att("unit", _real_channel.unit);
-    tag.push_att("type", channel_type_to_str(_real_channel.type));
+    tag.push_att("unit", ""); // keep for backward compability
+    tag.push_att("type", channel_type_to_str(_var_type));
     file << " " << tag.tag() << endl;
 
     tag.clear();
@@ -628,145 +369,281 @@ void Logger::_acquire_channel_dir()
 /*****************************************************************************/
 
 /**
-   Verwirft alle Daten und erstellt einen neuen Chunk
+ * Checks the given channel directory can be used for the current job.
+ * \return non-zero, if the directory matches
+ * \throw ELogger Failed to check.
+ */
 
-   Diese Methode löscht alle Daten im Speicher. Sie sollte
-   nur mit Bedacht aufgerufen werden (z. B. in einem Zweig
-   nach einem fork(), wobei der andere Zweig die Daten speichert).
-*/
-
-void Logger::discard_chunk()
-{
-    // Vorgeben, dass noch keine Daten geschrieben wurden
-    _data_size = 0;
-
-    // Neuen Saver erstellen (löscht vorher den alten Saver)
-    create_gen_saver();
-
-    // Vorgeben, dass noch kein Chunk existiert
-    _chunk_created = false;
-}
-
-/*****************************************************************************/
-
-/**
-   Merkt eine Änderung der Kanalvorgaben vor
-
-   Wenn ein Änderungsbefehl gesendet wurde, die
-   Bestätigung aber noch nicht da ist, kann es sein,
-   dass noch Daten entsprechend der "alten" Vorgabe empfangen
-   werden. Deshalb darf die Vorgabe solange nicht übernommen
-   werden, bis die Bestätigung da ist.
-
-   Das passiert mit dieser Methode. Sie merkt die neue Vorgabe vor.
-   Sobald eine Bestätigung mit der angegebenen ID
-   empfangen wird, muss do_change() aufgerufen werden.
-
-   \param channel Die neue, "wartende" Kanalvorgabe
-   \param id Änderungs-ID, die mit dem Änderungsbefehl
-   gesendet wurde.
-   \see change_is()
-   \see do_change()
-*/
-
-void Logger::set_change(const ChannelPreset *channel,
-                           const string &id)
-{
-    if (_change_in_progress)
-    {
-        msg() << "Change in progress!";
-        log(Warning);
-    }
-    else
-    {
-        _change_in_progress = true;
-    }
-
-    _change_id = id;
-    _change_channel = *channel;
-}
-
-/*****************************************************************************/
-
-/**
-   Abfrage auf eine bestimmte Änderungs-ID
-
-   Gibt "true" zurück, wenn die Angegebene ID
-   auf die vorgemerkte passt und zudem eine Änderung wartet
-
-   \return true, wenn ID passt
-*/
-
-bool Logger::change_is(const string &id) const
-{
-    return _change_id == id && _change_in_progress;
-}
-
-/*****************************************************************************/
-
-/**
-   Führt eine vorgemerkte Änderung durch
-
-   \throw ELogger Fehler beim Speichern von wartenden Daten
-*/
-
-void Logger::do_change()
-{
-    if (!_change_in_progress) return;
-
-    // Chunks beenden!
-    finish();
-
-    // Änderungen übernehmen
-    _channel_preset = _change_channel;
-
-    // Saver-Objekt neu erstellen
-    create_gen_saver();
-
-    // Jetzt wartet keine Änderung mehr
-    _change_in_progress = false;
-}
-
-/*****************************************************************************/
-
-/**
-   Speichert wartende Daten
-
-   Speichert alle Daten, die noch nicht im Dateisystem sind.
-
-   \throw ELogger Fehler beim Speichern - Datenverlust!
-*/
-
-void Logger::finish()
+int Logger::_channel_dir_matches(const string &dir_name) const
 {
     stringstream err;
-    bool error = false;
-#ifdef DEBUG
-    Time start = Time::now();
-#endif
+    string channel_file_name;
+    fstream channel_file;
+    struct stat stat_buf;
+    XmlParser xml;
+    XmlTag channel_tag;
 
-    try {
-        // Alle Daten speichern
-        if (_gen_saver) _gen_saver->flush();
-    }
-    catch (ESaver &e) {
-        error = true;
-        err << "saver::flush(): " << e.msg;
-    }
-
-    // Chunk beenden
-    _chunk_created = false;
-
-    if (error) {
+    if (stat(dir_name.c_str(), &stat_buf) == -1) {
+        err << "Failed to stat() \"" << dir_name << "\": "
+            << strerror(errno);
         throw ELogger(err.str());
     }
 
-#ifdef DEBUG
-    cout << "Logger::finish() for channel " << _real_channel.index
-        << " took " << (Time::now() - start).to_dbl_time() << " s." << endl;
+    if (!S_ISDIR(stat_buf.st_mode)) {
+        err << "\"" << dir_name << "\" is not a directory!";
+        throw ELogger(err.str());
+    }
+
+    channel_file_name = dir_name + "/channel.xml";
+    if (lstat(channel_file_name.c_str(), &stat_buf) == -1) {
+        err << "Failed to stat() \"" << channel_file_name << "\": "
+            << strerror(errno);
+        throw ELogger(err.str());
+    }
+
+    channel_file.open(channel_file_name.c_str(), ios::in);
+    if (!channel_file) {
+        err << "Failed to open() \"" << channel_file_name << "\": "
+            << strerror(errno);
+        throw ELogger(err.str());
+    }
+
+    try {
+        xml.parse(&channel_file, "dlschannel", dxttBegin);
+        channel_tag = *xml.parse(&channel_file, "channel", dxttSingle);
+        xml.parse(&channel_file, "dlschannel", dxttEnd);
+    }
+    catch (EXmlParser &e) {
+        err << "Parsing \"" << channel_file_name << "\": " << e.msg
+            << " tag: " << e.tag;
+        throw ELogger(err.str());
+    }
+
+    if (channel_tag.att("name")->to_str() != _channel_preset.name) {
+        return 0;
+    }
+
+#if 0
+    if (channel_tag.att("unit")->to_str() != _real_channel.unit)
+        return 0;
 #endif
 
-    _finished = true;
+    if (channel_tag.att("type")->to_str()
+            != channel_type_to_str(_var_type)) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/*****************************************************************************/
+
+/** Creates the generic saver object.
+ */
+void Logger::_create_gen_saver()
+{
+    if (_gen_saver) {
+        delete _gen_saver;
+        _gen_saver = NULL;
+    }
+
+    try {
+        switch (_var_type) {
+            case TCHAR:
+                _gen_saver = new SaverGenT<char>(this);
+                break;
+            case TUCHAR:
+                _gen_saver = new SaverGenT<unsigned char>(this);
+                break;
+            case TSHORT:
+                _gen_saver = new SaverGenT<short int>(this);
+                break;
+            case TUSHORT:
+                _gen_saver = new SaverGenT<unsigned short int>(this);
+                break;
+            case TINT:
+                _gen_saver = new SaverGenT<int>(this);
+                break;
+            case TUINT:
+                _gen_saver = new SaverGenT<unsigned int>(this);
+                break;
+            case TLINT:
+                _gen_saver = new SaverGenT<long>(this);
+                break;
+            case TULINT:
+                _gen_saver = new SaverGenT<unsigned long>(this);
+                break;
+            case TFLT:
+                _gen_saver = new SaverGenT<float>(this);
+                break;
+            case TDBL:
+                _gen_saver = new SaverGenT<double>(this);
+                break;
+
+            default:
+                throw ELogger("Unknown data type!");
+        }
+    }
+    catch (ESaver &e) {
+        throw ELogger("Constructing new saver: " + e.msg);
+    }
+    catch (...) {
+        throw ELogger("Out of memory while constructing saver!");
+    }
+
+    if (_channel_preset.meta_mask & MetaMean) {
+        _gen_saver->add_meta_saver(MetaMean);
+    }
+    if (_channel_preset.meta_mask & MetaMin) {
+        _gen_saver->add_meta_saver(MetaMin);
+    }
+    if (_channel_preset.meta_mask & MetaMax) {
+        _gen_saver->add_meta_saver(MetaMax);
+    }
+}
+
+/*****************************************************************************/
+
+/** Subscribes to the process variable.
+ */
+void Logger::_subscribe(PdCom::Variable *pv)
+{
+    switch(pv->type) {
+        case PdCom::Data::bool_T:
+        case PdCom::Data::uint8_T:
+            _var_type = TUCHAR;
+            break;
+        case PdCom::Data::sint8_T:
+            _var_type = TCHAR;
+            break;
+        case PdCom::Data::uint16_T:
+            _var_type = TUSHORT;
+            break;
+        case PdCom::Data::sint16_T:
+            _var_type = TSHORT;
+            break;
+        case PdCom::Data::uint32_T:
+            _var_type = TUINT;
+            break;
+        case PdCom::Data::sint32_T:
+            _var_type = TINT;
+            break;
+        case PdCom::Data::single_T:
+            _var_type = TFLT;
+            break;
+        case PdCom::Data::double_T:
+            _var_type = TDBL;
+            break;
+        case PdCom::Data::uint64_T:
+        case PdCom::Data::sint64_T:
+        default:
+            stringstream err;
+            err << "Channel \"" << _channel_preset.name
+                << "\" has invalid type " << pv->type << "!";
+            throw ELogger(err.str());
+    }
+
+    if (_channel_preset.sample_frequency <= 0.0) {
+        stringstream err;
+        err << "Channel \"" << _channel_preset.name << "\": "
+            << "Invalid sample frequency "
+            << _channel_preset.sample_frequency << "!";
+        throw ELogger(err.str());
+    }
+
+    if (_channel_preset.format_index == FORMAT_MDCT
+            && _var_type != TFLT
+            && _var_type != TDBL) {
+        stringstream err;
+        err << "MDCT compression only for floating point channels!";
+        throw ELogger(err.str());
+    }
+
+    _create_gen_saver();
+
+    double period = 1.0 / _channel_preset.sample_frequency;
+
+    if (period <= 0.0) {
+        stringstream err;
+        err << "Invalid period " << period;
+        throw ELogger(err.str());
+    }
+
+    try {
+        pv->subscribe(this, period);
+    }
+    catch (PdCom::Exception &e) {
+        stringstream err;
+        err << "Subscription failed: " << e.what();
+        throw ELogger(err.str());
+    }
+
+    _var = pv;
+    _discard_data = false;
+}
+
+/*****************************************************************************/
+
+/** Unsubscribes from the process variable.
+ */
+void Logger::_unsubscribe()
+{
+    if (_var) {
+        _var->unsubscribe(this);
+        _var = NULL;
+    }
+}
+
+/*****************************************************************************/
+
+void Logger::notify(PdCom::Variable *pv)
+{
+    if (_discard_data) {
+        return;
+    }
+
+    Time t;
+    t.from_dbl_time(pv->getMTime());
+
+    try {
+        _gen_saver->process_one(pv->getDataPtr(), t);
+    }
+    catch (ESaver &e) {
+        /* PdCom does not like, if exceptions are thrown in notify context.
+         * Therefore notify the logger process by calling a method. */
+        _parent_job->notify_error(E_DLS_ERROR_RESTART);
+        _discard_data = true;
+        msg() << e.msg;
+        log(Error);
+        return;
+    }
+    catch (ETimeTolerance &e) {
+        _parent_job->notify_error(E_DLS_ERROR_RESTART);
+        _discard_data = true;
+        msg() << e.msg;
+        log(Error);
+        return;
+    }
+
+    if (!_finished) {
+        // now something to finish
+        _finished = false;
+    }
+
+    _parent_job->notify_data();
+}
+
+/***************************************************************************/
+
+void Logger::notifyDelete(PdCom::Variable *pv)
+{
+#ifdef DEBUG
+    cout << __func__ << endl;
+#endif
+
+    if (_var && _var == pv) {
+        _var = NULL;
+    }
 }
 
 /*****************************************************************************/

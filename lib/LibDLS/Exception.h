@@ -25,7 +25,6 @@
 /*****************************************************************************/
 
 #include <string>
-using namespace std;
 
 /*****************************************************************************/
 
@@ -33,33 +32,23 @@ namespace LibDLS {
 
 /*****************************************************************************/
 
-/**
-   Basisklasse aller Exceptions der DLS-Klassen
-*/
-
+/** Base class for all LibDLS exceptions.
+ */
 class Exception
 {
-public:
+    public:
+        /** Constructor.
+          \param pmsg Exception message.
+         */
+        Exception(const std::string &pmsg):
+            msg(pmsg) {}
 
-    /**
-       Konstruktor
+        std::string msg; /**< Reason for the exception. */
 
-       \param pmsg Nachricht der zu werfenden Exception
-    */
-
-    Exception(const string &pmsg) {msg = pmsg;};
-
-    string msg; /**< Nachricht der Exception */
-
-private:
-
-    /**
-       Standardkonstruktor
-
-       Privat, da er nicht aufgerufen werden soll.
-    */
-
-    Exception();
+    private:
+        /** Private default constructor.
+         */
+        Exception();
 };
 
 /*****************************************************************************/

@@ -34,6 +34,10 @@ using namespace std;
 
 /*****************************************************************************/
 
+#include <pdcom/Variable.h>
+
+/*****************************************************************************/
+
 #include "lib/RingBufferT.h"
 
 #include "../config.h"
@@ -43,12 +47,11 @@ using namespace std;
 
 using namespace LibDLS;
 
-#define MAX_HOST_NAME_LEN 50
-
+//#define DEBUG_CONNECT
 //#define DEBUG_SIZES
 //#define DEBUG_SEND
 //#define DEBUG_REC
-//#define DEBUG_REC_TAGS
+//#define DEBUG_NOTIFY
 
 /*****************************************************************************/
 
@@ -59,66 +62,32 @@ using namespace LibDLS;
    \param job_id Auftrags-ID
 */
 
-ProcLogger::ProcLogger(const string &dls_dir, unsigned int job_id)
+ProcLogger::ProcLogger(
+        const string &dls_dir
+        ):
+    Process(),
+    _dls_dir(dls_dir),
+    _job(this),
+    _socket(-1),
+    _write_request(false),
+    _sig_hangup(sig_hangup),
+    _sig_child(sig_child),
+    _sig_usr1(sig_usr1),
+    _exit(false),
+    _exit_code(E_DLS_SUCCESS),
+    _state(Connecting),
+    _receiving_data(false),
+    _trigger(NULL)
 {
-    _dls_dir = dls_dir;
-    _job_id = job_id;
-    _sig_hangup = sig_hangup;
-    _sig_child = sig_child;
-    _sig_usr1 = sig_usr1;
-    _exit = false;
-    _exit_code = E_DLS_SUCCESS;
-    _state = dls_connecting;
-    _got_channels = false;
-    _socket = 0;
-    _last_trigger_requested.tv_sec = 0;
-    _last_trigger_requested.tv_usec = 0;
-    _last_watchdog.tv_sec = 0;
-    _last_watchdog.tv_usec = 0;
-    _receiving_data = false;
-    _buffer_level = 0;
+    readOnly = true; // from PdCom::Process: disable writing
 
     openlog("dlsd_logger", LOG_PID, LOG_DAEMON);
-
-    try
-    {
-        _job = new Job(this, _dls_dir);
-    }
-    catch (...)
-    {
-        _job = 0;
-        msg() << "Could not allocate memory for job!";
-        log(Error);
-    }
-
-    try {
-        _ring_buf = new RingBuffer(RECEIVE_RING_BUF_SIZE);
-    }
-    catch (...) {
-        _ring_buf = 0;
-        msg() << "Could not allocate memory for ring buffer.";
-        log(Error);
-    }
 }
 
 /*****************************************************************************/
 
 ProcLogger::~ProcLogger()
 {
-    if (_job) {
-        try {
-            delete _job;
-        }
-        catch (EJob &e) {
-            msg() << "Deleting job: " << e.msg;
-            log(Error);
-        }
-    }
-
-    if (_ring_buf) {
-        delete _ring_buf;
-    }
-
     closelog();
 }
 
@@ -130,7 +99,7 @@ ProcLogger::~ProcLogger()
    \return Exit-Code
 */
 
-int ProcLogger::start()
+int ProcLogger::start(unsigned int job_id)
 {
     msg() << "Process started for job " << dlsd_job_id << "!";
     log(Info);
@@ -138,8 +107,9 @@ int ProcLogger::start()
     _create_pid_file();
 
     if (!_exit) {
+
         // Ablauf starten
-        _start();
+        _start(job_id);
 
         if (process_type == LoggingProcess) {
             // PID-Datei wieder entfernen
@@ -161,15 +131,45 @@ int ProcLogger::start()
 
 /*****************************************************************************/
 
+/** Notify the process about an error and mark it for exiting.
+ */
+void ProcLogger::notify_error(int code)
+{
+    _exit = true;
+    _exit_code = code;
+}
+
+/*****************************************************************************/
+
+/** Notify the process about received data.
+ */
+void ProcLogger::notify_data()
+{
+    _last_receive_time.set_now();
+
+    if (!_receiving_data) {
+        _receiving_data = true;
+
+        msg() << "Receiving data.";
+        log(Info);
+    }
+
+    if (_quota_start_time.is_null()) {
+        _quota_start_time = _last_receive_time;
+    }
+}
+
+/*****************************************************************************/
+
 /**
    Starten des Logging-Prozesses (intern)
 */
 
-void ProcLogger::_start()
+void ProcLogger::_start(unsigned int job_id)
 {
     try {
         // Auftragsdaten importieren
-        _job->import(_job_id);
+        _job.import(job_id);
     }
     catch (EJob &e) {
         _exit_code = E_DLS_ERROR; // no restart, invalid configuration
@@ -180,14 +180,14 @@ void ProcLogger::_start()
 
     // Meldungen über Quota-Benutzung ausgeben
 
-    if (_job->preset()->quota_time()) {
-        msg() << "Using time quota of " << _job->preset()->quota_time()
+    if (_job.preset()->quota_time()) {
+        msg() << "Using time quota of " << _job.preset()->quota_time()
               << " seconds";
         log(Info);
     }
 
-    if (_job->preset()->quota_size()) {
-        msg() << "Using size quota of " << _job->preset()->quota_size()
+    if (_job.preset()->quota_size()) {
+        msg() << "Using size quota of " << _job.preset()->quota_size()
               << " bytes";
         log(Info);
     }
@@ -203,12 +203,15 @@ void ProcLogger::_start()
 
     // Verbindung zu MSR schliessen
     close(_socket);
+    _socket = -1;
 
-    msg() << "Connection to " << _job->preset()->source() << " closed.";
+    msg() << "Connection to " << _job.preset()->source() << " closed.";
     log(Info);
 
+    reset(); // PdCom::Process
+
     try {
-        _job->finish();
+        _job.finish();
     }
     catch (EJob &e) {
         _exit_code = E_DLS_ERROR_RESTART;
@@ -217,7 +220,7 @@ void ProcLogger::_start()
     }
 
 #ifdef DEBUG_SIZES
-    msg() << "Wrote " << _job->data_size() << " bytes of data.";
+    msg() << "Wrote " << _job.data_size() << " bytes of data.";
     log(Info);
 #endif
 }
@@ -232,81 +235,88 @@ void ProcLogger::_start()
 
 bool ProcLogger::_connect_socket()
 {
-    struct sockaddr_in address;
-    struct hostent *hp;
-    const char *source = _job->preset()->source().c_str();
-    uint16_t port = _job->preset()->port();
-    stringstream ident;
-    struct passwd *passwd;
-    char host_name[MAX_HOST_NAME_LEN + 1];
+    const char *host = _job.preset()->source().c_str();
 
-    // Socket öffnen
-    if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        msg() << "Could not create socket!";
+    stringstream service;
+    service << _job.preset()->port();
+
+    struct addrinfo hints = {};
+    hints.ai_family = AF_UNSPEC; // IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_protocol = 0; // any protocol
+    hints.ai_flags =
+        AI_ADDRCONFIG & // return address types if local interface exists
+        AI_NUMERICSERV; // service always numeric
+
+    struct addrinfo *result = NULL;
+
+    int ret = getaddrinfo(host, service.str().c_str(), &hints, &result);
+
+    if (ret) {
+        msg() << "Could not resolve \"" << host << ":" << service.str()
+            << "\": " << gai_strerror(ret);
         log(Error);
-
         return false;
     }
 
-    // Socket geöffnet, Adresse übersetzen/auflösen
-    address.sin_family = AF_INET;
-    if ((hp = gethostbyname(source)) == NULL)
-    {
+    struct addrinfo *rp;
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+#ifdef DEBUG_CONNECT
+        msg() << "Trying socket(family=" << rp->ai_family
+            << ", type=" << rp->ai_socktype
+            << ", protocol=" << rp->ai_protocol << ")...";
+        log(Info);
+#endif
+
+        _socket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (_socket == -1) {
+#ifdef DEBUG_CONNECT
+            msg() << "Failed: " << strerror(errno);
+            log(Error);
+#endif
+            continue;
+        }
+
+#ifdef DEBUG_CONNECT
+        msg() << "Trying connect(addr=" << rp->ai_addr
+            << ", len=" << rp->ai_addrlen;
+        log(Info);
+#endif
+
+        if (::connect(_socket, rp->ai_addr, rp->ai_addrlen) != -1) {
+            break; // success
+        }
+
         close(_socket);
+        _socket = -1;
 
-        msg() << "Could not resolve \"" << source << "\"!";
+#ifdef DEBUG_CONNECT
+        msg() << "Could not connect: " << strerror(errno) << endl;
+        log(Error);
+#endif
+    }
+
+    freeaddrinfo(result);
+
+    if (!rp) {
+        msg() << "Failed to connect: " << strerror(errno) << endl;
         log(Error);
 
         return false;
     }
 
-    // Adresse in sockaddr-Struktur kopieren
-    memcpy((char *) &address.sin_addr, (char *) hp->h_addr, hp->h_length);
-    address.sin_port = htons(port);
-
-    // Verbinden
-    if ((::connect(_socket, (struct sockaddr *) &address,
-                   sizeof(address))) == -1) {
-        close(_socket);
-
-        msg() << "Could not connect to \"" << source << "\"!";
-        log(Error);
-
-        return false;
-    }
-
-    // Verbunden!
-    msg() << "Connected to \"" << source << "\", port " << port << ".";
+    msg() << "Connected to \"" << host << ":" << service.str() << "\"" << ".";
     log(Info);
 
-    send_command(""); // Einmal Newline senden
-
-    // get user name
-    if (!(passwd = getpwuid(getuid()))) {
-        msg() << "Failed to obtain user information: "
-            << strerror(errno) << "!";
+    int optval = 1;
+    ret = setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE, &optval,
+            sizeof(optval));
+    if (ret == -1) {
+        msg() << "Failed to set keepalive socket option: "
+            << strerror(errno);
         log(Warning);
     }
-
-    // get host name
-    if (gethostname(host_name, MAX_HOST_NAME_LEN)) {
-        // failed to get host name
-        strcpy(host_name, "unknown");
-        msg() << "Failed to gethostname(): " << strerror(errno) << "!";
-        log(Warning);
-    }
-    else {
-        host_name[MAX_HOST_NAME_LEN] = 0x00;
-    }
-
-    // send identification
-    ident << "<remote_host name=\"";
-    if (passwd) ident << passwd->pw_name << "@";
-    ident << host_name << "\""
-        << " applicationname=\"dlsd-" << PACKAGE_VERSION << "-r" << REVISION
-        << ", job " << _job_id << "\"/>";
-    send_command(ident.str());
 
     return true;
 }
@@ -320,108 +330,78 @@ bool ProcLogger::_connect_socket()
 void ProcLogger::_read_write_socket()
 {
     fd_set read_fds, write_fds;
-    int select_ret, send_ret;
+    int select_ret;
     struct timeval timeout;
 
-    while (1) {
-        // File-Descriptor-Sets nullen und mit Client-FD vorbesetzen
+    while (!_exit) {
+
         FD_ZERO(&read_fds);
         FD_ZERO(&write_fds);
         FD_SET(_socket, &read_fds);
-        if (_to_send.length() > 0) FD_SET(_socket, &write_fds);
+
+        if (_write_request) {
+            FD_SET(_socket, &write_fds);
+        }
 
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
 
         // Warten auf Änderungen oder Timeout
-        if ((select_ret = select(_socket + 1, &read_fds,
-                                 &write_fds, 0, &timeout)) > 0) {
-            if (FD_ISSET(_socket, &read_fds)) { // Eingehende Daten?
+        select_ret = select(_socket + 1, &read_fds, &write_fds, 0, &timeout);
+
+        if (select_ret > 0) {
+            if (FD_ISSET(_socket, &read_fds)) { // incoming data
                 _read_socket();
-                if (!_exit)
-                    _parse_ring_buffer();
-                if (_exit)
+                if (_exit) {
                     break;
+                }
             }
 
-            // Bereit zum Senden?
             if (FD_ISSET(_socket, &write_fds)) {
-                if ((send_ret = send(_socket, _to_send.c_str(), // Daten senden
-                                     _to_send.length(), 0)) > 0)
-                {
-#ifdef DEBUG_SEND
-                    msg() << "SENT: \"" << _to_send.substr(0, send_ret)
-                          << "\"";
-                    log(Info);
-#endif
-
-                    _to_send.erase(0, send_ret); // Gesendetes entfernen
-                }
-                else if (send_ret == -1) {
+                int ret = writeReady();
+                if (ret < 0) {
                     _exit = true;
                     _exit_code = E_DLS_ERROR_RESTART;
-                    msg() << "Error " << errno << " in send()!";
+                    msg() << "Sending data failed: " << strerror(errno);
                     log(Error);
-                    break;
+                } else if (!ret) {
+                    // No more data to send
+                    _write_request = false;
                 }
             }
         }
-
-        // Select-Timeout
-        else if (select_ret == 0) {
-        }
-
-        // Select-Fehler
-        else if (select_ret == -1) {
-            if (errno == EINTR) {
-                msg() << "select() interrupted by signal.";
-                log(Info);
-            }
-            else {
-                _exit = true;
-                _exit_code = E_DLS_ERROR_RESTART;
-                msg() << "Error " << errno << " in select()!";
-                log(Error);
-                break;
-            }
+        else if (select_ret == -1 && errno != EINTR) {
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
+            msg() << "Error " << errno << " in select()!";
+            log(Error);
+            break;
         }
 
         // Auf gesetzte Signale überprüfen
         _check_signals();
 
-        if (_exit) break;
-
-        // Trigger
-        _do_trigger();
+        if (_exit) {
+            break;
+        }
 
         // Watchdog
         _do_watchdogs();
 
         // Warnung ausgeben, wenn zu lange keine Daten mehr empfangen
-        if (Time::now() - _last_data_received
-                > (uint64_t) NO_DATA_ABORT_TIME * 1000000) {
-            if (_receiving_data) {
-                _receiving_data = false;
-                _first_data_time.set_null();
-                if (_state != dls_waiting_for_trigger) {
-                    _exit = true;
-                    _exit_code = E_DLS_ERROR_RESTART;
-                    msg() << "No data received for " << NO_DATA_ABORT_TIME
-                        << " s! Seems that the server is down. Restarting...";
-                    log(Error);
-                }
-            }
-        } else if (!_receiving_data) {
-            msg() << "Receiving data.";
-            log(Info);
-            _receiving_data = true;
+        if (_state == Data &&
+                ((Time::now() - _last_receive_time).to_dbl_time() >
+                 NO_DATA_ABORT_TIME)) {
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
+
+            msg() << "No data received for " << NO_DATA_ABORT_TIME
+                << " s! Seems that the server is down. Restarting...";
+            log(Error);
         }
 
         // Quota
         _do_quota();
-
-        // Soll der Prozess beendet werden?
-        if (_exit) break;
     }
 }
 
@@ -433,60 +413,77 @@ void ProcLogger::_read_write_socket()
 
 void ProcLogger::_read_socket()
 {
-    char *write_addr;
-    unsigned int write_size;
-    int recv_ret;
+    char buf[4096];
 
-    _ring_buf->write_info(&write_addr, &write_size);
+    int ret = ::read(_socket, buf, sizeof(buf));
 
-    if (write_size == 0) {
-        _exit = true;
-        _exit_code = E_DLS_ERROR_RESTART;
-        msg() << "FATAL: Ring buffer full!";
-        log(Error);
-    }
-    else if ((recv_ret = recv(_socket, write_addr, write_size, 0)) > 0) {
+    if (ret > 0) {
 #ifdef DEBUG_REC
-        cout << "REC " << write_size << " " << Time::now()
-            << " " << string(write_addr, recv_ret) << " ENDREC" << endl;
+        cerr << "read: " << string(buf, ret) << endl;
 #endif
+        try {
+            newData(buf, ret);
+        }
+        catch (PdCom::Exception &e) {
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
 
-        // Dem Ring-Puffer mitteilen, dass Daten geschrieben wurden
-        _ring_buf->written(recv_ret);
-        _last_read_time.set_now();
+            msg() << "newData() failed: " << e.what()
+                << ", last data: " << string(buf, ret);
+        }
 
-#ifdef DEBUG_REC
-        cout << "read " << recv_ret << " bytes, space left: "
-            << _ring_buf->remaining() << endl;
-#endif
-    }
-    else if (recv_ret == 0) // Verbindung geschlossen!
-    {
+    } else if (ret < 0) {
+        if (errno != EINTR) {
+            _exit = true;
+            _exit_code = E_DLS_ERROR_RESTART;
+            msg() << "Error in recv(): " << strerror(errno);
+            log(Error);
+        }
+    } else { // ret == 0
         _exit = true;
         _exit_code = E_DLS_ERROR_RESTART;
         msg() << "Connection closed by server.";
         log(Error);
     }
-    else // Fehler
-    {
-        _exit = true;
-        _exit_code = E_DLS_ERROR_RESTART;
-        msg() << "Error " << errno << " in recv()!";
-        log(Error);
-    }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-/**
-   Merkt ein Kommando zum Senden an die Datenquelle vor
-
-   \param cmd Kommando-String
-*/
-
-void ProcLogger::send_command(const string &cmd)
+void ProcLogger::_subscribe_trigger()
 {
-    _to_send += cmd + "\n";
+    if (_trigger) {
+        _trigger->unsubscribe(this);
+        _trigger = NULL;
+    }
+
+    PdCom::Variable *pv = findVariable(_job.preset()->trigger());
+
+    if (!pv) {
+        msg() << "Trigger variable \"" << _job.preset()->trigger()
+            << "\" does not exist!";
+        log(Error);
+        return;
+    }
+
+    try {
+        pv->subscribe(this, 0.0); // event-based
+    }
+    catch (PdCom::Exception &e) {
+        msg() << "Trigger subscription failed: " << e.what();
+        log(Error);
+        return;
+    }
+
+    try {
+        pv->poll(this);
+    }
+    catch (PdCom::Exception &e) {
+        msg() << "Trigger polling failed: " << e.what();
+        log(Error);
+        return;
+    }
+
+    _trigger = pv;
 }
 
 /*****************************************************************************/
@@ -514,33 +511,7 @@ void ProcLogger::_check_signals()
         msg() << "Received notification from mother process.";
         log(Info);
 
-        try {
-            _job->import(_job_id);
-        }
-        catch (EJob &e) {
-            _exit = true;
-            _exit_code = E_DLS_ERROR;
-            msg() << "Importing job: " << e.msg;
-            log(Error);
-            return;
-        }
-
-        if (!_job->preset()->running()) { // Erfassung gestoppt
-            _exit = true;
-            msg() << "Job is no longer running.";
-            log(Info);
-        }
-        else { // Erfassung soll weiterlaufen
-            if (_state == dls_waiting_for_trigger) {
-                _state = dls_listening;
-                msg() << "No trigger any more! Start logging.";
-                log(Info);
-                _job->start_logging();
-            }
-            else {
-                _job->change_logging();
-            }
-        }
+        _reload();
     }
 
     // Nachricht Flush!
@@ -565,338 +536,57 @@ void ProcLogger::_check_signals()
 
 /*****************************************************************************/
 
-/**
-   Parst die gelesenen Daten nach XML-Tags
-*/
-
-void ProcLogger::_parse_ring_buffer()
+/** Reloads the job presettings.
+ */
+void ProcLogger::_reload()
 {
-    while (1) {
-        try {
-            // Das nächste XML-Tag im Ringpuffer parsen
-            _xml.parse(_ring_buf);
-        }
-        catch (EXmlParserEOF &e) { // Tag noch nicht komplett
-            // Weiter Daten empfangen
-            return;
-        }
-        catch (EXmlParser &e) { // Anderer Parsing-Fehler
-            _exit = true;
-            _exit_code = E_DLS_ERROR_RESTART;
-            msg() << "Parsing incoming data: " << e.msg << " Tag: " << e.tag;
-            log(Error);
-            return; // Prozess beenden!
-        }
-
-        // Tag komplett; verarbeiten!
-        _process_tag();
-
-        // Nach der Verarbeitung jedes Tags kann ein Fehler aufgetreten
-        // sein. Deshalb nach jedem Tag prüfen...
-        if (_exit) break;
-    }
-}
-
-/*****************************************************************************/
-
-/**
-   Verarbeitet ein vollständig geparstes XML-Tag
-*/
-
-void ProcLogger::_process_tag()
-{
-    string send_str, title;
-	RealChannel real_channel;
-    unsigned int new_buffer_level;
-
-    title = _xml.tag()->title();
-
-#ifdef DEBUG_REC_TAGS
-    cout << "TAG: " << _xml.tag()->tag() << " ENDTAG" << endl;
-#endif
-
     try {
-        if (title == "info" || title == "warn"
-            || title == "error" || title == "crit_error"
-            || title == "broadcast") {
-            msg() << "MSRD: " << _xml.tag()->tag();
-            log(Info);
-            // Message- und Message-Index-Datei aktualisieren
-            _job->message(_xml.tag());
-            return;
-        }
-
-        // Acknoledgement-Tags direkt an _job weiterleiten
-        else if (_xml.tag()->title() == "ack") {
-            _job->ack_received(_xml.tag()->att("id")->to_str());
-            return;
-        }
-
-        // Trigger-Parameter verarbeiten
-        else if (_xml.tag()->title() == "parameter" // Parameter empfangen
-                 && _job->preset()->trigger() != "" // Triggern aktiviert
-                 && (_xml.tag()->att("name")->to_str()
-                     == _job->preset()->trigger())) { // Trigger-Parameter
-            if (_state == dls_waiting_for_trigger
-                && _xml.tag()->att("value")->to_int() != 0) {
-                _state = dls_listening; // Zustandswechsel!
-                msg() << "Trigger active! Start logging.";
-                log(Info);
-                _receiving_data = false; // Gleich augeben, dass
-                                         // wieder Daten kommen
-                _job->start_logging();
-            }
-            else if (_state == dls_listening || _state == dls_getting_data) {
-                if (_xml.tag()->att("value")->to_int() == 0) {
-                    _state = dls_waiting_for_trigger;
-                    msg() << "Trigger not active! Stop logging.";
-                    log(Info);
-                    _job->stop_logging();
-                    msg() << "Waiting for trigger...";
-                    log(Info);
-                }
-            }
-
-            return;
-        }
-
-        switch (_state) { // Ab jetzt Zustandsabhängigkeit!
-            case dls_connecting: //------------------------------------
-                // Nur <connected> annehmen
-                if (_xml.tag()->title() == "connected") {
-                    // Nur mit MSR sprechen
-                    if (_xml.tag()->att("name")->to_str() != "MSR") {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-                        msg() << "Expected name: MSR!";
-                        log(Error);
-                        break;
-                    }
-
-                    // Version auslesen
-                    _msr_version = _xml.tag()->att("version")->to_int();
-
-                    if (_msr_version < MSR_VERSION(2, 7, 0)) {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-                        msg() << "Expected version > 2.7.0! Current version:";
-                        msg() << " " << MSR_V(_msr_version);
-                        msg() << "." << MSR_P(_msr_version);
-                        msg() << "." << MSR_S(_msr_version) << "...";
-                        log(Error);
-                        break;
-                    }
-
-                    // Endianess bestimmen
-                    if (_xml.tag()->has_att("arch")) {
-                        if (_xml.tag()->att("arch")->to_str() == "little") {
-                            source_arch = LittleEndian;
-                            msg() << "Source architecture: Little-endian.";
-                            log(Info);
-                        }
-                        else if (_xml.tag()->att("arch")->to_str() == "big") {
-                            source_arch = BigEndian;
-                            msg() << "Source architecture: Big-endian.";
-                            log(Info);
-                        }
-                        else {
-                            _exit = true;
-                            _exit_code = E_DLS_ERROR_RESTART;
-                            msg() << "Unknown architecture: "
-                                  << _xml.tag()->att("arch")->to_str();
-                            log(Error);
-                            break;
-                        }
-                    }
-                    else {
-                        source_arch = LittleEndian;
-                        msg() << "No architecture information!"
-                              << " Assuming little-endian.";
-                        log(Warning);
-                    }
-
-                    _state = dls_waiting_for_channels; // Zustandswechsel!
-
-                    msg() << "Connected to MSR version";
-                    msg() << " " << MSR_V(_msr_version);
-                    msg() << "." << MSR_P(_msr_version);
-                    msg() << "." << MSR_S(_msr_version);
-                    log(Info);
-
-                    // Alle Kanäle auslesen
-                    send_command("<rk>");
-                }
-                break;
-
-            case dls_waiting_for_channels: //--------------------------
-                if (_xml.tag()->title() == "channels"
-                    && _xml.tag()->type() == dxttBegin) {
-                    _state = dls_getting_channels; // Zustandswechsel
-                }
-                break;
-
-            case dls_getting_channels: //------------------------------
-                if (_xml.tag()->title() == "channel") {
-                    try {
-                        string type;
-
-                        real_channel.name = _xml.tag()->att("name")->to_str();
-                        if (_xml.tag()->has_att("unit")) {
-                            real_channel.unit =
-                                _xml.tag()->att("unit")->to_str();
-                        }
-                        real_channel.index =
-                            _xml.tag()->att("index")->to_int();
-                        real_channel.frequency =
-                            _xml.tag()->att("HZ")->to_int();
-                        real_channel.bufsize =
-                            _xml.tag()->att("bufsize")->to_int();
-
-                        type = _xml.tag()->att("typ")->to_str();
-
-                        real_channel.type = str_to_channel_type(type);
-
-                        if (real_channel.type == TUNKNOWN) {
-                            // ignore unknown channel types
-                            break;
-                        }
-
-                        _real_channels.push_back(real_channel);
-                    }
-                    catch (EXmlTag &e) {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-                        msg() << "Receiving MSR channel: " << e.msg
-                              << " tag: " << e.tag;
-                        log(Error);
-                    }
-                }
-                else if (_xml.tag()->title() == "channels"
-                         && _xml.tag()->type() == dxttEnd) {
-                    _got_channels = true;
-                    if (_job->preset()->trigger() == "") {
-                        // Alle Logger starten
-                        _job->start_logging();
-                        _state = dls_listening; // Zustandswechsel!
-
-                        msg() << "Start logging.";
-                    }
-                    else {
-                        _state = dls_waiting_for_trigger; // Zustandswechsel!
-                        msg() << "Waiting for trigger \"";
-                        msg() << _job->preset()->trigger() << "\"...";
-                    }
-
-                    log(Info);
-                }
-                break;
-
-            case dls_listening: //-------------------------------------
-                if (_xml.tag()->title() == "data") {
-                    _state = dls_getting_data; // Zustandswechsel!
-                    _last_data_received.set_now();
-                    _data_time.from_dbl_time(
-                        _xml.tag()->att("time")->to_dbl());
-
-#ifdef DEBUG_REC_TAGS
-                    cout << "data " << fixed << _data_time << endl;
-#endif
-
-                    // Zeit des ersten Datenempfanges vermerken
-                    if (_first_data_time.is_null())
-                        _first_data_time = _data_time;
-
-                    if (_xml.tag()->has_att("level")) {
-                        // Meldungen über Füllstand der Kanalpuffer auswerten
-                        new_buffer_level = _xml.tag()->att("level")->to_int();
-                        if (_buffer_level < BUFFER_LEVEL_WARNING
-                            && new_buffer_level >= BUFFER_LEVEL_WARNING) {
-                            // Warnung: Füllstand zu hoch!
-                            msg() << "Channel buffers nearly full!";
-                            log(Warning);
-                        }
-                        else if (_buffer_level >= BUFFER_LEVEL_WARNING
-                                 && new_buffer_level < BUFFER_LEVEL_WARNING) {
-                            // Entwarnung geben
-                            msg() << "Level of channel buffers decreasing...";
-                            log(Info);
-                        }
-
-                        _buffer_level = new_buffer_level;
-                    }
-                }
-                break;
-
-            case dls_getting_data: //----------------------------------
-                if (_xml.tag()->title() == "data"
-                    && _xml.tag()->type() == dxttEnd) {
-                    _state = dls_listening; // Zustandswechsel!
-                }
-                else if (_xml.tag()->title() == "F") {
-                    try {
-                        _job->process_data(_data_time,
-                                           _xml.tag()->att("c")->to_int(),
-                                           _xml.tag()->att("d")->to_str());
-                    }
-                    catch (ETimeTolerance &e) {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-                        msg() << "TIME TOLERANCE EXCEEDED: " << e.msg;
-                        log(Error);
-                    }
-                    catch (EJob &e) {
-                        _exit = true;
-                        _exit_code = E_DLS_ERROR_RESTART;
-
-                        msg() << "Processing data: " << e.msg;
-                        log(Error);
-                    }
-
-                    if ((Time::now() - _last_read_time).to_dbl_time() > 2.0)
-                    {
-#ifdef DEBUG_REC
-                        cout << "intermediate read!" << endl;
-#endif
-                        _read_socket();
-                    }
-                    _do_watchdogs();
-                }
-                break;
-
-            default: break; //-----------------------------------------
-        }
+        _job.import(_job.id());
     }
-    catch (EXmlTag &e) {
+    catch (EJob &e) {
         _exit = true;
-        _exit_code = E_DLS_ERROR_RESTART;
-        msg() << "Processing tag: " << e.msg << " tag: " << e.tag;
+        _exit_code = E_DLS_ERROR;
+        msg() << "Importing job: " << e.msg;
         log(Error);
+        return;
     }
-}
 
-/*****************************************************************************/
+    if (!_job.preset()->running()) { // Erfassung gestoppt
+        _exit = true;
+        msg() << "Job is no longer running.";
+        log(Info);
+        return;
+    }
 
-/**
-   Veranlasst das Senden des Trigger-Parameters
-*/
+    // continue running
 
-void ProcLogger::_do_trigger()
-{
-    stringstream cmd;
-    struct timeval now;
+    if (_job.preset()->trigger() != "") { // triggered
+        if (!_trigger || _trigger->path != _job.preset()->trigger()) {
+            // no trigger yet or trigger changed
+            _subscribe_trigger();
+        }
+        if (_state == Data) {
+            _job.change_logging();
+        }
+    }
+    else { // not triggered
+        if (_trigger) {
+            _trigger->unsubscribe(this);
+            _trigger = NULL;
+        }
 
-    if (_job->preset()->trigger() == ""
-            || !(_state == dls_waiting_for_trigger
-                || _state == dls_listening
-                || _state == dls_getting_data)) return;
+        if (_state == Waiting) {
+            _state = Data;
+            _last_receive_time.set_now();
+            _receiving_data = false;
 
-    gettimeofday(&now, 0);
+            msg() << "No trigger any more! Start logging.";
+            log(Info);
 
-    if (now.tv_sec > _last_trigger_requested.tv_sec + TRIGGER_INTERVAL) {
-        cmd << "<rp name=\"" << _job->preset()->trigger()
-            << "\" short=\"true\">";
-        send_command(cmd.str());
-        _last_trigger_requested = now;
+            _job.start_logging();
+        } else {
+            _job.change_logging();
+        }
     }
 }
 
@@ -908,29 +598,100 @@ void ProcLogger::_do_trigger()
 
 void ProcLogger::_do_watchdogs()
 {
-    struct timeval now;
-    fstream watchdog_file;
-    fstream logging_file;
+    if ((Time::now() - _last_watchdog_time).to_dbl_time() <
+            WATCHDOG_INTERVAL) {
+        return;
+    }
+
+    _last_watchdog_time.set_now();
+
     stringstream dir_name;
+    dir_name << _dls_dir << "/job" << _job.id();
 
-    dir_name << _dls_dir << "/job" << _job->preset()->id();
+    fstream watchdog_file;
+    watchdog_file.open((dir_name.str() + "/watchdog").c_str(), ios::out);
+    watchdog_file.close();
 
-    gettimeofday(&now, 0);
+    if (_state == Data && _receiving_data) {
+        fstream logging_file;
+        logging_file.open((dir_name.str() + "/logging").c_str(), ios::out);
+        logging_file.close();
+    }
+}
 
-    if (now.tv_sec > _last_watchdog.tv_sec + WATCHDOG_INTERVAL) {
-        watchdog_file.open((dir_name.str() + "/watchdog").c_str(), ios::out);
+/*****************************************************************************/
 
-        // Schließen ohne Fehlerbehandlung!
-        watchdog_file.close();
+/**
+   Prüft, ob die Quota überschritten wurde
 
-        if (_state != dls_waiting_for_trigger && _receiving_data) {
-            logging_file.open((dir_name.str() + "/logging").c_str(), ios::out);
+   Wenn ja, wird ein Kindprozess abgeforkt, der für die Flush-
+   Operationen zuständig ist. Der Elternprozess vergisst alle
+   bisherigen Daten und empfängt neue Daten von der Quelle.
+*/
 
-            // Schließen ohne Fehlerbehandlung!
-            logging_file.close();
+void ProcLogger::_do_quota()
+{
+    uint64_t quota_time = _job.preset()->quota_time();
+    uint64_t quota_size = _job.preset()->quota_size();
+    bool quota_reached = false;
+    Time quota_time_limit;
+
+    if (quota_time && !_quota_start_time.is_null()) {
+        quota_time_limit = _quota_start_time
+            + (uint64_t) (quota_time * 1000000 / QUOTA_PART_QUOTIENT);
+
+        if (_last_receive_time >= quota_time_limit) {
+            quota_reached = true;
+            msg() << "Time quota (1/" << QUOTA_PART_QUOTIENT
+                  << " of " << quota_time << " seconds) reached.";
+            log(Info);
         }
+    }
 
-        _last_watchdog = now;
+    if (quota_size) {
+        if (_job.data_size() >= quota_size / QUOTA_PART_QUOTIENT) {
+            quota_reached = true;
+            msg() << "Size quota (1/" << QUOTA_PART_QUOTIENT
+                  << " of " << quota_size << " bytes) reached.";
+            log(Info);
+        }
+    }
+
+    if (quota_reached) {
+        _flush();
+    }
+}
+
+/*****************************************************************************/
+
+/** Flush data.
+*/
+
+void ProcLogger::_flush()
+{
+    int fork_ret;
+
+    if ((fork_ret = fork()) == -1) {
+        _exit = true;
+        _exit_code = E_DLS_ERROR_RESTART;
+        msg() << "could not fork!";
+        log(Error);
+        return;
+    }
+
+    if (fork_ret == 0) { // "Kind"
+        // Wir sind jetzt der Aufräum-Prozess
+        process_type = CleanupProcess;
+        // Normal beenden und Daten speichern
+        _exit = true;
+        msg() << "flushing process forked.";
+        log(Info);
+    }
+    else {
+        // Alle Daten vergessen. Diese werden vom anderen
+        // Zweig gespeichert.
+        _job.discard();
+        _quota_start_time.set_null();
     }
 }
 
@@ -1001,80 +762,191 @@ void ProcLogger::_remove_pid_file()
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-/**
-   Prüft, ob die Quota überschritten wurde
-
-   Wenn ja, wird ein Kindprozess abgeforkt, der für die Flush-
-   Operationen zuständig ist. Der Elternprozess vergisst alle
-   bisherigen Daten und empfängt neue Daten von der Quelle.
-*/
-
-void ProcLogger::_do_quota()
+/** Called by PdCom::Process when client data is queried.
+ */
+bool ProcLogger::clientInteraction(
+        const string &,
+        const string &,
+        const string &,
+        list<ClientInteraction> &interactionList
+        )
 {
-    uint64_t quota_time = _job->preset()->quota_time();
-    uint64_t quota_size = _job->preset()->quota_size();
-    bool quota_reached = false;
-    Time quota_time_limit;
+    list<ClientInteraction>::iterator it;
 
-    if (quota_time && !_first_data_time.is_null()) {
-        quota_time_limit = _first_data_time
-            + (uint64_t) (quota_time * 1000000 / QUOTA_PART_QUOTIENT);
-
-        if (_data_time >= quota_time_limit) {
-            quota_reached = true;
-            msg() << "time quota (1/" << QUOTA_PART_QUOTIENT
-                  << " of " << quota_time << " seconds) reached.";
-            log(Info);
+    for (it = interactionList.begin(); it != interactionList.end(); it++) {
+        if (it->prompt == "Username") {
+            struct passwd *passwd = getpwuid(getuid());
+            if (passwd) {
+                it->response = passwd->pw_name;
+            }
+        }
+        else if (it->prompt == "Hostname") {
+            char hostname[256];
+            if (!gethostname(hostname, sizeof(hostname))) {
+                it->response = hostname;
+            }
+        }
+        else if (it->prompt == "Application") {
+            stringstream ident;
+            ident << "dlsd-" << PACKAGE_VERSION
+                << "-r" << REVISION
+                << ", job " << _job.id();
+            it->response = ident.str();
         }
     }
 
-    if (quota_size) {
-        if (_job->data_size() >= quota_size / QUOTA_PART_QUOTIENT) {
-            quota_reached = true;
-            msg() << "size quota (1/" << QUOTA_PART_QUOTIENT
-                  << " of " << quota_size << " bytes) reached.";
-            log(Info);
-        }
-    }
-
-    if (quota_reached) {
-        _flush();
-    }
+    return true;
 }
 
 /*****************************************************************************/
 
-/** Flush data.
-*/
-
-void ProcLogger::_flush()
+void ProcLogger::sigConnected()
 {
-    int fork_ret;
+    if (_job.preset()->trigger() == "") { // no trigger variable
+        _state = Data;
+        _last_receive_time.set_now();
+        _receiving_data = false;
+        _job.start_logging();
 
-    _first_data_time.set_null();
+        msg() << "Start logging.";
+        log(Info);
+    }
+    else { // trigger variable
+        _state = Waiting;
 
-    if ((fork_ret = fork()) == -1) {
-        _exit = true;
-        _exit_code = E_DLS_ERROR_RESTART;
-        msg() << "could not fork!";
-        log(Error);
+        msg() << "Waiting for trigger \"";
+        msg() << _job.preset()->trigger() << "\"...";
+        log(Info);
+
+        _subscribe_trigger();
+    }
+}
+
+/****************************************************************************/
+
+void ProcLogger::sendRequest()
+{
+#ifdef DEBUG_SEND
+    cerr << __func__ << "()" << endl;
+#endif
+    _write_request = true;
+}
+
+/****************************************************************************/
+
+int ProcLogger::sendData(const char *buf, size_t len)
+{
+#ifdef DEBUG_SEND
+    cerr << __func__ << "(): " << string(buf, len) << endl;
+#endif
+    int ret = ::write(_socket, buf, len);
+#ifdef DEBUG_SEND
+    cerr << __func__ << "() returned " << ret << endl;
+#endif
+
+    return ret;
+}
+
+/****************************************************************************/
+
+void ProcLogger::processMessage(
+        const PdCom::Time &time,
+        LogLevel_t level,
+        unsigned int, // messageNo
+        const std::string& message
+        ) const
+{
+    Time t;
+    string storeType;
+
+    t.from_dbl_time(time);
+
+    switch (level) {
+        case LogError:
+            storeType = "error";
+            break;
+        case LogWarn:
+            storeType = "warn";
+            break;
+        case LogInfo:
+            storeType = "info";
+            break;
+        case LogDebug:
+            storeType = "info";
+            break;
+        default:
+            storeType = "info";
+            break;
+    }
+
+    /* Unfortunately, processMessage is defined constant in PdCom::Process. */
+    ProcLogger *logger = (ProcLogger *) this;
+
+    logger->_job.message(t, storeType, message);
+}
+
+/****************************************************************************/
+
+void ProcLogger::protocolLog(
+        LogLevel_t level,
+        const string &message
+        ) const
+{
+    if (level > 2) {
         return;
     }
 
-    if (fork_ret == 0) { // "Kind"
-        // Wir sind jetzt der Aufräum-Prozess
-        process_type = CleanupProcess;
-        // Normal beenden und Daten speichern
-        _exit = true;
-        msg() << "flushing process forked.";
+    msg() << "PdCom: " << message;
+    log(Info);
+}
+
+/*****************************************************************************/
+
+void ProcLogger::notify(PdCom::Variable *pv)
+{
+    bool run;
+
+    pv->getValue(&run);
+
+#ifdef DEBUG_NOTIFY
+    cout << __func__ << ": " << run << endl;
+#endif
+
+    if (_state == Waiting && run) {
+        _state = Data;
+        _last_receive_time.set_now();
+        _receiving_data = false;
+
+        msg() << "Trigger active! Start logging.";
+        log(Info);
+
+        _job.start_logging();
+    }
+    else if (_state == Data && !run) {
+        msg() << "Trigger not active! Stop logging.";
+        log(Info);
+
+
+        _state = Waiting;
+        _job.stop_logging();
+
+        msg() << "Waiting for trigger...";
         log(Info);
     }
-    else {
-        // Alle Daten vergessen. Diese werden vom anderen
-        // Zweig gespeichert.
-        _job->discard_data();
+}
+
+/***************************************************************************/
+
+void ProcLogger::notifyDelete(PdCom::Variable *pv)
+{
+#ifdef DEBUG_NOTIFY
+    cout << __func__ << endl;
+#endif
+
+    if (_trigger && _trigger == pv) {
+        _trigger = NULL;
     }
 }
 

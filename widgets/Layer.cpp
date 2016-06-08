@@ -28,6 +28,7 @@
 #include "DlsWidgets/Section.h"
 #include "DlsWidgets/Layer.h"
 #include "DlsWidgets/Graph.h"
+#include "DlsWidgets/Model.h"
 #include "Channel.h"
 
 using DLS::Section;
@@ -39,13 +40,11 @@ using QtDls::Channel;
 /** Constructor.
  */
 Layer::Layer(
-        Section *section,
-        QtDls::Channel *channel,
-        const QColor &c
+        Section *section
         ):
     section(section),
-    channel(channel),
-    color(c),
+    channel(NULL),
+    color(section->nextColor()),
     scale(1.0),
     offset(0.0),
     precision(-1),
@@ -53,9 +52,6 @@ Layer::Layer(
     maximum(0.0),
     extremaValid(false)
 {
-    if (!color.isValid()) {
-        color = section->nextColor();
-    }
 }
 
 /****************************************************************************/
@@ -68,6 +64,7 @@ Layer::Layer(
         ):
     section(section),
     channel(o.channel),
+    urlString(o.urlString),
     name(o.name),
     unit(o.unit),
     color(o.color),
@@ -100,8 +97,21 @@ Layer::~Layer()
 
 /****************************************************************************/
 
-void Layer::load(const QDomElement &e)
+void Layer::load(const QDomElement &e, QtDls::Model *model, const QDir &dir)
 {
+    if (e.hasAttribute("url")) {
+        urlString = e.attribute("url");
+    }
+    else {
+        qWarning() << tr("Layer element missing url attribute!");
+    }
+
+#if 0
+    qDebug() << __func__ << this << urlString;
+#endif
+
+    connectChannel(model, dir);
+
     QDomNodeList children = e.childNodes();
 
     for (int i = 0; i < children.size(); i++) {
@@ -169,8 +179,7 @@ void Layer::load(const QDomElement &e)
 void Layer::save(QDomElement &e, QDomDocument &doc) const
 {
     QDomElement layerElem = doc.createElement("Layer");
-    QUrl url = channel->url();
-    layerElem.setAttribute("url", url.toString());
+    layerElem.setAttribute("url", urlString);
     e.appendChild(layerElem);
 
     QDomElement elem = doc.createElement("Name");
@@ -206,6 +215,56 @@ void Layer::save(QDomElement &e, QDomDocument &doc) const
     text = doc.createTextNode(num);
     elem.appendChild(text);
     layerElem.appendChild(elem);
+}
+
+/****************************************************************************/
+
+void Layer::connectChannel(QtDls::Model *model, const QDir &dir)
+{
+#if 0
+    qDebug() << __func__ << this << urlString;
+#endif
+
+    if (channel) {
+        return;
+    }
+
+    QUrl url;
+
+    url = QUrl(urlString);
+
+    if (url.isValid()) {
+        // allow relative paths
+        if (url.scheme().isEmpty() || url.scheme() == "file") {
+            QString path = url.path();
+            if (QDir::isRelativePath(path)) {
+                url.setPath(QDir::cleanPath(dir.absoluteFilePath(path)));
+            }
+        }
+    }
+    else {
+        qWarning() << tr("Invalid URL %1!").arg(url.toString());
+        return;
+    }
+
+    if (!url.isEmpty()) {
+        try {
+            channel = model->getChannel(url);
+        }
+        catch (QtDls::Model::Exception &e) {
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url.toString())
+                .arg(e.msg);
+        }
+    }
+}
+
+/****************************************************************************/
+
+void Layer::setChannel(QtDls::Channel *ch)
+{
+    channel = ch;
+    urlString = ch->url().toString();
 }
 
 /****************************************************************************/
@@ -284,12 +343,16 @@ void Layer::setPrecision(int p)
 /****************************************************************************/
 
 void Layer::loadData(const LibDLS::Time &start, const LibDLS::Time &end,
-        int width, GraphWorker *worker, set<LibDLS::Job *> &jobSet)
+        int width, GraphWorker *worker, std::set<LibDLS::Job *> &jobSet)
 {
 #if 0
     qDebug() << __func__ << start.to_str().c_str()
         << end.to_str().c_str() << width;
 #endif
+
+    if (!channel) {
+        return;
+    }
 
     worker->clearData();
     channel->fetchData(start, end, width,
@@ -313,10 +376,13 @@ QString Layer::title() const
     QString ret;
 
     if (!name.isEmpty()) {
-        ret += name;
+        ret = name;
+    }
+    else if (channel) {
+        ret = channel->name();
     }
     else {
-        ret += channel->name();
+        ret = urlString;
     }
 
     if (!unit.isEmpty()) {
@@ -742,65 +808,104 @@ void Layer::drawGaps(QPainter &painter, const QRect &rect,
         double xScale) const
 {
     double xp, prev_xp;
-    vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
-    LibDLS::Time last_end;
-    QColor gapColor(255, 255, 220, 127);
+    std::vector<Channel::TimeRange> ranges, relevant_chunk_ranges;
+    std::vector<Channel::TimeRange> overlap;
+    QColor gapColor(0xff, 0xec, 0x6b, 127);
+    QColor overlapColor(255, 0, 0, 127);
 
-    ranges = channel->chunkRanges();
-
-    // check if chunks overlap
-    last_end.set_null();
-    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
-         range != ranges.end();
-         range++) {
-        if (range->start <= last_end) {
-            QString msg;
-            QTextStream str(&msg);
-            str << "WARNING: Chunks overlapping in channel"
-                 << channel->name();
-            LibDLS::log(msg.toLocal8Bit().constData());
-            return;
-        }
-        last_end = range->end;
+    if (channel) {
+        ranges = channel->chunkRanges();
     }
 
-    for (vector<Channel::TimeRange>::iterator range = ranges.begin();
-         range != ranges.end(); range++) {
+    // check if chunks overlap and identify relevant ranges
+    for (std::vector<Channel::TimeRange>::iterator range = ranges.begin();
+         range != ranges.end();
+         range++) {
         if (range->end < section->getGraph()->getStart()) {
             continue;
         }
         if (range->start > section->getGraph()->getEnd()) {
             break;
         }
-        relevant_chunk_ranges.push_back(*range);
+
+        bool not_overlapping = true;
+
+        if (!relevant_chunk_ranges.empty()) {
+            Channel::TimeRange &last = relevant_chunk_ranges.back();
+            if (range->start <= last.end) {
+
+                Channel::TimeRange lap;
+                lap.start = range->start;
+                if (range->end < last.end) {
+                    lap.end = range->end;
+                } else {
+                    lap.end = last.end;
+                    last.end = range->end; // extend last range
+                }
+                overlap.push_back(lap);
+                not_overlapping = false;
+            }
+        }
+
+        if (not_overlapping) {
+            relevant_chunk_ranges.push_back(*range);
+        }
+    }
+
+    if (!overlap.empty()) {
+        QString msg;
+        QTextStream str(&msg);
+        str << "WARNING: Chunks overlapping in channel"
+            << channel->name();
+        LibDLS::log(msg.toLocal8Bit().constData());
     }
 
     prev_xp = -1;
 
-    for (vector<Channel::TimeRange>::iterator range =
+    // draw gaps
+    for (std::vector<Channel::TimeRange>::iterator range =
             relevant_chunk_ranges.begin();
          range != relevant_chunk_ranges.end(); range++) {
         xp = (range->start -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
 
         if (xp > prev_xp + 1) {
-            QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
+            QRect drawRect(rect.left() + (int) (prev_xp + 1.5),
                      rect.top(),
                      (int) (xp - prev_xp - 1),
                      rect.height());
-            painter.fillRect(gapRect, gapColor);
+            painter.fillRect(drawRect, gapColor);
         }
 
         prev_xp = (range->end -
                 section->getGraph()->getStart()).to_dbl_time() * xScale;
     }
 
+    // draw last gap
     if (rect.width() > prev_xp + 1) {
-        QRect gapRect(rect.left() + (int) (prev_xp + 1.5),
+        QRect drawRect(rect.left() + (int) (prev_xp + 1.5),
                 rect.top(),
                 (int) (rect.width() - prev_xp - 1),
                 rect.height());
-        painter.fillRect(gapRect, gapColor);
+        painter.fillRect(drawRect, gapColor);
+    }
+
+    // draw overlaps
+    for (std::vector<Channel::TimeRange>::iterator range =
+            overlap.begin();
+         range != overlap.end(); range++) {
+        int xs = (range->start -
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
+        int xe = (range->end -
+                section->getGraph()->getStart()).to_dbl_time() * xScale;
+        int w = xe - xs;
+        if (w < 1) {
+            w = 1;
+        }
+
+        QRect drawRect(rect.left() + xs, rect.top(),
+                w, rect.height());
+        painter.fillRect(drawRect, overlapColor);
     }
 }
 

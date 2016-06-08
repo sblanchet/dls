@@ -51,6 +51,7 @@ class Channel:
         ~Channel();
 
         QUrl url() const;
+		Model::NodeType type() const { return Model::ChannelNode; }
         QString name() const;
         LibDLS::Job *job() const { return ch->getJob(); }
         unsigned int dirIndex() const { return ch->dir_index(); }
@@ -72,7 +73,7 @@ class Channel:
             LibDLS::Time start;
             LibDLS::Time end;
         };
-        vector<TimeRange> chunkRanges();
+        std::vector<TimeRange> chunkRanges();
         bool getRange(LibDLS::Time &, LibDLS::Time &);
 
         int rowCount() const;
@@ -84,7 +85,7 @@ class Channel:
     private:
         LibDLS::Channel * const ch;
         QReadWriteLock rwlock;
-        vector<TimeRange> lastRanges;
+        std::vector<TimeRange> lastRanges;
 
         static bool range_before(const TimeRange &, const TimeRange &);
 

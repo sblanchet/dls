@@ -60,12 +60,14 @@ using namespace std;
    die Verbindung zum syslogd
 */
 
-ProcMother::ProcMother()
+ProcMother::ProcMother():
+    _sig_child(0),
+    _exit(false),
+    _exit_error(false),
+#ifdef DLS_SERVER
+    _listen_fd(-1)
+#endif
 {
-    _sig_child = 0;
-    _exit = false;
-    _exit_error = false;
-
     // Syslog initialisieren
     openlog("dlsd_mother", LOG_PID, LOG_DAEMON);
 }
@@ -80,6 +82,10 @@ ProcMother::ProcMother()
 
 ProcMother::~ProcMother()
 {
+#ifdef DLS_SERVER
+    _clear_connections();
+#endif
+
     // Syslog schliessen
     closelog();
 }
@@ -103,7 +109,7 @@ ProcMother::~ProcMother()
 */
 
 int ProcMother::start(const string &dls_dir, bool no_bind,
-        const std::string &service)
+        const std::string &service, bool read_only)
 {
 #ifdef DEBUG
     int p;
@@ -121,8 +127,15 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
     msg() << "Using dir \"" << _dls_dir << "\"";
     log(Info);
 
-    // Spooling-Verzeichnis leeren
-    _empty_spool();
+    if (read_only) {
+        msg() << "Running in read-only mode. No data will be logged!";
+        log(Info);
+    }
+
+    if (!read_only) {
+        // Spooling-Verzeichnis leeren
+        _empty_spool();
+    }
 
     // Anfangs einmal alle Aufträge laden
     _check_jobs();
@@ -155,13 +168,15 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
 
         if (_exit) break;
 
-        // Hat sich im Spooling-Verzeichnis etwas getan?
-        _check_spool();
+        if (!read_only) {
+            // Hat sich im Spooling-Verzeichnis etwas getan?
+            _check_spool();
 
-        if (_exit) break;
+            if (_exit) break;
 
-        // Laufen alle Prozesse noch?
-        _check_processes();
+            // Laufen alle Prozesse noch?
+            _check_processes();
+        }
 
 #ifdef DLS_SERVER
         // check for terminated connections
@@ -197,7 +212,7 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             msg() << "Accepted connection from " << addr_str;
             log(Info);
 
-            Connection *conn = new Connection(cfd);
+            Connection *conn = new Connection(this, cfd);
             _connections.push_back(conn);
 
             int ret = conn->start_thread();
@@ -225,7 +240,9 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
     }
 
 #ifdef DLS_SERVER
-    if (_listen_fd != -1) {
+    if (process_type == MotherProcess && _listen_fd != -1) {
+        msg() << "Closing listening port.";
+        log(Info);
         close(_listen_fd);
         _listen_fd = -1;
     }
@@ -877,6 +894,21 @@ int ProcMother::_prepare_socket(const char *service)
         ret = bind(_listen_fd, rp->ai_addr, rp->ai_addrlen);
         if (ret == 0) {
             // success
+
+            char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+            ret = getnameinfo(rp->ai_addr, rp->ai_addrlen,
+                    hbuf, sizeof(hbuf), sbuf, sizeof(sbuf),
+                    NI_NUMERICHOST | NI_NUMERICSERV);
+            if (ret) {
+                msg() << "Failed to get host/service names for bound socket: "
+                    << strerror(errno);
+                log(Warning);
+            }
+            else {
+                msg() << "Bound to " << hbuf << ":" << sbuf << ".";
+                log(Info);
+            }
+
             break;
         }
 
@@ -960,5 +992,19 @@ void ProcMother::_check_connections()
     }
 }
 
+
+/*****************************************************************************/
+
+void ProcMother::_clear_connections()
+{
+    for (list<Connection *>::iterator i = _connections.begin();
+            i != _connections.end(); i++) {
+        delete *i;
+    }
+
+    _connections.clear();
+}
+
 #endif
+
 /*****************************************************************************/

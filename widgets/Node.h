@@ -27,6 +27,8 @@
 
 #include <QModelIndex>
 
+#include "DlsWidgets/Model.h"
+
 /*****************************************************************************/
 
 namespace LibDLS {
@@ -42,6 +44,7 @@ class Node
         virtual ~Node();
 
         virtual QUrl url() const = 0;
+        virtual Model::NodeType type() const = 0;
 
         virtual int rowCount() const = 0;
         virtual QVariant data(const QModelIndex &, int) const = 0;

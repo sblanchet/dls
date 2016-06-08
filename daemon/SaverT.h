@@ -56,10 +56,12 @@ using namespace std;
    Allgemeine Exception eines Saver-Objekts
 */
 
-class ESaver: public LibDLS::Exception
+class ESaver:
+    public LibDLS::Exception
 {
 public:
-    ESaver(const string &pmsg): LibDLS::Exception(pmsg) {};
+    ESaver(const string &pmsg):
+        LibDLS::Exception(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -73,10 +75,12 @@ public:
    einen festgelegten Grenzwert überschreitet.
 */
 
-class ETimeTolerance: public LibDLS::Exception
+class ETimeTolerance:
+    public LibDLS::Exception
 {
 public:
-    ETimeTolerance(const string &pmsg) : Exception(pmsg) {};
+    ETimeTolerance(const string &pmsg):
+        LibDLS::Exception(pmsg) {};
 };
 
 /*****************************************************************************/
@@ -98,7 +102,7 @@ public:
     virtual ~SaverT();
 
 protected:
-    Logger *_parent_logger;        /**< Zeiger auf das besitzende
+    Logger * const _parent_logger; /**< Zeiger auf das besitzende
                                          Logger-Objekt */
     T *_block_buf;                    /**< Array von Datenwerten, die als Block
                                          in die entsprechende Datei gespeichert
@@ -165,56 +169,48 @@ private:
 */
 
 template <class T>
-SaverT<T>::SaverT(Logger *parent_logger)
+SaverT<T>::SaverT(
+        Logger *parent_logger
+        ):
+    _parent_logger(parent_logger),
+    _block_buf(NULL),
+    _meta_buf(NULL),
+    _block_buf_index(0U),
+    _block_buf_size(_parent_logger->channel_preset()->block_size),
+    _meta_buf_index(0U),
+    _meta_buf_size(_parent_logger->channel_preset()->meta_reduction),
+    _compression(NULL)
 {
     stringstream err;
-    unsigned int dim;
-    double acc;
 
-    _parent_logger = parent_logger;
-
-    _block_buf_size = _parent_logger->channel_preset()->block_size;
-    _block_buf_index = 0;
-    _meta_buf_size = _parent_logger->channel_preset()->meta_reduction;
-    _meta_buf_index = 0;
-
-    _block_buf = 0;
-    _meta_buf = 0;
-    _compression = 0;
-
-    try
-    {
+    try {
         _block_buf = new T[_block_buf_size];
         _meta_buf = new T[_meta_buf_size];
     }
-    catch (...)
-    {
+    catch (...) {
         throw ESaver("Could not allocate memory for buffers!");
     }
 
-    try
-    {
-        if (_parent_logger->channel_preset()->format_index
-				== LibDLS::FORMAT_ZLIB) {
+    try {
+        if (_parent_logger->channel_preset()->format_index ==
+                LibDLS::FORMAT_ZLIB) {
             _compression = new LibDLS::CompressionT_ZLib<T>();
         }
         else if (_parent_logger->channel_preset()->format_index
                  == LibDLS::FORMAT_MDCT) {
-            dim = _parent_logger->channel_preset()->mdct_block_size;
-            acc = _parent_logger->channel_preset()->accuracy;
+            unsigned int dim =
+                _parent_logger->channel_preset()->mdct_block_size;
+            double acc = _parent_logger->channel_preset()->accuracy;
 
-            if (typeid(T) == typeid(float))
-            {
+            if (typeid(T) == typeid(float)) {
                 _compression = (LibDLS::CompressionT<T> *)
                     new LibDLS::CompressionT_MDCT<float>(dim, acc);
             }
-            else if (typeid(T) == typeid(double))
-            {
+            else if (typeid(T) == typeid(double)) {
                 _compression = (LibDLS::CompressionT<T> *)
                     new LibDLS::CompressionT_MDCT<double>(dim, acc);
             }
-            else
-            {
+            else {
                 err << "MDCT only suitable for";
                 err << " floating point types, not for "
                     << typeid(T).name() << "!";
@@ -222,41 +218,37 @@ SaverT<T>::SaverT(Logger *parent_logger)
         }
         else if (_parent_logger->channel_preset()->format_index
                  == LibDLS::FORMAT_QUANT) {
-            acc = _parent_logger->channel_preset()->accuracy;
+            double acc = _parent_logger->channel_preset()->accuracy;
 
-            if (typeid(T) == typeid(float))
-            {
+            if (typeid(T) == typeid(float)) {
                 _compression = (LibDLS::CompressionT<T> *)
                     new LibDLS::CompressionT_Quant<float>(acc);
             }
-            else if (typeid(T) == typeid(double))
-            {
+            else if (typeid(T) == typeid(double)) {
                 _compression = (LibDLS::CompressionT<T> *)
                     new LibDLS::CompressionT_Quant<double>(acc);
             }
-            else
-            {
+            else {
                 err << "Quantization only suitable for";
                 err << " floating point types, not for "
                     << typeid(T).name() << "!";
             }
         }
-        else
-        {
+        else {
             err << "Unknown channel format index "
                 << _parent_logger->channel_preset()->format_index;
         }
     }
-    catch (LibDLS::ECompression &e)
-    {
+    catch (LibDLS::ECompression &e) {
         throw ESaver(e.msg);
     }
-    catch (...)
-    {
+    catch (...) {
         throw ESaver("Could not allocate memory for compression object!");
     }
 
-    if (err.str() != "") throw ESaver(err.str());
+    if (err.str() != "") {
+        throw ESaver(err.str());
+    }
 }
 
 /*****************************************************************************/

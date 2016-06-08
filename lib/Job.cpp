@@ -21,10 +21,12 @@
 
 #include <fcntl.h>
 #include <dirent.h>
+#include <errno.h>
+#include <string.h>
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 /*****************************************************************************/
@@ -33,21 +35,43 @@ using namespace std;
 #include "LibDLS/Dir.h"
 #include "LibDLS/Job.h"
 
+#include "proto/dls.pb.h"
+
 #include "XmlParser.h"
 #include "IndexT.h"
 #include "File.h"
+#include "BaseMessageList.h"
+#include "BaseMessage.h"
 
 using namespace LibDLS;
 
 /*****************************************************************************/
 
-/**
-   Constructor
-*/
-
-Job::Job():
-    _id(0)
+/** Constructor.
+ */
+Job::Job(Directory *dir):
+    _dir(dir),
+    _messages(new BaseMessageList())
 {
+}
+
+/*****************************************************************************/
+
+Job::Job(
+        Directory *dir,
+        const DlsProto::JobInfo &job_info
+        ):
+    _dir(dir),
+    _messages(new BaseMessageList())
+{
+    _preset.import_from(job_info.preset());
+
+    google::protobuf::RepeatedPtrField<DlsProto::ChannelInfo>::const_iterator
+        ch_i;
+    for (ch_i = job_info.channel().begin();
+            ch_i != job_info.channel().end(); ch_i++) {
+        _channels.push_back(Channel(this, *ch_i));
+    }
 }
 
 /*****************************************************************************/
@@ -58,6 +82,7 @@ Job::Job():
 
 Job::~Job()
 {
+    delete _messages;
 }
 
 /*****************************************************************************/
@@ -75,17 +100,46 @@ void Job::import(const string &dls_path, /**< DLS directory path */
     job_dir << dls_path << "/job" << job_id;
 
     _path = job_dir.str();
-    _id = job_id;
     _channels.clear();
 
     try {
         _preset.import(dls_path, job_id);
     }
     catch (EJobPreset &e) {
-		stringstream err;
+        stringstream err;
         err << "WARNING: " << e.msg;
-		log(err.str());
+        log(err.str());
         return;
+    }
+
+    bool exists;
+
+    try {
+        exists = _messages->exists(_path);
+    }
+    catch (LibDLS::BaseMessageList::Exception &e) {
+        stringstream err;
+        err << "Failed to check for message file "
+            << _messages->path(_path) << ": " << e.msg;
+        log(err.str());
+        return;
+    }
+
+    if (exists) {
+        try {
+            _messages->import(_path);
+        }
+        catch (LibDLS::BaseMessageList::Exception &e) {
+            stringstream err;
+            err << "Failed to import messages: " << e.msg;
+            log(err.str());
+        }
+
+#if 0
+        stringstream msg;
+        msg << "Imported " << _messages->count() << " messages.";
+        log(msg.str());
+#endif
     }
 }
 
@@ -97,55 +151,16 @@ void Job::import(const string &dls_path, /**< DLS directory path */
 
 void Job::fetch_channels()
 {
-    stringstream str;
-    DIR *dir;
-    struct dirent *dir_ent;
-    string channel_dir_name;
-    int channel_index;
-    Channel channel(this);
-
-    str.exceptions(ios::failbit | ios::badbit);
-
     _channels.clear();
 
-    if (!(dir = opendir(_path.c_str()))) {
-		stringstream err;
-        err << "ERROR: Failed to open job directory \"" << _path << "\".";
-		log(err.str());
-        return;
+    if (_dir->access() == Directory::Local) {
+        _fetch_channels_local();
     }
-
-    while ((dir_ent = readdir(dir))) {
-        channel_dir_name = dir_ent->d_name;
-        if (channel_dir_name.find("channel")) continue;
-
-        str.str("");
-        str.clear();
-        str << channel_dir_name.substr(7);
-
-        try {
-            str >> channel_index;
-        }
-        catch (...) {
-            continue;
-        }
-
-        try {
-            channel.import(_path + "/" + channel_dir_name, channel_index);
-        }
-        catch (ChannelException &e) {
-			stringstream err;
-            err << "WARNING: " << e.msg;
-			log(err.str());
-            continue;
-        }
-
-        _channels.push_back(channel);
+    else {
+        _fetch_channels_network();
     }
 
     _channels.sort();
-
-    closedir(dir);
 }
 
 /*************************************************************************/
@@ -160,7 +175,7 @@ LibDLS::Channel *LibDLS::Job::channel(unsigned int index)
     for (channel_i = _channels.begin();
          channel_i != _channels.end();
          channel_i++, index--) {
-	if (!index) return &(*channel_i);
+        if (!index) return &(*channel_i);
     }
 
     return NULL;
@@ -217,7 +232,27 @@ set<LibDLS::Channel *> LibDLS::Job::find_channels_by_name(
 
 bool LibDLS::Job::operator<(const Job &right) const
 {
-    return preset().id() < right.preset().id();
+    return _preset.id() < right._preset.id();
+}
+
+/*****************************************************************************/
+
+static std::string dls_message_type_strings[] = {
+    "Unknown",
+    "Info",
+    "Warning",
+    "Error",
+    "Critical",
+    "Broadcast"
+};
+
+const std::string &LibDLS::Job::Message::type_str() const
+{
+    Type t(type);
+    if (type < Unknown || type >= TypeCount) {
+        t = Unknown;
+    }
+    return dls_message_type_strings[t + 1];
 }
 
 /*****************************************************************************/
@@ -228,14 +263,17 @@ bool LibDLS::Job::operator<(const Job &right) const
  * \param end Endzeit des Bereiches
  */
 list<LibDLS::Job::Message> LibDLS::Job::load_msg(
-        Time start,
-        Time end
+        Time start, /**< Start time. */
+        Time end, /**< End time. */
+        std::string lang /**< Language for message translations. If empty,
+                           "en" is tried, otherwise the first available
+                           translation is used. */
         ) const
 {
     IndexT<MessageIndexRecord> index;
     MessageIndexRecord index_record;
     File file;
-    RingBuffer ring(10000);
+    RingBuffer ring(10000); // FIXME
     XmlParser xml;
     list<Message> ret;
     Message msg;
@@ -253,10 +291,12 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 
     // Das Message-Verzeichnis öffnen
     if (!(dir = opendir(msg_dir.str().c_str()))) {
-		stringstream err;
-        err << "ERROR: Failed to open message directory \""
-             << msg_dir.str() << "\".";
-		log(err.str());
+        if (errno != ENOENT) {
+            stringstream err;
+            err << "ERROR: Failed to open message directory \""
+                << msg_dir.str() << "\":" << strerror(errno);
+            log(err.str());
+        }
         return ret;
     }
 
@@ -360,9 +400,9 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     ring.write_info(&write_ptr, &write_len);
 
                     if (!write_len) {
-						stringstream err;
+                        stringstream err;
                         err << "ERROR: Message ringbuffer full!";
-						log(err.str());
+                        log(err.str());
                         return ret;
                     }
 
@@ -371,11 +411,11 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     file.read(write_ptr, write_len, &write_len);
 
                     if (!write_len) {
-						stringstream err;
+                        stringstream err;
                         err << "Warning: Message file "
                             << (msg_chunk_dir.str() + "/messages").c_str()
                             << " inconsistent!";
-						log(err.str());
+                        log(err.str());
                         skip = true;
                         break;
                     }
@@ -403,10 +443,10 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.text = xml.tag()->att("text")->to_str();
                 }
                 catch (EXmlTag &e) {
-					stringstream err;
+                    stringstream err;
                     err << "Message element: " << e.msg
                         << " Tag: " << e.tag;
-					log(err.str());
+                    log(err.str());
                     msg.text = string();
                 }
 
@@ -426,32 +466,41 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
                     msg.type = Message::Broadcast;
                 }
                 else {
-					stringstream err;
+                    stringstream err;
                     err << "Unknown message type "
                         << xml.tag()->title();
-					log(err.str());
+                    log(err.str());
                     msg.type = Message::Unknown;
+                }
+
+                // lookup message text
+                const BaseMessage *m = _messages->findPath(msg.text);
+                if (m) {
+                    string text = m->text(lang);
+                    if (text != "") {
+                        msg.text = text;
+                    }
                 }
 
                 ret.push_back(msg);
             }
         }
         catch (EIndexT &e) {
-			stringstream err;
+            stringstream err;
             err << "FEHLER im Message-Index: " << e.msg;
-			log(err.str());
+            log(err.str());
             return ret;
         }
         catch (EFile &e) {
-			stringstream err;
+            stringstream err;
             err << "FEHLER in der Message-Datei: " << e.msg;
-			log(err.str());
+            log(err.str());
             return ret;
         }
         catch (EXmlParser &e) {
-			stringstream err;
+            stringstream err;
             err << "FEHLER beim Parsen: " << e.msg;
-			log(err.str());
+            log(err.str());
             return ret;
         }
     }
@@ -459,5 +508,114 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
     return ret;
 }
 
+/*****************************************************************************/
+
+void Job::set_job_info(DlsProto::JobInfo *job_info, bool preset) const
+{
+    if (preset) {
+        _preset.set_job_preset_info(job_info->mutable_preset());
+    }
+
+    /* Channels */
+    for (list<LibDLS::Channel>::const_iterator ch_i = _channels.begin();
+            ch_i != _channels.end(); ch_i++) {
+        ch_i->set_channel_info(job_info->add_channel());
+    }
+}
+
+/*****************************************************************************/
+
+void Job::_fetch_channels_local()
+{
+    stringstream str;
+    DIR *dir;
+    struct dirent *dir_ent;
+    string channel_dir_name;
+    int channel_index;
+    Channel channel(this);
+
+    str.exceptions(ios::failbit | ios::badbit);
+
+    if (!(dir = opendir(_path.c_str()))) {
+        stringstream err;
+        err << "ERROR: Failed to open job directory \"" << _path << "\".";
+        log(err.str());
+        return;
+    }
+
+    while ((dir_ent = readdir(dir))) {
+        channel_dir_name = dir_ent->d_name;
+        if (channel_dir_name.find("channel")) continue;
+
+        str.str("");
+        str.clear();
+        str << channel_dir_name.substr(7);
+
+        try {
+            str >> channel_index;
+        }
+        catch (...) {
+            continue;
+        }
+
+        try {
+            channel.import(_path + "/" + channel_dir_name, channel_index);
+        }
+        catch (ChannelException &e) {
+            stringstream err;
+            err << "WARNING: " << e.msg;
+            log(err.str());
+            continue;
+        }
+
+        _channels.push_back(channel);
+    }
+
+
+    closedir(dir);
+}
+
+/*****************************************************************************/
+
+void Job::_fetch_channels_network()
+{
+    DlsProto::Request req;
+    DlsProto::Response res;
+
+    DlsProto::JobRequest *job_req = req.mutable_job_request();
+    job_req->set_id(_preset.id());
+    job_req->set_fetch_channels(true);
+
+    try {
+        _dir->_send_message(req);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to request channels: " << e.msg << endl;
+        return;
+    }
+
+    try {
+        _dir->_receive_message(res);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Failed to receive channels: " << e.msg << endl;
+        return;
+    }
+
+    if (res.has_error()) {
+        cerr << "Error response: " << res.error().message() << endl;
+        return;
+    }
+
+    const DlsProto::DirInfo &dir_info = res.dir_info();
+    const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
+
+    google::protobuf::RepeatedPtrField<DlsProto::ChannelInfo>::const_iterator
+        ch_i;
+    for (ch_i = job_info.channel().begin();
+            ch_i != job_info.channel().end(); ch_i++) {
+        _channels.push_back(Channel(this, *ch_i));
+    }
+}
 
 /*****************************************************************************/

@@ -54,7 +54,21 @@ int list_main(int argc, char *argv[])
     list_get_environment();
     list_get_options(argc, argv);
 
-    dls_dir.import(dls_dir_path);
+    try {
+        dls_dir.set_uri(dls_dir_path);
+    }
+    catch (DirectoryException &e) {
+        cerr << "Passing URI failed: " << e.msg << endl;
+        return 1;
+    }
+
+    try {
+        dls_dir.import();
+    }
+    catch (DirectoryException &e) {
+        cerr << "Import failed: " << e.msg << endl;
+        return 1;
+    }
 
     if (!job_id) {
         return list_jobs(&dls_dir);
@@ -73,11 +87,11 @@ int list_main(int argc, char *argv[])
 
 int list_jobs(Directory *dir)
 {
-    list<Job>::iterator job_i;
+    list<Job *>::iterator job_i;
 
     for (job_i = dir->jobs().begin(); job_i != dir->jobs().end(); job_i++) {
-        cout << " " << setw(4) << job_i->preset().id()
-             << "  " << job_i->preset().description() << endl;
+        cout << " " << setw(4) << (*job_i)->preset().id()
+             << "  " << (*job_i)->preset().description() << endl;
     }
 
     return 0;
@@ -100,12 +114,25 @@ int list_chunks(Job *job)
     Channel *channel;
     list<unsigned int>::iterator index_i;
 
-    job->fetch_channels();
+    try {
+        job->fetch_channels();
+    }
+    catch (Exception &e) {
+        cerr << "Failed to fetch channels: " << e.msg << endl;
+        return 1;
+    }
 
     for (channel_i = job->channels().begin();
          channel_i != job->channels().end();
          channel_i++) {
-        channel_i->fetch_chunks();
+
+        try {
+            channel_i->fetch_chunks();
+        }
+        catch (ChannelException &e) {
+            cerr << "Failed to fetch chunks: " << e.msg << endl;
+            return 1;
+        }
 
         // group channels with same chunks together
         same_chunks_found = false;

@@ -366,7 +366,7 @@ bool Graph::load(const QString &path, Model *model)
 
     QFile file(path);
     QFileInfo fi(path);
-    QDir dir = fi.absoluteDir();
+    dir = fi.absoluteDir();
 
     if (!file.open(QFile::ReadOnly)) {
         qWarning() << tr("Failed to open %1!").arg(path);
@@ -519,6 +519,22 @@ bool Graph::save(const QString &path)
 
     file.close();
     return true;
+}
+
+/****************************************************************************/
+
+/** Tries to connect layers without channels to the given model.
+ */
+void Graph::connectChannels(Model *model)
+{
+    rwLockSections.lockForRead();
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        (*s)->connectChannels(model, dir);
+    }
+
+    rwLockSections.unlock();
 }
 
 /****************************************************************************/
@@ -905,9 +921,7 @@ void Graph::print()
     QRect timeScaleRect(page);
     timeScaleRect.setLeft(scaleWidth);
 
-    set<LibDLS::Job *> jobSet;
-
-    rwLockSections.lockForRead();
+    std::set<LibDLS::Job *> jobSet;
 
     LibDLS::Time range = getEnd() - getStart();
 	int dataWidth = page.width() - scaleWidth;
@@ -919,6 +933,8 @@ void Graph::print()
 		measurePos =
 			(measureTime - getStart()).to_dbl_time() * xScale + 0.5;
 	}
+
+    rwLockSections.lockForRead();
 
     QList<Section *>::iterator first = sections.begin();
 
@@ -1179,7 +1195,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
     QRect msgSplitterRect(contentsRect());
     msgSplitterRect.setTop(
             contentsRect().bottom() + 1 - messageAreaHeight - splitterWidth);
-    msgSplitterRect.setHeight(max(splitterWidth, MIN_TOUCH_HEIGHT));
+    msgSplitterRect.setHeight(std::max(splitterWidth, MIN_TOUCH_HEIGHT));
 
     bool last = mouseOverMsgSplitter;
     mouseOverMsgSplitter =
@@ -1210,7 +1226,7 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         if (next != sections.end()) {
             height += (*next)->legendHeight();
         }
-        height = max(height, MIN_TOUCH_HEIGHT);
+        height = std::max(height, MIN_TOUCH_HEIGHT);
         splitterRect.setHeight(height);
         if (splitterRect.contains(event->pos())) {
             sec = *s;
@@ -1700,7 +1716,18 @@ void Graph::dropEvent(QDropEvent *event)
             continue;
         }
 
-        QtDls::Channel *ch = dropModel->getChannel(*url);
+        QtDls::Channel *ch;
+
+        try {
+            ch = dropModel->getChannel(*url);
+        }
+        catch (Model::Exception &e) {
+            qWarning() << tr("Failed to get channel %1: %2")
+                .arg(url->toString())
+                .arg(e.msg);
+            continue;
+        }
+
         if (ch) {
             s->appendLayer(ch);
         }
@@ -2073,7 +2100,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                 }
 
                 if (xc + MSG_ROW_HEIGHT / 2 + 2 <= rect.width()) {
-                    QString label(msg->text.c_str());
+                    QString label = QString::fromUtf8(msg->text.c_str());
                     QRect textRect(rect);
                     textRect.setLeft(
                             rect.left() + xc + MSG_ROW_HEIGHT / 2 + 2);
@@ -2631,7 +2658,7 @@ void GraphWorker::clearData()
 
 void GraphWorker::doWork()
 {
-    set<LibDLS::Job *> jobSet;
+    std::set<LibDLS::Job *> jobSet;
 
     messages.clear();
 
@@ -2651,12 +2678,19 @@ void GraphWorker::doWork()
 
     graph->rwLockSections.unlock();
 
-    for (set<LibDLS::Job *>::const_iterator job = jobSet.begin();
+    // get system language
+    QString lang = QLocale::system().name().left(2).toLower();
+    if (lang == "c") {
+        lang = "en";
+    }
+
+    for (std::set<LibDLS::Job *>::const_iterator job = jobSet.begin();
             job != jobSet.end(); job++) {
-        list<LibDLS::Job::Message> msgs =
-            (*job)->load_msg(graph->getStart(), graph->getEnd());
-        for (list<LibDLS::Job::Message>::const_iterator msg = msgs.begin();
-                msg != msgs.end(); msg++) {
+        std::list<LibDLS::Job::Message> msgs =
+            (*job)->load_msg(graph->getStart(), graph->getEnd(),
+                    lang.toLocal8Bit().constData());
+        for (std::list<LibDLS::Job::Message>::const_iterator msg =
+                msgs.begin(); msg != msgs.end(); msg++) {
             messages.append(*msg);
         }
     }

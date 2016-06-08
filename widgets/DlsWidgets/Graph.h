@@ -120,6 +120,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool load(const QString &, QtDls::Model *);
         bool save(const QString &);
 
+        void connectChannels(QtDls::Model *);
+
         Section *appendSection();
         Section *insertSectionBefore(Section *);
         void removeSection(Section *);
@@ -191,6 +193,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
 
     private:
         Scale scale;
+        QDir dir; /**< Directory for resolving relative channel paths. */
         QList<Section *> sections; /**< List of data sections. */
         QReadWriteLock rwLockSections;
         bool autoRange;

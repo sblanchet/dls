@@ -87,9 +87,9 @@ bool Channel::beginExport(LibDLS::Export *exporter, const QString &path)
 
 /****************************************************************************/
 
-vector<Channel::TimeRange> Channel::chunkRanges()
+std::vector<Channel::TimeRange> Channel::chunkRanges()
 {
-    vector<TimeRange> ranges;
+    std::vector<TimeRange> ranges;
 
     if (rwlock.tryLockForRead()) {
         for (LibDLS::Channel::ChunkMap::const_iterator c =

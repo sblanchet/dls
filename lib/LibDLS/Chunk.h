@@ -24,11 +24,17 @@
 
 /*****************************************************************************/
 
+#include <string>
+
 #include "Exception.h"
 #include "Time.h"
 #include "Data.h"
 
 /*****************************************************************************/
+
+namespace DlsProto {
+    class ChunkInfo;
+}
 
 namespace LibDLS {
 
@@ -52,92 +58,97 @@ typedef int (*DataCallback)(Data *, void *);
 
 /*************************************************************************/
 
-/**
-   Chunk Exception.
-*/
-
-class ChunkException : public Exception
+/** Chunk Exception.
+ */
+class ChunkException:
+    public Exception
 {
-public:
-    ChunkException(const string &pmsg) : Exception(pmsg) {};
+    public:
+        ChunkException(const std::string &pmsg):
+            Exception(pmsg) {};
 };
 
 /*************************************************************************/
 
-/**
-   Chunk class.
-*/
-
+/** Chunk.
+ */
 class Chunk
 {
-public:
-    Chunk();
-    virtual ~Chunk();
+    public:
+        Chunk();
+        Chunk(const DlsProto::ChunkInfo &, ChannelType);
+        virtual ~Chunk();
 
-    void import(const string &, ChannelType);
-    void fetch_range();
+        void import(const std::string &, ChannelType);
+        void fetch_range();
 
-    Time start() const { return _start; }
-    Time end() const { return _end; }
-    bool incomplete() const { return _incomplete; }
+        Time start() const { return _start; }
+        Time end() const { return _end; }
+        bool incomplete() const { return _incomplete; }
 
-    void fetch_data(Time, Time, unsigned int,
+        void fetch_data(Time, Time, unsigned int,
+                RingBuffer *,
+                DataCallback, void *,
+                unsigned int) const;
+
+        bool operator<(const Chunk &) const;
+        bool operator==(const Chunk &) const;
+
+        void set_chunk_info(DlsProto::ChunkInfo *) const;
+        void update_from_chunk_info(const DlsProto::ChunkInfo &);
+
+    protected:
+        std::string _dir; /**< Chunk-Verzeichnis */
+        double _sample_frequency; /**< Abtastfrequenz */
+        unsigned int _meta_reduction; /**< Meta-Untersetzung */
+        int _format_index; /**< Kompressionsformat */
+        unsigned int _mdct_block_size; /**< MDCT-Blockgroesse */
+        Time _start; /**< Startzeit des Chunks */
+        Time _end; /**< Endzeit des Chunks */
+        ChannelType _type; /**< channel type */
+        bool _incomplete; /**< Data ist still logged. */
+
+        unsigned int _calc_optimal_level(Time, Time, unsigned int) const;
+        Time _time_per_value(unsigned int) const;
+
+        void _fetch_level_data_wrapper(Time, Time,
+                MetaType,
+                unsigned int,
+                Time,
+                RingBuffer *,
+                Data **,
+                DataCallback,
+                void *,
+                unsigned int,
+                unsigned int &,
+                Time &) const;
+
+        template <class T>
+            void _fetch_level_data(Time, Time,
+                    MetaType,
+                    unsigned int,
+                    Time,
                     RingBuffer *,
-                    DataCallback, void *,
-                    unsigned int) const;
+                    Data **,
+                    DataCallback,
+                    void *,
+                    unsigned int,
+                    unsigned int &,
+                    Time &) const;
 
-    bool operator<(const Chunk &) const;
-    bool operator==(const Chunk &) const;
-
-protected:
-    string _dir;                    /**< Chunk-Verzeichnis */
-    double _sample_frequency;       /**< Abtastfrequenz */
-    unsigned int _meta_reduction;   /**< Meta-Untersetzung */
-    int _format_index;              /**< Kompressionsformat */
-    unsigned int _mdct_block_size;  /**< MDCT-Blockgroesse */
-    Time _start;                 /**< Startzeit des Chunks */
-    Time _end;                   /**< Endzeit des Chunks */
-    ChannelType _type; /**< channel type */
-    bool _incomplete; /**< Data ist still logged. */
-
-    unsigned int _calc_optimal_level(Time, Time, unsigned int) const;
-    Time _time_per_value(unsigned int) const;
-
-    void _fetch_level_data_wrapper(Time, Time,
-                                   MetaType,
-                                   unsigned int,
-                                   Time,
-                                   RingBuffer *,
-                                   Data **,
-                                   DataCallback,
-                                   void *,
-                                   unsigned int,
-                                   unsigned int &) const;
-
-    template <class T>
-    void _fetch_level_data(Time, Time,
-                           MetaType,
-                           unsigned int,
-                           Time,
-                           RingBuffer *,
-                           Data **,
-                           DataCallback,
-                           void *,
-                           unsigned int,
-                           unsigned int &) const;
-
-    template <class T>
-    void _process_data_tag(const XmlTag *,
-                           Time,
-                           MetaType,
-                           unsigned int,
-                           Time,
-                           CompressionT<T> *,
-                           Data **,
-                           DataCallback,
-                           void *,
-                           unsigned int,
-                           unsigned int &) const;
+        template <class T>
+            void _process_data_tag(const XmlTag *,
+                    Time,
+                    MetaType,
+                    unsigned int,
+                    Time,
+                    CompressionT<T> *,
+                    Data **,
+                    DataCallback,
+                    void *,
+                    unsigned int,
+                    unsigned int &,
+                    Time &) const;
 };
 
 /*****************************************************************************/

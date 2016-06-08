@@ -41,13 +41,15 @@ class Job;
 class Channel;
 
 class Dir:
-   public Node
+    public Node,
+    public LibDLS::Observer
 {
     public:
-        Dir(LibDLS::Directory *);
+        Dir(Model *, LibDLS::Directory *);
         ~Dir();
 
         QUrl url() const;
+		Model::NodeType type() const { return Model::DirNode; }
         Channel *findChannel(unsigned int, const QString &);
 
         class Exception
@@ -64,11 +66,17 @@ class Dir:
 
         LibDLS::Directory *getDir() const { return dir; }
 
+        virtual void update(); // pure virtual from LibDLS::Observer
+
     private:
+        Model * const model;
         LibDLS::Directory * const dir;
         QList<Job *> jobs;
 
         Dir();
+
+        void clear_jobs();
+        void update_jobs();
 };
 
 } // namespace

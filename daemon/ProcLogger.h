@@ -27,7 +27,10 @@
 #include <string>
 #include <list>
 #include <sstream>
-using namespace std;
+
+/*****************************************************************************/
+
+#include <pdcom/Process.h>
 
 /*****************************************************************************/
 
@@ -42,74 +45,73 @@ using namespace std;
    Logging-Prozess
 */
 
-class ProcLogger
+class ProcLogger:
+    public PdCom::Process,
+    private PdCom::Subscriber // for trigger variable
 {
 public:
-    ProcLogger(const string &, unsigned int);
+    ProcLogger(const std::string &);
     ~ProcLogger();
 
-    int start();
-    void send_command(const string &);
-    double max_frequency() const;
-    const list<LibDLS::RealChannel> *real_channels() const;
+    int start(unsigned int);
+
+    PdCom::Variable *findVariable(const std::string &path) const {
+        return PdCom::Process::findVariable(path);
+    }
+
+    void notify_error(int);
+    void notify_data(void);
+
+    std::string dls_dir() const { return _dls_dir; }
 
 private:
-    string _dls_dir;
-    unsigned int _job_id;
-    Job *_job;
+	std::string _dls_dir;
+    Job _job;
     int _socket;
-	LibDLS::RingBuffer *_ring_buf;
+    bool _write_request;
     unsigned int _sig_hangup;
     unsigned int _sig_child;
     unsigned int _sig_usr1;
-    string _to_send;
     bool _exit;
     int _exit_code;
-	LibDLS::XmlParser _xml;
-	LibDLS::XmlTag _tag;
-    enum State {
-        dls_connecting,
-        dls_waiting_for_channels,
-        dls_getting_channels,
-        dls_waiting_for_trigger,
-        dls_listening,
-        dls_getting_data
-    };
-    State _state;
-    int _msr_version;
-    list<LibDLS::RealChannel> _real_channels;
-	LibDLS::Time _data_time;
-	LibDLS::Time _first_data_time;
-    bool _got_channels;
-    struct timeval _last_trigger_requested;
-    struct timeval _last_watchdog;
-	LibDLS::Time _last_data_received;
+    enum {
+        Connecting,
+        Waiting,
+        Data
+    } _state;
+    LibDLS::Time _quota_start_time;
+    LibDLS::Time _last_watchdog_time;
+    LibDLS::Time _last_receive_time;
     bool _receiving_data;
-    unsigned int _buffer_level;
-	LibDLS::Time _last_read_time;
+    PdCom::Variable *_trigger;
 
-    void _start();
+    void _start(unsigned int);
     bool _connect_socket();
     void _read_write_socket();
     void _read_socket();
+    void _subscribe_trigger();
     void _check_signals();
-    void _parse_ring_buffer();
-    void _process_tag();
-    void _save_data();
-    void _do_trigger();
+    void _reload();
     void _do_watchdogs();
     void _do_quota();
     void _create_pid_file();
     void _remove_pid_file();
     void _flush();
+
+    // PdCom::Process
+    bool clientInteraction(const std::string &, const std::string &,
+            const std::string &, std::list<ClientInteraction> &);
+    void sigConnected();
+    void sendRequest();
+    int sendData(const char *, size_t);
+    void processMessage(const PdCom::Time &, LogLevel_t, unsigned int,
+            const std::string &) const;
+    void protocolLog(LogLevel_t, const std::string &) const;
+
+    // from PdCom::Subscriber()
+    void notify(PdCom::Variable *);
+    void notifyDelete(PdCom::Variable *);
 };
-
-/*****************************************************************************/
-
-inline const list<LibDLS::RealChannel> *ProcLogger::real_channels() const
-{
-    return &_real_channels;
-}
 
 /*****************************************************************************/
 

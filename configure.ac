@@ -42,12 +42,16 @@ ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_CXX
 AC_PROG_LIBTOOL
-AC_PREFIX_DEFAULT([/opt/etherlab])
+AC_PREFIX_DEFAULT([/usr/local])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
+AM_PATH_XML2
 
-AC_SUBST(LIBDLS_VERSION, [1:0:0])
+# check for PdCom
+LDFLAGS="$LDFLAGS -lpdcom"
+
+AC_SUBST(LIBDLS_VERSION, [3:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon
@@ -218,6 +222,14 @@ AM_CONDITIONAL(ENABLE_TOOL, test "x$enabletool" = "x1")
 AC_SUBST(ENABLE_TOOL, [$enabletool])
 
 #------------------------------------------------------------------------------
+# uriparser
+#------------------------------------------------------------------------------
+
+URIPARSER_MISSING="Please install uriparser."
+AC_CHECK_LIB(uriparser, uriParseUriA,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+AC_CHECK_HEADER(uriparser/Uri.h,, AC_MSG_ERROR(${URIPARSER_MISSING}))
+
+#------------------------------------------------------------------------------
 # TCP server functionality
 #------------------------------------------------------------------------------
 
@@ -246,6 +258,34 @@ else
 fi
 
 AM_CONDITIONAL(ENABLE_SERVER, test "x$enableserver" = "x1")
+
+#------------------------------------------------------------------------------
+# Enable protocol debugging
+#------------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to build with protocol debug output])
+
+AC_ARG_ENABLE([proto-debug],
+    AS_HELP_STRING([--enable-proto-debug], [Enable protocol debugging]),
+    [
+        case "${enableval}" in
+            yes) enableprotodebug=1
+                ;;
+            no) enableprotodebug=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-proto-debug])
+                ;;
+        esac
+    ],
+    [enableprotodebug=0]
+)
+
+if test "x$enableprotodebug" = "x1"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([DLS_PROTO_DEBUG], [1], [protocol debugging enabled])
+else
+    AC_MSG_RESULT([no])
+fi
 
 #------------------------------------------------------------------------------
 

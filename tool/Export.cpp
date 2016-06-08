@@ -57,6 +57,8 @@ static unsigned int decimation = 1;
 static bool export_ascii = false;
 static bool export_matlab = false;
 static bool quiet = false;
+static bool export_messages = false;
+static string message_lang;
 
 static unsigned int term_width;
 
@@ -110,11 +112,17 @@ int export_main(int argc, char *argv[])
 
     export_get_environment();
     export_get_options(argc, argv);
-    if (!quiet)
-        term_width = terminal_width();
 
-    if (export_ascii) exporters.push_back(new ExportAscii());
-    if (export_matlab) exporters.push_back(new ExportMat4());
+    if (!quiet) {
+        term_width = terminal_width();
+    }
+
+    if (export_ascii) {
+        exporters.push_back(new ExportAscii());
+    }
+    if (export_matlab) {
+        exporters.push_back(new ExportMat4());
+    }
 
     if (exporters.empty()) {
         cerr << "ERROR: No exporters active! Enable at least one." << endl;
@@ -123,7 +131,14 @@ int export_main(int argc, char *argv[])
     }
 
     try {
-        dls_dir.import(dls_dir_path);
+        dls_dir.set_uri(dls_dir_path);
+    } catch (DirectoryException &e) {
+        cerr << "ERROR: Passing URI: " << e.msg << endl;
+        exit(1);
+    }
+
+    try {
+        dls_dir.import();
     } catch (DirectoryException &e) {
         cerr << "ERROR: Importing DLS directory: " << e.msg << endl;
         exit(1);
@@ -335,6 +350,45 @@ int export_main(int argc, char *argv[])
         }
     }
 
+    cerr << endl;
+
+    if (export_messages) {
+        list<LibDLS::Job::Message> msgs;
+
+        cerr << "Exporting messages... " << flush;
+
+        try {
+            msgs = job->load_msg(start_time, end_time, message_lang);
+        }
+        catch (LibDLS::Exception &e) {
+            cerr << "failed!" << endl
+                << "ERROR: Message export failed: " << e.msg << endl;
+            exit(1);
+        }
+
+        cerr << "done." << endl;
+
+        stringstream msg_file_name;
+        msg_file_name << dls_export_dir << "/messages.txt";
+
+        ofstream msg_file;
+        msg_file.open(msg_file_name.str().c_str(), ios::trunc);
+        if (!msg_file.is_open()) {
+            cerr << "ERROR: Failed to write \""
+                << msg_file_name.str() << "\"!" << endl;
+            exit(1);
+        }
+
+        for (list<LibDLS::Job::Message>::const_iterator msg = msgs.begin();
+                msg != msgs.end(); msg++) {
+            msg_file << msg->time.to_iso_time() << " "
+                << msg->type_str() << " "
+                << msg->text << endl;
+        }
+
+        msg_file.close();
+    }
+
     // create info file
     info_file_name << dls_export_dir << "/dls_export_info";
     info_file.open(info_file_name.str().c_str(), ios::trunc);
@@ -366,7 +420,7 @@ int export_main(int argc, char *argv[])
 
     info_file.close();
 
-    cout << endl << "Export finished." << endl;
+    cout << "Export finished." << endl;
     return 0;
 }
 
@@ -403,6 +457,10 @@ void draw_progress(double percentage)
     static unsigned int number = 0;
     static unsigned int blocks = 0;
     unsigned int new_number, new_blocks, i;
+
+    if (percentage > 100.0) {
+        percentage = 100.0;
+    }
 
     new_number = (int) (percentage + 0.5);
     new_blocks = (int) (percentage * (term_width - 9) / 100.0);
@@ -589,7 +647,7 @@ void export_get_options(int argc, char *argv[])
     int c;
 
     while (1) {
-        if ((c = getopt(argc, argv, "d:o:f:amj:c:p:s:e:n:qh")) == -1) {
+        if ((c = getopt(argc, argv, "d:o:f:amj:c:p:s:e:n:qhgl:")) == -1) {
             break;
         }
 
@@ -663,6 +721,14 @@ void export_get_options(int argc, char *argv[])
                 quiet = true;
                 break;
 
+            case 'g':
+                export_messages = true;
+                break;
+
+            case 'l':
+                message_lang = optarg;
+                break;
+
             case 'h':
                 export_print_usage();
                 exit(0);
@@ -692,11 +758,13 @@ void export_get_options(int argc, char *argv[])
         exit(1);
     }
 
-    if (dls_export_dir == "")
+    if (dls_export_dir == "") {
         dls_export_dir = ".";
+    }
 
-    if (dls_export_format == "")
+    if (dls_export_format == "") {
         dls_export_format = "dls-export-%Y-%m-%d-%H-%M-%S";
+    }
 }
 
 /*****************************************************************************/
@@ -729,6 +797,8 @@ void export_print_usage()
          << " Default: End of recording"
          << endl
          << "   -n DECIMATION  Export every n'th value." << endl
+         << "   -g             Export messages." << endl
+         << "   -l LANGUAGE    2-character language code for messages." << endl
          << "   -q             Be quiet (no progress bar)" << endl
          << "   -h             Print this help" << endl
          << "CHANNELS is a comma-separated list of channel indices." << endl

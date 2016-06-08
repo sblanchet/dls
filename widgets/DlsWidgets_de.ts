@@ -14,7 +14,7 @@
         <translation>Anlegen von %1 fehlgeschlagen.</translation>
     </message>
     <message>
-        <location filename="ExportDialog.cpp" line="243"/>
+        <location filename="ExportDialog.cpp" line="250"/>
         <source>Target Directory</source>
         <translation>Zielverzeichnis</translation>
     </message>
@@ -297,12 +297,12 @@
         <translation>Anlegen von %1 fehlgeschlagen!</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="1594"/>
+        <location filename="Graph.cpp" line="1611"/>
         <source>Go to date</source>
         <translation>Gehe zu Datum</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="1977"/>
+        <location filename="Graph.cpp" line="1994"/>
         <source>Failed to load section: %1</source>
         <translation>Verarbeiten des Abschnitts fehlgeschlagen: %1</translation>
     </message>
@@ -325,37 +325,37 @@
 <context>
     <name>DLS::SectionModel</name>
     <message>
-        <location filename="SectionModel.cpp" line="159"/>
+        <location filename="SectionModel.cpp" line="157"/>
         <source>Channel</source>
         <translation>Kanal</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="162"/>
+        <location filename="SectionModel.cpp" line="160"/>
         <source>Name</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="165"/>
+        <location filename="SectionModel.cpp" line="163"/>
         <source>Unit</source>
         <translation>Einheit</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="168"/>
+        <location filename="SectionModel.cpp" line="166"/>
         <source>Color</source>
         <translation>Farbe</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="171"/>
+        <location filename="SectionModel.cpp" line="169"/>
         <source>Scale</source>
         <translation>Skalierung</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="174"/>
+        <location filename="SectionModel.cpp" line="172"/>
         <source>Offset</source>
         <translation>Versatz</translation>
     </message>
     <message>
-        <location filename="SectionModel.cpp" line="177"/>
+        <location filename="SectionModel.cpp" line="175"/>
         <source>Precision</source>
         <translation>Genauigkeit</translation>
     </message>
@@ -391,9 +391,14 @@
 <context>
     <name>Dir</name>
     <message>
-        <location filename="Dir.cpp" line="87"/>
+        <location filename="Dir.cpp" line="104"/>
         <source>Local directory %1</source>
         <translation>Lokales Verzeichnis %1</translation>
+    </message>
+    <message>
+        <location filename="Dir.cpp" line="110"/>
+        <source>Remote directory %1</source>
+        <translation>Netzwerkverzeichnis %1</translation>
     </message>
 </context>
 <context>
@@ -465,42 +470,42 @@
 <context>
     <name>Section</name>
     <message>
-        <location filename="Section.cpp" line="178"/>
+        <location filename="Section.cpp" line="187"/>
         <source>Invalid value in ScaleMinimum</source>
         <translation>Ungültiger Wert in Attribut ScaleMinimum</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="188"/>
+        <location filename="Section.cpp" line="197"/>
         <source>Invalid value in ScaleMaximum</source>
         <translation>Ungültiger Wert in Attribut ScaleMaximum</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="198"/>
+        <location filename="Section.cpp" line="207"/>
         <source>Invalid value in Height</source>
         <translation>Ungültiger Wert in Attribut Height</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="854"/>
+        <location filename="Section.cpp" line="862"/>
         <source>Layer element missing url attribute!</source>
         <translation>Kein Attribut url in Layer-Element!</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="860"/>
+        <location filename="Section.cpp" line="868"/>
         <source>Invalid URL in Layer element!</source>
         <translation>Ungültige URL in Layer-Element!</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="878"/>
+        <location filename="Section.cpp" line="886"/>
         <source>Failed to get channel %1: %2</source>
         <translation>Kanal %1 nicht gefunden: %2</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="885"/>
+        <location filename="Section.cpp" line="893"/>
         <source>Failed to get channel %1!</source>
         <translation>Kanal %1 nicht gefunden!</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="896"/>
+        <location filename="Section.cpp" line="904"/>
         <source>Failed to load layer: %1</source>
         <translation>Schicht konnte nicht geladen werden: %1</translation>
     </message>

@@ -27,6 +27,14 @@
 #include <pthread.h>
 #include <sstream>
 
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
+#include "config.h"
+#include "lib/LibDLS/Dir.h"
+#include "proto/dls.pb.h"
+
+class ProcMother;
+
 /*****************************************************************************/
 
 /** Incoming network connection.
@@ -34,7 +42,7 @@
 class Connection
 {
 public:
-    Connection(int);
+    Connection(ProcMother *, int);
     ~Connection();
 
     int start_thread();
@@ -42,18 +50,32 @@ public:
     int return_code() const { return _ret; }
 
 private:
-    int _fd;
+    ProcMother * const _parent_proc;
+    const int _fd;
+    google::protobuf::io::FileInputStream _fis;
+    google::protobuf::io::FileOutputStream _fos;
     pthread_t _thread;
     int _ret; /**< Return value. */
     bool _running;
-    std::stringstream _ostream;
+    LibDLS::Directory _dir;
+    LibDLS::Time _request_time;
 
     static void *_run_static(void *);
     void *_run();
+    void _send(google::protobuf::Message &
+#ifdef DLS_PROTO_DEBUG
+            , bool debug = 1
+#endif
+            );
     void _send_hello();
-    void _send();
     void _receive();
     void _process(const std::string &);
+    void _process_dir_info(const DlsProto::DirInfoRequest &);
+    void _process_job_request(const DlsProto::JobRequest &);
+    void _process_channel_request(LibDLS::Job *,
+            const DlsProto::ChannelRequest &);
+    static int _static_data_callback(LibDLS::Data *, void *);
+    void _data_callback(LibDLS::Data *);
 };
 
 /*****************************************************************************/

@@ -37,6 +37,7 @@ using namespace std;
 #include "globals.h"
 #include "Logger.h"
 #include "JobPreset.h"
+#include "MessageList.h"
 
 /*****************************************************************************/
 
@@ -71,7 +72,7 @@ public:
 class Job
 {
 public:
-    Job(ProcLogger *, const string &);
+    Job(ProcLogger *);
     ~Job();
 
     void import(unsigned int);
@@ -83,43 +84,46 @@ public:
     //@}
 
     //@{
-    void process_data(LibDLS::Time, int, const string &);
     uint64_t data_size() const;
     //@}
 
-    void ack_received(const string &);
-    void message(const LibDLS::XmlTag *);
+    void message(LibDLS::Time, const std::string &, const std::string &);
+
     void finish();
-    void discard_data();
+    void discard();
 
     const JobPreset *preset() const;
 
+    void notify_error(int);
+    void notify_data();
+
+    unsigned int id() const { return _preset.id(); }
+    std::string path() const;
+
 private:
-    ProcLogger *_parent_proc; /**< Zeiger auf den besitzenden
+    ProcLogger * const _parent_proc; /**< Zeiger auf den besitzenden
                                     Logging-Prozess */
-    string _dls_dir; /**< DLS-Datenverzeichnis */
     JobPreset _preset; /**< Auftragsvorgaben */
     list<Logger *> _loggers; /**< Zeigerliste aller aktiven Logger */
     unsigned int _id_gen; /**< Sequenz für die ID-Generierung */
     bool _logging_started; /**< Logging gestartet? */
 
     //@{
-	LibDLS::File _message_file; /**< Dateiobjekt für Messages */
-	LibDLS::IndexT<LibDLS::MessageIndexRecord> _message_index; /**< Index für
-																 Messages */
+    LibDLS::File _message_file; /**< Dateiobjekt für Messages */
+    LibDLS::IndexT<LibDLS::MessageIndexRecord> _message_index; /**< Index für
+                                                                 Messages */
     bool _msg_chunk_created; /**< true, wenn es einen aktuellen
                                 Message-Chunk gibt. */
     string _msg_chunk_dir; /**< Pfad des aktuellen Message-
                               Chunks-Verzeichnisses */
+    MessageList _messages; /**< List of messages. */
     //@}
 
     void _clear_loggers();
     void _sync_loggers(SyncLoggerMode);
     bool _add_logger(const LibDLS::ChannelPreset *);
-    bool _change_logger(Logger *, const LibDLS::ChannelPreset *);
-    void _remove_logger(Logger *);
+    void _stop_logger(Logger *);
     Logger *_logger_exists_for_channel(const string &);
-    string _generate_id();
 };
 
 /*****************************************************************************/

@@ -27,7 +27,8 @@ TEMPLATE = app
 TARGET = dlsgui
 DEPENDPATH += .
 
-INCLUDEPATH += ../widgets ../lib
+INCLUDEPATH += $$PWD/../widgets $$PWD/../lib
+DEPENDPATH += $$PWD/../widgets $$PWD/../lib
 QT += svg
 
 include(../widgets/updateqm.pri)
@@ -39,9 +40,9 @@ isEmpty(PREFIX) {
 
 unix {
     CONFIG += debug
-    LIBS += -L$$PWD/../widgets -lDlsWidgets
-    LIBS += -L$$PWD/../lib/.libs -ldls
-    LIBS += -lfftw3 -lm -lz
+    LIBS += $$PWD/../widgets/libDlsWidgets.so
+    LIBS += $$PWD/../lib/.libs/libdls.so
+    LIBS += -lfftw3 -lxml2 -lm -lz
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
     QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
 }
@@ -49,7 +50,7 @@ win32 {
     CONFIG += release
     LIBS += -L$$PWD/../widgets/release -lDlsWidgets0
     LIBS += -L$$PWD/../lib/.libs -ldls
-    LIBS += -lfftw3 -lm -lz
+    LIBS += -lfftw3 -lxml2 -lm -lz
 }
 
 target.path = $$PREFIX/bin
@@ -59,20 +60,23 @@ HEADERS += \
     AboutDialog.h \
     LogWindow.h \
     MainWindow.h \
-    SettingsDialog.h
+    SettingsDialog.h \
+    UriDialog.h \
 
 SOURCES += \
     AboutDialog.cpp \
     LogWindow.cpp \
     MainWindow.cpp \
     SettingsDialog.cpp \
+    UriDialog.cpp \
     main.cpp
 
 FORMS += \
     AboutDialog.ui \
     LogWindow.ui \
     MainWindow.ui \
-    SettingsDialog.ui
+    SettingsDialog.ui \
+    UriDialog.ui
 
 RESOURCES += dlsgui.qrc
 

@@ -82,10 +82,8 @@ public:
        \throw ESaver Fehler beim Verarbeiten der Daten
        \throw ETimeTolerance Zeit-Toleranzfehler!
     */
-
-    virtual void process_data(const void *buffer,
-                              unsigned int length,
-                              LibDLS::Time time_of_last) = 0;
+    virtual void process_one(const void *buffer,
+            LibDLS::Time time_of_last) = 0;
 };
 
 /*****************************************************************************/
@@ -98,7 +96,9 @@ public:
 */
 
 template <class T>
-class SaverGenT : public SaverGen, public SaverT<T>
+class SaverGenT:
+	public SaverGen,
+	public SaverT<T>
 {
     using SaverT<T>::_block_buf;
     using SaverT<T>::_block_buf_index;
@@ -120,15 +120,15 @@ public:
     virtual ~SaverGenT();
 
     void add_meta_saver(LibDLS::MetaType type);
-    void process_data(const void *, unsigned int, LibDLS::Time);
+    void process_one(const void *, LibDLS::Time);
     void flush();
 
 private:
-	list<LibDLS::MetaType> _meta_types; /**< Liste der zu erfassenden
-										  Meta-Typen */
+    list<LibDLS::MetaType> _meta_types; /**< Liste der zu erfassenden Meta-Typen */
     list<SaverMetaT<T> *> _meta_savers; /**< Liste der aktiven Meta-Saver */
     bool _savers_created; /**< Wurden bereits alle Meta-Saver erstellt? */
     bool _finished; /**< true, wenn keine Daten mehr im Speicher */
+    uint64_t _processed_values; /**< Processed values since start. */
 
     void _fill_buffers(const T *, unsigned int, LibDLS::Time);
 
@@ -142,8 +142,6 @@ private:
     int _meta_level() const;
     string _meta_type() const;
 
-    void _convert_endianess(unsigned char *, unsigned int) const;
-
     SaverGenT(); // Default-Konstruktor darf nicht aufgerufen werden!
 };
 
@@ -156,11 +154,14 @@ private:
 */
 
 template <class T>
-SaverGenT<T>::SaverGenT(Logger *parent_logger)
-    : SaverT<T>(parent_logger)
+SaverGenT<T>::SaverGenT(
+        Logger *parent_logger
+        ):
+    SaverT<T>(parent_logger),
+    _savers_created(false),
+    _finished(true),
+    _processed_values(0)
 {
-    _savers_created = false;
-    _finished = true;
 }
 
 /*****************************************************************************/
@@ -209,122 +210,66 @@ void SaverGenT<T>::add_meta_saver(LibDLS::MetaType type)
 
 /*****************************************************************************/
 
-/**
-   Nimmt Binärdaten zum Speichern entgegen
+/** Process one value.
+ *
+   Diese Methode führt Plausiblitätsprüfungen (vergangene Zeit seit dem
+   letzten Datenwert) durch, um die Daten schliesslich als Array vom Typ T an
+   die Methode _fill_buffers() weiterzuleiten.
 
-   Diese Methode führt Plausiblitätsprüfungen (Anzahl der
-   Werte / Größe des Puffers / vergangene Zeit seit dem
-   letzten Datenwert) durch, um die Daten
-   schliesslich als Array vom Typ T an die Methode
-   _fill_buffers() weiterzuleiten.
-
-   Wird der zeitliche Toleranzbereich verletzt,
-   wird eine Exception geworfen. Der Prozess sollte
-   dann beendet werden.
+   Wird der zeitliche Toleranzbereich verletzt, wird eine Exception geworfen.
+   Der Prozess sollte dann beendet werden.
 
    \param buffer Adresse des Datenpuffers
-   \param size Anzahl der Bytes im Puffer
-   \param time_of_last Zeit des letzten Datenwertes im Puffer
+   \param time Zeit des Datenwertes im Puffer
    \throw ESaver Fehler beim Speichern der Daten
    \throw ETimeTolerance Toleranzfehler! Prozess beenden!
 */
 
 template <class T>
-void SaverGenT<T>::process_data(const void *buffer,
-                                   unsigned int size,
-                                   LibDLS::Time time_of_last)
+void SaverGenT<T>::process_one(
+		const void *buffer,
+		LibDLS::Time time
+		)
 {
-	LibDLS::Time diff_time, time_of_first, actual_diff, target_diff;
+    LibDLS::Time actual_diff, target_diff;
     float error_percent;
-    double freq = _parent_logger->channel_preset()->sample_frequency;
-    unsigned int values_in_buffer;
     stringstream err;
 
-    if (size == 0) return;
-
-    // Die Länge des Datenblocks muss ein Vielfaches der Datengröße sein!
-    if (size % sizeof(T)) throw ESaver("Illegal data size!");
-
-    values_in_buffer = size / sizeof(T);
-
-    diff_time.from_dbl_time((values_in_buffer - 1) / freq);
-    time_of_first = time_of_last - diff_time; // Zeit des ersten neuen Wertes
+#if 0
+    cerr << time.to_str()
+        << " d=" << _time_of_last.diff_str_to(time)
+        << " v=" << ((T *) buffer)[0] << endl;
+#endif
 
     // Wenn Werte in den Puffern sind
-    if (_block_buf_index || _meta_buf_index)
-    {
+    if (_block_buf_index || _meta_buf_index) {
         // Zeitabstände errechnen
-        target_diff.from_dbl_time(1 / freq);         // Erwarteter Zeitabstand
-        actual_diff = time_of_first - _time_of_last; // Tats. Zeitabstand
+		double freq = _parent_logger->channel_preset()->sample_frequency;
+        target_diff.from_dbl_time(1 / freq); // Erwarteter Zeitabstand
+        actual_diff = time - _time_of_last; // Tats. Zeitabstand
 
         // Relativen Fehler errechnen
         error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
-            / target_diff.to_dbl() * 100;
-        if (error_percent < 0) error_percent *= -1;
+            / target_diff.to_dbl() * 100.0;
+        if (error_percent < 0.0) {
+			error_percent *= -1.0;
+		}
 
         // Toleranzbereich verletzt?
-        if (error_percent > ALLOWED_TIME_VARIANCE)
-        {
+        if (error_percent > ALLOWED_TIME_VARIANCE) {
             // Fehler! Prozess beenden!
             err << "Time diff of " << actual_diff;
-            err << " (expected: " << target_diff
-                << ", error: " << error_percent << "%)";
-            err << " channel \"" << _parent_logger->channel_preset()->name
-                << "\".";
+            err << " us (expected " << target_diff
+                << " us, error is " << error_percent << " %)";
+            err << " at channel \"" << _parent_logger->channel_preset()->name
+                << "\" after processing " << _processed_values << " values.";
             throw ETimeTolerance(err.str());
         }
     }
 
-    // Endianess konvertieren, falls nötig
-    if (arch != source_arch)
-        _convert_endianess((unsigned char *) buffer, size);
-
     // Daten speichern
-    _fill_buffers((T *) buffer, values_in_buffer, time_of_first);
-}
-
-/*****************************************************************************/
-
-/**
-   Konvertieren der Endianess
-
-   Bemerkung: Konnte von mir noch nicht getestet werden! fp
-
-   \param buffer Adresse des Datenspeichers
-   \param size Anzahl der Bytes im Speicher
-*/
-
-template <class T>
-void SaverGenT<T>::_convert_endianess(unsigned char *buffer,
-                                         unsigned int size) const
-{
-    unsigned int i, j, k, bytes_per_value, values;
-    unsigned char tmp;
-
-    bytes_per_value = sizeof(T);
-    values = size / bytes_per_value;
-
-    // "Byteweise drehen"
-    if ((arch == LittleEndian && source_arch == BigEndian) ||
-        (arch == BigEndian && source_arch == LittleEndian))
-    {
-        for (i = 0; i < values; i++)
-        {
-            for (j = 0; j < bytes_per_value / 2; j++)
-            {
-                k = bytes_per_value - j - 1;
-                tmp = buffer[j];
-                buffer[j] = buffer[k];
-                buffer[k] = tmp;
-            }
-
-            buffer += bytes_per_value;
-        }
-    }
-    else
-    {
-        throw ETimeTolerance("Unknown architecture conversion!");
-    }
+    _fill_buffers((T *) buffer, 1, time);
+    _processed_values++;
 }
 
 /*****************************************************************************/
@@ -360,14 +305,17 @@ void SaverGenT<T>::_fill_buffers(const T *buffer,
     _finished = false;
 
     // Alle Werte übernehmen
-    for (unsigned int i = 0; i < length; i++)
-    {
+    for (unsigned int i = 0; i < length; i++) {
         // Zeit des zuletzt eingefügten Wertes setzen
         _time_of_last = time_of_first + time_of_one * i;
 
         // Bei Blockanfang, Zeiten vermerken
-        if (_block_buf_index == 0) _block_time = _time_of_last;
-        if (_meta_buf_index == 0) _meta_time = _time_of_last;
+        if (_block_buf_index == 0) {
+            _block_time = _time_of_last;
+        }
+        if (_meta_buf_index == 0) {
+            _meta_time = _time_of_last;
+        }
 
         // Wert in die Puffer übernehmen
         _block_buf[_block_buf_index++] = buffer[i];
@@ -444,6 +392,7 @@ void SaverGenT<T>::flush()
 
     // Jetzt ist nichts mehr im Speicher
     _finished = true;
+    _processed_values = 0;
 }
 
 /*****************************************************************************/
