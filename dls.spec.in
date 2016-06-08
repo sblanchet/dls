@@ -23,16 +23,19 @@ Name: @PACKAGE@
 Version: @VERSION@
 Release: 1
 
+%define package_version %{version}
+%define libver 3
+
 Summary: Data Logging Service
 License: GPL-3.0+
 Vendor: Ingenieurgemeinschaft IgH GmbH
 Group: Productivity/Other
 Url: http://etherlab.org/en/dls
-Source0: http://etherlab.org/download/dls/%{name}-%{version}.tar.bz2
+Source0: http://etherlab.org/download/dls/%{name}-%{package_version}.tar.bz2
 Source1: dls-rpmlintrc
 Patch0: rpath.patch
 PreReq: permissions
-BuildRoot: %_tmppath/%name-%version-root
+BuildRoot: %_tmppath/%name-%{package_version}-root
 BuildRequires: fftw3-devel
 BuildRequires: fltk-devel
 BuildRequires: fontconfig-devel
@@ -45,6 +48,11 @@ BuildRequires: xorg-x11-proto-devel
 BuildRequires: libqt4-devel
 BuildRequires: shared-mime-info
 BuildRequires: desktop-file-utils
+BuildRequires: liburiparser-devel
+BuildRequires: pdcom-devel
+BuildRequires: protobuf-devel
+BuildRequires: libxml2-devel
+Requires: desktop-file-utils
 
 %description
 DLS is a process data logging service, capable of capturing high-frequency
@@ -65,7 +73,7 @@ The %name-devel package contains the static libraries and header files
 needed for development with %name.
 
 %prep
-%setup
+%setup -n %{name}-%{package_version}
 %patch0 -p1
 
 %build
@@ -128,11 +136,11 @@ touch /usr/share/icons/hicolor
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING NEWS
+%config %{_sysconfdir}/profile.d/dls.sh
 %if "%{_vendor}" == "suse"
 /var/adm/fillup-templates/sysconfig.dls
 %endif
 %{_sysconfdir}/init.d/dls
-%{_sysconfdir}/profile.d/dls.sh
 %{_bindir}/dls*
 %if "%{_vendor}" == "suse"
 %{_sbindir}/rcdls
@@ -140,19 +148,12 @@ touch /usr/share/icons/hicolor
 %{_datadir}/applications/*.desktop
 %{_datadir}/mime/packages/*.xml
 %{_datadir}/icons/hicolor
-%{_datadir}/icons/hicolor/scalable
-%{_datadir}/icons/hicolor/scalable/apps
-%{_datadir}/icons/hicolor/scalable/apps/*.svg
-%{_datadir}/icons/hicolor/32x32
-%{_datadir}/icons/hicolor/32x32/apps
-%{_datadir}/icons/hicolor/32x32/apps/*.png
-%{_libdir}/libdls.so.1.0.0
+%{_libdir}/libdls.so.%{libver}.0.0
 %{_libdir}/libDlsWidgets.so
 
 %files -n dls-devel
 %defattr(-,root,root,755)
-%doc INSTALL
-%{_includedir}/DlsWidgets
+%dir %{_includedir}/DlsWidgets
 %{_includedir}/DlsWidgets/Graph.h
 %{_includedir}/DlsWidgets/Layer.h
 %{_includedir}/DlsWidgets/Model.h
@@ -160,20 +161,21 @@ touch /usr/share/icons/hicolor
 %{_includedir}/DlsWidgets/Section.h
 %{_includedir}/DlsWidgets/Translator.h
 %{_includedir}/DlsWidgets/ValueScale.h
-%{_includedir}/com_channel_preset.hpp
-%{_includedir}/com_exception.hpp
-%{_includedir}/com_job_preset.hpp
-%{_includedir}/com_time.hpp
-%{_includedir}/lib_channel.hpp
-%{_includedir}/lib_chunk.hpp
-%{_includedir}/lib_data.hpp
-%{_includedir}/lib_dir.hpp
-%{_includedir}/lib_export.hpp
-%{_includedir}/lib_globals.hpp
-%{_includedir}/lib_job.hpp
+%dir %{_includedir}/LibDLS
+%{_includedir}/LibDLS/Channel.h
+%{_includedir}/LibDLS/ChannelPreset.h
+%{_includedir}/LibDLS/Chunk.h
+%{_includedir}/LibDLS/Data.h
+%{_includedir}/LibDLS/Dir.h
+%{_includedir}/LibDLS/Exception.h
+%{_includedir}/LibDLS/Export.h
+%{_includedir}/LibDLS/Job.h
+%{_includedir}/LibDLS/JobPreset.h
+%{_includedir}/LibDLS/Time.h
+%{_includedir}/LibDLS/globals.h
 %{_libdir}/libdls.a
 %{_libdir}/libdls.la
-%{_libdir}/libdls.so.1
+%{_libdir}/libdls.so.%{libver}
 %{_libdir}/libdls.so
 %{_libdir}/qt4/plugins/designer/libDlsWidgets.so
 
