@@ -31,7 +31,6 @@ libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
 libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm -lprotobuf
 
 libdls_la_SOURCES = \
-	$(builddir)/../proto/dls.pb.cc \
 	Base64.cpp \
 	BaseMessage.cpp \
 	BaseMessageList.cpp \
@@ -51,10 +50,11 @@ libdls_la_SOURCES = \
 	globals.cpp \
 	mdct.cpp
 
+nodist_libdls_la_SOURCES = $(builddir)/../proto/dls.pb.cc
+
 #------------------------------------------------------------------------------
 
 noinst_HEADERS = \
-	$(builddir)/../proto/dls.pb.h \
 	Base64.h \
 	BaseMessage.h \
 	BaseMessageList.h \
@@ -68,5 +68,7 @@ noinst_HEADERS = \
 	XmlTag.h \
 	ZLib.h \
 	mdct.h
+
+nodist_noinst_HEADERS = $(builddir)/../proto/dls.pb.h
 
 #------------------------------------------------------------------------------
