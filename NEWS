@@ -6,6 +6,55 @@ vim700: spelllang=en spell
 
 ------------------------------------------------------------------------------
 
+Version 1.4.0-rc1
+
+* Common
+    * Implemented DLS protocol for remote data access
+    * Support compiling library, widgets and GUI for windows
+    * Changed default prefix to /usr/local
+    * Some autotools usage improvements
+
+* Daemon
+    * Use PdCom library to access process data
+    * Triggering on signal possible
+    * Message logging via plainmessages.xml in job directory
+    * DLS protocol for data access (protocol buffers based)
+    * Optionally build without protocol server
+    * Read-only mode switch
+    * Flush data on SIGUSR1
+    * Improved checking for stale PID file
+    * Added sample systemd service file
+
+* Library
+    * Directory import based on URIs (DLS protocol support)
+    * Fetch deeper data levels if not close enough to chunk end
+    * Exporting messages
+
+* DlsWidgets
+    * Allow layer without channel
+    * Made gap color more visible
+    * Improved drawing overlapping chunks
+    * List channels in dls_export_info
+    * 8 default colors from Solarized colorscheme
+    * Draw generic and extrema data (both possible together)
+    * Continue loading settings if channel not found
+    * Qt designer integration
+    * Qt5 support
+    * Avoid drawing busy icon during printing
+    * Graph touch input improvements
+
+* GUI
+    * DLS protocol support (URI dialog)
+    * Support for relative signal paths in dlsgui view files
+    * Store absolute paths of recent files
+    * About dialog and datasource menu
+    * Display URI in sections dialog
+
+* Command-line tool
+    * Directory may be an URI (DLS protocol support)
+    * Implemented -p option for dls export command
+    * Export ASCII files with maximum precision
+
 Version 1.3.1
 
 * Added Icons, MIME information and desktop files for DLSGUI.
