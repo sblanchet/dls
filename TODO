@@ -1,42 +1,43 @@
 
 $Id$
 
-vim: tw=78 spelllang=en spell
+vim: tw=78 spelllang=en spell syntax=markdown
 
-* All
-    - Move unit and type attributes into chunk
-    - Synopsis in usage strings
-    - man pages for commands
+# Common
+    * Move unit and type attributes into chunk
+    * Synopsis in usage strings
+    * man pages for commands
+    * Check for PdCom in a portable way
 
-* dlsgui
-    - Show if channel is actually logged
-    - Integrate dls_ctl functionality
-        - Available channels as tree with filter function
-    - Show signals as tree
-    - Fix URI file:// slash problem in UriDialog.cpp
+# User frontend (dlsgui)
+    * Show if channel is actually logged
+    * Integrate configuration functionality of DLS Manager
+        * Available channels as tree with filter function
+    * Show signals as tree
+    * Fix URI file:// slash problem in UriDialog.cpp
 
-* dlsd:
-    - Protocol authentication
-    - Configuration via protocol
-    - Fix online sample time change
+# Daemon (dlsd)
+    * Protocol authentication
+    * Configuration via protocol
+    * Fix online sample time change
 
-* dls:
-    - option -Q for really quiet
-    - export:
+# Command-line tool (dls)
+    * option -Q for really quiet
+    * export:
         * times with the date parser
         * additional information in dls_export_info (channel name, unit,
             command-line options, intersected chunks, min-max values)
         * times in dls_export_info in ISO format
-	- split
-	- delete
-	- check
-	- repair
-    - list
+	* split
+	* delete
+	* check
+	* repair
+    * list
         * optionally don't go through every chunk
-    - Status (replace dls_status).
-    - getopt() long
-    - show compression rate
+    * status (replace dls-status.pl)
+    * getopt() long
+    * show compression rate
 
-* lib:
-    - Get rid of ring buffers to extract data (Channel.cpp)
-    - Fetch chunks and data in same network request
+# Library (LibDLS):
+    * Get rid of ring buffers to extract data (Channel.cpp)
+    * Fetch chunks and data in same network request
