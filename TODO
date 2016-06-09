@@ -4,13 +4,11 @@ $Id$
 vim: tw=78 spelllang=en spell
 
 * All
-    - Synopsis in usage strings.
-    - Event-based variables
-    - Move unit and type attributes into chunk.
+    - Move unit and type attributes into chunk
+    - Synopsis in usage strings
+    - man pages for commands
 
 * dlsgui
-    - Table model for message list.
-    - Concept for non-existing channels
     - Show if channel is actually logged
     - Integrate dls_ctl functionality
         - Available channels as tree with filter function
@@ -18,9 +16,9 @@ vim: tw=78 spelllang=en spell
     - Fix URI file:// slash problem in UriDialog.cpp
 
 * dlsd:
-    - store the same signal with different settings (compression, sample
-      rate).
     - Protocol authentication
+    - Configuration via protocol
+    - Fix online sample time change
 
 * dls:
     - option -Q for really quiet
