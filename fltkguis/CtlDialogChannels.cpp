@@ -280,9 +280,10 @@ void *CtlDialogChannels::_static_thread_function(void *data)
 
 void CtlDialogChannels::_thread_function()
 {
+    stringstream port_str;
+    struct addrinfo hints, *result, *rp;
+    int ret;
     int socket;
-    struct sockaddr_in address;
-    struct hostent *hp;
     fd_set read_fds, write_fds;
     int select_ret, recv_ret, send_ret;
 	LibDLS::XmlParser xml;
@@ -294,33 +295,41 @@ void CtlDialogChannels::_thread_function()
     unsigned int write_size;
     bool exit_thread = false;
 
-    // Socket öffnen
-    if ((socket = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        _error = "Konnte keinen Socket erstellen!";
+    /* Obtain address(es) matching host/port */
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+    hints.ai_flags = AI_NUMERICSERV; /* port is numeric. */
+
+    port_str << _port;
+
+    ret = getaddrinfo(_source.c_str(), port_str.str().c_str(),
+            &hints, &result);
+    if (ret) {
+        stringstream err;
+        err << "Failed to get address info: " << gai_strerror(ret);
+        _error = err.str();
         return;
     }
 
-    // Socket geöffnet, Adresse übersetzen/auflösen
-    address.sin_family = AF_INET;
-    if ((hp = gethostbyname(_source.c_str())) == NULL)
-    {
-        _error = "Konnte die Adresse \"" + _source + "\" nicht auflösen!";
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        socket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (socket == -1) {
+            continue;
+        }
+
+        if (connect(socket, rp->ai_addr, rp->ai_addrlen) != -1) {
+            break;
+        }
+
         close(socket);
-        return;
     }
 
-    // Adresse in sockaddr-Struktur kopieren
-    memcpy((char *) &address.sin_addr, (char *) hp->h_addr, hp->h_length);
-    address.sin_port = htons(_port);
+    freeaddrinfo(result);
 
-    // Verbinden
-    if ((::connect(socket, (struct sockaddr *) &address,
-                   sizeof(address))) == -1)
-    {
-        _error = "Verbindung zu \"" + _source +
-            "\" konnte nicht aufgebaut werden!";
-        close(socket);
+    if (!rp) {
+        _error = "Connection failed!";
         return;
     }
 
