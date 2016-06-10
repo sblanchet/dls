@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>671</width>
-    <height>224</height>
+    <height>253</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -66,15 +66,19 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_4">
-          <property name="styleSheet">
-           <string notr="true"/>
-          </property>
+         <widget class="QLabel" name="labelCopyright">
           <property name="text">
-           <string>Copyright © 2014 Florian Pose &lt;fp@igh.de&gt;</string>
+           <string notr="true">Copyright © xxxx Florian Pose &lt;fp@igh.de&gt;</string>
           </property>
           <property name="openExternalLinks">
            <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelVersion">
+          <property name="text">
+           <string notr="true">Version x.x.x - Revision xxxxxxx</string>
           </property>
          </widget>
         </item>
