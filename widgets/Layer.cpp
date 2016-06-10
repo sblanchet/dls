@@ -261,6 +261,15 @@ void Layer::connectChannel(QtDls::Model *model, const QDir &dir)
 
 /****************************************************************************/
 
+/** Returns, if the directory is used by this layer.
+ */
+bool Layer::dirInUse(const LibDLS::Directory *d) const
+{
+    return channel && channel->job()->dir() == d;
+}
+
+/****************************************************************************/
+
 void Layer::setChannel(QtDls::Channel *ch)
 {
     channel = ch;

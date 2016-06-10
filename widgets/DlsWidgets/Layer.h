@@ -59,6 +59,7 @@ class Q_DECL_EXPORT Layer
         void save(QDomElement &, QDomDocument &) const;
 
         void connectChannel(QtDls::Model *, const QDir &);
+        bool dirInUse(const LibDLS::Directory *) const;
 
         void setChannel(QtDls::Channel *);
         QtDls::Channel *getChannel() const { return channel; };

@@ -12,6 +12,7 @@
 #include <LibDLS/Dir.h>
 
 #include "DlsWidgets/Model.h"
+#include "DlsWidgets/Graph.h"
 #include "Dir.h"
 #include "Channel.h"
 
@@ -44,6 +45,26 @@ void Model::addLocalDir(
 
 /****************************************************************************/
 
+void Model::removeDir(
+        LibDLS::Directory *remDir
+        )
+{
+    int row = 0;
+
+    for (QList<Dir *>::iterator d = dirs.begin(); d != dirs.end();
+            d++, row++) {
+        if (remDir == (*d)->getDir()) {
+            beginRemoveRows(QModelIndex(), row, row);
+            dirs.removeAt(row);
+            delete remDir;
+            endRemoveRows();
+            return;
+        }
+    }
+}
+
+/****************************************************************************/
+
 void Model::clear()
 {
     if (dirs.empty()) {
@@ -58,6 +79,40 @@ void Model::clear()
     }
 
     endRemoveRows();
+}
+
+/****************************************************************************/
+
+bool Model::hasUnusedDirs(DLS::Graph *graph) const
+{
+    bool hasUnused = false;
+
+    for (QList<Dir *>::const_iterator d = dirs.begin(); d != dirs.end(); d++) {
+        hasUnused = !graph->dirInUse((*d)->getDir());
+        if (hasUnused) {
+            break;
+        }
+    }
+
+    return hasUnused;
+}
+
+/****************************************************************************/
+
+void Model::removeUnusedDirs(DLS::Graph *graph)
+{
+    QList<Dir *> unused;
+
+    for (QList<Dir *>::const_iterator d = dirs.begin(); d != dirs.end(); d++) {
+        if (!graph->dirInUse((*d)->getDir())) {
+            unused.push_back(*d);
+        }
+    }
+
+    for (QList<Dir *>::const_iterator d = unused.begin(); d != unused.end();
+            d++) {
+        removeDir((*d)->getDir());
+    }
 }
 
 /****************************************************************************/
@@ -157,6 +212,8 @@ QtDls::Channel *Model::getChannel(QUrl url)
             delete d;
             continue;
         }
+
+        qDebug() << "Adding directory" << uriText;
 
         Dir *dir = new Dir(this, d);
         beginInsertRows(QModelIndex(), dirs.count(), dirs.count());

@@ -539,6 +539,29 @@ void Graph::connectChannels(Model *model)
 
 /****************************************************************************/
 
+/** Returns, if a directory is used by some layer.
+ */
+bool Graph::dirInUse(const LibDLS::Directory *d)
+{
+    bool inUse;
+
+    rwLockSections.lockForRead();
+
+    for (QList<Section *>::const_iterator s = sections.begin();
+            s != sections.end(); s++) {
+        inUse = (*s)->dirInUse(d);
+        if (inUse) {
+            break;
+        }
+    }
+
+    rwLockSections.unlock();
+
+    return inUse;
+}
+
+/****************************************************************************/
+
 Section *Graph::appendSection()
 {
     rwLockSections.lockForWrite();

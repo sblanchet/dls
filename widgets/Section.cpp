@@ -287,6 +287,29 @@ void Section::connectChannels(Model *model, const QDir &dir)
 
 /****************************************************************************/
 
+/** Returns, if a directory is used by some layer.
+ */
+bool Section::dirInUse(const LibDLS::Directory *d)
+{
+    bool inUse;
+
+    rwLockLayers.lockForRead();
+
+    for (QList<Layer *>::const_iterator l = layers.begin();
+            l != layers.end(); l++) {
+        inUse = (*l)->dirInUse(d);
+        if (inUse) {
+            break;
+        }
+    }
+
+    rwLockLayers.unlock();
+
+    return inUse;
+}
+
+/****************************************************************************/
+
 void Section::setAutoScale(bool a)
 {
     if (a != autoScale) {

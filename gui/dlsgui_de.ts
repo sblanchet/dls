@@ -19,12 +19,11 @@
         <translation>Open-Source Messdatenerfassungsystem</translation>
     </message>
     <message utf8="true">
-        <location filename="AboutDialog.ui" line="74"/>
         <source>Copyright © 2014 Florian Pose &lt;fp@igh.de&gt;</source>
-        <translation>Copyright © 2014 Florian Pose &lt;fp@igh.de&gt;</translation>
+        <translation type="obsolete">Copyright © 2014 Florian Pose &lt;fp@igh.de&gt;</translation>
     </message>
     <message>
-        <location filename="AboutDialog.ui" line="89"/>
+        <location filename="AboutDialog.ui" line="93"/>
         <source>http://etherlab.org/en/dls</source>
         <translation>http://etherlab.org/en/dls</translation>
     </message>
@@ -276,9 +275,19 @@
         <translation>Ausführen des Scriptes fehlgeschlagen: %1</translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="654"/>
+        <location filename="MainWindow.cpp" line="651"/>
         <source>Update</source>
         <translation>Aktualisieren</translation>
+    </message>
+    <message>
+        <location filename="MainWindow.cpp" line="655"/>
+        <source>Remove</source>
+        <translation>Entfernen</translation>
+    </message>
+    <message>
+        <location filename="MainWindow.cpp" line="659"/>
+        <source>Remove unused directories</source>
+        <translation>Nicht verwendete Verzeichnisse entfernen</translation>
     </message>
 </context>
 <context>

@@ -102,6 +102,8 @@ class MainWindow:
 
         void treeViewCustomContextMenu(const QPoint &);
         void updateDirectory();
+        void removeDirectory();
+        void removeUnusedDirectories();
 };
 
 /****************************************************************************/
