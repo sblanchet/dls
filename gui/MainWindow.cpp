@@ -647,12 +647,20 @@ void MainWindow::treeViewCustomContextMenu(const QPoint &point)
     QModelIndex index = treeView->indexAt(point);
 
     menuDir = model.dir(index);
-    if (!menuDir) {
-        return;
-    }
 
     QAction *a = menu->addAction(tr("Update"), this, SLOT(updateDirectory()));
     a->setIcon(QIcon(":/images/view-refresh.svg"));
+    a->setEnabled(menuDir);
+
+    a = menu->addAction(tr("Remove"), this, SLOT(removeDirectory()));
+    a->setIcon(QIcon(":/images/Edit-delete.svg"));
+    a->setEnabled(menuDir && !dlsGraph->dirInUse(menuDir));
+
+    a = menu->addAction(tr("Remove unused directories"),
+            this, SLOT(removeUnusedDirectories()));
+    a->setIcon(QIcon(":/images/Edit-delete.svg"));
+    a->setEnabled(model.hasUnusedDirs(dlsGraph));
+
     menu->exec(treeView->viewport()->mapToGlobal(point));
 }
 
@@ -672,6 +680,25 @@ void MainWindow::updateDirectory()
 
     dlsGraph->connectChannels(&model);
     dlsGraph->loadData();
+}
+
+/****************************************************************************/
+
+void MainWindow::removeDirectory()
+{
+    if (!menuDir) {
+        return;
+    }
+
+    model.removeDir(menuDir);
+    menuDir = NULL;
+}
+
+/****************************************************************************/
+
+void MainWindow::removeUnusedDirectories()
+{
+    model.removeUnusedDirs(dlsGraph);
 }
 
 /****************************************************************************/

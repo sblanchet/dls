@@ -59,6 +59,7 @@ EXTRA_DIST = \
 	gui/dlsgui.qrc \
 	gui/dlsgui.rc \
 	gui/dlsgui_de.ts \
+	gui/images/Edit-delete.svg \
 	gui/images/Folder-remote.svg \
 	gui/images/Folder.svg \
 	gui/images/Network-idle.svg \

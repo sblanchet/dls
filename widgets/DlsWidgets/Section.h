@@ -41,6 +41,7 @@ class QDomDocument;
 
 namespace LibDLS {
     class Job;
+    class Directory;
 }
 
 namespace QtDls {
@@ -76,6 +77,7 @@ class Q_DECL_EXPORT Section
         void save(QDomElement &, QDomDocument &);
 
         void connectChannels(QtDls::Model *, const QDir &);
+        bool dirInUse(const LibDLS::Directory *);
 
         Graph *getGraph() { return graph; }
 

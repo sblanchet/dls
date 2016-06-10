@@ -126,6 +126,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool save(const QString &);
 
         void connectChannels(QtDls::Model *);
+        bool dirInUse(const LibDLS::Directory *);
 
         Section *appendSection();
         Section *insertSectionBefore(Section *);
