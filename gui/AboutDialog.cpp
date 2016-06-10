@@ -44,11 +44,12 @@ AboutDialog::AboutDialog(
     setupUi(this);
 
     labelCopyright->setText(
-            QString("Copyright © 2014 – %1 Florian Pose <fp@igh.de>")
+            QString::fromUtf8(
+                "Copyright © 2014 – %1 Florian Pose <fp@igh.de>")
             .arg(QString(__DATE__).right(4)));
 
     labelVersion->setText(
-            QString("Version %1 – Revision %2")
+            QString::fromUtf8("Version %1 – Revision %2")
             .arg(PACKAGE_VERSION)
             .arg(DLS_STR(REVISION)));
 }
