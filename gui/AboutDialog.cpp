@@ -26,6 +26,12 @@
 
 #include "AboutDialog.h"
 
+#include "../config.h"
+
+// literate macro
+#define DLS_LIT(X) #X
+#define DLS_STR(X) DLS_LIT(X)
+
 /****************************************************************************/
 
 /** Constructor.
@@ -36,6 +42,15 @@ AboutDialog::AboutDialog(
     QDialog(parent)
 {
     setupUi(this);
+
+    labelCopyright->setText(
+            QString("Copyright © 2014 – %1 Florian Pose <fp@igh.de>")
+            .arg(QString(__DATE__).right(4)));
+
+    labelVersion->setText(
+            QString("Version %1 – Revision %2")
+            .arg(PACKAGE_VERSION)
+            .arg(DLS_STR(REVISION)));
 }
 
 /****************************************************************************/
