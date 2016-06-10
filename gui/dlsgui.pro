@@ -98,6 +98,8 @@ icons_png.files = images/dlsgui.png images/dlsgui-view.png
 
 INSTALLS += mimetype desktop icons_svg icons_png
 
+QMAKE_CXXFLAGS += -DREVISION=$(shell $$PWD/../revision.sh $$PWD/..)
+
 #HEADERS += modeltest.h
 #SOURCES += modeltest.cpp
 
