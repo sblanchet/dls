@@ -41,20 +41,18 @@ dlsd_CXXFLAGS = \
 	-Wall \
 	-I$(topsrcdir) \
 	@FFTW3_CFLAGS@ \
-	@ZLIB_CFLAGS@ \
-	$(PDCOM_CPPFLAGS)
+	@ZLIB_CFLAGS@
 
 dlsd_LDFLAGS = \
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
-	$(PDCOM_LDFLAGS) \
 	-pthread
 
 dlsd_LDADD = \
 	@FFTW3_LIBS@ \
 	$(top_builddir)/lib/.libs/libdls.so \
 	@ZLIB_LIBS@ \
-	$(PDCOM_LIBS) \
+	-lpdcom \
 	$(XML_LIBS) \
 	-lm
 
