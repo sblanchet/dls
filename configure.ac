@@ -80,6 +80,23 @@ fi
 AM_CONDITIONAL(ENABLE_DAEMON, test "x$enabledaemon" = "x1")
 AC_SUBST(ENABLE_DAEMON, [$enabledaemon])
 
+if test "x$enabledaemon" = "x1"; then
+
+AC_MSG_CHECKING([for PdCom 3.0 library])
+
+AC_LANG(C++)
+AC_COMPILE_IFELSE([
+AC_LANG_SOURCE([
+#include <pdcom.h>
+#if PDCOM_MAJOR == 3 && PDCOM_MINOR == 0
+/* FINE */
+#else
+# error need PdCom 3.0.x
+#endif
+])], AC_MSG_RESULT([found]), AC_MSG_ERROR([not found]))
+
+fi
+
 #------------------------------------------------------------------------------
 # FLTK
 #------------------------------------------------------------------------------
