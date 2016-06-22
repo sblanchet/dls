@@ -48,9 +48,6 @@ AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
 AM_PATH_XML2
 
-# check for PdCom
-LDFLAGS="$LDFLAGS -lpdcom"
-
 AC_SUBST(LIBDLS_VERSION, [3:0:0])
 
 #------------------------------------------------------------------------------
