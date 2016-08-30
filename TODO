@@ -41,3 +41,4 @@ vim: tw=78 spelllang=en spell syntax=markdown
 # Library (LibDLS):
     * Get rid of ring buffers to extract data (Channel.cpp)
     * Fetch chunks and data in same network request
+    * Load messages via protocol
