@@ -78,6 +78,7 @@ public:
 
     unsigned int record_count() const;
     uint64_t file_size() const { return _size; };
+    const std::string path() const { return _file.path(); };
 
 private:
     File _file;
