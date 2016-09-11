@@ -45,6 +45,10 @@ using namespace std;
 
 using namespace LibDLS;
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 /*****************************************************************************/
 
 /** Constructor.
@@ -271,21 +275,21 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
         ) const
 {
     IndexT<MessageIndexRecord> index;
-    MessageIndexRecord index_record;
+    MessageIndexRecord index_record, next_index_record;
     File file;
-    RingBuffer ring(10000); // FIXME
     XmlParser xml;
     list<Message> ret;
     Message msg;
     stringstream msg_dir, str, msg_chunk_dir;
-    char *write_ptr;
-    unsigned int i, write_len;
+    unsigned int index_row;
     DIR *dir;
     struct dirent *dir_ent;
     string entry_name;
     uint64_t msg_chunk_time;
     list<uint64_t> chunk_times;
     list<uint64_t>::iterator chunk_time_i;
+    bool next_record_already_read;
+    size_t to_read, read_bytes;
 
     msg_dir << _path << "/messages";
 
@@ -373,135 +377,187 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
 
         try {
             file.open_read((msg_chunk_dir.str() + "/messages").c_str());
-            index.open_read((msg_chunk_dir.str() + "/messages.idx").c_str());
-
-#if DEBUG
-            cerr << (msg_chunk_dir.str() + "/messages.idx").c_str() << ": "
-                << index.record_count() << " index records." << endl;
-#endif
-
-            for (i = 0; i < index.record_count(); i++) {
-                bool skip = false;
-                index_record = index[i];
-
-#if DEBUG
-                cerr << "idxrec " << index_record.time << ": "
-                    << index_record.position << endl;
-#endif
-
-                if (Time(index_record.time) < start) continue;
-                if (Time(index_record.time) > end) break;
-
-                file.seek(index_record.position);
-                ring.clear();
-
-                // Solange lesen, bis ein Tag komplett ist
-                while (1) {
-                    ring.write_info(&write_ptr, &write_len);
-
-                    if (!write_len) {
-                        stringstream err;
-                        err << "ERROR: Message ringbuffer full!";
-                        log(err.str());
-                        return ret;
-                    }
-
-                    if (write_len > 300) write_len = 300;
-
-                    file.read(write_ptr, write_len, &write_len);
-
-                    if (!write_len) {
-                        stringstream err;
-                        err << "Warning: Message file "
-                            << (msg_chunk_dir.str() + "/messages").c_str()
-                            << " inconsistent!";
-                        log(err.str());
-                        skip = true;
-                        break;
-                    }
-
-                    ring.written(write_len);
-
-                    try {
-                        xml.parse(&ring);
-                    }
-                    catch (EXmlParserEOF &e) {
-                        // Noch nicht genug Daten. Mehr einlesen!
-                        continue;
-                    }
-
-                    break;
-                }
-
-                if (skip) {
-                    break;
-                }
-
-                msg.time = index_record.time;
-
-                try {
-                    msg.text = xml.tag()->att("text")->to_str();
-                }
-                catch (EXmlTag &e) {
-                    stringstream err;
-                    err << "Message element: " << e.msg
-                        << " Tag: " << e.tag;
-                    log(err.str());
-                    msg.text = string();
-                }
-
-                if (xml.tag()->title() == "info") {
-                    msg.type = Message::Info;
-                }
-                else if (xml.tag()->title() == "warn") {
-                    msg.type = Message::Warning;
-                }
-                else if (xml.tag()->title() == "error") {
-                    msg.type = Message::Error;
-                }
-                else if (xml.tag()->title() == "crit_error") {
-                    msg.type = Message::Critical;
-                }
-                else if (xml.tag()->title() == "broadcast") {
-                    msg.type = Message::Broadcast;
-                }
-                else {
-                    stringstream err;
-                    err << "Unknown message type "
-                        << xml.tag()->title();
-                    log(err.str());
-                    msg.type = Message::Unknown;
-                }
-
-                // lookup message text
-                const BaseMessage *m = _messages->findPath(msg.text);
-                if (m) {
-                    string text = m->text(lang);
-                    if (text != "") {
-                        msg.text = text;
-                    }
-                }
-
-                ret.push_back(msg);
-            }
-        }
-        catch (EIndexT &e) {
-            stringstream err;
-            err << "FEHLER im Message-Index: " << e.msg;
-            log(err.str());
-            return ret;
         }
         catch (EFile &e) {
             stringstream err;
-            err << "FEHLER in der Message-Datei: " << e.msg;
+            err << "ERROR opening message file: " << e.msg;
             log(err.str());
-            return ret;
+            continue;
         }
-        catch (EXmlParser &e) {
+
+        try {
+            index.open_read((msg_chunk_dir.str() + "/messages.idx").c_str());
+        }
+        catch (EIndexT &e) {
             stringstream err;
-            err << "FEHLER beim Parsen: " << e.msg;
+            err << "Error opening message index: " << e.msg;
             log(err.str());
-            return ret;
+            continue;
+        }
+
+#if DEBUG
+        cerr << (msg_chunk_dir.str() + "/messages.idx").c_str() << ": "
+            << index.record_count() << " index records." << endl;
+#endif
+
+        next_record_already_read = false;
+
+        for (index_row = 0; index_row < index.record_count();
+                index_row++) { // FIXME use binary search
+            if (next_record_already_read) {
+                index_record = next_index_record;
+            }
+            else {
+                try {
+                    index_record = index[index_row];
+                } catch (EIndexT &e) {
+                    stringstream err;
+                    err << "ERROR: Could not read from index \""
+                        << index.path() << "\": " << e.msg;
+                    log(err.str());
+                    break;
+                }
+            }
+
+#if DEBUG
+            cerr << "idxrec " << index_record.time << ": "
+                << index_record.position << endl;
+#endif
+
+            if (Time(index_record.time) < start) {
+                continue;
+            }
+
+            if (Time(index_record.time) > end) {
+                break;
+            }
+
+            // determine data size to read
+            if (index_row < index.record_count() - 1) {
+                // there is a following index record, so we can take the
+                // amount of data to read from the index!
+                try {
+                    next_index_record = index[index_row + 1];
+                } catch (EIndexT &e) {
+                    stringstream err;
+                    err << "ERROR: Could not read from index \""
+                        << index.path() << "\": " << e.msg;
+                    log(err.str());
+                    break;
+                }
+                next_record_already_read = true;
+                to_read =
+                    next_index_record.position - index_record.position;
+            }
+            else {
+                // last index record, get size from message file
+                try {
+                    size_t data_file_size = file.calc_size();
+                    to_read = data_file_size - index_record.position;
+                } catch (EFile &e) {
+                    stringstream err;
+                    err << "ERROR: Could not seek in message file!";
+                    log(err.str());
+                    break;
+                }
+            }
+
+#if DEBUG
+            cerr << "reading message at " << index_record.position
+                << " with " << to_read << " bytes." << endl;
+#endif
+
+            // go to desired position in the message file
+            try {
+                file.seek(index_record.position);
+            } catch (EFile &e) {
+                stringstream err;
+                err << "ERROR: Could not seek in message file!";
+                log(err.str());
+                break;
+            }
+
+            string buffer;
+
+            try {
+                read_bytes = file.read(buffer, to_read);
+            } catch (EFile &e) {
+                stringstream err;
+                err << "ERROR: Could not read from message file!";
+                log(err.str());
+                break;
+            }
+
+            if (read_bytes != to_read) {
+                stringstream err;
+                err << "ERROR: EOF while reading message file!";
+                log(err.str());
+                break;
+            }
+
+            try {
+                istringstream str(buffer);
+                xml.parse(&str);
+            }
+            catch (EXmlParser &e) {
+                stringstream err;
+                err << "ERROR while parsing message file: " << e.msg;
+                log(err.str());
+                break;
+            }
+            catch (EXmlParserEOF &e) {
+                stringstream err;
+                err << "ERROR: EOF while parsing message tag!";
+                log(err.str());
+                break;
+            }
+
+            msg.time = index_record.time;
+
+            try {
+                msg.text = xml.tag()->att("text")->to_str();
+            }
+            catch (EXmlTag &e) {
+                stringstream err;
+                err << "Message element: " << e.msg
+                    << " Tag: " << e.tag;
+                log(err.str());
+                msg.text = string();
+            }
+
+            if (xml.tag()->title() == "info") {
+                msg.type = Message::Info;
+            }
+            else if (xml.tag()->title() == "warn") {
+                msg.type = Message::Warning;
+            }
+            else if (xml.tag()->title() == "error") {
+                msg.type = Message::Error;
+            }
+            else if (xml.tag()->title() == "crit_error") {
+                msg.type = Message::Critical;
+            }
+            else if (xml.tag()->title() == "broadcast") {
+                msg.type = Message::Broadcast;
+            }
+            else {
+                stringstream err;
+                err << "Unknown message type "
+                    << xml.tag()->title();
+                log(err.str());
+                msg.type = Message::Unknown;
+            }
+
+            // lookup message text
+            const BaseMessage *m = _messages->findPath(msg.text);
+            if (m) {
+                string text = m->text(lang);
+                if (text != "") {
+                    msg.text = text;
+                }
+            }
+
+            ret.push_back(msg);
         }
     }
 

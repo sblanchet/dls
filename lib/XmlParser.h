@@ -92,12 +92,8 @@ public:
     XmlParser();
     ~XmlParser();
 
-    const XmlTag *parse(istream *,
-                           const string & = "",
-                           XmlTagType = dxttSingle);
-    const XmlTag *parse(RingBuffer *,
-                           const string & = "",
-                           XmlTagType = dxttSingle);
+    const XmlTag *parse(istream *, const string & = "", XmlTagType =
+            dxttSingle);
 
     const XmlTag *tag() const;
 
@@ -105,11 +101,8 @@ private:
     XmlTag _tag; /**< Zuletzt geparstes XML-Tag */
     string _current_tag;
 
-    RingBuffer *_data_ring; /**< Zeiger auf zu
-                                  parsenden Ring */
-
     istream *_data_stream; /**< Zeiger auf zu parsenden Stream */
-    unsigned int _data_stream_start; /**< Ürsprüngliche Startposition
+    unsigned int _data_stream_start; /**< Ursprüngliche Startposition
                                         im Stream */
     unsigned int _data_stream_pos; /**< Aktuelle Position im Stream */
     char _data_stream_char; /**< Aktuelles Zeichen im Stream */
@@ -118,13 +111,8 @@ private:
     unsigned int _data_stream_char_index; /**< Index des aktuell
                                              gelesenen Zeichens im Stream */
 
-    enum XmlParserType {
-        ptStream,
-        ptRing
-    };
-    void _parse(XmlParserType, const string &, XmlTagType);
-    char _data(XmlParserType, unsigned int);
-    void _erase(XmlParserType, unsigned int);
+    void _parse(const string &, XmlTagType);
+    char _data(unsigned int);
     bool _alphanum(char);
 };
 
