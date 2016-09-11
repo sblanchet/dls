@@ -16,6 +16,9 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Show signals as tree
     * Fix URI file:// slash problem in UriDialog.cpp
 
+# FLTK frontends
+    * Use PdCom to load available channels
+
 # Daemon (dlsd)
     * Protocol authentication
     * Configuration via protocol
@@ -41,3 +44,5 @@ vim: tw=78 spelllang=en spell syntax=markdown
 # Library (LibDLS):
     * Fetch chunks and data in same network request
     * Load messages via protocol
+    * Avoid XML parsing via ring buffer (used in dls_ctl): xml_no_ring.patch
+
