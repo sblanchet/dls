@@ -40,12 +40,10 @@ namespace LibDLS {
 
 /*****************************************************************************/
 
-template <class TYPE, class SIZE> class RingBufferT;
-typedef class RingBufferT<char, unsigned int> RingBuffer;
-class XmlTag;
+template <class T> class IndexT;
+class File;
 template <class T> class CompressionT;
-class Channel;
-class Data;
+class XmlTag;
 
 /*****************************************************************************/
 
@@ -87,7 +85,6 @@ class Chunk
         bool incomplete() const { return _incomplete; }
 
         void fetch_data(Time, Time, unsigned int,
-                RingBuffer *,
                 DataCallback, void *,
                 unsigned int) const;
 
@@ -115,7 +112,6 @@ class Chunk
                 MetaType,
                 unsigned int,
                 Time,
-                RingBuffer *,
                 Data **,
                 DataCallback,
                 void *,
@@ -128,13 +124,32 @@ class Chunk
                     MetaType,
                     unsigned int,
                     Time,
-                    RingBuffer *,
                     Data **,
                     DataCallback,
                     void *,
                     unsigned int,
                     unsigned int &,
                     Time &) const;
+
+        template <class T>
+            bool _read_tag(
+                    IndexT<IndexRecord> &,
+                    unsigned int,
+                    IndexRecord &,
+                    IndexRecord &,
+                    bool &,
+                    File &,
+                    CompressionT<T> *,
+                    MetaType,
+                    unsigned int,
+                    Time,
+                    Data **,
+                    DataCallback,
+                    void *,
+                    unsigned int,
+                    unsigned int &,
+                    Time &
+                    ) const;
 
         template <class T>
             void _process_data_tag(const XmlTag *,

@@ -479,14 +479,13 @@ void Channel::_fetch_data_local(
 #endif
 
     ChunkMap::const_iterator chunk_i;
-    RingBuffer ring(100000); // FIXME
 
     if (start < end) {
         try {
             for (chunk_i = _chunks.begin(); chunk_i != _chunks.end();
                     chunk_i++) {
                 chunk_i->second.fetch_data(start, end,
-                        min_values, &ring, cb, cb_data, decimation);
+                        min_values, cb, cb_data, decimation);
             }
         } catch (ChunkException &e) {
             stringstream err;

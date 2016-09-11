@@ -168,7 +168,6 @@ void Chunk::fetch_data(
         Time start,
         Time end,
         unsigned int min_values,
-        RingBuffer *ring,
         DataCallback cb,
         void *cb_data, /**< arbitrary callback param */
         unsigned int decimation
@@ -201,14 +200,14 @@ void Chunk::fetch_data(
 
         if (!level) {
             _fetch_level_data_wrapper(start, end, MetaGen, level,
-                    time_per_value, ring, &data, cb, cb_data,
+                    time_per_value, &data, cb, cb_data,
                     decimation, decimationCounter, last);
         } else {
             _fetch_level_data_wrapper(start, end, MetaMin, level,
-                    time_per_value, ring, &data, cb, cb_data,
+                    time_per_value, &data, cb, cb_data,
                     decimation, decimationCounter, last);
             _fetch_level_data_wrapper(start, end, MetaMax, level,
-                    time_per_value, ring, &data, cb, cb_data,
+                    time_per_value, &data, cb, cb_data,
                     decimation, decimationCounter, last);
         }
 
@@ -248,7 +247,6 @@ void Chunk::_fetch_level_data_wrapper(Time start,
                                               MetaType meta_type,
                                               unsigned int level,
                                               Time time_per_value,
-                                              RingBuffer *ring,
                                               Data **data,
                                               DataCallback cb,
                                               void *cb_data, /**< arbitrary
@@ -262,57 +260,53 @@ void Chunk::_fetch_level_data_wrapper(Time start,
     switch (_type) {
         case TCHAR:
             _fetch_level_data<char>(start, end, meta_type, level,
-                                    time_per_value, ring, data, cb, cb_data,
-                                    decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TUCHAR:
             _fetch_level_data<unsigned char>(start, end, meta_type, level,
-                                             time_per_value, ring, data,
-                                             cb, cb_data, decimation,
-                                             decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TSHORT:
             _fetch_level_data<short>(start, end, meta_type, level,
-                                     time_per_value, ring, data, cb, cb_data,
-                                     decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TUSHORT:
             _fetch_level_data<unsigned short>(start, end, meta_type, level,
-                                              time_per_value, ring, data,
-                                              cb, cb_data, decimation,
-                                              decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TINT:
             _fetch_level_data<int>(start, end, meta_type, level,
-                                   time_per_value, ring, data, cb, cb_data,
-                                   decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TUINT:
             _fetch_level_data<unsigned int>(start, end, meta_type, level,
-                                            time_per_value, ring, data,
-                                            cb, cb_data, decimation,
-                                            decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TLINT:
             _fetch_level_data<long>(start, end, meta_type, level,
-                                    time_per_value, ring, data, cb, cb_data,
-                                    decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TULINT:
             _fetch_level_data<unsigned long>(start, end, meta_type, level,
-                                             time_per_value, ring, data,
-                                             cb, cb_data, decimation,
-                                             decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TFLT:
             _fetch_level_data<float>(start, end, meta_type, level,
-                                     time_per_value, ring, data, cb, cb_data,
-                                     decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
         case TDBL:
             _fetch_level_data<double>(start, end, meta_type, level,
-                                      time_per_value, ring, data, cb, cb_data,
-                                      decimation, decimationCounter, last);
+                    time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last);
             break;
 
         default: {
@@ -335,7 +329,6 @@ void Chunk::_fetch_level_data(Time start,
         MetaType meta_type,
         unsigned int level,
         Time time_per_value,
-        RingBuffer *ring,
         Data **data,
         DataCallback cb,
         void *cb_data, /**< arbitrary callback
@@ -351,13 +344,11 @@ void Chunk::_fetch_level_data(Time start,
     IndexT<GlobalIndexRecord> global_index;
     GlobalIndexRecord global_index_record;
     IndexT<IndexRecord> index;
-    IndexRecord index_record;
+    IndexRecord index_record, next_index_record;
     File data_file;
-    unsigned int i, j, write_len, blocks_read = 0;
-    char *write_ptr;
-    XmlParser xml;
-    bool must_read_again;
+    unsigned int i, index_row, blocks_read = 0;
     CompressionT<T> *comp;
+    bool next_record_already_read = false;
 
     if (_format_index == FORMAT_ZLIB) {
         comp = new CompressionT_ZLib<T>();
@@ -414,7 +405,7 @@ void Chunk::_fetch_level_data(Time start,
         return;
     }
 
-    // loop through all indexed data files
+    // loop through all indexed data files -- FIXME use binary search
     for (i = 0; i < global_index.record_count(); i++) {
         try {
             global_index_record = global_index[i];
@@ -466,187 +457,184 @@ void Chunk::_fetch_level_data(Time start,
             return;
         }
 
-        // loop through all index records
-        for (j = 0; j < index.record_count(); j++) {
-            try {
-                index_record = index[j];
-            } catch (EIndexT &e) {
-				stringstream err;
-                err << "ERROR: Could not read from index \"" << indexPath
-                    << "\": " << e.msg;
-				log(err.str());
-                delete comp;
-                return;
+        bool next_record_already_read = false;
+
+        // loop through all index records -- FIXME use binary search!
+        for (index_row = 0; index_row < index.record_count(); index_row++) {
+            if (next_record_already_read) {
+                index_record = next_index_record;
+            }
+            else {
+                try {
+                    index_record = index[index_row];
+                } catch (EIndexT &e) {
+                    stringstream err;
+                    err << "ERROR: Could not read from index \"" << indexPath
+                        << "\": " << e.msg;
+                    log(err.str());
+                    delete comp;
+                    return;
+                }
             }
 
             // the block covers a time range before the requested range.
             // try the next one.
-            if (Time(index_record.end_time) < start) continue;
+            if (Time(index_record.end_time) < start) {
+                continue;
+            }
 
             // the following blocks cover time ranges after the requested
             // range. abort loading.
-            if (Time(index_record.start_time) >= end) break;
+            if (Time(index_record.start_time) >= end) {
+                break;
+            }
 
-            try {
-                data_file.seek(index_record.position);
-            } catch (EFile &e) {
-				stringstream err;
-                err << "ERROR: Could not seek in data file!";
-				log(err.str());
+            if (!_read_tag(index, index_row, index_record, next_index_record,
+                        next_record_already_read, data_file, comp, meta_type,
+                        level, time_per_value, data, cb, cb_data, decimation,
+                        decimationCounter, last)) {
                 delete comp;
                 return;
             }
 
-            ring->clear();
-
-            // read bytes, until a tag is complete
-            while (1) {
-                ring->write_info(&write_ptr, &write_len);
-                if (write_len > 1024) {
-                    write_len = 1024;
-                }
-
-                if (!write_len) {
-					stringstream err;
-                    err << "ERROR: Ring buffer too small for data!";
-					log(err.str());
-                    delete comp;
-                    return;
-                }
-
-                try {
-                    data_file.read(write_ptr, write_len, &write_len);
-                } catch (EFile &e) {
-					stringstream err;
-                    err << "ERROR: Could not read from data file: "
-                         << e.msg;
-					log(err.str());
-                    delete comp;
-                    return;
-                }
-
-                if (!write_len) {
-					stringstream err;
-                    err << "ERROR: EOF in \"" << data_file_name.str()
-                         << "\" after searching position "
-                         << index_record.position << "!";
-					log(err.str());
-                    delete comp;
-                    return;
-                }
-
-                ring->written(write_len);
-
-                try {
-                    xml.parse(ring);
-                } catch (EXmlParserEOF &e) {
-                    continue;
-                } catch (EXmlParser &e) {
-					stringstream err;
-                    err << "parsing error: " << e.msg;
-					log(err.str());
-                    delete comp;
-                    return;
-                }
-
-                if (xml.tag()->title() == "d") {
-                    try {
-                        _process_data_tag(xml.tag(), index_record.start_time,
-                                          meta_type, level, time_per_value,
-                                          comp, data, cb, cb_data,
-                                          decimation, decimationCounter,
-                                          last);
-                    } catch (EXmlTag &e) {
-						stringstream err;
-                        err << "ERROR: Could not read block: " << e.msg;
-						log(err.str());
-                        delete comp;
-                        return;
-                    }
-
-                    blocks_read++;
-                }
-
-                break;
-            }
-            // next index record
+            blocks_read++;
         }
     }
 
     // blocks read, files still open
 
     if (blocks_read && _format_index == FORMAT_MDCT) {
-        // read one more record for MDCT
-        try {
-            xml.parse(ring);
-            must_read_again = false;
-        }
-        catch (EXmlParser &e) {
-			stringstream err;
-            err << "ERROR: While parsing: " << e.msg;
-			log(err.str());
+        // read one more block! -- FIXME index_row valid?
+        if (!_read_tag(index, index_row, index_record, next_index_record,
+                    next_record_already_read, data_file, comp, meta_type,
+                    level, time_per_value, data, cb, cb_data, decimation,
+                    decimationCounter, last)) {
             delete comp;
             return;
-        }
-        catch (EXmlParserEOF &e) {
-            must_read_again = true;
-        }
-
-        while (must_read_again) {
-            ring->write_info(&write_ptr, &write_len);
-            if (write_len > 1024) write_len = 1024;
-
-            try {
-                data_file.read(write_ptr, write_len, &write_len);
-            }
-            catch (EFile &e) {
-				stringstream err;
-                err << "ERROR: Could not read data file: " << e.msg;
-				log(err.str());
-                delete comp;
-                return;
-            }
-
-            if (!write_len) {
-                delete comp;
-                return;
-            }
-
-            ring->written(write_len);
-
-            try {
-                xml.parse(ring);
-                must_read_again = false;
-            }
-            catch (EXmlParser &e) {
-				stringstream err;
-                err << "ERROR: While parsing: " << e.msg;
-				log(err.str());
-                delete comp;
-                return;
-            }
-            catch (EXmlParserEOF &e) {
-            }
-        }
-
-        if (xml.tag()->title() == "d") {
-            try {
-                _process_data_tag(xml.tag(), index_record.start_time,
-                                  meta_type, level,
-                                  time_per_value, comp, data, cb, data,
-                                  decimation, decimationCounter, last);
-            }
-            catch (EXmlTag &e) {
-				stringstream err;
-                err << "ERROR: Failed to read block!";
-				log(err.str());
-                delete comp;
-                return;
-            }
         }
     }
 
     delete comp;
+}
+
+/*****************************************************************************/
+
+/** Read one data tag.
+ */
+template <class T>
+bool Chunk::_read_tag(
+        IndexT<IndexRecord> &index,
+        unsigned int index_row,
+        IndexRecord &index_record,
+        IndexRecord &next_index_record,
+        bool &next_record_already_read,
+        File &data_file,
+        CompressionT<T> *comp,
+        MetaType meta_type,
+        unsigned int level,
+        Time time_per_value,
+        Data **data,
+        DataCallback cb,
+        void *cb_data, /**< arbitrary callback parameter */
+        unsigned int decimation,
+        unsigned int &decimationCounter,
+        Time &last
+        ) const
+{
+    size_t to_read, read_bytes;
+    XmlParser xml;
+
+    // determine data size to read
+    if (index_row < index.record_count() - 1) {
+        // there is a following index tag, so we can take the amount of
+        // data to read from the index!
+        try {
+            next_index_record = index[index_row + 1];
+        } catch (EIndexT &e) {
+            stringstream err;
+            err << "ERROR: Could not read from index \"" << index.path()
+                << "\": " << e.msg;
+            log(err.str());
+            return false;
+        }
+        next_record_already_read = true;
+        to_read = next_index_record.position - index_record.position;
+    }
+    else {
+        // last index record, get size from data file
+        try {
+            size_t data_file_size = data_file.calc_size();
+            to_read = data_file_size - index_record.position;
+        } catch (EFile &e) {
+            stringstream err;
+            err << "ERROR: Could not seek in data file!";
+            log(err.str());
+            return false;
+        }
+    }
+
+    // go to desired position in the data file
+    try {
+        data_file.seek(index_record.position);
+    } catch (EFile &e) {
+        stringstream err;
+        err << "ERROR: Could not seek in data file!";
+        log(err.str());
+        return false;
+    }
+
+    string buffer;
+
+    try {
+        read_bytes = data_file.read(buffer, to_read);
+    } catch (EFile &e) {
+        stringstream err;
+        err << "ERROR: Could not read from data file!";
+        log(err.str());
+        return false;
+    }
+
+    if (read_bytes != to_read) {
+        stringstream err;
+        err << "ERROR: EOF in \"" << data_file.path()
+            << "\" after searching position "
+            << index_record.position << "! Read " << read_bytes
+            << " of " << to_read << ".";
+        log(err.str());
+        return false;
+    }
+
+    try {
+        istringstream str(buffer);
+        xml.parse(&str);
+    } catch (EXmlParserEOF &e) {
+        stringstream err;
+        err << "EOF while parsing XML tag: " << e.msg;
+        log(err.str());
+        return false;
+    } catch (EXmlParser &e) {
+        stringstream err;
+        err << "parsing error: " << e.msg;
+        log(err.str());
+        return false;
+    }
+
+    if (xml.tag()->title() == "d") {
+        try {
+            _process_data_tag(xml.tag(), index_record.start_time,
+                    meta_type, level, time_per_value,
+                    comp, data, cb, cb_data,
+                    decimation, decimationCounter,
+                    last);
+        } catch (EXmlTag &e) {
+            stringstream err;
+            err << "ERROR: Could not read block: " << e.msg;
+            log(err.str());
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /*****************************************************************************/

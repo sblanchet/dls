@@ -530,6 +530,27 @@ void File::read(char *target, unsigned int length, unsigned int *bytes_read)
 
 /*****************************************************************************/
 
+/** Wrapper around read() for std::string.
+ */
+unsigned int File::read(std::string &target, unsigned int length)
+{
+    unsigned int bytes_read = 0;
+
+    target.clear();
+    target.resize(length);
+    read(&target[0], length, &bytes_read);
+
+#if 0
+    cerr << "read " << bytes_read << "/" << length << " bytes from "
+        << _path << endl;
+    cerr << target << endl;
+#endif
+
+    return bytes_read;
+}
+
+/*****************************************************************************/
+
 /**
    Berechnet die Dateigröße mit einem Sprung ans Ende
 

@@ -26,6 +26,8 @@
 
 #include <stdint.h>
 
+#include <string>
+
 #include "LibDLS/Exception.h"
 
 /*****************************************************************************/
@@ -83,6 +85,7 @@ public:
 
     //@{
     void read(char *, unsigned int, unsigned int * = 0);
+    unsigned int read(std::string &, unsigned int);
     void write(const char *, unsigned int);
     void append(const char *, unsigned int);
     void seek(unsigned int);
