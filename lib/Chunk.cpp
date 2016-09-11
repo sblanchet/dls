@@ -502,7 +502,17 @@ void Chunk::_fetch_level_data(Time start,
             // read bytes, until a tag is complete
             while (1) {
                 ring->write_info(&write_ptr, &write_len);
-                if (write_len > 1024) write_len = 1024;
+                if (write_len > 1024) {
+                    write_len = 1024;
+                }
+
+                if (!write_len) {
+					stringstream err;
+                    err << "ERROR: Ring buffer too small for data!";
+					log(err.str());
+                    delete comp;
+                    return;
+                }
 
                 try {
                     data_file.read(write_ptr, write_len, &write_len);
