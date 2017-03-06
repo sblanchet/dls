@@ -430,6 +430,15 @@ void LibDLS::Job::_load_msg_local(
 
     msg_dir << _path << "/messages";
 
+#if 0
+    {
+        stringstream msg;
+        msg << __func__ << " " << msg_dir.str() << start.to_real_time()
+                << " " << end.to_real_time();
+        log(msg.str());
+    }
+#endif
+
     // Das Message-Verzeichnis öffnen
     if (!(dir = opendir(msg_dir.str().c_str()))) {
         if (errno != ENOENT) {
@@ -699,6 +708,15 @@ void LibDLS::Job::_load_msg_local(
             ret.push_back(msg);
         }
     }
+
+
+#if 0
+    {
+        stringstream msg;
+        msg << "Loaded " << ret.size() << " messages.";
+        log(msg.str());
+    }
+#endif
 }
 
 /*****************************************************************************/
@@ -764,6 +782,9 @@ void LibDLS::Job::_load_msg_network(
             case DlsProto::MsgUnknown:
             default:
                 msg.type = Message::Unknown;
+                break;
+            case DlsProto::MsgInfo:
+                msg.type = Message::Info;
                 break;
             case DlsProto::MsgWarning:
                 msg.type = Message::Warning;
