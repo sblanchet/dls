@@ -53,6 +53,14 @@ using namespace std;
 
 /*****************************************************************************/
 
+void lib_log(const char *text, void *)
+{
+    msg() << "LibDLS: " << text;
+    log(Info);
+}
+
+/*****************************************************************************/
+
 /**
    Konstruktor
 
@@ -70,6 +78,8 @@ ProcMother::ProcMother():
 {
     // Syslog initialisieren
     openlog("dlsd_mother", LOG_PID, LOG_DAEMON);
+
+    LibDLS::set_logging_callback(lib_log, NULL);
 }
 
 /*****************************************************************************/
