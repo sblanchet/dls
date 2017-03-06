@@ -36,6 +36,7 @@
 #include "SectionDialog.h"
 #include "DatePickerDialog.h"
 #include "ExportDialog.h"
+#include "FilterDialog.h"
 
 using DLS::Graph;
 using DLS::GraphWorker;
@@ -114,6 +115,7 @@ Graph::Graph(
     removeSectionAction(this),
     clearSectionsAction(this),
     messagesAction(this),
+    filterAction(this),
     printAction(this),
     exportAction(this),
     selectedSection(NULL),
@@ -311,6 +313,11 @@ Graph::Graph(
     connect(&messagesAction, SIGNAL(changed()),
             this, SLOT(showMessagesChanged()));
 
+    filterAction.setText(tr("Filter messages..."));
+    filterAction.setStatusTip(tr("Filter messages by regular expressions."));
+    filterAction.setIcon(QIcon(":/DlsWidgets/images/messages.svg"));
+    connect(&filterAction, SIGNAL(triggered()), this, SLOT(filterTriggered()));
+
     printAction.setText(tr("Print..."));
     printAction.setStatusTip(tr("Open the print dialog."));
     printAction.setIcon(QIcon(":/DlsWidgets/images/document-print.svg"));
@@ -437,6 +444,9 @@ bool Graph::load(const QString &path, Model *model)
             }
             messageAreaHeight = num;
         }
+        else if (child.tagName() == "MessageFilter") {
+            setMessageFilter(child.text());
+        }
         else if (child.tagName() == "Sections") {
             loadSections(child, model, dir);
         }
@@ -499,6 +509,11 @@ bool Graph::save(const QString &path)
     text = doc.createTextNode(num);
     msgHeightElem.appendChild(text);
     root.appendChild(msgHeightElem);
+
+    QDomElement filterElem = doc.createElement("MessageFilter");
+    text = doc.createTextNode(messageFilter);
+    filterElem.appendChild(text);
+    root.appendChild(filterElem);
 
     QDomElement secElem = doc.createElement("Sections");
     root.appendChild(secElem);
@@ -1068,6 +1083,21 @@ void Graph::setShowMessages(
     if (show != showMessages) {
         showMessages = show;
         messagesAction.setChecked(show);
+        update();
+    }
+}
+
+/****************************************************************************/
+
+/** Set the message filter regexp.
+ */
+void Graph::setMessageFilter(
+        const QString &filter
+        )
+{
+    qDebug() << filter;
+    if (filter != messageFilter) {
+        messageFilter = filter;
         update();
     }
 }
@@ -1653,6 +1683,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(&removeSectionAction);
     menu.addAction(&clearSectionsAction);
     menu.addAction(&messagesAction);
+    menu.addAction(&filterAction);
     menu.addSeparator();
     menu.addAction(&printAction);
     menu.addAction(&exportAction);
@@ -2610,6 +2641,18 @@ void Graph::showMessagesChanged()
 
 /****************************************************************************/
 
+void Graph::filterTriggered()
+{
+    FilterDialog *dialog = new FilterDialog(this, messageFilter);
+    int ret = dialog->exec();
+    if (ret == QDialog::Accepted) {
+        setMessageFilter(dialog->getRegex());
+    }
+    delete dialog;
+}
+
+/****************************************************************************/
+
 void Graph::showExport()
 {
     // FIXME channels() race
@@ -2710,7 +2753,8 @@ void GraphWorker::doWork()
     for (std::set<LibDLS::Job *>::const_iterator job = jobSet.begin();
             job != jobSet.end(); job++) {
         std::list<LibDLS::Job::Message> msgs =
-            (*job)->load_msg(graph->getStart(), graph->getEnd(),
+            (*job)->load_msg_filtered(graph->getStart(), graph->getEnd(),
+                    graph->getMessageFilter().toUtf8().constData(),
                     lang.toLocal8Bit().constData());
         for (std::list<LibDLS::Job::Message>::const_iterator msg =
                 msgs.begin(); msg != msgs.end(); msg++) {

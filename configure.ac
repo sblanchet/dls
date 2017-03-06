@@ -48,6 +48,8 @@ AC_CONFIG_SRCDIR([config.h.in])
 AC_LIB_PREFIX
 AM_PATH_XML2
 
+PKG_CHECK_MODULES([PCRE], [libpcre >= 8])
+
 AC_SUBST(LIBDLS_VERSION, [3:0:0])
 
 #------------------------------------------------------------------------------
