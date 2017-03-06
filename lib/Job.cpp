@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pcre.h>
+
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -277,10 +279,38 @@ list<LibDLS::Job::Message> LibDLS::Job::load_msg(
     list<Message> ret;
 
     if (_dir->access() == Directory::Local) {
-        _load_msg_local(ret, start, end, lang);
+        _load_msg_local(ret, start, end, string(), lang);
     }
     else {
-        _load_msg_network(ret, start, end, lang);
+        _load_msg_network(ret, start, end, string(), lang);
+    }
+
+    return ret;
+}
+
+/*****************************************************************************/
+
+/** Lädt Nachrichten im angegebenen Zeitbereich, gefiltert per RegEx.
+ *
+ * \param start Anfangszeit des Bereiches
+ * \param end Endzeit des Bereiches
+ */
+list<LibDLS::Job::Message> LibDLS::Job::load_msg_filtered(
+        Time start, /**< Start time. */
+        Time end, /**< End time. */
+        const std::string &regex, /**< RegEx. */
+        std::string lang /**< Language for message translations. If empty,
+                           "en" is tried, otherwise the first available
+                           translation is used. */
+        ) const
+{
+    list<Message> ret;
+
+    if (_dir->access() == Directory::Local) {
+        _load_msg_local(ret, start, end, regex, lang);
+    }
+    else {
+        _load_msg_network(ret, start, end, regex, lang);
     }
 
     return ret;
@@ -407,6 +437,7 @@ void LibDLS::Job::_load_msg_local(
         list<LibDLS::Job::Message> &ret, /**< Message list. */
         Time start, /**< Start time. */
         Time end, /**< End time. */
+        const std::string &regex, /**< Filter regex. */
         std::string lang /**< Language for message translations. If empty,
                            "en" is tried, otherwise the first available
                            translation is used. */
@@ -427,6 +458,20 @@ void LibDLS::Job::_load_msg_local(
     list<uint64_t>::iterator chunk_time_i;
     bool next_record_already_read;
     size_t to_read, read_bytes;
+    const char *pcre_errptr = NULL;
+    int pcre_erroffset = 0;
+
+    pcre *re = NULL;
+
+    if (!regex.empty()) {
+        re = pcre_compile(regex.c_str(), PCRE_UTF8, &pcre_errptr,
+                &pcre_erroffset, NULL);
+        if (re == NULL) {
+            stringstream err;
+            err << "ERROR: Failed to compile filter regex:" << pcre_errptr;
+            log(err.str());
+        }
+    }
 
     msg_dir << _path << "/messages";
 
@@ -448,6 +493,9 @@ void LibDLS::Job::_load_msg_local(
             log(err.str());
         } else {
             cerr << msg_dir.str() << " not found." << endl;
+        }
+        if (re) {
+            pcre_free(re);
         }
         return;
     }
@@ -717,6 +765,10 @@ void LibDLS::Job::_load_msg_local(
         log(msg.str());
     }
 #endif
+
+    if (re) {
+        pcre_free(re);
+    }
 }
 
 /*****************************************************************************/
@@ -730,6 +782,7 @@ void LibDLS::Job::_load_msg_network(
         list<LibDLS::Job::Message> &ret, /**< Message list. */
         Time start, /**< Start time. */
         Time end, /**< End time. */
+        const std::string &regex, /**< Filter regex. */
         std::string lang /**< Language for message translations. If empty,
                            "en" is tried, otherwise the first available
                            translation is used. */
@@ -744,6 +797,7 @@ void LibDLS::Job::_load_msg_network(
     msg_req->set_start(start.to_uint64());
     msg_req->set_end(end.to_uint64());
     msg_req->set_language(lang);
+    msg_req->set_filter(regex);
 
     try {
         _dir->_send_message(req);

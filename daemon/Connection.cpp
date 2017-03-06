@@ -301,8 +301,8 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
     if (req.has_message_request()) {
         const DlsProto::MessageRequest &msg_req = req.message_request();
         list<LibDLS::Job::Message> msgs;
-        msgs = job->load_msg(msg_req.start(), msg_req.end(),
-                msg_req.language());
+        msgs = job->load_msg_filtered(msg_req.start(), msg_req.end(),
+                msg_req.filter(), msg_req.language());
 
         DlsProto::Response res;
         DlsProto::DirInfo *dir_info = res.mutable_dir_info();

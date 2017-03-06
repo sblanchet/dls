@@ -106,6 +106,8 @@ class Job
 
         std::list<Message> load_msg(Time, Time,
                 std::string = std::string()) const;
+        std::list<Message> load_msg_filtered(Time, Time,
+                const std::string &, std::string = std::string()) const;
 
         void set_job_info(DlsProto::JobInfo *, bool = true) const;
         Directory *dir() const { return _dir; }
@@ -121,9 +123,9 @@ class Job
         void _fetch_channels_network();
 
         void _load_msg_local(std::list<Message> &, Time, Time,
-                std::string = std::string()) const;
+                const std::string &, std::string = std::string()) const;
         void _load_msg_network(std::list<Message> &, Time, Time,
-                std::string = std::string()) const;
+                const std::string &, std::string = std::string()) const;
 
         Job(); // private
 };

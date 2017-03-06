@@ -115,6 +115,7 @@ HEADERS += \
     DatePickerDialog.h \
     Dir.h \
     ExportDialog.h \
+    FilterDialog.h \
     Job.h \
     Node.h \
     Plugin.h \
@@ -128,6 +129,7 @@ SOURCES += \
     DatePickerDialog.cpp \
     Dir.cpp \
     ExportDialog.cpp \
+    FilterDialog.cpp \
     Graph.cpp \
     Job.cpp \
     Layer.cpp \
@@ -145,6 +147,7 @@ SOURCES += \
 FORMS = \
     DatePickerDialog.ui \
     ExportDialog.ui \
+    FilterDialog.ui \
     SectionDialog.ui
 
 RESOURCES = DlsWidgets.qrc

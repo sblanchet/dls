@@ -137,6 +137,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         const LibDLS::Time &getStart() const { return scale.getStart(); };
         const LibDLS::Time &getEnd() const { return scale.getEnd(); };
         QSet<QUrl> urls();
+        const QString &getMessageFilter() const { return messageFilter; }
 
         struct ChannelInfo {
             QUrl url;
@@ -179,6 +180,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void pan(double);
         void print();
         void setShowMessages(bool);
+        void setMessageFilter(const QString &);
         void clearSections();
 
     protected:
@@ -248,6 +250,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QAction removeSectionAction;
         QAction clearSectionsAction;
         QAction messagesAction;
+        QAction filterAction;
         QAction printAction;
         QAction exportAction;
         Section *selectedSection;
@@ -275,6 +278,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         QMutex msgMutex;
         static QColor messageColor[];
         static QString messagePixmap[];
+        QString messageFilter;
 
         QMutex loggingMutex;
 
@@ -319,6 +323,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void workerFinished();
         void updateSection(Section *section);
         void showMessagesChanged();
+        void filterTriggered();
         void showExport();
         void fixMeasuringLine();
         void removeMeasuringLine();
