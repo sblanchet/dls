@@ -120,6 +120,11 @@ class Job
         void _fetch_channels_local();
         void _fetch_channels_network();
 
+        void _load_msg_local(std::list<Message> &, Time, Time,
+                std::string = std::string()) const;
+        void _load_msg_network(std::list<Message> &, Time, Time,
+                std::string = std::string()) const;
+
         Job(); // private
 };
 

@@ -297,6 +297,22 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
     if (req.has_channel_request()) {
         _process_channel_request(job, req.channel_request());
     }
+
+    if (req.has_message_request()) {
+        const DlsProto::MessageRequest &msg_req = req.message_request();
+        list<LibDLS::Job::Message> msgs;
+        job->load_msg(msg_req.start(), msg_req.end(), msg_req.language());
+
+        DlsProto::Response res;
+        DlsProto::DirInfo *dir_info = res.mutable_dir_info();
+        DlsProto::JobInfo *job_info = dir_info->add_job();
+        for (list<LibDLS::Job::Message>::const_iterator msg_i = msgs.begin();
+                msg_i != msgs.end(); msg_i++) {
+            DlsProto::Message *msg = job_info->add_message();
+            msg->set_time(msg_i->time.to_uint64());
+        }
+        _send(res);
+    }
 }
 
 /*****************************************************************************/
