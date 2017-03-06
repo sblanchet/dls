@@ -891,6 +891,15 @@ int ProcMother::_prepare_socket(const char *service)
             continue;
         }
 
+        int enable = 1;
+        ret = setsockopt(_listen_fd, SOL_SOCKET, SO_REUSEADDR, &enable,
+                sizeof(int));
+        if (ret < 0) {
+            msg() << "Failed to set SO_REUSEADDR flag for socket: "
+                << strerror(errno);
+            log(Warning);
+        }
+
         ret = bind(_listen_fd, rp->ai_addr, rp->ai_addrlen);
         if (ret == 0) {
             // success
