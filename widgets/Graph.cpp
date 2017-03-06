@@ -1095,7 +1095,6 @@ void Graph::setMessageFilter(
         const QString &filter
         )
 {
-    qDebug() << filter;
     if (filter != messageFilter) {
         messageFilter = filter;
         update();
