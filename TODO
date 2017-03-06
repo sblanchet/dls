@@ -8,6 +8,7 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Synopsis in usage strings
     * man pages for commands
     * Check for PdCom in a portable way
+    * Allow compiling without PCRE
 
 # User frontend (dlsgui)
     * Show if channel is actually logged
@@ -23,6 +24,7 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Protocol authentication
     * Configuration via protocol
     * Fix online sample time change
+    * Improve protocol buffers stream adapters usage.
 
 # Command-line tool (dls)
     * option -Q for really quiet
@@ -44,5 +46,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
 # Library (LibDLS):
     * Add version macros
     * Fetch chunks and data in same network request
-    * Avoid XML parsing via ring buffer (used in dls_ctl): xml_no_ring.patch
+    * Avoid XML parsing via ring buffer (used in dls-ctl): xml-no-ring.patch
+    * Improve protocol buffers stream adapters usage.
 
