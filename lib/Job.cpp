@@ -721,6 +721,21 @@ void LibDLS::Job::_load_msg_local(
                 msg.text = string();
             }
 
+            if (re) {
+                int ovec[32];
+                int ret = pcre_exec(re, NULL, msg.text.c_str(),
+                        msg.text.size(), 0, 0, ovec, 32);
+#if 0
+                stringstream s;
+                s << msg.text << " " << regex << " " << ret;
+                log(s.str());
+#endif
+                if (ret < 1) {
+                    // no match; skip this message
+                    continue;
+                }
+            }
+
             if (xml.tag()->title() == "info") {
                 msg.type = Message::Info;
             }
