@@ -31,6 +31,7 @@ message JobRequest {
     required uint32 id = 1;
     optional bool fetch_channels = 2;
     optional ChannelRequest channel_request = 3;
+    optional MessageRequest message_request = 4;
 }
 
 message ChannelRequest {
@@ -44,6 +45,12 @@ message DataRequest {
     required uint64 end = 2;
     optional uint32 min_values = 3;
     optional uint32 decimation = 4;
+}
+
+message MessageRequest {
+    required uint64 start = 1;
+    required uint64 end = 2;
+    optional string language = 3;
 }
 
 //---------------------------------------------------------------------------
@@ -64,6 +71,7 @@ message DirInfo {
 message JobInfo {
     optional JobPresetInfo preset = 1;
     repeated ChannelInfo channel = 2;
+    repeated Message message = 3;
 }
 
 message JobPresetInfo {
@@ -106,6 +114,12 @@ message Data {
     repeated double value = 5;
 }
 
+message Message {
+    required uint64 time = 1;
+    required MessageType type = 2;
+    required string text = 3;
+}
+
 //---------------------------------------------------------------------------
 
 enum ChannelType
@@ -131,6 +145,18 @@ enum MetaType
     MetaMean = 1; // deprecated
     MetaMin = 2;
     MetaMax = 4;
+}
+
+//---------------------------------------------------------------------------
+
+enum MessageType
+{
+    MsgUnknown = -1;
+    MsgInfo = 0;
+    MsgWarning = 1;
+    MsgError = 2;
+    MsgCritical = 3;
+    MsgBroadcast = 4;
 }
 
 //---------------------------------------------------------------------------
