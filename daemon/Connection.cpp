@@ -301,7 +301,8 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
     if (req.has_message_request()) {
         const DlsProto::MessageRequest &msg_req = req.message_request();
         list<LibDLS::Job::Message> msgs;
-        job->load_msg(msg_req.start(), msg_req.end(), msg_req.language());
+        msgs = job->load_msg(msg_req.start(), msg_req.end(),
+                msg_req.language());
 
         DlsProto::Response res;
         DlsProto::DirInfo *dir_info = res.mutable_dir_info();
@@ -310,6 +311,28 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
                 msg_i != msgs.end(); msg_i++) {
             DlsProto::Message *msg = job_info->add_message();
             msg->set_time(msg_i->time.to_uint64());
+            switch (msg_i->type) {
+                case LibDLS::Job::Message::Unknown:
+                default:
+                    msg->set_type(DlsProto::MsgUnknown);
+                    break;
+                case LibDLS::Job::Message::Info:
+                    msg->set_type(DlsProto::MsgInfo);
+                    break;
+                case LibDLS::Job::Message::Warning:
+                    msg->set_type(DlsProto::MsgWarning);
+                    break;
+                case LibDLS::Job::Message::Error:
+                    msg->set_type(DlsProto::MsgError);
+                    break;
+                case LibDLS::Job::Message::Critical:
+                    msg->set_type(DlsProto::MsgCritical);
+                    break;
+                case LibDLS::Job::Message::Broadcast:
+                    msg->set_type(DlsProto::MsgBroadcast);
+                    break;
+            }
+            msg->set_text(msg_i->text);
         }
         _send(res);
     }
