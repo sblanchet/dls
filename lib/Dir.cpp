@@ -67,11 +67,11 @@ Directory::Directory(const std::string &uri_text):
     WSADATA wsaData;
     int err = WSAStartup(0x0202, &wsaData);
     if (err != 0) {
-        stringstream err;
-        err << "WSAStartup() failed with error " << err << ".";
-        _error_msg = err.str();
-        log(err.str());
-        throw DirectoryException(err.str());
+        stringstream msg;
+        msg << "WSAStartup() failed with error " << err << ".";
+        _error_msg = msg.str();
+        log(msg.str());
+        throw DirectoryException(msg.str());
     } else {
         stringstream msg;
         msg << "WSAStartup() initialized with version "
@@ -415,7 +415,11 @@ void Directory::_connect()
     }
 
     struct addrinfo *rp;
+#ifdef _WIN32
+    SOCKET sock;
+#else
     int sock;
+#endif
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if (sock == DLS_INVALID_SOCKET) {
