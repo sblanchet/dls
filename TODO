@@ -18,7 +18,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Fix URI file:// slash problem in UriDialog.cpp
     * Feed color selector with solarized colors
 
-
 # FLTK frontends
     * Use PdCom to load available channels
 
@@ -26,7 +25,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Protocol authentication
     * Configuration via protocol
     * Fix online sample time change
-    * Improve protocol buffers stream adapters usage.
 
 # Command-line tool (dls)
     * option -Q for really quiet
@@ -49,5 +47,4 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Add version macros
     * Fetch chunks and data in same network request
     * Avoid XML parsing via ring buffer (used in dls-ctl): xml-no-ring.patch
-    * Improve protocol buffers stream adapters usage.
 
