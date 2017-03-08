@@ -16,6 +16,8 @@ vim: tw=78 spelllang=en spell syntax=markdown
         * Available channels as tree with filter function
     * Show signals as tree
     * Fix URI file:// slash problem in UriDialog.cpp
+    * Feed color selector with solarized colors
+
 
 # FLTK frontends
     * Use PdCom to load available channels
