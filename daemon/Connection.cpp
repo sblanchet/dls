@@ -384,7 +384,7 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
             }
             msg->set_text(msg_i->text);
         }
-        _send(res);
+        _send_msg(res);
     }
 }
 
