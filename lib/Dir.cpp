@@ -37,7 +37,6 @@
 #include <errno.h>
 
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include <uriparser/Uri.h>
 
@@ -56,108 +55,11 @@ using namespace LibDLS;
 #define DLS_CLOSE_SOCKET ::close
 #endif
 
-//#define DEBUG_STREAM
-
-/*****************************************************************************/
-
-class LibDLS::SocketStream:
-    public google::protobuf::io::CopyingInputStream,
-    public google::protobuf::io::CopyingOutputStream
-{
-    public:
-        SocketStream(
-#ifdef _WIN32
-                SOCKET sock
-#else
-                int sock
-#endif
-        ): _sock(sock), _errno(0) {}
-
-        int Read(void *buffer, int size) {
-#ifdef DEBUG_STREAM
-            stringstream msg;
-            msg << __func__ << "(" << size << ")";
-#endif
-
-            ssize_t bytes_read;
-#ifdef _WIN32
-            bytes_read = recv(_sock, (char *) buffer, size, 0);
-#else
-            bytes_read = read(_sock, buffer, size);
-#endif
-
-#ifdef DEBUG_STREAM
-            msg << ": " << bytes_read;
-            log(msg.str());
-#endif
-
-            if (bytes_read >= 0) {
-                return bytes_read;
-            } else {
-#ifdef _WIN32
-                _errno = WSAGetLastError();
-#else
-                _errno = errno;
-#endif
-                return -1;
-            }
-        }
-
-        bool Write(const void *buffer, int size) {
-            const char *buf = (const char *) buffer;
-#ifdef DEBUG_STREAM
-            stringstream msg;
-            msg << __func__ << "(" << size << ")";
-#endif
-
-            ssize_t bytes_written;
-            while (size > 0) {
-                bytes_written = send(_sock, buf, size, 0);
-
-                if (bytes_written < 0) {
-#ifdef _WIN32
-                    _errno = WSAGetLastError();
-#else
-                    _errno = errno;
-#endif
-                    return false;
-                }
-
-                if (bytes_written <= size) {
-                    size -= bytes_written;
-                    buf += bytes_written;
-                }
-                else {
-                    return false; // FIXME
-                }
-            }
-
-#ifdef DEBUG_STREAM
-            msg << ": " << bytes_written;
-            log(msg.str());
-#endif
-            return true;
-        }
-
-        int lastError() const { return _errno; }
-
-    private:
-#ifdef _WIN32
-        SOCKET _sock;
-#else
-        int _sock;
-#endif
-        int _errno;
-};
-
 /*****************************************************************************/
 
 Directory::Directory(const std::string &uri_text):
     _access(Unknown),
-    _sock(DLS_INVALID_SOCKET),
-    _sockstream(NULL),
-    _cisa(NULL),
-    _cosa(NULL)
+    _sock(DLS_INVALID_SOCKET)
 {
     set_uri(uri_text);
 
@@ -543,36 +445,7 @@ void Directory::_connect()
     if (!rp) {
         _error_msg = "Connection failed!";
         log(_error_msg);
-        goto out_throw;
-    }
-
-    try {
-        _sockstream = new SocketStream(sock);
-    }
-    catch (...) {
-        _error_msg = "Failed to create socket input stream!";
-        log(_error_msg);
-        goto out_sock;
-    }
-
-    try {
-        _cisa =
-            new google::protobuf::io::CopyingInputStreamAdaptor(_sockstream);
-    }
-    catch (...) {
-        _error_msg = "Failed to create socket input stream adapter!";
-        log(_error_msg);
-        goto out_stream;
-    }
-
-    try {
-        _cosa =
-            new google::protobuf::io::CopyingOutputStreamAdaptor(_sockstream);
-    }
-    catch (...) {
-        _error_msg = "Failed to create socket output stream adapter!";
-        log(_error_msg);
-        goto out_cisa;
+        throw DirectoryException(_error_msg);
     }
 
     _sock = sock;
@@ -585,16 +458,6 @@ void Directory::_connect()
 
     /* read hello message */
     _receive_hello();
-    return;
-
-out_cisa:
-    delete _cisa;
-out_stream:
-    delete _sockstream;
-out_sock:
-    DLS_CLOSE_SOCKET(sock);
-out_throw:
-    throw DirectoryException(_error_msg);
 }
 
 /*****************************************************************************/
@@ -611,11 +474,44 @@ void Directory::_disconnect()
         log(msg.str());
     }
 
-    delete _cosa;
-    delete _cisa;
-    delete _sockstream;
     DLS_CLOSE_SOCKET(_sock);
     _sock = DLS_INVALID_SOCKET;
+    _receive_buffer.clear();
+}
+
+/*****************************************************************************/
+
+void Directory::_send_data(const char *buffer, size_t size)
+{
+#ifdef DEBUG_STREAM
+    cerr << __func__ << "(" << size << ")" << endl;
+#endif
+
+    ssize_t ret;
+    while (size > 0) {
+        ret = send(_sock, buffer, size, 0);
+
+#ifdef DEBUG_STREAM
+        cerr << __func__ << "(): send() returned " << ret << endl;
+#endif
+
+        if (ret < 0) {
+#ifdef _WIN32
+            int e = WSAGetLastError();
+#else
+            int e = errno;
+#endif
+            stringstream err;
+            err << "send() failed: " << strerror(e);
+            log(err.str());
+            cerr << err.str() << endl;
+            _disconnect();
+            throw DirectoryException(err.str());
+        }
+
+        size -= ret;
+        buffer += ret;
+    }
 }
 
 /*****************************************************************************/
@@ -624,31 +520,67 @@ void Directory::_send_message(const DlsProto::Request &req)
 {
     _connect();
 
+    int messageSize = req.ByteSize();
+    string sendBuffer;
+
 #ifdef DLS_PROTO_DEBUG
-    cerr << "Sending message with " << req.ByteSize() << " bytes:" << endl;
+    cerr << "Sending message with " << messageSize << " bytes:" << endl;
     cerr << req.DebugString() << endl;
 #endif
 
-    {
-        string str;
-        req.SerializeToString(&str);
-        google::protobuf::io::CodedOutputStream os(_cosa);
-        os.WriteVarint32(req.ByteSize());
-        if (os.HadError()) {
-            stringstream err;
-            err << "os.WriteVarint32() failed!";
-            throw DirectoryException(err.str());
-        }
+    google::protobuf::uint8 varIntStr[32];
+    google::protobuf::uint8 *past =
+        google::protobuf::io::CodedOutputStream::
+        WriteVarint32ToArray(messageSize, varIntStr);
 
-        os.WriteString(str);
-        if (os.HadError()) {
-            stringstream err;
-            err << "os.WriteString() failed!";
-            throw DirectoryException(err.str());
-        }
+    int varIntStrSize = past - varIntStr;
+    sendBuffer += string((const char *) varIntStr, varIntStrSize);
+
+    string msgStr;
+    req.SerializeToString(&msgStr);
+    sendBuffer += msgStr;
+
+    _send_data(sendBuffer.c_str(), sendBuffer.size());
+}
+
+/*****************************************************************************/
+
+void Directory::_receive_data()
+{
+#ifdef DEBUG_STREAM
+    cerr << __func__ << "()" << endl;
+#endif
+
+    ssize_t ret;
+    char data[1024];
+    ret = recv(_sock, data, sizeof(data), 0);
+
+#ifdef DEBUG_STREAM
+    cerr << "recv() returned " << ret << endl;
+#endif
+
+    if (ret >= 0) {
+        _receive_buffer += string(data, ret);
     }
-
-    _cosa->Flush();
+    else if (ret == 0) {
+        stringstream err;
+        err << "Connection closed by peer.";
+        log(err.str());
+        _disconnect();
+        throw DirectoryException(err.str());
+    }
+    else {
+#ifdef _WIN32
+        int e = WSAGetLastError();
+#else
+        int e = errno;
+#endif
+        stringstream err;
+        err << "recv() failed: " << strerror(e);
+        log(err.str());
+        _disconnect();
+        throw DirectoryException(err.str());
+    }
 }
 
 /*****************************************************************************/
@@ -658,44 +590,53 @@ void Directory::_receive_message(
         bool debug
         )
 {
-    google::protobuf::io::CodedInputStream ci(_cisa);
+    if (_receive_buffer.empty()) {
+        _receive_data();
+    }
 
-    uint32_t size;
-    bool success = ci.ReadVarint32(&size);
+    unsigned int messageSize = 0;
+
+    while (1) {
+        google::protobuf::io::CodedInputStream
+            ci((const google::protobuf::uint8 *) _receive_buffer.c_str(),
+                    _receive_buffer.size());
+        if (ci.ReadVarint32(&messageSize)) {
+            break;
+        }
+
+        // try to fetch more data to complete varint
+#ifdef DEBUG_STREAM
+        cerr << "Varint32 incomplete (" << _receive_buffer.size()
+            << " bytes). Fetching more data... " << endl;
+#endif
+        _receive_data();
+    }
+
+    int varIntSize =
+        google::protobuf::io::CodedOutputStream::VarintSize32(
+                messageSize);
+    _receive_buffer.erase(0, varIntSize);
+
+    while ((unsigned int) _receive_buffer.size() < messageSize) {
+        _receive_data();
+    }
+
+    bool success = msg.ParseFromArray(_receive_buffer.c_str(), messageSize);
     if (!success) {
         stringstream err;
-        err << "ReadVarint32() failed: " << strerror(_sockstream->lastError())
-            << " (" << _sockstream->lastError() << ").";
-        _error_msg = err.str();
-        log(_error_msg);
+        err << "ParseFromArray() failed!";
+        log(err.str());
+        cerr << err.str() << endl;
         _disconnect();
         throw DirectoryException(err.str());
     }
 
-    string rec;
-    success = ci.ReadString(&rec, size);
-    if (!success) {
-        stringstream err;
-        err << "ReadString() failed!";
-        _error_msg = err.str();
-        log(_error_msg);
-        _disconnect();
-        throw DirectoryException(err.str());
-    }
-
-    success = msg.ParseFromString(rec);
-    if (!success) {
-        stringstream err;
-        err << "ParseFromString() failed!";
-        _error_msg = err.str();
-        log(_error_msg);
-        _disconnect();
-        throw DirectoryException(err.str());
-    }
+    _receive_buffer.erase(0, messageSize);
 
 #ifdef DLS_PROTO_DEBUG
+    cerr << "Received message with " << messageSize << " bytes. "
+        << _receive_buffer.size() << " remaining. " << endl;
     if (debug) {
-        cerr << "Received message with " << size << " bytes:" << endl;
         cerr << msg.DebugString() << endl;
     }
 #endif
