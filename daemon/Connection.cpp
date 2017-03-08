@@ -167,12 +167,11 @@ void Connection::_receive_data()
         google::protobuf::io::CodedInputStream
             ci((const google::protobuf::uint8 *) _receiveBuffer.c_str(),
                     _receiveBuffer.size());
-
         bool success = ci.ReadVarint32(&_messageSize);
         if (!success) {
-            cerr << PFX << "ReadVarint32() failed (size = "
-                << _receiveBuffer.size() << ")" << endl;
-            _running = false;
+            cerr << PFX << "Varint32 incomplete (size = "
+                << _receiveBuffer.size() << "). Wait for next receive!"
+                << endl;
             return;
         }
 
