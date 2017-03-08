@@ -27,9 +27,6 @@
 #include <string>
 #include <list>
 
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/message.h>
-
 #ifdef _WIN32
 #include <ws2tcpip.h>
 #endif
@@ -44,6 +41,12 @@ namespace DlsProto {
     class Request;
     class Response;
     class DirInfo;
+}
+
+namespace google {
+    namespace protobuf {
+        class Message;
+    }
 }
 
 namespace LibDLS {
@@ -137,10 +140,7 @@ class DLS_EXPORT Directory
 #else
         int _sock;
 #endif
-        SocketStream *_sockstream;
-        google::protobuf::io::CopyingInputStreamAdaptor *_cisa;
-        google::protobuf::io::CopyingOutputStreamAdaptor *_cosa;
-        google::protobuf::io::FileOutputStream *_fos;
+        std::string _receive_buffer;
 
         std::list<Job *> _jobs; /**< list of jobs */
 
@@ -153,7 +153,9 @@ class DLS_EXPORT Directory
 
         void _connect();
         void _disconnect();
+        void _send_data(const char *, size_t);
         void _send_message(const DlsProto::Request &);
+        void _receive_data();
         void _receive_message(google::protobuf::Message &, bool debug = 1);
         void _receive_hello();
 
