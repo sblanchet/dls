@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <google/protobuf/io/coded_stream.h>
 
@@ -41,10 +43,9 @@ using namespace std;
 Connection::Connection(ProcMother *parent_proc, int fd):
     _parent_proc(parent_proc),
     _fd(fd),
-    _fis(fd),
-    _fos(fd),
     _ret(0),
-    _running(true)
+    _running(true),
+    _messageSize(0U)
 {
 }
 
@@ -103,15 +104,21 @@ void *Connection::_run_static(void *arg)
 void *Connection::_run()
 {
     fd_set rfds;
+    fd_set wfds;
     int ret;
 
     _send_hello();
 
     while (_running) {
         FD_ZERO(&rfds);
+        FD_ZERO(&wfds);
         FD_SET(_fd, &rfds);
 
-        ret = select(_fd + 1, &rfds, NULL, NULL, NULL);
+        if (!_sendBuffer.empty()) {
+            FD_SET(_fd, &wfds);
+        }
+
+        ret = select(_fd + 1, &rfds, &wfds, NULL, NULL);
         if (ret == -1) {
             if (errno != EINTR) {
                 char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
@@ -122,7 +129,10 @@ void *Connection::_run()
 
         if (ret > 0) { // file descriptors ready
             if (FD_ISSET(_fd, &rfds)) {
-                _receive();
+                _receive_data();
+            }
+            if (FD_ISSET(_fd, &wfds)) {
+                _send_data();
             }
         }
     }
@@ -132,7 +142,91 @@ void *Connection::_run()
 
 /*****************************************************************************/
 
-void Connection::_send(
+void Connection::_receive_data()
+{
+    char data[1024];
+    int ret = ::recv(_fd, data, sizeof(data), 0);
+
+    if (ret == 0) {
+        cerr << "Connection closed by peer." << endl;
+        _running = false;
+        return;
+    }
+
+    if (ret < 0) {
+        cerr << "recv() failed: " << strerror(errno) << endl;
+        _running = false;
+        return;
+    }
+
+    _receiveBuffer += string(data, ret);
+
+    if (!_messageSize) {
+        google::protobuf::io::CodedInputStream
+            ci((const google::protobuf::uint8 *) _receiveBuffer.c_str(),
+                    _receiveBuffer.size());
+
+        bool success = ci.ReadVarint32(&_messageSize);
+        if (!success) {
+            cerr << "ReadVarint32() failed (size = " << _receiveBuffer.size()
+                << ")" << endl;
+            _running = false;
+            return;
+        }
+
+        int varIntSize =
+            google::protobuf::io::CodedOutputStream::VarintSize32(
+                    _messageSize);
+        _receiveBuffer.erase(0, varIntSize);
+    }
+
+    if ((unsigned int) _receiveBuffer.size() < _messageSize) {
+        cerr << "Data missing. Wait for next receive!" << endl;
+        return;
+    }
+
+    DlsProto::Request req;
+    bool success = req.ParseFromArray(_receiveBuffer.c_str(), _messageSize);
+    if (!success) {
+        cerr << "ParseFromArray() failed!" << endl;
+        _running = true;
+        return;
+    }
+
+#ifdef DLS_PROTO_DEBUG
+    cerr << "Received request with " << rec.size() << " bytes: " << endl;
+    cerr << req.DebugString() << endl;
+#endif
+
+    _receiveBuffer.erase(0, _messageSize);
+    _messageSize = 0;
+    _request_time.set_now();
+
+    _process(req);
+}
+
+/*****************************************************************************/
+
+void Connection::_send_data()
+{
+    if (_sendBuffer.empty()) {
+        return;
+    }
+
+    ssize_t ret = ::send(_fd, _sendBuffer.c_str(), _sendBuffer.size(), 0);
+
+    if (ret < 0) {
+        cerr << "send() failed: " << strerror(errno) << endl;
+        _running = false;
+        return;
+    }
+
+    _sendBuffer.erase(0, ret);
+}
+
+/*****************************************************************************/
+
+void Connection::_send_msg(
         google::protobuf::Message &msg
 #ifdef DLS_PROTO_DEBUG
         , bool debug
@@ -150,35 +244,26 @@ void Connection::_send(
     catch (bad_cast &e) {
     }
 
-    string str;
-    msg.SerializeToString(&str);
+    int messageSize = msg.ByteSize();
 
 #ifdef DLS_PROTO_DEBUG
     if (debug) {
         cerr << "Sending message with "
-            << msg.ByteSize() << " bytes: " << endl
+            << messageSize << " bytes: " << endl
             << msg.DebugString() << endl;
     }
 #endif
 
-    {
-        google::protobuf::io::CodedOutputStream os(&_fos);
-        os.WriteVarint32(msg.ByteSize());
-        if (os.HadError()) {
-            cerr << "os.WriteVarint32() failed!" << endl;
-            _running = false;
-            return;
-        }
+    google::protobuf::uint8 varIntStr[32];
+    google::protobuf::uint8 *past =
+        google::protobuf::io::CodedOutputStream::
+        WriteVarint32ToArray(messageSize, varIntStr);
+    int varIntStrSize = past - varIntStr;
+    _sendBuffer += string((const char *) varIntStr, varIntStrSize);
 
-        os.WriteString(str);
-        if (os.HadError()) {
-            cerr << "os.WriteString() failed!" << endl;
-            _running = false;
-            return;
-        }
-    }
-
-    _fos.Flush();
+    string str;
+    msg.SerializeToString(&str);
+    _sendBuffer += str;
 }
 
 /*****************************************************************************/
@@ -189,48 +274,13 @@ void Connection::_send_hello()
     msg.set_version(PACKAGE_VERSION);
     msg.set_revision(REVISION);
     msg.set_protocol_version(1);
-    _send(msg);
+    _send_msg(msg);
 }
 
 /*****************************************************************************/
 
-void Connection::_receive()
+void Connection::_process(const DlsProto::Request &req)
 {
-    google::protobuf::io::CodedInputStream ci(&_fis);
-
-    uint32_t size;
-    bool success = ci.ReadVarint32(&size);
-    if (!success) {
-        cerr << "ReadVarint32() failed!" << endl;
-        _running = false;
-        return;
-    }
-
-    string str;
-    success = ci.ReadString(&str, size);
-    if (!success) {
-        cerr << "ReadString() failed!" << endl;
-        _running = false;
-        return;
-    }
-
-    _request_time.set_now();
-
-    _process(str);
-}
-
-/*****************************************************************************/
-
-void Connection::_process(const string &rec)
-{
-    DlsProto::Request req;
-    req.ParseFromString(rec);
-
-#ifdef DLS_PROTO_DEBUG
-    cerr << "Received request with " << rec.size() << " bytes: " << endl;
-    cerr << req.DebugString() << endl;
-#endif
-
     if (req.has_dir_info()) {
         _process_dir_info(req.dir_info());
     }
@@ -260,13 +310,13 @@ void Connection::_process_dir_info(const DlsProto::DirInfoRequest &req)
         DlsProto::Response res;
         DlsProto::Error *err = res.mutable_error();
         err->set_message(e.msg);
-        _send(res);
+        _send_msg(res);
         return;
     }
 
     DlsProto::Response res;
     _dir.set_dir_info(res.mutable_dir_info());
-    _send(res);
+    _send_msg(res);
 }
 
 /*****************************************************************************/
@@ -281,7 +331,7 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
         str << "Job " << req.id() << " not found!";
         DlsProto::Error *err = res.mutable_error();
         err->set_message(str.str());
-        _send(res);
+        _send_msg(res);
         return;
     }
 
@@ -291,7 +341,7 @@ void Connection::_process_job_request(const DlsProto::JobRequest &req)
         DlsProto::DirInfo *dir_info = res.mutable_dir_info();
         DlsProto::JobInfo *job_info = dir_info->add_job();
         job->set_job_info(job_info, false);
-        _send(res);
+        _send_msg(res);
     }
 
     if (req.has_channel_request()) {
@@ -354,7 +404,7 @@ void Connection::_process_channel_request(
         DlsProto::Response res;
         DlsProto::Error *err = res.mutable_error();
         err->set_message(str.str());
-        _send(res);
+        _send_msg(res);
         return;
     }
 
@@ -370,7 +420,7 @@ void Connection::_process_channel_request(
             DlsProto::Response res;
             DlsProto::Error *err = res.mutable_error();
             err->set_message(str.str());
-            _send(res);
+            _send_msg(res);
             return;
         }
 
@@ -394,7 +444,7 @@ void Connection::_process_channel_request(
             channel_info->add_removed_chunks(*rem_i);
         }
 
-        _send(res);
+        _send_msg(res);
     }
 
     if (req.has_data_request()) {
@@ -413,7 +463,7 @@ void Connection::_process_channel_request(
 
         DlsProto::Response res;
         res.set_end_of_response(true);
-        _send(res);
+        _send_msg(res);
     }
 }
 
@@ -441,7 +491,7 @@ void Connection::_data_callback(LibDLS::Data *data)
         data_res->add_value(data->value(i));
     }
 
-    _send(res
+    _send_msg(res
 #ifdef DLS_PROTO_DEBUG
             , 0
 #endif
