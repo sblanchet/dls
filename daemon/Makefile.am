@@ -39,14 +39,15 @@ dlsd_CPPFLAGS = \
 dlsd_CXXFLAGS = \
 	$(CXXFLAGS) \
 	-Wall \
-	-I$(topsrcdir) \
+	-I$(top_srcdir) \
 	@FFTW3_CFLAGS@ \
 	@ZLIB_CFLAGS@
 
 dlsd_LDFLAGS = \
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
-	-pthread
+	-pthread \
+    -Wl,--rpath -Wl,"../lib/.libs"
 
 dlsd_LDADD = \
 	@FFTW3_LIBS@ \
@@ -71,7 +72,7 @@ dlsd_SOURCES = \
 
 if ENABLE_SERVER
 dlsd_SOURCES += Connection.cpp
-nodist_dlsd_SOURCES = ../proto/dls.pb.cc
+nodist_dlsd_SOURCES = $(top_srcdir)/proto/dls.pb.cc
 dlsd_LDADD += -lprotobuf
 endif
 

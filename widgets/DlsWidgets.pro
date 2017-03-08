@@ -78,6 +78,7 @@ win32 {
 }
 unix {
     LIBS += $$OUT_PWD/../lib/.libs/libdls.so
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
 }
 
 LIBS += -lfftw3 -lz -lxml2
