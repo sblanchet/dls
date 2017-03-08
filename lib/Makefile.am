@@ -50,7 +50,7 @@ libdls_la_SOURCES = \
 	globals.cpp \
 	mdct.cpp
 
-nodist_libdls_la_SOURCES = ../proto/dls.pb.cc
+nodist_libdls_la_SOURCES = $(top_srcdir)/proto/dls.pb.cc
 
 #------------------------------------------------------------------------------
 
@@ -69,6 +69,6 @@ noinst_HEADERS = \
 	ZLib.h \
 	mdct.h
 
-nodist_noinst_HEADERS = ../proto/dls.pb.h
+nodist_noinst_HEADERS = $(top_srcdir)/proto/dls.pb.h
 
 #------------------------------------------------------------------------------
