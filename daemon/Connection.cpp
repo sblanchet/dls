@@ -38,6 +38,8 @@
 #include <typeinfo>
 using namespace std;
 
+#define PFX (pfx() + "." + __func__ + "() ").c_str()
+
 /*****************************************************************************/
 
 Connection::Connection(ProcMother *parent_proc, int fd):
@@ -53,7 +55,7 @@ Connection::Connection(ProcMother *parent_proc, int fd):
 
 Connection::~Connection()
 {
-    cerr << "Closing connection " << _fd << "." << endl;
+    cerr << PFX << "Closing connection." << endl;
     close(_fd);
 }
 
@@ -122,7 +124,7 @@ void *Connection::_run()
         if (ret == -1) {
             if (errno != EINTR) {
                 char ebuf[1024], *str = strerror_r(errno, ebuf, sizeof(ebuf));
-                cerr << "select() failed: " << str << endl;
+                cerr << PFX << "select() failed: " << str << endl;
                 _running = false;
             }
         }
@@ -148,13 +150,13 @@ void Connection::_receive_data()
     int ret = ::recv(_fd, data, sizeof(data), 0);
 
     if (ret == 0) {
-        cerr << "Connection closed by peer." << endl;
+        cerr << PFX << "Connection closed by peer." << endl;
         _running = false;
         return;
     }
 
     if (ret < 0) {
-        cerr << "recv() failed: " << strerror(errno) << endl;
+        cerr << PFX << "recv() failed: " << strerror(errno) << endl;
         _running = false;
         return;
     }
@@ -168,8 +170,8 @@ void Connection::_receive_data()
 
         bool success = ci.ReadVarint32(&_messageSize);
         if (!success) {
-            cerr << "ReadVarint32() failed (size = " << _receiveBuffer.size()
-                << ")" << endl;
+            cerr << PFX << "ReadVarint32() failed (size = "
+                << _receiveBuffer.size() << ")" << endl;
             _running = false;
             return;
         }
@@ -181,21 +183,21 @@ void Connection::_receive_data()
     }
 
     if ((unsigned int) _receiveBuffer.size() < _messageSize) {
-        cerr << "Data missing. Wait for next receive!" << endl;
+        cerr << PFX << "Data missing. Wait for next receive!" << endl;
         return;
     }
 
     DlsProto::Request req;
     bool success = req.ParseFromArray(_receiveBuffer.c_str(), _messageSize);
     if (!success) {
-        cerr << "ParseFromArray() failed!" << endl;
+        cerr << PFX << "ParseFromArray() failed!" << endl;
         _running = true;
         return;
     }
 
 #ifdef DLS_PROTO_DEBUG
-    cerr << "Received request with " << rec.size() << " bytes: " << endl;
-    cerr << req.DebugString() << endl;
+    cerr << PFX << "Received request with " << rec.size()
+        << " bytes: " << req.DebugString() << endl;
 #endif
 
     _receiveBuffer.erase(0, _messageSize);
@@ -216,7 +218,7 @@ void Connection::_send_data()
     ssize_t ret = ::send(_fd, _sendBuffer.c_str(), _sendBuffer.size(), 0);
 
     if (ret < 0) {
-        cerr << "send() failed: " << strerror(errno) << endl;
+        cerr << PFX << "send() failed: " << strerror(errno) << endl;
         _running = false;
         return;
     }
@@ -248,7 +250,7 @@ void Connection::_send_msg(
 
 #ifdef DLS_PROTO_DEBUG
     if (debug) {
-        cerr << "Sending message with "
+        cerr << PFX << "Sending message with "
             << messageSize << " bytes: " << endl
             << msg.DebugString() << endl;
     }
@@ -496,6 +498,15 @@ void Connection::_data_callback(LibDLS::Data *data)
             , 0
 #endif
             );
+}
+
+/****************************************************************************/
+
+std::string Connection::pfx() const
+{
+    stringstream str;
+    str << "Connection(" << _fd << ")";
+    return str.str();
 }
 
 /*****************************************************************************/

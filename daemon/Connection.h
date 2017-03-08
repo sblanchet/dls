@@ -76,6 +76,7 @@ private:
             const DlsProto::ChannelRequest &);
     static int _static_data_callback(LibDLS::Data *, void *);
     void _data_callback(LibDLS::Data *);
+    std::string pfx() const;
 };
 
 /*****************************************************************************/
