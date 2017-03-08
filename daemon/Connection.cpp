@@ -196,7 +196,7 @@ void Connection::_receive_data()
     }
 
 #ifdef DLS_PROTO_DEBUG
-    cerr << PFX << "Received request with " << rec.size()
+    cerr << PFX << "Received request with " << _messageSize
         << " bytes: " << req.DebugString() << endl;
 #endif
 
