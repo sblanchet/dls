@@ -34,6 +34,12 @@
 
 int main(int argc, char *argv[])
 {
+#ifndef __unix__
+    // when packaging in directory, put the qwindows.dll in the platforms
+    // subdir
+    qputenv("QT_QPA_PLATFORM_PLUGIN_PATH", QByteArray("platforms"));
+#endif
+
     QApplication::setStyle("plastique");
 
     QCoreApplication::setOrganizationName("EtherLab");
