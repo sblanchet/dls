@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Filter messages</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -27,7 +27,7 @@
    <item>
     <widget class="QLabel" name="labelStatus">
      <property name="text">
-      <string>Expression valid.</string>
+      <string notr="true">Expression valid.</string>
      </property>
     </widget>
    </item>
