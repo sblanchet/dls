@@ -9,6 +9,7 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * man pages for commands
     * Check for PdCom in a portable way
     * Allow compiling without PCRE
+    * Remove -rpath linker flags
 
 # User frontend (dlsgui)
     * Show if channel is actually logged
