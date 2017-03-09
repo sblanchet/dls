@@ -43,15 +43,16 @@ dlsd_CXXFLAGS = \
 	@FFTW3_CFLAGS@ \
 	@ZLIB_CFLAGS@
 
+
 dlsd_LDFLAGS = \
+	-L$(top_builddir)/lib/.libs
 	@FFTW3_LDFLAGS@ \
 	@ZLIB_LDFLAGS@ \
-	-pthread \
-    -Wl,--rpath -Wl,"../lib/.libs"
+	-pthread
 
 dlsd_LDADD = \
+	-ldls \
 	@FFTW3_LIBS@ \
-	$(top_builddir)/lib/.libs/libdls.so \
 	@ZLIB_LIBS@ \
 	-lpdcom \
 	$(XML_LIBS) \
