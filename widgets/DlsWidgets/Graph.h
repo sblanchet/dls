@@ -43,7 +43,7 @@
 #include <QtDesigner/QDesignerExportWidget>
 #endif
 #else
-# define QDESIGNER_WIDGET_EXPORT
+# define QDESIGNER_WIDGET_EXPORT Q_DECL_EXPORT
 #endif
 
 #include <LibDLS/Job.h>
