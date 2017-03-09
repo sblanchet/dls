@@ -26,8 +26,13 @@ lib_LTLIBRARIES = libdls.la
 #------------------------------------------------------------------------------
 
 libdls_la_CXXFLAGS = -Wall @FFTW3_CFLAGS@ @ZLIB_CFLAGS@ $(XML_CPPFLAGS)
-libdls_la_LDFLAGS = @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ \
+
+libdls_la_LDFLAGS = \
+	@FFTW3_LDFLAGS@ \
+	@ZLIB_LDFLAGS@ \
+	-pthread \
 	-version-info @LIBDLS_VERSION@
+
 libdls_la_LIBADD = @FFTW3_LIBS@ @ZLIB_LIBS@ -lm -lprotobuf $(PCRE_LIBS)
 
 libdls_la_SOURCES = \
