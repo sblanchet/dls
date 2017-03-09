@@ -44,7 +44,7 @@ equals(DLS_DESIGNER, 0) {
 }
 
 isEmpty(DLSGUI_RPATH) {
-    DLSGUI_RPATH=1
+    DLSGUI_RPATH=0
 }
 equals(DLSGUI_RPATH, 1) {
     QMAKE_LFLAGS += -Wl,--rpath -Wl,$$OUT_PWD/../lib/.libs
