@@ -32,8 +32,21 @@ endif
 #------------------------------------------------------------------------------
 
 dls_CXXFLAGS = -Wall -DREVISION=\"$(REV)\" @FFTW3_CFLAGS@ @ZLIB_CFLAGS@
-dls_LDFLAGS = -L$(top_builddir)/lib @FFTW3_LDFLAGS@ @ZLIB_LDFLAGS@ -pthread
-dls_LDADD = -ldls @FFTW3_LIBS@ -lm @ZLIB_LIBS@ $(XML_LIBS) -lprotobuf
+
+dls_LDFLAGS = \
+	-L$(top_builddir)/lib/.libs \
+	@FFTW3_LDFLAGS@ \
+	@ZLIB_LDFLAGS@ \
+	-pthread
+
+dls_LDADD = \
+	-ldls \
+	@FFTW3_LIBS@ \
+	-lm \
+	@ZLIB_LIBS@ \
+	$(XML_LIBS) \
+	-lprotobuf
+
 dls_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dls_SOURCES = \
