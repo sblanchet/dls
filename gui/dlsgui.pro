@@ -43,20 +43,28 @@ equals(DLS_DESIGNER, 0) {
     DEFINES += DLS_NO_DESIGNER
 }
 
+isEmpty(DLSGUI_RPATH) {
+    DLSGUI_RPATH=1
+}
+equals(DLSGUI_RPATH, 1) {
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,$$OUT_PWD/../lib/.libs
+    QMAKE_LFLAGS += -Wl,--rpath -Wl,$$OUT_PWD/../widgets
+}
+
+QMAKE_LFLAGS += -L$$OUT_PWD/../lib/.libs
+
 unix {
     CONFIG += debug
-    LIBS += $$PWD/../widgets/libDlsWidgets.so
-    LIBS += $$PWD/../lib/.libs/libdls.so
-    LIBS += -lfftw3 -lxml2 -lm -lz
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../widgets"
+    QMAKE_LFLAGS += -L$$OUT_PWD/../widgets
+    LIBS += -lDlsWidgets -ldls
 }
 win32 {
     CONFIG += release
-    LIBS += -L$$PWD/../widgets/release -lDlsWidgets0
-    LIBS += -L$$PWD/../lib/.libs -ldls
-    LIBS += -lfftw3 -lxml2 -lm -lz
+    QMAKE_LFLAGS += -L$$OUT_PWD/../widgets/release
+    LIBS += -lDlsWidgets0 -ldls
 }
+
+LIBS += -lfftw3 -lxml2 -lm -lz
 
 target.path = $$PREFIX/bin
 INSTALLS += target
