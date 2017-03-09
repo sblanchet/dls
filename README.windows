@@ -8,15 +8,17 @@ vim: syntax=sh
 export BASE=/vol/opt/etherlab/src/dls-windows
 
 export VERSION=1.4.0-rc2
-export ARCH=win64
-export CONFIGURE=mingw64-configure
 
-#export MINGWBASE=/usr/i686-w64-mingw32
-export MINGWBASE=/usr/x86_64-w64-mingw32
+export ARCH=win32
+export CONFIGURE=mingw32-configure
+#export CONFIGURE=mingw64-configure
+export MINGWBASE=/usr/i686-w64-mingw32
+#export MINGWBASE=/usr/x86_64-w64-mingw32
 
 export ROOT=${BASE}/root-${ARCH}-${VERSION}
 export MINGWROOT=${MINGWBASE}/sys-root/mingw
-export DISTDIR=${BASE}/dlsgui-${VERSION}-${ARCH}
+export DISTBASE=dlsgui-${VERSION}-${ARCH}
+export DISTDIR=${BASE}/${DISTBASE}
 export QMAKE=${MINGWBASE}/bin/qt5/qmake
 export LRELEASE=${MINGWBASE}/bin/qt5/lrelease
 
@@ -153,3 +155,8 @@ cp -r ${MINGWROOT}/lib/qt5/plugins/imageformats ${DISTDIR}
 cp ${ROOT}/bin/DlsWidgets0.dll ${DISTDIR}
 cp ${ROOT}/bin/libprotobuf-9.dll ${DISTDIR}
 cp ${ROOT}/bin/liburiparser-1.dll ${DISTDIR}
+
+cd ${BASE}
+zip -r ${DISTBASE}.zip ${DISTBASE}
+md5sum ${DISTBASE}.zip > ${DISTBASE}.zip.md5
+gpg -b ${DISTBASE}.zip
