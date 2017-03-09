@@ -1,7 +1,5 @@
 #------------------------------------------------------------------------------
 #
-# $Id$
-#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the
@@ -29,9 +27,9 @@
 # - make dist-bzip2
 # - add tag release-x.x.x
 #
-AC_INIT([dls],[1.4.0-rc1],[fp@igh.de])
+AC_INIT([dls],[1.4.0-rc2],[fp@igh.de])
 AC_CONFIG_AUX_DIR([autoconf])
-AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2 subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
 # support older autotools versions
 ifdef([AC_CONFIG_MACRO_DIR], AC_CONFIG_MACRO_DIR([m4]))
@@ -50,7 +48,20 @@ AM_PATH_XML2
 
 PKG_CHECK_MODULES([PCRE], [libpcre >= 8])
 
-AC_SUBST(LIBDLS_VERSION, [3:0:0])
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
+#
+# current[:revision[:age]]
+#
+# - If the library source code has changed at all since the last update, then
+# increment revision (‘c:r:a’ becomes ‘c:r+1:a’).
+# - If any interfaces have been added, removed, or changed since the last
+# update, increment current, and set revision to 0.
+# - If any interfaces have been added since the last public release, then
+# increment age.
+# - If any interfaces have been removed or changed since the last public
+# release, then set age to 0.
+#
+AC_SUBST(LIBDLS_VERSION, [4:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon
