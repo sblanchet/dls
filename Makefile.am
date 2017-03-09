@@ -102,6 +102,9 @@ EXTRA_DIST = \
 	widgets/ExportDialog.cpp \
 	widgets/ExportDialog.h \
 	widgets/ExportDialog.ui \
+	widgets/FilterDialog.cpp \
+	widgets/FilterDialog.h \
+	widgets/FilterDialog.ui \
 	widgets/Graph.cpp \
 	widgets/Job.cpp \
 	widgets/Job.h \
