@@ -1,8 +1,6 @@
 #-----------------------------------------------------------------------------
 #
-# $Id$
-#
-# Copyright (C) 2012 - 2013  Florian Pose <fp@igh-essen.com>
+# Copyright (C) 2012 - 2017  Florian Pose <fp@igh-essen.com>
 #
 # This file is part of the data logging service (DLS).
 #
@@ -36,6 +34,13 @@ include(../widgets/updateqm.pri)
 isEmpty(PREFIX) {
     unix:PREFIX = /vol/opt/etherlab
     win32:PREFIX = "c:/msys/1.0/local"
+}
+
+isEmpty(DLS_DESIGNER) {
+    DLS_DESIGNER=1
+}
+equals(DLS_DESIGNER, 0) {
+    DEFINES += DLS_NO_DESIGNER
 }
 
 unix {
