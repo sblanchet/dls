@@ -91,8 +91,8 @@ win32 {
     QMAKE_LFLAGS += -shared
 }
 unix {
-    LIBS += $$OUT_PWD/../lib/.libs/libdls.so
-    QMAKE_LFLAGS += -Wl,--rpath -Wl,"../lib/.libs"
+    QMAKE_LFLAGS += -L../lib/.libs
+    LIBS += -ldls
 }
 
 LIBS += -lfftw3 -lz -lxml2
