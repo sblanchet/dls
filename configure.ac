@@ -1,7 +1,5 @@
 #------------------------------------------------------------------------------
 #
-# $Id$
-#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the
@@ -31,7 +29,7 @@
 #
 AC_INIT([dls],[1.4.0-rc1],[fp@igh.de])
 AC_CONFIG_AUX_DIR([autoconf])
-AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2 subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
 # support older autotools versions
 ifdef([AC_CONFIG_MACRO_DIR], AC_CONFIG_MACRO_DIR([m4]))
