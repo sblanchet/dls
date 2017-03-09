@@ -96,8 +96,10 @@ unix {
 
 LIBS += -lfftw3 -lz -lxml2
 
-target.path = $$[QT_INSTALL_PLUGINS]/designer
-INSTALLS += target
+equals(DLS_DESIGNER, 1) {
+    target.path = $$[QT_INSTALL_PLUGINS]/designer
+    INSTALLS += target
+}
 
 unix {
     libraries.path = $${PREFIX}/lib$${LIBEXT}
