@@ -1,8 +1,6 @@
 #-----------------------------------------------------------------------------
 #
-# $Id$
-#
-# Copyright (C) 2012  Florian Pose <fp@igh-essen.com>
+# Copyright (C) 2012-2017  Florian Pose <fp@igh-essen.com>
 #
 # This file is part of the DLS widget library.
 #
@@ -34,12 +32,11 @@ TARGET = DlsWidgets
 VERSION = 0.9.0
 
 greaterThan(QT_MAJOR_VERSION, 4) {
-    CONFIG += plugin dll
-    QT += widgets designer svg printsupport
-    DEFINES += DLS_QT5 # needed for moc processing of WidgetCollection.h
+    CONFIG += dll
+    QT += widgets svg printsupport xml
 }
 else {
-    CONFIG += designer plugin dll
+    CONFIG += dll
     QT += svg
 }
 
@@ -61,6 +58,23 @@ equals(DEBUG_MT_IN_FILE, 1) {
     DEFINES += DEBUG_MT_IN_FILE
 }
 
+isEmpty(DLS_DESIGNER) {
+    DLS_DESIGNER=1
+}
+equals(DLS_DESIGNER, 1) {
+    greaterThan(QT_MAJOR_VERSION, 4) {
+        CONFIG += plugin
+        QT += designer
+        DEFINES += DLS_QT5 # needed for moc processing of WidgetCollection.h
+    }
+    else {
+        CONFIG += designer plugin
+    }
+}
+else {
+    DEFINES += DLS_NO_DESIGNER
+}
+
 LIBEXT=""
 unix {
     HARDWARE_PLATFORM = $$system(uname -i)
@@ -73,8 +87,7 @@ INCLUDEPATH += $$PWD $$PWD/../lib
 DEPENDPATH += $$PWD $$PWD/../lib
 
 win32 {
-    QMAKE_LFLAGS += -shared
-    LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -lws2_32
+    LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -lws2_32 -lpcre
 }
 unix {
     LIBS += $$OUT_PWD/../lib/.libs/libdls.so
@@ -119,10 +132,8 @@ HEADERS += \
     FilterDialog.h \
     Job.h \
     Node.h \
-    Plugin.h \
     SectionDialog.h \
-    SectionModel.h \
-    WidgetCollection.h
+    SectionModel.h
 
 SOURCES += \
     Channel.cpp \
@@ -136,14 +147,21 @@ SOURCES += \
     Layer.cpp \
     Model.cpp \
     Node.cpp \
-    Plugin.cpp \
     Scale.cpp \
     Section.cpp \
     SectionDialog.cpp \
     SectionModel.cpp \
     Translator.cpp \
-    ValueScale.cpp \
-    WidgetCollection.cpp
+    ValueScale.cpp
+
+equals(DLS_DESIGNER, 1) {
+    SOURCES += \
+        Plugin.cpp \
+        WidgetCollection.cpp
+    HEADERS += \
+        Plugin.h \
+        WidgetCollection.h
+}
 
 FORMS = \
     DatePickerDialog.ui \
