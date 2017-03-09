@@ -2,7 +2,7 @@ vim: syntax=sh
 
 # OpenSUSE Leap 42.1 / MinGW 32 bit
 
-sudo zypper in mingw32-libexpat-devel mingw32-filesystem mingw32-gcc-c++ mingw32-gcc mingw32-cross-cpp mingw32-cpp mingw32-cross-gcc mingw32-cross-gcc-c++ mingw32-fftw3 mingw32-fftw3-devel mingw32-zlib-devel
+sudo zypper in mingw32-libexpat-devel mingw32-filesystem mingw32-gcc-c++ mingw32-gcc mingw32-cross-cpp mingw32-cpp mingw32-cross-gcc mingw32-cross-gcc-c++ mingw32-fftw3 mingw32-fftw3-devel mingw32-zlib-devel mingw32-libxml2-devel mingw32-pcre-devel mingw32-cross-libqt5-qmake mingw32-libqt5-qtsvg mingw32-libqt5-qtsvg-devel mingw32-angleproject-devel mingw32-libpcre1 mingw32-libxml2-2
 
 #-----------------------------------------------------------------------------
 # HOWTO build the DLS GUI for Windoze
@@ -88,7 +88,7 @@ ${CONFIGURE} \
     --with-zlib-dir=${MINGWROOT} \
     --with-fftw3-dir=${MINGWROOT} \
     --with-xml-prefix=${MINGWROOT}
-make
+make -j8
 make install
 
 cd widgets
@@ -105,3 +105,41 @@ make
 make install
 cd ..
 
+cd ..
+
+export DISTDIR=${BASE}/dlsgui-${VERSION}-${ARCH}
+mkdir -p ${DISTDIR}
+
+cp ${ROOT}/bin/dlsgui.exe ${DISTDIR}
+
+cp ${MINGWROOT}/bin/Qt5Core.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/Qt5Gui.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/Qt5PrintSupport.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/Qt5Svg.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/Qt5Widgets.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/Qt5Xml.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/icudata56.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/icui18n56.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/icuuc56.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libEGL.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libGLESv2.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libfftw3-3.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libfreetype-6.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libgcc_s_sjlj-1.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libglib-2.0-0.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libharfbuzz-0.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libintl-8.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libpcre-1.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libpcre16-0.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libpng16-16.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libstdc++-6.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libwinpthread-1.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/libxml2-2.dll ${DISTDIR}
+cp ${MINGWROOT}/bin/zlib1.dll ${DISTDIR}
+
+cp -r ${MINGWROOT}/lib/qt5/plugins/platforms ${DISTDIR}
+cp -r ${MINGWROOT}/lib/qt5/plugins/imageformats ${DISTDIR}
+
+cp ${ROOT}/bin/DlsWidgets0.dll ${DISTDIR}
+cp ${ROOT}/bin/libprotobuf-9.dll ${DISTDIR}
+cp ${ROOT}/bin/liburiparser-1.dll ${DISTDIR}
