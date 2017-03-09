@@ -36,10 +36,14 @@
 #include <QUrl>
 #include <QDir>
 
+#ifndef DLS_NO_DESIGNER
 #if QT_VERSION >= 0x050000
 #include <QtUiPlugin/QDesignerExportWidget>
 #else
 #include <QtDesigner/QDesignerExportWidget>
+#endif
+#else
+# define QDESIGNER_WIDGET_EXPORT
 #endif
 
 #include <LibDLS/Job.h>
