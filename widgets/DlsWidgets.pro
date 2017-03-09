@@ -88,6 +88,7 @@ DEPENDPATH += $$PWD $$PWD/../lib
 
 win32 {
     LIBS += $$OUT_PWD/../lib/.libs/libdls.a -lprotobuf -luriparser -lws2_32 -lpcre
+    QMAKE_LFLAGS += -shared
 }
 unix {
     LIBS += $$OUT_PWD/../lib/.libs/libdls.so
