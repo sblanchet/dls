@@ -24,7 +24,7 @@ Version: @VERSION@
 Release: 1
 
 %define package_version %{version}
-%define libver 3
+%define libver 4
 
 Summary: Data Logging Service
 License: GPL-3.0+
@@ -52,6 +52,7 @@ BuildRequires: liburiparser-devel
 BuildRequires: pdcom-devel
 BuildRequires: protobuf-devel
 BuildRequires: libxml2-devel
+BuildRequires: pcre-devel
 Requires: desktop-file-utils
 
 %description
