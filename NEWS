@@ -6,6 +6,29 @@ vim700: spelllang=en spell
 
 ------------------------------------------------------------------------------
 
+Version 1.4.0-rc2
+
+* Common
+    * Added configuration check for PdCom
+    * Added README for building the GUI on windows
+
+* Library
+    * Fetch messages via protocol
+    * Regex-based message filter
+    * Improved protocol buffers usage
+    * Avoid using fixed-size ring buffer for loading data
+
+* Daemon
+    * Provide logging mechanism for library calls
+    * Set SO_REUSEADDR flag on listening socket
+    * Improved protocol buffers usage
+
+* GUI
+    * Support for removing directories
+    * Include version and revision in about dialog
+    * Moved dls_ctl to getaddrinfo()
+    * Message filter dialog
+
 Version 1.4.0-rc1
 
 * Common
