@@ -1,0 +1,107 @@
+vim: syntax=sh
+
+# OpenSUSE Leap 42.1 / MinGW 32 bit
+
+sudo zypper in mingw32-libexpat-devel mingw32-filesystem mingw32-gcc-c++ mingw32-gcc mingw32-cross-cpp mingw32-cpp mingw32-cross-gcc mingw32-cross-gcc-c++ mingw32-fftw3 mingw32-fftw3-devel mingw32-zlib-devel
+
+#-----------------------------------------------------------------------------
+# HOWTO build the DLS GUI for Windoze
+#-----------------------------------------------------------------------------
+
+# modify this to your needs
+export BASE=/vol/opt/etherlab/src/dls-windows
+
+export VERSION=1.4.0-rc2
+export ARCH=win32
+export CONFIGURE=mingw32-configure
+
+export MINGWBASE=/usr/i686-w64-mingw32
+#export MINGWBASE=/usr/x86_64-w64-mingw32
+
+export ROOT=${BASE}/root-${ARCH}-${VERSION}
+export MINGWROOT=${MINGWBASE}/sys-root/mingw
+export QMAKE=${MINGWBASE}/bin/qt5/qmake
+export LRELEASE=${MINGWBASE}/bin/qt5/lrelease
+
+#-----------------------------------------------------------------------------
+# URIParser
+#-----------------------------------------------------------------------------
+
+cd ${BASE}
+wget https://excellmedia.dl.sourceforge.net/project/uriparser/Sources/0.8.1/uriparser-0.8.1.tar.bz2
+
+tar xjf uriparser-0.8.1.tar.bz2
+mv uriparser-0.8.1 uriparser-0.8.1-${ARCH}
+cd uriparser-0.8.1-${ARCH}
+# comment-out binary in Makefile.am
+autoreconf -i
+${CONFIGURE} \
+    --disable-test \
+    --disable-doc \
+    --includedir=${ROOT}/include \
+    --libdir=${ROOT}/lib
+make
+make install
+cd ..
+
+#-----------------------------------------------------------------------------
+# Protocol buffers
+#-----------------------------------------------------------------------------
+
+# git clone https://github.com/google/protobuf.git protobuf
+# cd protobuf
+# git archive --format tar.gz --prefix=protobuf-2.6.1/ -o protobuf-2.6.1.tar.gz v2.6.1
+# cp protobuf-2.6.1.tar.gz ..
+# cd ..
+
+tar xzf protobuf-2.6.1.tar.gz
+mv protobuf-2.6.1 protobuf-2.6.1-${ARCH}
+cd protobuf-2.6.1-${ARCH}
+autoreconf -f -i -Wall,no-obsolete
+${CONFIGURE} \
+    --bindir=${ROOT}/bin \
+    --libdir=${ROOT}/lib \
+    --includedir=${ROOT}/include \
+    --with-protoc=/usr/bin/protoc
+make -j8
+make install
+cd ..
+
+#-----------------------------------------------------------------------------
+# DLS
+#-----------------------------------------------------------------------------
+
+hg clone ssh://zuse/p/dls/hg dls-hg-${ARCH}
+cd dls-hg-${ARCH}
+./bootstrap.sh
+${CONFIGURE} \
+    --prefix=${ROOT} \
+    --includedir=${ROOT}/include \
+    --libdir=${ROOT}/lib \
+    --sysconfdir=${ROOT}/etc \
+    --bindir=${ROOT}/bin \
+    --disable-daemon \
+    --disable-fltk \
+    --disable-tool \
+    LDFLAGS="-L${ROOT}/lib" \
+    CPPFLAGS="-I${ROOT}/include" \
+    --with-zlib-dir=${MINGWROOT} \
+    --with-fftw3-dir=${MINGWROOT} \
+    --with-xml-prefix=${MINGWROOT}
+make
+make install
+
+cd widgets
+${QMAKE} DLS_DESIGNER=0 QMAKE_LIBDIR=${ROOT}/lib PREFIX=${ROOT}
+${LRELEASE} DlsWidgets_de.ts -qm .qm/locale/DlsWidgets_de.qm
+make
+make install
+cd ..
+
+cd gui
+${QMAKE} DLS_DESIGNER=0 PREFIX=${ROOT}
+${LRELEASE} dlsgui_de.ts -qm .qm/locale/dlsgui_de.qm
+make
+make install
+cd ..
+
