@@ -1,6 +1,4 @@
 #
-# $Id$
-#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the
@@ -31,10 +29,12 @@ License: GPL-3.0+
 Vendor: Ingenieurgemeinschaft IgH GmbH
 Group: Productivity/Other
 Url: http://etherlab.org/en/dls
-Source0: http://etherlab.org/download/dls/%{name}-%{package_version}.tar.bz2
+Source0: %{name}-%{package_version}.tar.bz2
 Source1: dls-rpmlintrc
-Patch0: rpath.patch
+Patch0: subdir-objects.patch
+Patch1: pid_file_name.patch
 PreReq: permissions
+Requires(post): %insserv_prereq %fillup_prereq
 BuildRoot: %_tmppath/%name-%{package_version}-root
 BuildRequires: fftw3-devel
 BuildRequires: fltk-devel
@@ -52,6 +52,9 @@ BuildRequires: liburiparser-devel
 BuildRequires: pdcom-devel
 BuildRequires: protobuf-devel
 BuildRequires: libxml2-devel
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: libtool
 BuildRequires: pcre-devel
 Requires: desktop-file-utils
 
@@ -76,8 +79,10 @@ needed for development with %name.
 %prep
 %setup -n %{name}-%{package_version}
 %patch0 -p1
+%patch1 -p1
 
 %build
+./bootstrap.sh # because patches modify build system
 %configure
 make %{?_smp_mflags}
 cd widgets
