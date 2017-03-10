@@ -757,7 +757,8 @@ void ProcLogger::_remove_pid_file()
     if (unlink(pid_file_name.str().c_str()) == -1) {
         _exit = true;
         _exit_code = E_DLS_ERROR;
-        msg() << "Could not remove PID file \"" << pid_file_name << "\"!";
+        msg() << "Could not remove PID file \"" << pid_file_name.str()
+            << "\"!";
         log(Error);
     }
 }
