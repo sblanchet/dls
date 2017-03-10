@@ -425,7 +425,9 @@ void dump_signal(int sig)
         close(fd);
     }
 
-    if (!is_daemon) cout << "CRITICAL: " << err;
+    if (!is_daemon) {
+        cout << "CRITICAL: " << err.str();
+    }
 }
 
 /*****************************************************************************/
