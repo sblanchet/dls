@@ -61,6 +61,7 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     connect(&scriptProcess, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(scriptError(QProcess::ProcessError)));
 
+    updateWindowTitle();
     setWindowIcon(QPixmap(":/images/dlsgui.svg"));
 
     QSettings settings;
@@ -160,7 +161,7 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent):
     if (!fileToLoad.isEmpty()) {
         if (dlsGraph->load(fileToLoad, &model)) {
             currentFileName = fileToLoad;
-            setWindowFilePath(currentFileName);
+            updateWindowTitle();
             addRecentFile(currentFileName);
         }
         else {
@@ -277,7 +278,7 @@ QStringList MainWindow::viewFilters()
 void MainWindow::on_actionNew_triggered()
 {
     currentFileName = "";
-    setWindowFilePath(currentFileName);
+    updateWindowTitle();
     dlsGraph->clearSections();
 }
 
@@ -304,7 +305,7 @@ void MainWindow::on_actionLoad_triggered()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
-        setWindowFilePath(currentFileName);
+        updateWindowTitle();
         addRecentFile(currentFileName);
     }
 }
@@ -322,7 +323,7 @@ void MainWindow::openRecentFile()
 
     if (dlsGraph->load(path, &model)) {
         currentFileName = path;
-        setWindowFilePath(currentFileName);
+        updateWindowTitle();
         addRecentFile(currentFileName);
     }
 }
@@ -352,7 +353,7 @@ void MainWindow::on_actionSave_triggered()
 
     if (dlsGraph->save(path)) {
         currentFileName = path;
-        setWindowFilePath(currentFileName);
+        updateWindowTitle();
         addRecentFile(currentFileName);
     }
 }
@@ -380,7 +381,7 @@ void MainWindow::on_actionSaveAs_triggered()
 
     if (dlsGraph->save(path)) {
         currentFileName = path;
-        setWindowFilePath(currentFileName);
+        updateWindowTitle();
         addRecentFile(currentFileName);
     }
 }
@@ -699,6 +700,20 @@ void MainWindow::removeDirectory()
 void MainWindow::removeUnusedDirectories()
 {
     model.removeUnusedDirs(dlsGraph);
+}
+
+/****************************************************************************/
+
+void MainWindow::updateWindowTitle()
+{
+    if (currentFileName.isEmpty()) {
+        setWindowFilePath("");
+        setWindowTitle(QCoreApplication::applicationName());
+    }
+    else {
+        setWindowTitle("");
+        setWindowFilePath(currentFileName);
+    }
 }
 
 /****************************************************************************/

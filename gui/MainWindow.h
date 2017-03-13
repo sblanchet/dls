@@ -104,6 +104,7 @@ class MainWindow:
         void updateDirectory();
         void removeDirectory();
         void removeUnusedDirectories();
+        void updateWindowTitle();
 };
 
 /****************************************************************************/
