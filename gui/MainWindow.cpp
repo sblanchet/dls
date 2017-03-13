@@ -280,6 +280,7 @@ void MainWindow::on_actionNew_triggered()
     currentFileName = "";
     updateWindowTitle();
     dlsGraph->clearSections();
+    dlsGraph->setMessageFilter("");
 }
 
 /****************************************************************************/
