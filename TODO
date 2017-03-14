@@ -10,13 +10,16 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Check for PdCom in a portable way
     * Allow compiling without PCRE
 
+# DLS Widgets
+    * Fix time scaling bug concerning scrollbar
+    * Show signals as tree
+    * Feed color selector with solarized colors
+
 # User frontend (dlsgui)
     * Show if channel is actually logged
     * Integrate configuration functionality of DLS Manager
         * Available channels as tree with filter function
-    * Show signals as tree
     * Fix URI file:// slash problem in UriDialog.cpp
-    * Feed color selector with solarized colors
 
 # FLTK frontends
     * Use PdCom to load available channels
