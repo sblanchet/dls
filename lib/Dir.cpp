@@ -59,7 +59,9 @@ using namespace LibDLS;
 
 Directory::Directory(const std::string &uri_text):
     _access(Unknown),
-    _sock(DLS_INVALID_SOCKET)
+    _sock(DLS_INVALID_SOCKET),
+    _protocol_version(0),
+    _proto_messages_warning_given(false)
 {
     set_uri(uri_text);
 
@@ -480,6 +482,8 @@ void Directory::_disconnect()
 
     DLS_CLOSE_SOCKET(_sock);
     _sock = DLS_INVALID_SOCKET;
+    _protocol_version = 0;
+    _proto_messages_warning_given = false;
     _receive_buffer.clear();
 }
 
@@ -654,6 +658,8 @@ void Directory::_receive_hello()
 
     _receive_message(hello);
 
+    _protocol_version = hello.protocol_version();
+
     stringstream str;
     str << "Received hello from DLS " << hello.version()
         << " " << hello.revision() << " protocol version "
@@ -668,6 +674,25 @@ void Directory::_notify_observers()
     std::set<Observer *>::iterator o;
     for (o = _observers.begin(); o != _observers.end(); o++) {
         (*o)->update();
+    }
+}
+
+/*****************************************************************************/
+
+bool Directory::serverSupportsMessages()
+{
+    if (_protocol_version < 2) {
+        if (!_proto_messages_warning_given) {
+            _proto_messages_warning_given = true;
+            stringstream err;
+            err << "WARNING: Server does not support loading messages. "
+                << "Please update to protocol verion 2 or later.";
+            log(err.str());
+        }
+        return false;
+    }
+    else {
+        return true;
     }
 }
 

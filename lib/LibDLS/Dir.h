@@ -124,6 +124,7 @@ class DLS_EXPORT Directory
         void remove_observer(Observer *);
 
         const std::string &error_msg() const { return _error_msg; }
+        bool serverSupportsMessages();
 
     private:
         std::string _uri_text;
@@ -141,6 +142,8 @@ class DLS_EXPORT Directory
         int _sock;
 #endif
         std::string _receive_buffer;
+        int _protocol_version; /**< Server protocol version. */
+        bool _proto_messages_warning_given; /**< Messages support warning. */
 
         std::list<Job *> _jobs; /**< list of jobs */
 
