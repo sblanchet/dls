@@ -803,6 +803,10 @@ void LibDLS::Job::_load_msg_network(
                            translation is used. */
         ) const
 {
+    if (!_dir->serverSupportsMessages()) {
+        return;
+    }
+
     DlsProto::Request req;
     DlsProto::Response res;
 

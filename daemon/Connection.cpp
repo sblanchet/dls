@@ -274,7 +274,7 @@ void Connection::_send_hello()
     DlsProto::Hello msg;
     msg.set_version(PACKAGE_VERSION);
     msg.set_revision(REVISION);
-    msg.set_protocol_version(1);
+    msg.set_protocol_version(2); // support message_request (see dls.proto)
     _send_msg(msg);
 }
 
