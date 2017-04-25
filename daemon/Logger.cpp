@@ -605,6 +605,12 @@ void Logger::notify(PdCom::Variable *pv)
     Time t;
     t.from_dbl_time(pv->getMTime());
 
+#if 0
+    double val;
+    pv->getValue(&val, 1);
+    cout << t.to_dbl_time() << "     " << val << endl;
+#endif
+
     try {
         _gen_saver->process_one(pv->getDataPtr(), t);
     }
