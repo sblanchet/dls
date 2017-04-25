@@ -43,7 +43,7 @@
 #include "LibDLS/Dir.h"
 #include "proto/dls.pb.h"
 
-#if 0
+#ifdef DEBUG_STREAM
 #include <iostream>
 #endif
 
@@ -57,6 +57,17 @@ using namespace LibDLS;
 #define DLS_INVALID_SOCKET -1
 #define DLS_CLOSE_SOCKET ::close
 #endif
+
+/*****************************************************************************/
+
+void MyLogHandler(google::protobuf::LogLevel level,
+        const char* filename, int line, const std::string& message)
+{
+    stringstream err;
+    err << "protobuf error: " << filename << ":" << line
+        << ": " << message;
+    log(err.str());
+}
 
 /*****************************************************************************/
 
@@ -84,6 +95,8 @@ Directory::Directory(const std::string &uri_text):
         log(msg.str());
     }
 #endif
+
+    google::protobuf::SetLogHandler(MyLogHandler);
 }
 
 /*****************************************************************************/
@@ -569,7 +582,7 @@ void Directory::_receive_data()
     cerr << "recv() returned " << ret << endl;
 #endif
 
-    if (ret >= 0) {
+    if (ret > 0) {
         _receive_buffer += string(data, ret);
     }
     else if (ret == 0) {
@@ -634,9 +647,8 @@ void Directory::_receive_message(
     bool success = msg.ParseFromArray(_receive_buffer.c_str(), messageSize);
     if (!success) {
         stringstream err;
-        err << "ParseFromArray() failed;"
-            << " recSize=" << _receive_buffer.size()
-            << " messageSize=" << messageSize;
+        err << "ParseFromArray(" << _receive_buffer.size()
+            << " / " << messageSize << ") failed!";
         log(err.str());
         _disconnect();
         throw DirectoryException(err.str());
