@@ -19,7 +19,6 @@
  *
  *****************************************************************************/
 
-#include <iostream>
 #include <sstream>
 #include <algorithm>
 
@@ -43,6 +42,10 @@
 #include "config.h"
 #include "LibDLS/Dir.h"
 #include "proto/dls.pb.h"
+
+#if 0
+#include <iostream>
+#endif
 
 using namespace std;
 using namespace LibDLS;
@@ -512,7 +515,6 @@ void Directory::_send_data(const char *buffer, size_t size)
             stringstream err;
             err << "send() failed: " << strerror(e);
             log(err.str());
-            cerr << err.str() << endl;
             _disconnect();
             throw DirectoryException(err.str());
         }
@@ -632,9 +634,10 @@ void Directory::_receive_message(
     bool success = msg.ParseFromArray(_receive_buffer.c_str(), messageSize);
     if (!success) {
         stringstream err;
-        err << "ParseFromArray() failed!";
+        err << "ParseFromArray() failed;"
+            << " recSize=" << _receive_buffer.size()
+            << " messageSize=" << messageSize;
         log(err.str());
-        cerr << err.str() << endl;
         _disconnect();
         throw DirectoryException(err.str());
     }
@@ -681,6 +684,10 @@ void Directory::_notify_observers()
 
 bool Directory::serverSupportsMessages()
 {
+    if (!connected()) {
+        return false;
+    }
+
     if (_protocol_version < 2) {
         if (!_proto_messages_warning_given) {
             _proto_messages_warning_given = true;
