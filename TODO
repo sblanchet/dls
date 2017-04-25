@@ -50,6 +50,7 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * show compression rate
 
 # Library (LibDLS):
+    * Auto-import jobs on reconnect
     * Add version macros
     * Fetch chunks and data in same network request
     * Avoid XML parsing via ring buffer (used in dls-ctl): xml-no-ring.patch
