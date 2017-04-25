@@ -16,6 +16,8 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Feed color selector with solarized colors
 
 # User frontend (dlsgui)
+    * Make loading data sources run in background (so that window is shown
+      immediately)
     * Fix adding data sources on loading view
     * Show if channel is actually logged
     * Integrate configuration functionality of DLS Manager
