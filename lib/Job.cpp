@@ -461,18 +461,6 @@ void LibDLS::Job::_load_msg_local(
     const char *pcre_errptr = NULL;
     int pcre_erroffset = 0;
 
-    pcre *re = NULL;
-
-    if (!regex.empty()) {
-        re = pcre_compile(regex.c_str(), PCRE_UTF8, &pcre_errptr,
-                &pcre_erroffset, NULL);
-        if (re == NULL) {
-            stringstream err;
-            err << "ERROR: Failed to compile filter regex:" << pcre_errptr;
-            log(err.str());
-        }
-    }
-
     msg_dir << _path << "/messages";
 
 #if 0
@@ -484,20 +472,26 @@ void LibDLS::Job::_load_msg_local(
     }
 #endif
 
-    // Das Message-Verzeichnis öffnen
+    // try to open message directory
     if (!(dir = opendir(msg_dir.str().c_str()))) {
         if (errno != ENOENT) {
             stringstream err;
             err << "ERROR: Failed to open message directory \""
                 << msg_dir.str() << "\":" << strerror(errno);
             log(err.str());
-        } else {
-            cerr << msg_dir.str() << " not found." << endl;
-        }
-        if (re) {
-            pcre_free(re);
         }
         return;
+    }
+
+    pcre *re = NULL;
+    if (!regex.empty()) {
+        re = pcre_compile(regex.c_str(), PCRE_UTF8, &pcre_errptr,
+                &pcre_erroffset, NULL);
+        if (re == NULL) {
+            stringstream err;
+            err << "ERROR: Failed to compile filter regex:" << pcre_errptr;
+            log(err.str());
+        }
     }
 
     // Alle Message-Chunks durchlaufen
