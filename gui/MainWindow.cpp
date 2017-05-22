@@ -45,7 +45,11 @@ using namespace std;
 
 /****************************************************************************/
 
-MainWindow::MainWindow(const QString &fileName, QWidget *parent):
+MainWindow::MainWindow(
+        const QString &fileName,
+        bool newView,
+        QWidget *parent
+        ):
     QMainWindow(parent),
     uriDialog(this),
     scriptActions(NULL),
@@ -151,7 +155,10 @@ MainWindow::MainWindow(const QString &fileName, QWidget *parent):
 
     QString fileToLoad;
 
-    if (!fileName.isEmpty()) {
+    if (newView) {
+        // pass
+    }
+    else if (!fileName.isEmpty()) {
         fileToLoad = fileName;
     }
     else if (restore && recentFiles.size() > 0) {
