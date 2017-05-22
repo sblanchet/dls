@@ -35,6 +35,7 @@
 using namespace std;
 
 #include <getopt.h>
+#include <libgen.h> // basename()
 
 /****************************************************************************/
 
