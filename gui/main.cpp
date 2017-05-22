@@ -43,6 +43,7 @@ string binaryBaseName;
 int get_options(int, char **);
 
 // command-line argument variables
+bool newView = false;
 QString fileName;
 
 /*****************************************************************************/
@@ -54,6 +55,7 @@ string usage()
     str << "Usage: " << binaryBaseName << " [OPTIONS] [ <FILENAME> ]" << endl
         << endl
         << "Global options:" << endl
+        << "  --new           -n         Start with empty view." << endl
         << "  --help          -h         Show this help." << endl
         << endl
         << "FILENAME is a path to a stored DLS view (*.dlsv), that" << endl
@@ -105,7 +107,7 @@ int main(int argc, char *argv[])
     translator.load(":/.qm/locale/dlsgui_" + QLocale::system().name());
     app.installTranslator(&translator);
 
-    MainWindow mainWin(fileName);
+    MainWindow mainWin(fileName, newView);
     mainWin.show();
 
     try {
@@ -124,17 +126,22 @@ int get_options(int argc, char **argv)
     static struct option longOptions[] = {
         // name,      has_arg,           flag, val
         {"help",      no_argument,       NULL, 'h'},
+        {"new",       no_argument,       NULL, 'n'},
         {NULL,        0,                 0,    0  }
     };
 
     int c;
     do {
-        c = getopt_long(argc, argv, "h", longOptions, NULL);
+        c = getopt_long(argc, argv, "hn", longOptions, NULL);
 
         switch (c) {
             case 'h':
                 cout << usage();
                 return 2;
+
+            case 'n':
+                newView = true;
+                break;
 
             case '?':
                 cerr << endl << usage();
