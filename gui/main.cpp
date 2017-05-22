@@ -21,19 +21,57 @@
  *
  ****************************************************************************/
 
+#include "MainWindow.h"
+
+#include "DlsWidgets/Translator.h"
+
 #include <QApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
 #include <QDebug>
 
-#include "DlsWidgets/Translator.h"
+#include <iostream>
+#include <sstream>
+using namespace std;
 
-#include "MainWindow.h"
+#include <getopt.h>
+
+/****************************************************************************/
+
+string binaryBaseName;
+int get_options(int, char **);
+
+// command-line argument variables
+QString fileName;
+
+/*****************************************************************************/
+
+string usage()
+{
+    stringstream str;
+
+    str << "Usage: " << binaryBaseName << " [OPTIONS] [ <FILENAME> ]" << endl
+        << endl
+        << "Global options:" << endl
+        << "  --help          -h         Show this help." << endl
+        << endl
+        << "FILENAME is a path to a stored DLS view (*.dlsv), that" << endl
+        << "  will be loaded on start-up." << endl;
+
+    return str.str();
+}
 
 /****************************************************************************/
 
 int main(int argc, char *argv[])
 {
+    binaryBaseName = basename(argv[0]);
+
+    int ret = get_options(argc, argv);
+    if (ret) {
+        return ret;
+    }
+
 #ifndef __unix__
     // when packaging in directory, put the qwindows.dll in the platforms
     // subdir
@@ -66,18 +104,7 @@ int main(int argc, char *argv[])
     translator.load(":/.qm/locale/dlsgui_" + QLocale::system().name());
     app.installTranslator(&translator);
 
-#ifdef __unix__
-    QStringList args = app.arguments();
-    QString fileName;
-
-    if (args.count() >= 2) {
-        fileName = args[1];
-    }
-
     MainWindow mainWin(fileName);
-#else
-    MainWindow mainWin;
-#endif
     mainWin.show();
 
     try {
@@ -87,6 +114,50 @@ int main(int argc, char *argv[])
         qCritical() << "Model exception: " << e.msg;
         return 1;
     }
+}
+
+/*****************************************************************************/
+
+int get_options(int argc, char **argv)
+{
+    static struct option longOptions[] = {
+        // name,      has_arg,           flag, val
+        {"help",      no_argument,       NULL, 'h'},
+        {NULL,        0,                 0,    0  }
+    };
+
+    int c;
+    do {
+        c = getopt_long(argc, argv, "h", longOptions, NULL);
+
+        switch (c) {
+            case 'h':
+                cout << usage();
+                return 2;
+
+            case '?':
+                cerr << endl << usage();
+                return 1;
+
+            default:
+                break;
+        }
+    }
+    while (c != -1);
+
+    unsigned int argCount = argc - optind;
+    if (argCount > 1) {
+        cerr << binaryBaseName << " takes either zero or one argument(s)."
+            << endl << endl;
+        cerr << usage();
+        return 1;
+    }
+
+    if (argCount == 1) {
+        fileName = argv[optind];
+    }
+
+    return 0;
 }
 
 /****************************************************************************/
