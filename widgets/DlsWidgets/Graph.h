@@ -310,7 +310,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void loggingCallback(const char *);
         void updateTouch(QTouchEvent *);
         bool touchPanStart(const QPoint &);
-        void touchPanUpdate(int);
+        void touchPanUpdate(const QTouchEvent::TouchPoint &);
         void touchZoomStart(int, int);
         void touchZoomUpdate(int, int);
         int getDataWidth() const;
