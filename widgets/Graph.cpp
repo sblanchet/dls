@@ -166,14 +166,14 @@ Graph::Graph(
 
     fixMeasuringAction.setText(tr("&Fix measuring line"));
     fixMeasuringAction.setStatusTip(
-			tr("Fix the measuring line at the current time."));
+            tr("Fix the measuring line at the current time."));
     connect(&fixMeasuringAction, SIGNAL(triggered()),
-			this, SLOT(fixMeasuringLine()));
+            this, SLOT(fixMeasuringLine()));
 
     removeMeasuringAction.setText(tr("&Remove measuring line"));
     removeMeasuringAction.setStatusTip(tr("Remove the measuring line."));
     connect(&removeMeasuringAction, SIGNAL(triggered()),
-			this, SLOT(removeMeasuringLine()));
+            this, SLOT(removeMeasuringLine()));
 
     prevViewAction.setText(tr("&Previous view"));
     prevViewAction.setShortcut(Qt::ALT | Qt::Key_Left);
@@ -835,7 +835,7 @@ void Graph::setInteraction(Interaction i)
         panning = false;
     }
     if (measuring && interaction != Measure) {
-		measureTime.set_null();
+        measureTime.set_null();
     }
 
     updateMeasuring();
@@ -961,15 +961,15 @@ void Graph::print()
     std::set<LibDLS::Job *> jobSet;
 
     LibDLS::Time range = getEnd() - getStart();
-	int dataWidth = page.width() - scaleWidth;
-	int measurePos = -1;
-	if (!measureTime.is_null() && dataWidth > 0
-			&& measureTime >= getStart() && measureTime < getEnd()
-			&& range > 0.0) {
-		double xScale = dataWidth / range.to_dbl_time();
-		measurePos =
-			(measureTime - getStart()).to_dbl_time() * xScale + 0.5;
-	}
+    int dataWidth = page.width() - scaleWidth;
+    int measurePos = -1;
+    if (!measureTime.is_null() && dataWidth > 0
+            && measureTime >= getStart() && measureTime < getEnd()
+            && range > 0.0) {
+        double xScale = dataWidth / range.to_dbl_time();
+        measurePos =
+            (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+    }
 
     rwLockSections.lockForRead();
 
@@ -1026,39 +1026,39 @@ void Graph::print()
             top += height + 1;
         }
 
-		if (measurePos != -1) {
-			int xp = page.left() + scaleWidth + measurePos;
-			QPen pen;
-			pen.setColor(Qt::darkBlue);
-			painter.setPen(pen);
+        if (measurePos != -1) {
+            int xp = page.left() + scaleWidth + measurePos;
+            QPen pen;
+            pen.setColor(Qt::darkBlue);
+            painter.setPen(pen);
 
-			painter.drawLine(xp, page.top(), xp, page.bottom());
+            painter.drawLine(xp, page.top(), xp, page.bottom());
 
-			QRect textRect(page);
-			textRect.setLeft(xp + 3);
-			textRect.setTop(page.top() + 2);
-			textRect.setHeight(page.height() - 4);
-			QString label(measureTime.to_real_time().c_str());
-			QFontMetrics fm(painter.font());
-			QSize s = fm.size(0, label);
-			if (s.width() <= textRect.width()) {
-				painter.fillRect(
-						QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
-						Qt::white);
-				painter.drawText(textRect, Qt::AlignLeft, label);
-			}
-			else {
-				textRect.setLeft(page.left());
-				textRect.setRight(xp - 3);
-				if (s.width() <= textRect.width()) {
-					painter.fillRect(QRect(
-								QPoint(textRect.right() + 1 - s.width(),
-									textRect.top()), s).adjusted(-2, 0, 2, 0),
-							Qt::white);
-					painter.drawText(textRect, Qt::AlignRight, label);
-				}
-			}
-		}
+            QRect textRect(page);
+            textRect.setLeft(xp + 3);
+            textRect.setTop(page.top() + 2);
+            textRect.setHeight(page.height() - 4);
+            QString label(measureTime.to_real_time().c_str());
+            QFontMetrics fm(painter.font());
+            QSize s = fm.size(0, label);
+            if (s.width() <= textRect.width()) {
+                painter.fillRect(
+                        QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
+                        Qt::white);
+                painter.drawText(textRect, Qt::AlignLeft, label);
+            }
+            else {
+                textRect.setLeft(page.left());
+                textRect.setRight(xp - 3);
+                if (s.width() <= textRect.width()) {
+                    painter.fillRect(QRect(
+                                QPoint(textRect.right() + 1 - s.width(),
+                                    textRect.top()), s).adjusted(-2, 0, 2, 0),
+                            Qt::white);
+                    painter.drawText(textRect, Qt::AlignRight, label);
+                }
+            }
+        }
 
         first = last + 1;
         if (first != sections.end()) {
@@ -1467,12 +1467,12 @@ void Graph::paintEvent(
     int top = contentsRect().top() + scale.getOuterLength() + 1;
     LibDLS::Time range = getEnd() - getStart();
     int measurePos = -1;
-	if (!measureTime.is_null()
-			&& measureTime >= getStart() && measureTime < getEnd()
-			&& range > 0.0) {
-		double xScale = getDataWidth() / range.to_dbl_time();
-		measurePos = (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
-	}
+    if (!measureTime.is_null()
+            && measureTime >= getStart() && measureTime < getEnd()
+            && range > 0.0) {
+        double xScale = getDataWidth() / range.to_dbl_time();
+        measurePos = (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+    }
     QRect dataRect(contentsRect());
     dataRect.setTop(top);
     if (showMessages) {
@@ -1581,7 +1581,7 @@ void Graph::paintEvent(
     }
 
     if (measurePos != -1) {
-		int xp = contentsRect().left() + scaleWidth + measurePos;
+        int xp = contentsRect().left() + scaleWidth + measurePos;
         QPen pen;
         pen.setColor(Qt::darkBlue);
         painter.setPen(pen);
@@ -1642,7 +1642,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     rwLockSections.lockForRead();
 
     removeMeasuringAction.setEnabled(
-			interaction != Measure && !measureTime.is_null());
+            interaction != Measure && !measureTime.is_null());
     selectedSection = sectionFromPos(event->pos());
     removeSectionAction.setEnabled(selectedSection);
     clearSectionsAction.setEnabled(!sections.isEmpty());
@@ -1906,7 +1906,7 @@ void Graph::updateMeasuring()
     LibDLS::Time range = getEnd() - getStart();
     QRect measureRect(contentsRect());
     measureRect.setLeft(contentsRect().left() + scaleWidth);
-	int dataWidth = getDataWidth();
+    int dataWidth = getDataWidth();
 
     if (range <= 0.0 || !measureRect.isValid() ||
             !measureRect.contains(endPos) || dataWidth <= 0) {
@@ -2744,21 +2744,21 @@ void Graph::fixMeasuringLine()
     LibDLS::Time range = getEnd() - getStart();
     QRect measureRect(contentsRect());
     measureRect.setLeft(contentsRect().left() + scaleWidth);
-	int dataWidth = getDataWidth();
+    int dataWidth = getDataWidth();
 
     if (range > 0.0 && measureRect.isValid()
-			&& measureRect.contains(endPos) && dataWidth > 0) {
+            && measureRect.contains(endPos) && dataWidth > 0) {
 
-		if (interaction == Measure) {
-			setInteraction(Pan);
-		}
+        if (interaction == Measure) {
+            setInteraction(Pan);
+        }
 
         double xScale = range.to_dbl_time() / dataWidth;
         int measurePos = endPos.x() - measureRect.left();
         measureTime.from_dbl_time(measurePos * xScale);
         measureTime += getStart();
 
-		update();
+        update();
     }
 }
 
@@ -2766,8 +2766,8 @@ void Graph::fixMeasuringLine()
 
 void Graph::removeMeasuringLine()
 {
-	measureTime.set_null();
-	update();
+    measureTime.set_null();
+    update();
 }
 
 /****************************************************************************/
