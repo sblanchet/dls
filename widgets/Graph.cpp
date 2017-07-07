@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- * $Id$
- *
- * Copyright (C) 2012 - 2013  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012 - 2017  Florian Pose <fp@igh.de>
  *
  * This file is part of the DLS widget library.
  *
@@ -1256,37 +1254,9 @@ void Graph::mouseMoveEvent(QMouseEvent *event)
         update(msgSplitterRect);
     }
 
-    int top = contentsRect().top() + scale.getOuterLength() + 1 -
-        scrollBar.value();
-    QRect splitterRect(contentsRect());
-    if (scrollBarNeeded) {
-        splitterRect.setWidth(contentsRect().width() - scrollBar.width());
-    }
-
     rwLockSections.lockForRead();
 
-    Section *sec = NULL;
-
-    for (QList<Section *>::iterator s = sections.begin();
-            s != sections.end(); s++) {
-        if (top > event->pos().y()) {
-            break;
-        }
-        splitterRect.moveTop(top + (*s)->getHeight());
-        QList<Section *>::iterator next = s + 1;
-        int height = splitterWidth;
-        if (next != sections.end()) {
-            height += (*next)->legendHeight();
-        }
-        height = std::max(height, MIN_TOUCH_HEIGHT);
-        splitterRect.setHeight(height);
-        if (splitterRect.contains(event->pos())) {
-            sec = *s;
-            break;
-        }
-        top += (*s)->getHeight() + splitterWidth;
-    }
-
+    Section *sec = splitterSectionFromPos(event->pos());
     if (splitterSection != sec) {
         splitterSection = sec;
         update();
@@ -1652,6 +1622,8 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
     QMenu gotoMenu(this);
 
+    rwLockSections.lockForRead();
+
     removeMeasuringAction.setEnabled(
 			interaction != Measure && !measureTime.is_null());
     selectedSection = sectionFromPos(event->pos());
@@ -1703,6 +1675,8 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
 
     menu.exec(event->globalPos());
     selectedSection = NULL;
+
+    rwLockSections.unlock();
 }
 
 /****************************************************************************/
@@ -1990,22 +1964,55 @@ Section *Graph::sectionFromPos(const QPoint &pos)
     int top = contentsRect().top() + scale.getOuterLength() + 1 -
         scrollBar.value();
 
-    rwLockSections.lockForRead();
-
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
         QRect rect(contentsRect().left(), top,
                 contentsRect().width(), (*s)->getHeight());
         if (rect.contains(pos)) {
-            rwLockSections.unlock();
             return *s;
         }
         top += (*s)->getHeight() + splitterWidth;
     }
 
-    rwLockSections.unlock();
-
     return NULL;
+}
+
+/****************************************************************************/
+
+/** If the position is on a section splitter, return the section.
+ */
+Section *Graph::splitterSectionFromPos(const QPoint &pos)
+{
+    Section *sec = NULL;
+
+    int top = contentsRect().top() + scale.getOuterLength() + 1 -
+        scrollBar.value();
+    QRect splitterRect(contentsRect());
+    if (scrollBarNeeded) {
+        splitterRect.setWidth(contentsRect().width() - scrollBar.width());
+    }
+
+    for (QList<Section *>::iterator s = sections.begin();
+            s != sections.end(); s++) {
+        if (top > pos.y()) {
+            break;
+        }
+        splitterRect.moveTop(top + (*s)->getHeight());
+        QList<Section *>::iterator next = s + 1;
+        int height = splitterWidth;
+        if (next != sections.end()) {
+            height += (*next)->legendHeight();
+        }
+        height = std::max(height, MIN_TOUCH_HEIGHT);
+        splitterRect.setHeight(height);
+        if (splitterRect.contains(pos)) {
+            sec = *s;
+            break;
+        }
+        top += (*s)->getHeight() + splitterWidth;
+    }
+
+    return sec;
 }
 
 /****************************************************************************/

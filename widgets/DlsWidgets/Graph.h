@@ -303,6 +303,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateMeasuring();
         void updateScrollBar();
         Section *sectionFromPos(const QPoint &);
+        Section *splitterSectionFromPos(const QPoint &);
         static void drawDropRect(QPainter &, const QRect &);
         void newView();
         bool loadSections(const QDomElement &, QtDls::Model *, const QDir &);
