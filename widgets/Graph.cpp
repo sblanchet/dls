@@ -2251,8 +2251,6 @@ void Graph::updateTouch(QTouchEvent *event)
 {
     int count = event->touchPoints().count();
 
-    event->accept();
-
 #ifdef DEBUG_MT_ON_SCREEN
     int displayCount = count;
     if (event->type() == QEvent::TouchEnd
@@ -2330,17 +2328,22 @@ void Graph::updateTouch(QTouchEvent *event)
                 }
                 else {
                     rwLockSections.unlock();
-                    touchPanStart(tp0.lastPos().x());
+
+                    if (touchPanStart(tp0.pos().toPoint())) {
+                        event->accept();
+                    }
                 }
             }
             else if (count == 2) {
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
                 QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
                 touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+                event->accept();
             }
             break;
 
         case QEvent::TouchUpdate:
+            event->accept();
             if (count == 1) {
                 if (touchZooming) {
                     touchZooming = false;
@@ -2367,7 +2370,7 @@ void Graph::updateTouch(QTouchEvent *event)
                     touchPanUpdate(tp0.lastPos().x());
                 }
                 else {
-                    touchPanStart(tp0.lastPos().x());
+                    touchPanStart(tp0.pos().toPoint());
                 }
             }
             else if (count >= 2) {
@@ -2386,6 +2389,7 @@ void Graph::updateTouch(QTouchEvent *event)
 #if QT_VERSION >= 0x050000
         case QEvent::TouchCancel:
 #endif
+            event->accept();
             movingSection = NULL;
             if (touchPanning) {
                 touchPanning = false;
@@ -2405,11 +2409,20 @@ void Graph::updateTouch(QTouchEvent *event)
 
 /****************************************************************************/
 
-void Graph::touchPanStart(int x)
+bool Graph::touchPanStart(const QPoint &pos)
 {
-    touchX0 = x;
+    QRect panRect(contentsRect());
+    if (scrollBarNeeded) {
+        panRect.setWidth(contentsRect().width() - scrollBar.width());
+    }
+    if (!panRect.contains(pos)) {
+        return false;
+    }
+
+    touchX0 = pos.x();
     touchPanning = true;
     panning = false;
+    return true;
 }
 
 /****************************************************************************/
