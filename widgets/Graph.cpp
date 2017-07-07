@@ -2318,7 +2318,6 @@ void Graph::updateTouch(QTouchEvent *event)
                 QPoint tp0Pos(tp0.pos().toPoint());
                 Section *sec = splitterSectionFromPos(tp0Pos);
                 if (sec) {
-                    qDebug() << "moving section";
                     movingSection = sec;
                     startPos = tp0Pos;
                     startHeight = movingSection->getHeight();
@@ -2365,13 +2364,13 @@ void Graph::updateTouch(QTouchEvent *event)
                 }
                 else {
                     rwLockSections.unlock();
-                }
 
-                if (touchPanning) {
-                    touchPanUpdate(tp0);
-                }
-                else {
-                    touchPanStart(tp0.pos().toPoint());
+                    if (touchPanning) {
+                        touchPanUpdate(tp0);
+                    }
+                    else {
+                        touchPanStart(tp0.pos().toPoint());
+                    }
                 }
             }
             else if (count >= 2) {
@@ -2436,7 +2435,7 @@ void Graph::touchPanUpdate(const QTouchEvent::TouchPoint &tp)
 
     if (scrollBarNeeded) {
         int dy = tp.pos().y() - tp.lastPos().y();
-        scrollBar.setValue(scrollBar.value() + dy);
+        scrollBar.setValue(scrollBar.value() - dy);
     }
 
     if (range > 0.0 && dataWidth > 0) {
