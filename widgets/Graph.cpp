@@ -1164,29 +1164,44 @@ bool Graph::event(
  */
 void Graph::mousePressEvent(QMouseEvent *event)
 {
+    if (!(event->button() & Qt::LeftButton)) {
+        return;
+    }
+
     startPos = event->pos();
     endPos = event->pos();
     dragStart = getStart();
     dragEnd = getEnd();
 
-    if (event->button() & Qt::LeftButton) {
-        if (mouseOverMsgSplitter) {
-            movingMsgSplitter = true;
-            startHeight = messageAreaHeight;
-        }
-        else if (splitterSection) {
-            movingSection = splitterSection;
-            startHeight = splitterSection->getHeight();
-        }
-        else if (interaction == Zoom && !touchZooming) {
-            zooming = true;
-        }
-        else if (interaction == Pan && !touchZooming) {
-            panning = true;
-        }
-
+    if (mouseOverMsgSplitter) {
+        movingMsgSplitter = true;
+        startHeight = messageAreaHeight;
+        event->accept();
         updateCursor();
         update();
+        return;
+    }
+    else if (splitterSection) {
+        movingSection = splitterSection;
+        startHeight = splitterSection->getHeight();
+        event->accept();
+        updateCursor();
+        update();
+        return;
+    }
+    else if (interaction == Zoom && !touchZooming) {
+        zooming = true;
+        event->accept();
+        updateCursor();
+        update();
+        return;
+    }
+    else if (interaction == Pan && !touchZooming) {
+        panning = true;
+        event->accept();
+        updateCursor();
+        update();
+        return;
     }
 }
 
@@ -1465,6 +1480,7 @@ void Graph::paintEvent(
     }
     if (scrollBarNeeded) {
         dataRect.setWidth(contentsRect().width() - scrollBar.width());
+        // FIXME don't move scrollbar during paint, better during resize?
         scrollBar.move(dataRect.right() + 1, top);
         scrollBar.resize(scrollBar.width(), dataRect.height());
     }
