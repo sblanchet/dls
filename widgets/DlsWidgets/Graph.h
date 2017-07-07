@@ -309,7 +309,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         static void staticLoggingCallback(const char *, void *);
         void loggingCallback(const char *);
         void updateTouch(QTouchEvent *);
-        void touchPanStart(int);
+        bool touchPanStart(const QPoint &);
         void touchPanUpdate(int);
         void touchZoomStart(int, int);
         void touchZoomUpdate(int, int);
