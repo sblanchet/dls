@@ -2313,7 +2313,25 @@ void Graph::updateTouch(QTouchEvent *event)
         case QEvent::TouchBegin:
             if (count == 1) {
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
-                touchPanStart(tp0.lastPos().x());
+
+                rwLockSections.lockForRead();
+
+                QPoint tp0Pos(tp0.pos().toPoint());
+                Section *sec = splitterSectionFromPos(tp0Pos);
+                if (sec) {
+                    qDebug() << "moving section";
+                    movingSection = sec;
+                    startPos = tp0Pos;
+                    startHeight = movingSection->getHeight();
+                    rwLockSections.unlock();
+                    event->accept();
+                    updateCursor();
+                    update();
+                }
+                else {
+                    rwLockSections.unlock();
+                    touchPanStart(tp0.lastPos().x());
+                }
             }
             else if (count == 2) {
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
@@ -2328,6 +2346,23 @@ void Graph::updateTouch(QTouchEvent *event)
                     touchZooming = false;
                 }
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
+
+                rwLockSections.lockForRead();
+
+                if (movingSection) {
+                    int dh = tp0.pos().y() - startPos.y();
+                    int h = startHeight + dh;
+                    if (h < 0) {
+                        h = 0;
+                    }
+                    movingSection->setHeight(h);
+                    rwLockSections.unlock();
+                    updateScrollBar();
+                }
+                else {
+                    rwLockSections.unlock();
+                }
+
                 if (touchPanning) {
                     touchPanUpdate(tp0.lastPos().x());
                 }
@@ -2351,6 +2386,7 @@ void Graph::updateTouch(QTouchEvent *event)
 #if QT_VERSION >= 0x050000
         case QEvent::TouchCancel:
 #endif
+            movingSection = NULL;
             if (touchPanning) {
                 touchPanning = false;
                 newView();
