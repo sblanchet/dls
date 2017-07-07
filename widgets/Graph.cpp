@@ -153,6 +153,7 @@ Graph::Graph(
 
     scrollBar.setVisible(false);
     scrollBar.setCursor(Qt::ArrowCursor);
+    scrollBar.raise();
     connect(&scrollBar, SIGNAL(valueChanged(int)),
             this, SLOT(sliderValueChanged(int)));
 
@@ -2265,7 +2266,7 @@ void Graph::updateTouch(QTouchEvent *event)
         QTouchEvent::TouchPoint tp = event->touchPoints()[i];
         debugString += QString("%1: %2x%3 - %4x%5\n").arg(i)
             .arg(tp.startPos().x()).arg(tp.startPos().y())
-            .arg(tp.lastPos().x()).arg(tp.lastPos().y());
+            .arg(tp.pos().x()).arg(tp.pos().y());
     }
     update();
 #endif
@@ -2301,7 +2302,7 @@ void Graph::updateTouch(QTouchEvent *event)
         QTouchEvent::TouchPoint tp = event->touchPoints()[i];
         dbg += QString("%1 %2x%3 - %4x%5\n").arg(i)
             .arg(tp.startPos().x()).arg(tp.startPos().y())
-            .arg(tp.lastPos().x()).arg(tp.lastPos().y());
+            .arg(tp.pos().x()).arg(tp.pos().y());
     }
     debugFile.write(dbg.toUtf8().constData());
     debugFile.flush();
@@ -2337,7 +2338,7 @@ void Graph::updateTouch(QTouchEvent *event)
             else if (count == 2) {
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
                 QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
-                touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+                touchZoomStart(tp0.pos().x(), tp1.pos().x());
                 event->accept();
             }
             break;
@@ -2367,7 +2368,7 @@ void Graph::updateTouch(QTouchEvent *event)
                 }
 
                 if (touchPanning) {
-                    touchPanUpdate(tp0.lastPos().x());
+                    touchPanUpdate(tp0);
                 }
                 else {
                     touchPanStart(tp0.pos().toPoint());
@@ -2377,10 +2378,10 @@ void Graph::updateTouch(QTouchEvent *event)
                 QTouchEvent::TouchPoint tp0 = event->touchPoints()[0];
                 QTouchEvent::TouchPoint tp1 = event->touchPoints()[1];
                 if (touchZooming) {
-                    touchZoomUpdate(tp0.lastPos().x(), tp1.lastPos().x());
+                    touchZoomUpdate(tp0.pos().x(), tp1.pos().x());
                 }
                 else {
-                    touchZoomStart(tp0.lastPos().x(), tp1.lastPos().x());
+                    touchZoomStart(tp0.pos().x(), tp1.pos().x());
                 }
             }
             break;
@@ -2419,7 +2420,8 @@ bool Graph::touchPanStart(const QPoint &pos)
         return false;
     }
 
-    touchX0 = pos.x();
+    startPos = pos;
+    touchX0 = pos.x(); // FIXME unused; kept for binary compatibility
     touchPanning = true;
     panning = false;
     return true;
@@ -2427,24 +2429,27 @@ bool Graph::touchPanStart(const QPoint &pos)
 
 /****************************************************************************/
 
-void Graph::touchPanUpdate(int x)
+void Graph::touchPanUpdate(const QTouchEvent::TouchPoint &tp)
 {
     int dataWidth = getDataWidth();
     LibDLS::Time range = getEnd() - getStart();
 
-    if (range <= 0.0 || dataWidth <= 0) {
-        return;
+    if (scrollBarNeeded) {
+        int dy = tp.pos().y() - tp.lastPos().y();
+        scrollBar.setValue(scrollBar.value() + dy);
     }
 
-    double xScale = range.to_dbl_time() / dataWidth;
+    if (range > 0.0 && dataWidth > 0) {
+        double xScale = range.to_dbl_time() / dataWidth;
 
-    LibDLS::Time diff;
-    diff.from_dbl_time((x - touchX0) * xScale);
-    touchX0 = x;
-    scale.setRange(getStart() - diff, getEnd() - diff);
-    autoRange = false;
-    updateActions();
-    update();
+        LibDLS::Time diff;
+        diff.from_dbl_time((tp.pos().x() - touchX0) * xScale);
+        touchX0 = tp.pos().x();
+        scale.setRange(getStart() - diff, getEnd() - diff);
+        autoRange = false;
+        updateActions();
+        update();
+    }
 }
 
 /****************************************************************************/
