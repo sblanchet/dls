@@ -2018,9 +2018,11 @@ Section *Graph::splitterSectionFromPos(const QPoint &pos)
         QList<Section *>::iterator next = s + 1;
         int height = splitterWidth;
         if (next != sections.end()) {
-            height += (*next)->legendHeight();
+            height += std::min((*next)->getHeight(), (*next)->legendHeight());
         }
-        height = std::max(height, MIN_TOUCH_HEIGHT);
+        else { // last section
+            height = std::max(height, MIN_TOUCH_HEIGHT);
+        }
         splitterRect.setHeight(height);
         if (splitterRect.contains(pos)) {
             sec = *s;
