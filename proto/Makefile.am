@@ -27,5 +27,6 @@ $(protobuf_sources): dls.proto
 	protoc $< --cpp_out=$(builddir)
 
 EXTRA_DIST = dls.proto
+CLEANFILES = $(protobuf_sources)
 
 #------------------------------------------------------------------------------
