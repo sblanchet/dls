@@ -68,6 +68,7 @@ Section::Section(
     scaleMin(0.0),
     scaleMax(100.0),
     height(100),
+    relativePrintHeight(-1.0),
     minimum(0.0),
     maximum(0.0),
     extremaValid(false),
@@ -90,6 +91,7 @@ Section::Section(
     scaleMin(o.scaleMin),
     scaleMax(o.scaleMax),
     height(o.height),
+    relativePrintHeight(o.relativePrintHeight),
     minimum(o.minimum),
     maximum(o.maximum),
     extremaValid(o.extremaValid)
@@ -134,6 +136,7 @@ Section &Section::operator=(
     scaleMin = o.scaleMin;
     scaleMax = o.scaleMax;
     height = o.height;
+    relativePrintHeight = o.relativePrintHeight;
     minimum = o.minimum;
     maximum = o.maximum;
     extremaValid = o.extremaValid;
@@ -209,6 +212,16 @@ void Section::load(const QDomElement &e, Model *model, const QDir &dir)
             }
             setHeight(num);
         }
+        else if (child.tagName() == "RelativePrintHeight") {
+            QString text = child.text();
+            bool ok;
+            double num = text.toDouble(&ok);
+            if (!ok) {
+                QString msg = tr("Invalid value in RelativePrintHeight");
+                throw Exception(msg);
+            }
+            setRelativePrintHeight(num);
+        }
         else if (child.tagName() == "Layers") {
             loadLayers(child, model, dir);
         }
@@ -252,6 +265,12 @@ void Section::save(QDomElement &e, QDomDocument &doc)
 
     elem = doc.createElement("Height");
     num.setNum(height);
+    text = doc.createTextNode(num);
+    elem.appendChild(text);
+    secElem.appendChild(elem);
+
+    elem = doc.createElement("RelativePrintHeight");
+    num.setNum(relativePrintHeight);
     text = doc.createTextNode(num);
     elem.appendChild(text);
     secElem.appendChild(elem);
@@ -371,6 +390,13 @@ void Section::setHeight(int h)
         updateScale();
         graph->update();
     }
+}
+
+/****************************************************************************/
+
+void Section::setRelativePrintHeight(double h)
+{
+    relativePrintHeight = h;
 }
 
 /****************************************************************************/
@@ -612,6 +638,21 @@ void Section::draw(QPainter &painter, const QRect &rect, int measureX,
         painter.drawLine(backRect.bottomLeft(), backRect.bottomRight());
         painter.drawLine(backRect.bottomRight(), backRect.topRight());
         painter.restore();
+    }
+}
+
+/****************************************************************************/
+
+double Section::relativeHeight(int totalHeight) const
+{
+    if (relativePrintHeight >= 0) {
+        return relativePrintHeight;
+    }
+    else if (totalHeight > 0) {
+        return (double) height / totalHeight;
+    }
+    else {
+        return 0.0;
     }
 }
 

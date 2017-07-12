@@ -89,11 +89,14 @@ class Q_DECL_EXPORT Section
         void setScaleMaximum(double);
         int getHeight() const { return height; };
         void setHeight(int);
+        double getRelativePrintHeight() const { return relativePrintHeight; };
+        void setRelativePrintHeight(double);
 
         void resize(int);
         int getScaleWidth() const { return scale.getWidth(); }
         void draw(QPainter &, const QRect &, int, int, bool);
         int legendHeight() const { return legend.size().height(); }
+        double relativeHeight(int) const;
 
         Layer *appendLayer(QtDls::Channel *);
 
@@ -129,6 +132,7 @@ class Q_DECL_EXPORT Section
         double scaleMin;
         double scaleMax;
         int height;
+        double relativePrintHeight;
         QTextDocument legend;
         double minimum;
         double maximum;
