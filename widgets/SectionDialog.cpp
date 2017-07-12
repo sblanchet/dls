@@ -56,6 +56,8 @@ SectionDialog::SectionDialog(
     lineEditMaximum->setText(QLocale().toString(section->getScaleMaximum()));
 
     checkBoxShowScale->setChecked(section->getShowScale());
+    doubleSpinBoxRelHeight->setValue(
+            section->getRelativePrintHeight() * 100.0);
 
     connect(model,
             SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
@@ -133,6 +135,12 @@ void SectionDialog::accept()
     workSection.setScaleMaximum(max);
     workSection.setAutoScale(radioButtonAuto->isChecked());
     workSection.setShowScale(checkBoxShowScale->isChecked());
+
+    double relHeight = doubleSpinBoxRelHeight->value() / 100.0;
+    if (relHeight < 0.0) {
+        relHeight = -1.0;
+    }
+    workSection.setRelativePrintHeight(relHeight);
 
     *section = workSection;
 

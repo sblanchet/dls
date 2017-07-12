@@ -35,302 +35,302 @@
 <context>
     <name>DLS::Graph</name>
     <message>
-        <location filename="Graph.cpp" line="168"/>
+        <location filename="Graph.cpp" line="167"/>
         <source>&amp;Fix measuring line</source>
         <translation>Messlinie &amp;fixieren</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="170"/>
+        <location filename="Graph.cpp" line="169"/>
         <source>Fix the measuring line at the current time.</source>
         <translation>Hält die Messlinie an der aktuellen Zeit fest.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="174"/>
+        <location filename="Graph.cpp" line="173"/>
         <source>&amp;Remove measuring line</source>
         <translation>Messlinie &amp;entfernen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="175"/>
+        <location filename="Graph.cpp" line="174"/>
         <source>Remove the measuring line.</source>
         <translation>Entfernt die Messlinie.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="179"/>
+        <location filename="Graph.cpp" line="178"/>
         <source>&amp;Previous view</source>
         <translation>&amp;Vorherige Ansicht</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="181"/>
+        <location filename="Graph.cpp" line="180"/>
         <source>Return to previous view.</source>
         <translation>Kehrt zur vorherigen Ansicht zurück.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="185"/>
+        <location filename="Graph.cpp" line="184"/>
         <source>&amp;Next view</source>
         <translation>&amp;Nächste Ansicht</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="187"/>
+        <location filename="Graph.cpp" line="186"/>
         <source>Proceed to next view.</source>
         <translation>Wechselt zur nächstspäteren Ansicht.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="191"/>
+        <location filename="Graph.cpp" line="190"/>
         <source>&amp;Update</source>
         <translation>&amp;Akt&amp;ualisieren</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="193"/>
+        <location filename="Graph.cpp" line="192"/>
         <source>Update displayed data.</source>
         <translation>Lädt die Daten für den aktuellen Zeitbereich neu.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="197"/>
+        <location filename="Graph.cpp" line="196"/>
         <source>&amp;Zoom</source>
         <translation>&amp;Zoom</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="199"/>
+        <location filename="Graph.cpp" line="198"/>
         <source>Set mouse interaction to zooming.</source>
         <translation>Setzt die Mausinteraktion auf Zoom.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="203"/>
+        <location filename="Graph.cpp" line="202"/>
         <source>&amp;Pan</source>
         <translation>&amp;Verschieben</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="205"/>
+        <location filename="Graph.cpp" line="204"/>
         <source>Set mouse interaction to panning.</source>
         <translation>Setzt die Mausinteraktion auf Verschieben.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="209"/>
+        <location filename="Graph.cpp" line="208"/>
         <source>&amp;Measure</source>
         <translation>&amp;Messen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="211"/>
+        <location filename="Graph.cpp" line="210"/>
         <source>Set mouse interaction to measuring.</source>
         <translation>Setzt die Mausinteraktion auf Messen.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="216"/>
+        <location filename="Graph.cpp" line="215"/>
         <source>Zoom in</source>
         <translation>Hereinzoomen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="218"/>
+        <location filename="Graph.cpp" line="217"/>
         <source>Zoom the current view in to half of the time around the center.</source>
         <translation>Stellt den halben Zeitbereich um die Mitte dar.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="223"/>
+        <location filename="Graph.cpp" line="222"/>
         <source>Zoom out</source>
         <translation>Herauszoomen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="225"/>
+        <location filename="Graph.cpp" line="224"/>
         <source>Zoom the current view out the double time around the center.</source>
         <translation>Stellt den doppelten Zeitbereich um die Mitte dar.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="230"/>
+        <location filename="Graph.cpp" line="229"/>
         <source>Auto range</source>
         <translation>Gesamten Zeitbereich anzeigen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="232"/>
+        <location filename="Graph.cpp" line="231"/>
         <source>Automatically zoom to the data extent.</source>
         <translation>Automatisch auf den maximalen Zeitbereich zoomen.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="236"/>
+        <location filename="Graph.cpp" line="235"/>
         <source>Choose date...</source>
         <translation>Datum wählen...</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="238"/>
+        <location filename="Graph.cpp" line="237"/>
         <source>Open a dialog for date picking.</source>
         <translation>Öffnet den Dialog zur Datumswahl.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="241"/>
+        <location filename="Graph.cpp" line="240"/>
         <source>Today</source>
         <translation>Heute</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="243"/>
+        <location filename="Graph.cpp" line="242"/>
         <source>Set the date range to today.</source>
         <translation>Setzt den Zeitbereich auf heute.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="247"/>
+        <location filename="Graph.cpp" line="246"/>
         <source>Yesterday</source>
         <translation>Gestern</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="249"/>
+        <location filename="Graph.cpp" line="248"/>
         <source>Set the date range to yesterday.</source>
         <translation>Setzt den Zeitbereich auf gestern.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="253"/>
+        <location filename="Graph.cpp" line="252"/>
         <source>This week</source>
         <translation>Diese Woche</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="255"/>
+        <location filename="Graph.cpp" line="254"/>
         <source>Set the date range to this week.</source>
         <translation>Setzt den Zeitbereich auf diese Woche.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="259"/>
+        <location filename="Graph.cpp" line="258"/>
         <source>Last week</source>
         <translation>Letzte Woche</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="261"/>
+        <location filename="Graph.cpp" line="260"/>
         <source>Set the date range to last week.</source>
         <translation>Setzt den Zeitbereich auf letzte Woche.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="265"/>
+        <location filename="Graph.cpp" line="264"/>
         <source>This month</source>
         <translation>Dieser Monat</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="267"/>
+        <location filename="Graph.cpp" line="266"/>
         <source>Set the date range to this month.</source>
         <translation>Setzt den Zeitbereich auf diesen Monat.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="271"/>
+        <location filename="Graph.cpp" line="270"/>
         <source>Last month</source>
         <translation>Letzter Monat</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="273"/>
+        <location filename="Graph.cpp" line="272"/>
         <source>Set the date range to last month.</source>
         <translation>Setzt den Zeitbereich auf letzten Monat.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="277"/>
+        <location filename="Graph.cpp" line="276"/>
         <source>This year</source>
         <translation>Dieses Jahr</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="279"/>
+        <location filename="Graph.cpp" line="278"/>
         <source>Set the date range to this year.</source>
         <translation>Setzt den Zeitbereich auf dieses Jahr.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="283"/>
+        <location filename="Graph.cpp" line="282"/>
         <source>Last year</source>
         <translation>Letztes Jahr</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="285"/>
+        <location filename="Graph.cpp" line="284"/>
         <source>Set the date range to last year.</source>
         <translation>Setzt den zeitbereich auf letztes Jahr.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="289"/>
+        <location filename="Graph.cpp" line="288"/>
         <source>Section properties...</source>
         <translation>Abschnittseigenschaften...</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="290"/>
+        <location filename="Graph.cpp" line="289"/>
         <source>Open the section configuration dialog.</source>
         <translation>Öffnet den Einstellungsdialog für den Abschnitt.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="297"/>
+        <location filename="Graph.cpp" line="296"/>
         <source>Remove section</source>
         <translation>Abschnitt entfernen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="298"/>
+        <location filename="Graph.cpp" line="297"/>
         <source>Remove the selected section.</source>
         <translation>Löscht den gewählten Abschnitt.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="303"/>
+        <location filename="Graph.cpp" line="302"/>
         <source>Clear sections</source>
         <translation>Alle Abschnitte entfernen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="304"/>
+        <location filename="Graph.cpp" line="303"/>
         <source>Remove all sections.</source>
         <translation>Löscht alle Abschnitte.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="309"/>
+        <location filename="Graph.cpp" line="308"/>
         <source>Show Messages</source>
         <translation>Meldungen zeigen</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="310"/>
+        <location filename="Graph.cpp" line="309"/>
         <source>Show process messages.</source>
         <translation>Stellt Meldungen des Prozesses dar.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="316"/>
+        <location filename="Graph.cpp" line="315"/>
         <source>Filter messages...</source>
         <translation>Meldungen filtern...</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="317"/>
+        <location filename="Graph.cpp" line="316"/>
         <source>Filter messages by regular expressions.</source>
         <translation>Meldungen mit regulären Ausdrücken filtern.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="321"/>
+        <location filename="Graph.cpp" line="320"/>
         <source>Print...</source>
         <translation>Drucken...</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="322"/>
+        <location filename="Graph.cpp" line="321"/>
         <source>Open the print dialog.</source>
         <translation>Öffnet den Druckdialog.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="326"/>
+        <location filename="Graph.cpp" line="325"/>
         <source>Export...</source>
         <translation>Exportieren...</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="327"/>
+        <location filename="Graph.cpp" line="326"/>
         <source>Open the export dialog.</source>
         <translation>Öffnet den Dialog zum Exportieren der Daten.</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="379"/>
+        <location filename="Graph.cpp" line="378"/>
         <source>Failed to open %1!</source>
         <translation>Öffnen von %1 fehlgeschlagen!</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="389"/>
+        <location filename="Graph.cpp" line="388"/>
         <source>Failed to parse XML, line %2, column %3: %4</source>
         <translation>Verarbeiten des XMLs fehlgeschlagen in Zeile %2, Spalte %3: %4</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="479"/>
+        <location filename="Graph.cpp" line="478"/>
         <source>Failed to open %1 for writing!</source>
         <translation>Anlegen von %1 fehlgeschlagen!</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="1679"/>
+        <location filename="Graph.cpp" line="1595"/>
         <source>Go to date</source>
         <translation>Gehe zu Datum</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="1778"/>
+        <location filename="Graph.cpp" line="1696"/>
         <source>Failed to get channel %1: %2</source>
         <translation>Kanal %1 nicht gefunden: %2</translation>
     </message>
     <message>
-        <location filename="Graph.cpp" line="2074"/>
+        <location filename="Graph.cpp" line="2025"/>
         <source>Failed to load section: %1</source>
         <translation>Verarbeiten des Abschnitts fehlgeschlagen: %1</translation>
     </message>
@@ -342,7 +342,7 @@
 <context>
     <name>DLS::SectionDialog</name>
     <message numerus="yes">
-        <location filename="SectionDialog.cpp" line="256"/>
+        <location filename="SectionDialog.cpp" line="264"/>
         <source>Remove %n layer(s)</source>
         <translation>
             <numerusform>%n Abschnitt entfernen</numerusform>
@@ -529,19 +529,24 @@
 <context>
     <name>Section</name>
     <message>
-        <location filename="Section.cpp" line="187"/>
+        <location filename="Section.cpp" line="190"/>
         <source>Invalid value in ScaleMinimum</source>
         <translation>Ungültiger Wert in Attribut ScaleMinimum</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="197"/>
+        <location filename="Section.cpp" line="200"/>
         <source>Invalid value in ScaleMaximum</source>
         <translation>Ungültiger Wert in Attribut ScaleMaximum</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="207"/>
+        <location filename="Section.cpp" line="210"/>
         <source>Invalid value in Height</source>
         <translation>Ungültiger Wert in Attribut Height</translation>
+    </message>
+    <message>
+        <location filename="Section.cpp" line="220"/>
+        <source>Invalid value in RelativePrintHeight</source>
+        <translation>Ungültiger Wert in Attribut RelativePrintHeight</translation>
     </message>
     <message>
         <source>Layer element missing url attribute!</source>
@@ -560,7 +565,7 @@
         <translation type="vanished">Kanal %1 nicht gefunden!</translation>
     </message>
     <message>
-        <location filename="Section.cpp" line="931"/>
+        <location filename="Section.cpp" line="972"/>
         <source>Failed to load layer: %1</source>
         <translation>Schicht konnte nicht geladen werden: %1</translation>
     </message>
@@ -608,7 +613,24 @@
         <translation>Skala anzeigen</translation>
     </message>
     <message>
-        <location filename="SectionDialog.ui" line="130"/>
+        <location filename="SectionDialog.ui" line="96"/>
+        <source>Relative printing
+height:</source>
+        <translation>Relative Höhe
+im Ausdruck:</translation>
+    </message>
+    <message>
+        <location filename="SectionDialog.ui" line="104"/>
+        <source>(unused)</source>
+        <translation>(keine)</translation>
+    </message>
+    <message>
+        <location filename="SectionDialog.ui" line="107"/>
+        <source> %</source>
+        <translation> %</translation>
+    </message>
+    <message>
+        <location filename="SectionDialog.ui" line="161"/>
         <source>Preview</source>
         <translation>Vorschau</translation>
     </message>
