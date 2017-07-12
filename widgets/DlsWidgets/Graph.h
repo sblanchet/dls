@@ -127,7 +127,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool load(const QString &, QtDls::Model *);
         bool save(const QString &);
 
-        void renderPage(QPainter &, const QRect &, unsigned int = 0);
+        bool renderPage(QPainter &, const QRect &, unsigned int = 0);
 
         void connectChannels(QtDls::Model *);
         bool dirInUse(const LibDLS::Directory *);
