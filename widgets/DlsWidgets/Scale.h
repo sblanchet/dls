@@ -36,7 +36,7 @@ namespace DLS {
 class Scale
 {
     public:
-        Scale(QWidget *);
+        Scale(const QWidget *);
 
         const LibDLS::Time &getStart() const { return start; }
         const LibDLS::Time &getEnd() const { return end; }

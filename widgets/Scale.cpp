@@ -37,7 +37,7 @@ using DLS::Scale;
 
 /** Constructor.
  */
-Scale::Scale(QWidget *p):
+Scale::Scale(const QWidget *p):
     parent(p),
     length(0),
     outerLength(0),
