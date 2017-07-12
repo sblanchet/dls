@@ -537,8 +537,12 @@ bool Graph::save(const QString &path)
 
 /****************************************************************************/
 
-bool Graph::renderPage(QPainter &painter, const QRect &rect,
-        unsigned int pageNum)
+bool Graph::renderPage(
+        QPainter &painter,
+        const QRect &rect,
+        unsigned int pageNum,
+        RenderFlags flags
+        )
 {
     bool ret = false;
 
@@ -553,7 +557,7 @@ bool Graph::renderPage(QPainter &painter, const QRect &rect,
         QList<Section *>::const_iterator last =
             lastSectionOnPage(first, displayHeight);
         if (page == pageNum) {
-            renderSections(painter, rect, first, last, displayHeight);
+            renderSections(painter, rect, first, last, displayHeight, flags);
             ret = true;
             break;
         }
@@ -982,7 +986,7 @@ void Graph::print()
         int displayHeight = renderCommon(painter, rect);
         QList<Section *>::const_iterator last =
             lastSectionOnPage(first, displayHeight);
-        renderSections(painter, rect, first, last, displayHeight);
+        renderSections(painter, rect, first, last, displayHeight, All);
         first = last + 1;
         if (first != sections.end()) {
             printer.newPage();
@@ -2556,7 +2560,8 @@ void Graph::renderSections(
         const QRect &rect,
         QList<Section *>::const_iterator first,
         QList<Section *>::const_iterator last,
-        int displayHeight
+        int displayHeight,
+        RenderFlags flags
         )
 {
     QList<Section *>::const_iterator secIter = first;
@@ -2575,7 +2580,7 @@ void Graph::renderSections(
     int dataWidth = rect.width() - scaleWidth;
     LibDLS::Time range = getEnd() - getStart();
     int measurePos = -1;
-    if (!measureTime.is_null() && dataWidth > 0
+    if ((flags & MeasuringLine) && !measureTime.is_null() && dataWidth > 0
             && measureTime >= getStart() && measureTime < getEnd()
             && range > 0.0) {
         double xScale = dataWidth / range.to_dbl_time();
