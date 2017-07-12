@@ -537,6 +537,32 @@ bool Graph::save(const QString &path)
 
 /****************************************************************************/
 
+void Graph::renderPage(QPainter &painter, const QRect &rect,
+        unsigned int pageNum)
+{
+    int displayHeight = renderCommon(painter, rect);
+
+    rwLockSections.lockForRead();
+
+    QList<Section *>::const_iterator first = sections.begin();
+    unsigned int page = 0;
+
+    while (first != sections.end()) {
+        QList<Section *>::const_iterator last =
+            lastSectionOnPage(first, displayHeight);
+        if (page == pageNum) {
+            renderSections(painter, rect, first, last, displayHeight);
+            break;
+        }
+        first = last + 1;
+        page++;
+    }
+
+    rwLockSections.unlock();
+}
+
+/****************************************************************************/
+
 /** Tries to connect layers without channels to the given model.
  */
 void Graph::connectChannels(Model *model)
@@ -941,125 +967,17 @@ void Graph::print()
         return;
     }
 
-    // get widget data height
-    int displayHeight = contentsRect().height() - scale.getOuterLength() - 1;
-    if (displayHeight <= 0) {
-        qWarning("invalid data height.");
-        return;
-    }
-
-    QRect page(printer.pageRect());
-    page.moveTo(0, 0);
-
-    Scale printScale(this);
-    printScale.setRange(scale.getStart(), scale.getEnd());
-    printScale.setLength(page.width());
-
-    QRect timeScaleRect(page);
-    timeScaleRect.setLeft(scaleWidth);
-
-    std::set<LibDLS::Job *> jobSet;
-
-    LibDLS::Time range = getEnd() - getStart();
-    int dataWidth = page.width() - scaleWidth;
-    int measurePos = -1;
-    if (!measureTime.is_null() && dataWidth > 0
-            && measureTime >= getStart() && measureTime < getEnd()
-            && range > 0.0) {
-        double xScale = dataWidth / range.to_dbl_time();
-        measurePos =
-            (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
-    }
+    QRect rect(printer.pageRect());
+    rect.moveTo(0, 0);
 
     rwLockSections.lockForRead();
 
-    QList<Section *>::iterator first = sections.begin();
-
+    QList<Section *>::const_iterator first = sections.begin();
     while (first != sections.end()) {
-
-        // choose sections for current page
-        QList<Section *>::iterator last = first;
-        int heightSum = (*first)->getHeight();
-        unsigned int count = 1;
-        while (heightSum < displayHeight) {
-            QList<Section *>::iterator next = last + 1;
-            if (next == sections.end() ||
-                    heightSum + (*next)->getHeight() > displayHeight) {
-                break;
-            }
-
-            last = next;
-            heightSum += (*last)->getHeight();
-            count++;
-        }
-
-        printScale.draw(painter, timeScaleRect);
-
-        QPen verLinePen;
-        painter.setPen(verLinePen);
-        painter.drawLine(page.left(),
-                page.top() + printScale.getOuterLength(),
-                page.right(),
-                page.top() + printScale.getOuterLength());
-
-        int top = page.top() + printScale.getOuterLength() + 1;
-        QRect dataRect(page);
-        dataRect.setTop(page.top() + printScale.getOuterLength() + 1);
-
-        for (QList<Section *>::iterator s = first; s != last + 1; s++) {
-            int height = (*s)->getHeight() * (dataRect.height() - count - 1)
-                / heightSum;
-            QRect r(page.left(), top, page.width(), height);
-
-            Section drawSection(**s);
-            drawSection.setHeight(height);
-            drawSection.resize(page.width());
-            drawSection.loadData(scale.getStart(), scale.getEnd(),
-                dataWidth, &worker, jobSet);
-            drawSection.draw(painter, r, measurePos, scaleWidth, false);
-
-            QPen pen;
-            painter.setPen(pen);
-            painter.drawLine(page.left(), top + height,
-                    page.right(), top + height);
-
-            top += height + 1;
-        }
-
-        if (measurePos != -1) {
-            int xp = page.left() + scaleWidth + measurePos;
-            QPen pen;
-            pen.setColor(Qt::darkBlue);
-            painter.setPen(pen);
-
-            painter.drawLine(xp, page.top(), xp, page.bottom());
-
-            QRect textRect(page);
-            textRect.setLeft(xp + 3);
-            textRect.setTop(page.top() + 2);
-            textRect.setHeight(page.height() - 4);
-            QString label(measureTime.to_real_time().c_str());
-            QFontMetrics fm(painter.font());
-            QSize s = fm.size(0, label);
-            if (s.width() <= textRect.width()) {
-                painter.fillRect(
-                        QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
-                        Qt::white);
-                painter.drawText(textRect, Qt::AlignLeft, label);
-            }
-            else {
-                textRect.setLeft(page.left());
-                textRect.setRight(xp - 3);
-                if (s.width() <= textRect.width()) {
-                    painter.fillRect(QRect(
-                                QPoint(textRect.right() + 1 - s.width(),
-                                    textRect.top()), s).adjusted(-2, 0, 2, 0),
-                            Qt::white);
-                    painter.drawText(textRect, Qt::AlignRight, label);
-                }
-            }
-        }
-
+        int displayHeight = renderCommon(painter, rect);
+        QList<Section *>::const_iterator last =
+            lastSectionOnPage(first, displayHeight);
+        renderSections(painter, rect, first, last, displayHeight);
         first = last + 1;
         if (first != sections.end()) {
             printer.newPage();
@@ -1069,6 +987,153 @@ void Graph::print()
     rwLockSections.unlock();
 
     painter.end();
+}
+
+/****************************************************************************/
+
+QList<Section *>::const_iterator Graph::lastSectionOnPage(
+        QList<Section *>::const_iterator first,
+        int displayHeight
+        ) const
+{
+    QList<Section *>::const_iterator secIter = first;
+    double heightSum = (*first)->relativeHeight(displayHeight);
+    while (secIter != sections.end()) {
+        QList<Section *>::const_iterator next = secIter + 1;
+        if (next == sections.end()) {
+            break;
+        }
+        double relHeight = (*next)->relativeHeight(displayHeight);
+        if (heightSum + relHeight > 1.0) {
+            break;
+        }
+
+        heightSum += relHeight;
+        secIter = next;
+    }
+
+    return secIter;
+}
+
+/****************************************************************************/
+
+int Graph::renderCommon(
+        QPainter &painter,
+        const QRect &rect
+        ) const
+{
+    QRect timeScaleRect(rect);
+    timeScaleRect.setLeft(scaleWidth); // width taken from display!
+
+    Scale printScale(this);
+    printScale.setRange(scale.getStart(), scale.getEnd());
+    printScale.setLength(rect.width());
+    printScale.draw(painter, timeScaleRect);
+    int displayHeight = rect.height() - printScale.getOuterLength() - 1;
+
+    // Horizontal line above top section
+    QPen horLinePen;
+    painter.setPen(horLinePen);
+    painter.drawLine(rect.left(),
+            rect.top() + printScale.getOuterLength(),
+            rect.right(),
+            rect.top() + printScale.getOuterLength());
+
+    return displayHeight;
+}
+
+/****************************************************************************/
+
+void Graph::renderSections(
+        QPainter &painter,
+        const QRect &rect,
+        QList<Section *>::const_iterator first,
+        QList<Section *>::const_iterator last,
+        int displayHeight
+        )
+{
+    QList<Section *>::const_iterator secIter = first;
+    double heightSum = (*first)->relativeHeight(displayHeight);
+    unsigned int count = 1;
+    while (secIter != last) {
+        secIter++;
+        heightSum += (*secIter)->relativeHeight(displayHeight);
+        count++;
+    }
+
+    if (heightSum <= 0) {
+        return;
+    }
+
+    int dataWidth = rect.width() - scaleWidth;
+    LibDLS::Time range = getEnd() - getStart();
+    int measurePos = -1;
+    if (!measureTime.is_null() && dataWidth > 0
+            && measureTime >= getStart() && measureTime < getEnd()
+            && range > 0.0) {
+        double xScale = dataWidth / range.to_dbl_time();
+        measurePos =
+            (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+    }
+
+    std::set<LibDLS::Job *> jobSet;
+    int top = rect.bottom() - displayHeight + 1;
+    QRect dataRect(rect);
+    dataRect.setTop(top);
+
+    for (QList<Section *>::const_iterator s = first; s != last + 1; s++) {
+        int height = (*s)->relativeHeight(displayHeight) *
+            (dataRect.height() - count - 1) / heightSum;
+        QRect r(rect.left(), top, rect.width(), height);
+
+        Section drawSection(**s);
+        drawSection.setHeight(height);
+        drawSection.resize(rect.width());
+        drawSection.loadData(scale.getStart(), scale.getEnd(),
+                dataWidth, &worker, jobSet);
+        drawSection.draw(painter, r, measurePos, scaleWidth, false);
+
+        QPen pen;
+        painter.setPen(pen);
+        painter.drawLine(rect.left(), top + height,
+                rect.right(), top + height);
+
+        top += height + 1;
+    }
+
+    if (measurePos != -1) {
+        int xp = rect.left() + scaleWidth + measurePos;
+        QPen pen;
+        pen.setColor(Qt::darkBlue);
+        painter.setPen(pen);
+
+        painter.drawLine(xp, rect.top(), xp, rect.bottom());
+
+        QRect textRect(rect);
+        textRect.setLeft(xp + 3);
+        textRect.setTop(rect.top() + 2);
+        textRect.setHeight(rect.height() - 4);
+        QString label(measureTime.to_real_time().c_str());
+        QFontMetrics fm(painter.font());
+        QSize s = fm.size(0, label);
+        if (s.width() <= textRect.width()) {
+            painter.fillRect(
+                    QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
+                    Qt::white);
+            painter.drawText(textRect, Qt::AlignLeft, label);
+        }
+        else {
+            textRect.setLeft(rect.left());
+            textRect.setRight(xp - 3);
+            if (s.width() <= textRect.width()) {
+                painter.fillRect(QRect(
+                            QPoint(textRect.right() + 1 - s.width(),
+                                textRect.top()), s).adjusted(-2, 0, 2, 0),
+                        Qt::white);
+                painter.drawText(textRect, Qt::AlignRight, label);
+            }
+        }
+    }
 }
 
 /****************************************************************************/
@@ -1457,8 +1522,8 @@ void Graph::paintEvent(
     scale.draw(painter, timeScaleRect);
 
     // Horizontal line above top section
-    QPen verLinePen;
-    painter.setPen(verLinePen);
+    QPen horLinePen;
+    painter.setPen(horLinePen);
     painter.drawLine(contentsRect().left(),
             contentsRect().top() + scale.getOuterLength(),
             contentsRect().right(),
@@ -1936,8 +2001,6 @@ void Graph::updateScrollBar()
 
     for (QList<Section *>::iterator s = sections.begin();
             s != sections.end(); s++) {
-        QRect rect(contentsRect().left(), height,
-                contentsRect().width(), (*s)->getHeight());
         height += (*s)->getHeight() + splitterWidth;
     }
 
