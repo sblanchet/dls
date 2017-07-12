@@ -127,6 +127,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool load(const QString &, QtDls::Model *);
         bool save(const QString &);
 
+        void renderPage(QPainter &, const QRect &, unsigned int = 0);
+
         void connectChannels(QtDls::Model *);
         bool dirInUse(const LibDLS::Directory *);
 
@@ -315,6 +317,12 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void touchZoomUpdate(int, int);
         int getDataWidth() const;
         QSet<QtDls::Channel *> displayedChannels();
+        QList<Section *>::const_iterator lastSectionOnPage(
+                QList<Section *>::const_iterator, int) const;
+        int renderCommon(QPainter &, const QRect &) const;
+        void renderSections(QPainter &, const QRect &,
+                QList<Section *>::const_iterator,
+                QList<Section *>::const_iterator, int);
 
     private slots:
         void interactionSlot();
