@@ -537,9 +537,11 @@ bool Graph::save(const QString &path)
 
 /****************************************************************************/
 
-void Graph::renderPage(QPainter &painter, const QRect &rect,
+bool Graph::renderPage(QPainter &painter, const QRect &rect,
         unsigned int pageNum)
 {
+    bool ret = false;
+
     int displayHeight = renderCommon(painter, rect);
 
     rwLockSections.lockForRead();
@@ -552,6 +554,7 @@ void Graph::renderPage(QPainter &painter, const QRect &rect,
             lastSectionOnPage(first, displayHeight);
         if (page == pageNum) {
             renderSections(painter, rect, first, last, displayHeight);
+            ret = true;
             break;
         }
         first = last + 1;
@@ -559,6 +562,8 @@ void Graph::renderPage(QPainter &painter, const QRect &rect,
     }
 
     rwLockSections.unlock();
+
+    return ret;
 }
 
 /****************************************************************************/
