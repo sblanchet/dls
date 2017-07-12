@@ -127,7 +127,14 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         bool load(const QString &, QtDls::Model *);
         bool save(const QString &);
 
-        bool renderPage(QPainter &, const QRect &, unsigned int = 0);
+        enum RenderFlag {
+            Plain = 0,
+            MeasuringLine = 1,
+            All = MeasuringLine
+        };
+        Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
+        bool renderPage(QPainter &, const QRect &, unsigned int = 0,
+                RenderFlags = All);
 
         void connectChannels(QtDls::Model *);
         bool dirInUse(const LibDLS::Directory *);
@@ -322,7 +329,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         int renderCommon(QPainter &, const QRect &) const;
         void renderSections(QPainter &, const QRect &,
                 QList<Section *>::const_iterator,
-                QList<Section *>::const_iterator, int);
+                QList<Section *>::const_iterator, int, RenderFlags);
 
     private slots:
         void interactionSlot();
@@ -339,6 +346,8 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void fixMeasuringLine();
         void removeMeasuringLine();
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(Graph::RenderFlags)
 
 /****************************************************************************/
 
