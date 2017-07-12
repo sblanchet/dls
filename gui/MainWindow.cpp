@@ -31,6 +31,12 @@ using namespace std;
 #include <QMessageBox>
 #include <QUrl>
 
+#define RENDERTEST 0
+
+#if RENDERTEST
+#include <QPainter>
+#endif
+
 #include "MainWindow.h"
 #include "SettingsDialog.h"
 #include "AboutDialog.h"
@@ -431,6 +437,24 @@ void MainWindow::on_actionAboutDlsgui_triggered()
     AboutDialog dialog(this);
 
     dialog.exec();
+
+#if RENDERTEST
+    QPixmap pixmap(600, 400);
+    QPainter painter(&pixmap);
+    pixmap.fill();
+    int page = 0;
+
+    while (1) {
+        if (!dlsGraph->renderPage(painter, pixmap.rect(),
+                    page, DLS::Graph::All)) {
+            break;
+        }
+
+        pixmap.save(QString("shot-%1.png").arg(page));
+        pixmap.fill();
+        page++;
+    }
+#endif
 }
 
 /****************************************************************************/
