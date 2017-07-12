@@ -991,160 +991,6 @@ void Graph::print()
 
 /****************************************************************************/
 
-QList<Section *>::const_iterator Graph::lastSectionOnPage(
-        QList<Section *>::const_iterator first,
-        int displayHeight
-        ) const
-{
-    QList<Section *>::const_iterator secIter = first;
-    double heightSum = (*first)->relativeHeight(displayHeight);
-    while (secIter != sections.end()) {
-        QList<Section *>::const_iterator next = secIter + 1;
-        if (next == sections.end()) {
-            break;
-        }
-        double relHeight = (*next)->relativeHeight(displayHeight);
-        if (heightSum + relHeight > 1.0) {
-            break;
-        }
-
-        heightSum += relHeight;
-        secIter = next;
-    }
-
-    return secIter;
-}
-
-/****************************************************************************/
-
-int Graph::renderCommon(
-        QPainter &painter,
-        const QRect &rect
-        ) const
-{
-    QRect timeScaleRect(rect);
-    timeScaleRect.setLeft(scaleWidth); // FIXME taken from display!
-
-    Scale printScale(this);
-    printScale.setRange(scale.getStart(), scale.getEnd());
-    printScale.setLength(timeScaleRect.width());
-    printScale.draw(painter, timeScaleRect);
-    int displayHeight = rect.height() - printScale.getOuterLength() - 1;
-
-    // Horizontal line above top section
-    QPen horLinePen;
-    painter.setPen(horLinePen);
-    painter.drawLine(rect.left(),
-            rect.top() + printScale.getOuterLength(),
-            rect.right(),
-            rect.top() + printScale.getOuterLength());
-
-    return displayHeight;
-}
-
-/****************************************************************************/
-
-void Graph::renderSections(
-        QPainter &painter,
-        const QRect &rect,
-        QList<Section *>::const_iterator first,
-        QList<Section *>::const_iterator last,
-        int displayHeight
-        )
-{
-    QList<Section *>::const_iterator secIter = first;
-    double heightSum = (*first)->relativeHeight(displayHeight);
-    unsigned int count = 1;
-    while (secIter != last) {
-        secIter++;
-        heightSum += (*secIter)->relativeHeight(displayHeight);
-        count++;
-    }
-
-    if (heightSum <= 0) {
-        return;
-    }
-
-    int dataWidth = rect.width() - scaleWidth;
-    LibDLS::Time range = getEnd() - getStart();
-    int measurePos = -1;
-    if (!measureTime.is_null() && dataWidth > 0
-            && measureTime >= getStart() && measureTime < getEnd()
-            && range > 0.0) {
-        double xScale = dataWidth / range.to_dbl_time();
-        measurePos =
-            (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
-    }
-
-    std::set<LibDLS::Job *> jobSet;
-    int top = rect.bottom() - displayHeight + 1;
-    QRect dataRect(rect);
-    dataRect.setTop(top);
-
-    for (QList<Section *>::const_iterator s = first; s != last + 1; s++) {
-        int height;
-        if (s == last) {
-            // use remaining height
-            height = dataRect.bottom() - top;
-        }
-        else {
-            height = (*s)->relativeHeight(displayHeight) *
-                (dataRect.height() - count - 1) / heightSum;
-        }
-        QRect r(rect.left(), top, rect.width(), height);
-
-        Section drawSection(**s);
-        drawSection.setHeight(height);
-        drawSection.resize(rect.width());
-        drawSection.loadData(scale.getStart(), scale.getEnd(),
-                dataWidth, &worker, jobSet);
-        drawSection.draw(painter, r, measurePos, scaleWidth, false);
-
-        QPen pen;
-        painter.setPen(pen);
-        painter.drawLine(rect.left(), top + height,
-                rect.right(), top + height);
-
-        top += height + 1;
-    }
-
-    if (measurePos != -1) {
-        int xp = rect.left() + scaleWidth + measurePos;
-        QPen pen;
-        pen.setColor(Qt::darkBlue);
-        painter.setPen(pen);
-
-        painter.drawLine(xp, rect.top(), xp, rect.bottom());
-
-        QRect textRect(rect);
-        textRect.setLeft(xp + 3);
-        textRect.setTop(rect.top() + 2);
-        textRect.setHeight(rect.height() - 4);
-        QString label(measureTime.to_real_time().c_str());
-        QFontMetrics fm(painter.font());
-        QSize s = fm.size(0, label);
-        if (s.width() <= textRect.width()) {
-            painter.fillRect(
-                    QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
-                    Qt::white);
-            painter.drawText(textRect, Qt::AlignLeft, label);
-        }
-        else {
-            textRect.setLeft(rect.left());
-            textRect.setRight(xp - 3);
-            if (s.width() <= textRect.width()) {
-                painter.fillRect(QRect(
-                            QPoint(textRect.right() + 1 - s.width(),
-                                textRect.top()), s).adjusted(-2, 0, 2, 0),
-                        Qt::white);
-                painter.drawText(textRect, Qt::AlignRight, label);
-            }
-        }
-    }
-}
-
-/****************************************************************************/
-
 /** Set whether to display messages.
  */
 void Graph::setShowMessages(
@@ -2643,6 +2489,160 @@ QSet<QtDls::Channel *> Graph::displayedChannels()
     rwLockSections.unlock();
 
     return channels;
+}
+
+/****************************************************************************/
+
+QList<Section *>::const_iterator Graph::lastSectionOnPage(
+        QList<Section *>::const_iterator first,
+        int displayHeight
+        ) const
+{
+    QList<Section *>::const_iterator secIter = first;
+    double heightSum = (*first)->relativeHeight(displayHeight);
+    while (secIter != sections.end()) {
+        QList<Section *>::const_iterator next = secIter + 1;
+        if (next == sections.end()) {
+            break;
+        }
+        double relHeight = (*next)->relativeHeight(displayHeight);
+        if (heightSum + relHeight > 1.0) {
+            break;
+        }
+
+        heightSum += relHeight;
+        secIter = next;
+    }
+
+    return secIter;
+}
+
+/****************************************************************************/
+
+int Graph::renderCommon(
+        QPainter &painter,
+        const QRect &rect
+        ) const
+{
+    QRect timeScaleRect(rect);
+    timeScaleRect.setLeft(scaleWidth); // FIXME taken from display!
+
+    Scale printScale(this);
+    printScale.setRange(scale.getStart(), scale.getEnd());
+    printScale.setLength(timeScaleRect.width());
+    printScale.draw(painter, timeScaleRect);
+    int displayHeight = rect.height() - printScale.getOuterLength() - 1;
+
+    // Horizontal line above top section
+    QPen horLinePen;
+    painter.setPen(horLinePen);
+    painter.drawLine(rect.left(),
+            rect.top() + printScale.getOuterLength(),
+            rect.right(),
+            rect.top() + printScale.getOuterLength());
+
+    return displayHeight;
+}
+
+/****************************************************************************/
+
+void Graph::renderSections(
+        QPainter &painter,
+        const QRect &rect,
+        QList<Section *>::const_iterator first,
+        QList<Section *>::const_iterator last,
+        int displayHeight
+        )
+{
+    QList<Section *>::const_iterator secIter = first;
+    double heightSum = (*first)->relativeHeight(displayHeight);
+    unsigned int count = 1;
+    while (secIter != last) {
+        secIter++;
+        heightSum += (*secIter)->relativeHeight(displayHeight);
+        count++;
+    }
+
+    if (heightSum <= 0) {
+        return;
+    }
+
+    int dataWidth = rect.width() - scaleWidth;
+    LibDLS::Time range = getEnd() - getStart();
+    int measurePos = -1;
+    if (!measureTime.is_null() && dataWidth > 0
+            && measureTime >= getStart() && measureTime < getEnd()
+            && range > 0.0) {
+        double xScale = dataWidth / range.to_dbl_time();
+        measurePos =
+            (measureTime - getStart()).to_dbl_time() * xScale + 0.5;
+    }
+
+    std::set<LibDLS::Job *> jobSet;
+    int top = rect.bottom() - displayHeight + 1;
+    QRect dataRect(rect);
+    dataRect.setTop(top);
+
+    for (QList<Section *>::const_iterator s = first; s != last + 1; s++) {
+        int height;
+        if (s == last) {
+            // use remaining height
+            height = dataRect.bottom() - top;
+        }
+        else {
+            height = (*s)->relativeHeight(displayHeight) *
+                (dataRect.height() - count - 1) / heightSum;
+        }
+        QRect r(rect.left(), top, rect.width(), height);
+
+        Section drawSection(**s);
+        drawSection.setHeight(height);
+        drawSection.resize(rect.width());
+        drawSection.loadData(scale.getStart(), scale.getEnd(),
+                dataWidth, &worker, jobSet);
+        drawSection.draw(painter, r, measurePos, scaleWidth, false);
+
+        QPen pen;
+        painter.setPen(pen);
+        painter.drawLine(rect.left(), top + height,
+                rect.right(), top + height);
+
+        top += height + 1;
+    }
+
+    if (measurePos != -1) {
+        int xp = rect.left() + scaleWidth + measurePos;
+        QPen pen;
+        pen.setColor(Qt::darkBlue);
+        painter.setPen(pen);
+
+        painter.drawLine(xp, rect.top(), xp, rect.bottom());
+
+        QRect textRect(rect);
+        textRect.setLeft(xp + 3);
+        textRect.setTop(rect.top() + 2);
+        textRect.setHeight(rect.height() - 4);
+        QString label(measureTime.to_real_time().c_str());
+        QFontMetrics fm(painter.font());
+        QSize s = fm.size(0, label);
+        if (s.width() <= textRect.width()) {
+            painter.fillRect(
+                    QRect(textRect.topLeft(), s).adjusted(-2, 0, 2, 0),
+                    Qt::white);
+            painter.drawText(textRect, Qt::AlignLeft, label);
+        }
+        else {
+            textRect.setLeft(rect.left());
+            textRect.setRight(xp - 3);
+            if (s.width() <= textRect.width()) {
+                painter.fillRect(QRect(
+                            QPoint(textRect.right() + 1 - s.width(),
+                                textRect.top()), s).adjusted(-2, 0, 2, 0),
+                        Qt::white);
+                painter.drawText(textRect, Qt::AlignRight, label);
+            }
+        }
+    }
 }
 
 /*****************************************************************************
