@@ -1023,11 +1023,11 @@ int Graph::renderCommon(
         ) const
 {
     QRect timeScaleRect(rect);
-    timeScaleRect.setLeft(scaleWidth); // width taken from display!
+    timeScaleRect.setLeft(scaleWidth); // FIXME taken from display!
 
     Scale printScale(this);
     printScale.setRange(scale.getStart(), scale.getEnd());
-    printScale.setLength(rect.width());
+    printScale.setLength(timeScaleRect.width());
     printScale.draw(painter, timeScaleRect);
     int displayHeight = rect.height() - printScale.getOuterLength() - 1;
 
@@ -1082,8 +1082,15 @@ void Graph::renderSections(
     dataRect.setTop(top);
 
     for (QList<Section *>::const_iterator s = first; s != last + 1; s++) {
-        int height = (*s)->relativeHeight(displayHeight) *
-            (dataRect.height() - count - 1) / heightSum;
+        int height;
+        if (s == last) {
+            // use remaining height
+            height = dataRect.bottom() - top;
+        }
+        else {
+            height = (*s)->relativeHeight(displayHeight) *
+                (dataRect.height() - count - 1) / heightSum;
+        }
         QRect r(rect.left(), top, rect.width(), height);
 
         Section drawSection(**s);
