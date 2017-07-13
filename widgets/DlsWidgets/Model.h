@@ -60,6 +60,8 @@ class Q_DECL_EXPORT Model:
         void removeDir(LibDLS::Directory *);
         void clear();
 
+        void update();
+
         bool hasUnusedDirs(DLS::Graph *) const;
         void removeUnusedDirs(DLS::Graph *);
 
