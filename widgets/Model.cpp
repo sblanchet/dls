@@ -83,6 +83,15 @@ void Model::clear()
 
 /****************************************************************************/
 
+void Model::update()
+{
+    for (QList<Dir *>::iterator d = dirs.begin(); d != dirs.end(); d++) {
+        (*d)->getDir()->import();
+    }
+}
+
+/****************************************************************************/
+
 bool Model::hasUnusedDirs(DLS::Graph *graph) const
 {
     bool hasUnused = false;

@@ -159,6 +159,8 @@ int Dir::row(void *n) const
 
 /****************************************************************************/
 
+/** Update observers.
+ */
 void Dir::update()
 {
     update_jobs();
