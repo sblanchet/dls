@@ -2534,7 +2534,8 @@ int Graph::renderCommon(
         ) const
 {
     QRect timeScaleRect(rect);
-    timeScaleRect.setLeft(scaleWidth); // FIXME taken from display!
+    // FIXME scaleWidth taken from display!
+    timeScaleRect.setLeft(rect.left() + scaleWidth);
 
     Scale printScale(this);
     printScale.setRange(scale.getStart(), scale.getEnd());
