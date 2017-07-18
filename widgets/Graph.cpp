@@ -1566,7 +1566,7 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
     QMenu gotoMenu(this);
 
-    rwLockSections.lockForRead();
+    rwLockSections.lockForWrite();
 
     removeMeasuringAction.setEnabled(
             interaction != Measure && !measureTime.is_null());
@@ -1574,6 +1574,8 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     removeSectionAction.setEnabled(selectedSection);
     clearSectionsAction.setEnabled(!sections.isEmpty());
     sectionPropertiesAction.setEnabled(selectedSection);
+
+    rwLockSections.unlock();
 
     menu.addAction(&fixMeasuringAction);
     menu.addAction(&removeMeasuringAction);
@@ -1618,8 +1620,9 @@ void Graph::contextMenuEvent(QContextMenuEvent *event)
     gotoMenu.addAction(&gotoLastYearAction);
 
     menu.exec(event->globalPos());
-    selectedSection = NULL;
 
+    rwLockSections.lockForWrite();
+    selectedSection = NULL;
     rwLockSections.unlock();
 }
 
@@ -1674,7 +1677,7 @@ void Graph::dropEvent(QDropEvent *event)
         }
     }
     else {
-        s = appendSection();
+        s = appendSection(); // FIXME do not release lock inbetween!
     }
 
     QList<QUrl> urls = event->mimeData()->urls();
@@ -2692,6 +2695,8 @@ void Graph::sectionProperties()
     if (!selectedSection) {
         return;
     }
+
+    // FIXME section locking!
 
     SectionDialog *dialog = new SectionDialog(selectedSection, this);
     dialog->exec();
