@@ -284,21 +284,25 @@ int export_main(int argc, char *argv[])
 
     cout << "Exporting to \"" << dls_export_dir << "\" ..." << endl;
 
+    // create unique directory
 #ifdef __unix__
     ret = mkdir(dls_export_dir.c_str(), 0755);
 #else
     ret = mkdir(dls_export_dir.c_str());
 #endif
 
-    // create unique directory
     if (ret) {
         cerr << "ERROR: Failed to create export directory: ";
         cerr << strerror(errno) << endl;
         exit(1);
     }
 
-    if (start_time < channels_start) start_time = channels_start;
-    if (end_time > channels_end) end_time = channels_end;
+    if (start_time < channels_start) {
+        start_time = channels_start;
+    }
+    if (end_time > channels_end) {
+        end_time = channels_end;
+    }
 
     current_channel = 0;
     total_channels = channels.size();
