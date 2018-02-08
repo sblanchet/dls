@@ -19,6 +19,8 @@
 #
 #------------------------------------------------------------------------------
 
+AUTOMAKE_OPTIONS = no-dependencies
+
 protobuf_sources = dls.pb.cc dls.pb.h
 
 all-local: $(protobuf_sources)
