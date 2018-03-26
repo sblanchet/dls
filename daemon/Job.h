@@ -81,6 +81,7 @@ public:
     void start_logging();
     void change_logging();
     void stop_logging();
+    void subscribe_messages();
     //@}
 
     //@{
