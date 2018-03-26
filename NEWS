@@ -6,6 +6,11 @@ vim700: spelllang=en spell
 
 ------------------------------------------------------------------------------
 
+Since 1.4.0-rc2
+
+* Daemon
+    * Keep logging messages independent of trigger
+
 Version 1.4.0-rc2
 
 * Common

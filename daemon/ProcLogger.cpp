@@ -588,6 +588,8 @@ void ProcLogger::_reload()
             _job.change_logging();
         }
     }
+
+    _job.subscribe_messages();
 }
 
 /*****************************************************************************/
@@ -809,10 +811,12 @@ void ProcLogger::sigConnected()
         _state = Data;
         _last_receive_time.set_now();
         _receiving_data = false;
-        _job.start_logging();
 
         msg() << "Start logging.";
         log(Info);
+
+        _job.start_logging();
+
     }
     else { // trigger variable
         _state = Waiting;
@@ -823,6 +827,8 @@ void ProcLogger::sigConnected()
 
         _subscribe_trigger();
     }
+
+    _job.subscribe_messages();
 }
 
 /****************************************************************************/
