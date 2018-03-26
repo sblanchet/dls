@@ -97,8 +97,8 @@ public:
 
 template <class T>
 class SaverGenT:
-	public SaverGen,
-	public SaverT<T>
+    public SaverGen,
+    public SaverT<T>
 {
     using SaverT<T>::_block_buf;
     using SaverT<T>::_block_buf_index;
@@ -227,9 +227,9 @@ void SaverGenT<T>::add_meta_saver(LibDLS::MetaType type)
 
 template <class T>
 void SaverGenT<T>::process_one(
-		const void *buffer,
-		LibDLS::Time time
-		)
+        const void *buffer,
+        LibDLS::Time time
+        )
 {
     LibDLS::Time actual_diff, target_diff;
     float error_percent;
@@ -244,7 +244,7 @@ void SaverGenT<T>::process_one(
     // Wenn Werte in den Puffern sind
     if (_block_buf_index || _meta_buf_index) {
         // Zeitabstände errechnen
-		double freq = _parent_logger->channel_preset()->sample_frequency;
+        double freq = _parent_logger->channel_preset()->sample_frequency;
         target_diff.from_dbl_time(1 / freq); // Erwarteter Zeitabstand
         actual_diff = time - _time_of_last; // Tats. Zeitabstand
 
@@ -252,8 +252,8 @@ void SaverGenT<T>::process_one(
         error_percent = (actual_diff.to_dbl() - target_diff.to_dbl())
             / target_diff.to_dbl() * 100.0;
         if (error_percent < 0.0) {
-			error_percent *= -1.0;
-		}
+            error_percent *= -1.0;
+        }
 
         // Toleranzbereich verletzt?
         if (error_percent > ALLOWED_TIME_VARIANCE) {
@@ -296,7 +296,7 @@ void SaverGenT<T>::_fill_buffers(const T *buffer,
                                     unsigned int length,
                                     LibDLS::Time time_of_first)
 {
-	LibDLS::Time time_of_one;
+    LibDLS::Time time_of_one;
     double freq = _parent_logger->channel_preset()->sample_frequency;
 
     time_of_one.from_dbl_time(1 / freq); // Zeit eines Wertes

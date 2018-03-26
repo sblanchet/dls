@@ -71,8 +71,8 @@ Chunk::Chunk(const DlsProto::ChunkInfo &info, ChannelType type):
     _meta_reduction(0),
     _format_index(0),
     _mdct_block_size(0),
-	_start(info.start()),
-	_end(info.end()),
+    _start(info.start()),
+    _end(info.end()),
     _type(type),
     _incomplete(info.incomplete())
 {
@@ -363,9 +363,9 @@ void Chunk::_fetch_level_data(Time start,
                 new CompressionT_MDCT<double>(_mdct_block_size, 0);
         }
         else {
-			stringstream err;
+            stringstream err;
             err << "ERROR: MDCT only for floating point types!";
-			log(err.str());
+            log(err.str());
             return;
         }
     }
@@ -379,17 +379,17 @@ void Chunk::_fetch_level_data(Time start,
                 new CompressionT_Quant<double>(0.0);
         }
         else {
-			stringstream err;
+            stringstream err;
             err << "ERROR: Quant only for floating point types!";
-			log(err.str());
+            log(err.str());
             return;
         }
     }
     else {
-		stringstream err;
+        stringstream err;
         err << "ERROR: Unknown compression type index: "
              << _format_index;
-		log(err.str());
+        log(err.str());
         return;
     }
 
@@ -410,11 +410,11 @@ void Chunk::_fetch_level_data(Time start,
         try {
             global_index_record = global_index[i];
         } catch (EIndexT &e) {
-			stringstream err;
+            stringstream err;
             err << "ERROR: Failed read record " << i
                  << " from global index \"";
             err << global_index_file_name << "\". Reason: " << e.msg;
-			log(err.str());
+            log(err.str());
             delete comp;
             return;
         }
@@ -442,17 +442,17 @@ void Chunk::_fetch_level_data(Time start,
             index.open_read(indexPath);
             data_file.open_read(data_file_name.str().c_str());
         } catch (EIndexT &e) {
-			stringstream err;
+            stringstream err;
             err << "ERROR: Failed to open index \"";
             err << indexPath << "\": " << e.msg;
-			log(err.str());
+            log(err.str());
             delete comp;
             return;
         } catch (EFile &e) {
-			stringstream err;
+            stringstream err;
             err << "ERROR: Failed to open data file \"";
             err << indexPath << "\": " << e.msg;
-			log(err.str());
+            log(err.str());
             delete comp;
             return;
         }
@@ -669,9 +669,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         try {
             comp->uncompress(block_data, strlen(block_data), block_size);
         } catch (ECompression &e) {
-			stringstream err;
+            stringstream err;
             err << "ERROR while uncompressing: " << e.msg;
-			log(err.str());
+            log(err.str());
             return;
         }
 
@@ -699,9 +699,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
         try {
             comp->flush_uncompress(block_data, strlen(block_data));
         } catch (ECompression &e) {
-			stringstream err;
+            stringstream err;
             err << "ERROR while uncompressing: " << e.msg;
-			log(err.str());
+            log(err.str());
             return;
         }
 
@@ -920,9 +920,9 @@ bool Chunk::operator==(const Chunk &other) const
 
 void Chunk::set_chunk_info(DlsProto::ChunkInfo *chunk_info) const
 {
-	chunk_info->set_start(_start.to_uint64());
-	chunk_info->set_end(_end.to_uint64());
-	chunk_info->set_incomplete(_incomplete);
+    chunk_info->set_start(_start.to_uint64());
+    chunk_info->set_end(_end.to_uint64());
+    chunk_info->set_incomplete(_incomplete);
 }
 
 /*****************************************************************************/

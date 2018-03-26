@@ -353,7 +353,7 @@ void CtlDialogJob::_edit_channels()
 void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
 {
     list<LibDLS::RealChannel>::const_iterator ch_i;
-	LibDLS::ChannelPreset new_channel;
+    LibDLS::ChannelPreset new_channel;
     CtlJobPreset job_copy;
 
     if (channels->size() == 0) return;

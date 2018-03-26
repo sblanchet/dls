@@ -52,7 +52,7 @@ public:
 
     void set_channel(LibDLS::Channel *);
     void fetch_data(LibDLS::Time, LibDLS::Time, unsigned int);
-	LibDLS::Channel *channel();
+    LibDLS::Channel *channel();
 
     const LibDLS::Channel *channel() const;
     const list<LibDLS::Data> &gen_data() const;
@@ -67,7 +67,7 @@ public:
     bool operator<(const ViewChannel &) const;
 
 private:
-	LibDLS::Channel *_channel;
+    LibDLS::Channel *_channel;
     list<LibDLS::Data> _gen_data;
     list<LibDLS::Data> _min_data;
     list<LibDLS::Data> _max_data;

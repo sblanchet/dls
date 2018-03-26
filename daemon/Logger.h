@@ -68,7 +68,7 @@ public:
 */
 
 class Logger:
-	private PdCom::Subscriber
+    private PdCom::Subscriber
 {
 public:
     Logger(Job *, const LibDLS::ChannelPreset *, const string &,
@@ -82,8 +82,8 @@ public:
 
     //@{
     const LibDLS::ChannelPreset *channel_preset() const {
-		return &_channel_preset;
-	}
+        return &_channel_preset;
+    }
     uint64_t data_size() const {
         return _data_size;
     }
@@ -138,9 +138,9 @@ private:
     void _subscribe(PdCom::Variable *);
     void _unsubscribe();
 
-	// from PdCom::Subscriber()
+    // from PdCom::Subscriber()
     void notify(PdCom::Variable *);
-	void notifyDelete(PdCom::Variable *);
+    void notifyDelete(PdCom::Variable *);
 };
 
 /*****************************************************************************/

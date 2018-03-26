@@ -51,7 +51,7 @@ class Channel:
         ~Channel();
 
         QUrl url() const;
-		Model::NodeType type() const { return Model::ChannelNode; }
+        Model::NodeType type() const { return Model::ChannelNode; }
         QString name() const;
         LibDLS::Job *job() const { return ch->getJob(); }
         unsigned int dirIndex() const { return ch->dir_index(); }

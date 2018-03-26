@@ -70,7 +70,7 @@ private:
 
     const list<LibDLS::Channel> *_channels;
     unsigned int _channel_count;
-	LibDLS::Time _start, _end;
+    LibDLS::Time _start, _end;
     list<LibDLS::Export *> _exporters;
     unsigned int _decimation;
     string _export_dir;

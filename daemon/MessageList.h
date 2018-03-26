@@ -41,13 +41,13 @@ class Job;
 /** Message list.
  */
 class MessageList:
-	public LibDLS::BaseMessageList
+    public LibDLS::BaseMessageList
 {
 public:
     MessageList(Job *);
     virtual ~MessageList();
 
-	LibDLS::BaseMessage *newMessage(xmlNode *);
+    LibDLS::BaseMessage *newMessage(xmlNode *);
 
     void subscribe(PdCom::Process *);
     void unsubscribe();

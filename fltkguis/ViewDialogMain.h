@@ -74,8 +74,8 @@ private:
     ViewViewData *_view_data; /**< Anzeige für die Kanaldaten */
     ViewViewMsg *_view_msg; /**< Anzeige für die Messages */
 
-	LibDLS::Directory _dls_dir; /**< LibDLS directory object */
-	LibDLS::Job *_current_job; /**< current job */
+    LibDLS::Directory _dls_dir; /**< LibDLS directory object */
+    LibDLS::Job *_current_job; /**< current job */
 
     static void _callback(Fl_Widget *, void *);
     void _button_close_clicked();

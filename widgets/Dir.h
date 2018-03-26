@@ -49,7 +49,7 @@ class Dir:
         ~Dir();
 
         QUrl url() const;
-		Model::NodeType type() const { return Model::DirNode; }
+        Model::NodeType type() const { return Model::DirNode; }
         Channel *findChannel(unsigned int, const QString &);
 
         class Exception

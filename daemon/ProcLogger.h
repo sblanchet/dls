@@ -65,7 +65,7 @@ public:
     std::string dls_dir() const { return _dls_dir; }
 
 private:
-	std::string _dls_dir;
+    std::string _dls_dir;
     Job _job;
     int _socket;
     bool _write_request;

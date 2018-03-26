@@ -115,13 +115,13 @@ protected:
     unsigned int _meta_buf_index;     /**< Index des ersten, freien Elementes
                                          im Meta-Puffer */
     unsigned int _meta_buf_size;      /**< Größe des Meta-Puffers */
-	LibDLS::Time _block_time;              /**< Zeit des ersten Datenwertes im
+    LibDLS::Time _block_time;              /**< Zeit des ersten Datenwertes im
                                          Block-Puffer */
-	LibDLS::Time _meta_time;               /**< Zeit des ersten Datenwertes im
+    LibDLS::Time _meta_time;               /**< Zeit des ersten Datenwertes im
                                          Meta-Puffer */
-	LibDLS::Time _time_of_last;            /**< Zeit des letzten Datenwertes beider
+    LibDLS::Time _time_of_last;            /**< Zeit des letzten Datenwertes beider
                                          Puffer */
-	LibDLS::CompressionT<T> *_compression; /**< Zeiger auf ein beliebiges
+    LibDLS::CompressionT<T> *_compression; /**< Zeiger auf ein beliebiges
                                          Komprimierungs-Objekt */
 
     void _save_block();
@@ -153,8 +153,8 @@ protected:
     virtual string _meta_type() const = 0;
 
 private:
-	LibDLS::File _data_file;  /**< Datei-Objekt zum Speichern der Blöcke */
-	LibDLS::File _index_file; /**< Datei-Objekt zum Speichern der Block-Indizes */
+    LibDLS::File _data_file;  /**< Datei-Objekt zum Speichern der Blöcke */
+    LibDLS::File _index_file; /**< Datei-Objekt zum Speichern der Block-Indizes */
 
     void _begin_files(LibDLS::Time);
 };
@@ -291,9 +291,9 @@ SaverT<T>::~SaverT()
 template <class T>
 void SaverT<T>::_save_block()
 {
-	LibDLS::IndexRecord index_record;
+    LibDLS::IndexRecord index_record;
     stringstream pre, post, err;
-	LibDLS::Time start_time, end_time;
+    LibDLS::Time start_time, end_time;
 
     // Wenn keine Daten im Puffer sind, beenden.
     if (_block_buf_index == 0) return;
@@ -375,7 +375,7 @@ void SaverT<T>::_save_block()
     {
         // Index aktualisieren
         _index_file.append((char *) &index_record,
-				sizeof(LibDLS::IndexRecord));
+                sizeof(LibDLS::IndexRecord));
     }
     catch (LibDLS::EFile &e)
     {
@@ -404,7 +404,7 @@ template <class T>
 void SaverT<T>::_save_rest()
 {
     stringstream pre, post, err;
-	LibDLS::Time start_time, end_time;
+    LibDLS::Time start_time, end_time;
 
 #ifdef DEBUG
     msg() << "Saving rest";
@@ -487,8 +487,8 @@ template <class T>
 void SaverT<T>::_begin_files(LibDLS::Time time_of_first)
 {
     stringstream dir_name, file_name, err;
-	LibDLS::IndexT<LibDLS::GlobalIndexRecord> global_index;
-	LibDLS::GlobalIndexRecord global_index_record;
+    LibDLS::IndexT<LibDLS::GlobalIndexRecord> global_index;
+    LibDLS::GlobalIndexRecord global_index_record;
 
     if (!_parent_logger->chunk_created())
     {
@@ -579,8 +579,8 @@ void SaverT<T>::_begin_files(LibDLS::Time time_of_first)
 template <class T>
 void SaverT<T>::_finish_files()
 {
-	LibDLS::IndexT<LibDLS::GlobalIndexRecord> global_index;
-	LibDLS::GlobalIndexRecord global_index_record;
+    LibDLS::IndexT<LibDLS::GlobalIndexRecord> global_index;
+    LibDLS::GlobalIndexRecord global_index_record;
     stringstream file_name, err;
     unsigned int index_of_last;
     bool was_open = _data_file.open();

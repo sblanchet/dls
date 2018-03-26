@@ -89,9 +89,9 @@ void Data::push_back(const Data &other)
 
     if (other._time_per_value != _time_per_value
         || other._start_time != end_time() + _time_per_value) {
-		stringstream err;
+        stringstream err;
         err << "WARNING: Data appending failed!";
-		log(err.str());
+        log(err.str());
         return;
     }
 

@@ -45,8 +45,8 @@ using namespace std;
 
 struct ViewViewDataChunkRange
 {
-	LibDLS::Time start;
-	LibDLS::Time end;
+    LibDLS::Time start;
+    LibDLS::Time end;
 };
 
 /*****************************************************************************/
@@ -90,24 +90,24 @@ public:
     void update();
     void range_callback(void (*)(LibDLS::Time, LibDLS::Time, void *), void *);
 
-	LibDLS::Time start() const;
-	LibDLS::Time end() const;
+    LibDLS::Time start() const;
+    LibDLS::Time end() const;
 
 private:
     Fl_Track_Bar *_track_bar;    /**< Vertikale Track-Bar */
     list<ViewChannel> _channels; /**< Liste der zu Zeigenden Kanäle */
-	LibDLS::Time _range_start;   /**< Startzeit der anzuzeigenden Zeitspanne */
-	LibDLS::Time _range_end;     /**< Endzeit der anzuzeigenden Zeitspanne */
+    LibDLS::Time _range_start;   /**< Startzeit der anzuzeigenden Zeitspanne */
+    LibDLS::Time _range_end;     /**< Endzeit der anzuzeigenden Zeitspanne */
     bool _full_range;            /**< Gibt an, ob beim Hinzufügen eines
                                     Kanales die Zeitspanne auf die volle
                                     Zeitspanne ausgeweitet werden soll. */
 
     // Callbacks
-	void (*_range_cb)(LibDLS::Time, LibDLS::Time, void *); /**<
-															 Funktionszeiger
-															 auf Callback bei
-															 Zeitbereichs-
-															 änderungen */
+    void (*_range_cb)(LibDLS::Time, LibDLS::Time, void *); /**<
+                                                             Funktionszeiger
+                                                             auf Callback bei
+                                                             Zeitbereichs-
+                                                             änderungen */
     void *_range_cb_data;                        /**< Daten zur Übergabe bei
                                                     Range-CB */
 

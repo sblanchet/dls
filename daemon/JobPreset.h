@@ -60,14 +60,14 @@ public:
 
     pid_t process_id() const;
     int last_exit_code() const;
-	LibDLS::Time exit_time() const;
+    LibDLS::Time exit_time() const;
 
     bool process_exists();
 
 private:
     pid_t _pid; /**< PID des ge'fork'ten Kindprozesses */
     int _last_exit_code; /**< Exitcode des letzten Prozesses */
-	LibDLS::Time _exit_time; /**< Beendigungszeit des letzten Prozesses */
+    LibDLS::Time _exit_time; /**< Beendigungszeit des letzten Prozesses */
 };
 
 /*****************************************************************************/

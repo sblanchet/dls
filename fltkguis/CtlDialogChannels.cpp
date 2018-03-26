@@ -199,9 +199,9 @@ void CtlDialogChannels::_button_ok_clicked()
     sel_i = _grid_channels->selected_list()->begin();
     while (sel_i != _grid_channels->selected_list()->end())
     {
-	if (_checkbutton_reduceToOneHz->value()){
-	    _channels[*sel_i].frequency=1;
-	}
+        if (_checkbutton_reduceToOneHz->value()){
+            _channels[*sel_i].frequency=1;
+        }
 
         _selected.push_back(_channels[*sel_i]);
         sel_i++;
@@ -286,11 +286,11 @@ void CtlDialogChannels::_thread_function()
     int socket;
     fd_set read_fds, write_fds;
     int select_ret, recv_ret, send_ret;
-	LibDLS::XmlParser xml;
+    LibDLS::XmlParser xml;
     const LibDLS::XmlTag *tag;
-	LibDLS::RealChannel channel;
+    LibDLS::RealChannel channel;
     string to_send;
-	LibDLS::RingBuffer ring(65535);
+    LibDLS::RingBuffer ring(65535);
     char *write_pointer;
     unsigned int write_size;
     bool exit_thread = false;
@@ -370,12 +370,12 @@ void CtlDialogChannels::_thread_function()
                             tag = xml.parse(&ring);
                         }
                         catch (LibDLS::EXmlParserEOF &e)
-							// Tag noch nicht komplett
+                            // Tag noch nicht komplett
                         {
                             break;
                         }
                         catch (LibDLS::EXmlParser &e)
-							// Anderer Parsing-Fehler
+                            // Anderer Parsing-Fehler
                         {
                             _error = "Parser error in tag \"" + e.tag + "\"!";
                             exit_thread = true;
