@@ -58,13 +58,13 @@ public:
     virtual ~SaverMetaT();
 
     void generate_meta_data(LibDLS::Time, LibDLS::Time, unsigned int,
-			const T *);
+            const T *);
     void flush();
 
 private:
     SaverMetaT<T> *_next_saver; /**< Zeiger auf das Saver-Objekt
                                       der nächsten Ebene */
-	LibDLS::MetaType _type;             /**< Typ dieses Saver-Objektes */
+    LibDLS::MetaType _type;             /**< Typ dieses Saver-Objektes */
     bool _finished;                /**< true, wenn keine Daten mahr im
                                       Speicher */
     unsigned int _level;           /**< Meta-Ebene dieses Saver-Objektes */
@@ -251,9 +251,9 @@ string SaverMetaT<T>::_meta_type() const
 {
     switch (_type)
     {
-		case LibDLS::MetaMean: return "mean";
-		case LibDLS::MetaMin: return "min";
-		case LibDLS::MetaMax: return "max";
+        case LibDLS::MetaMean: return "mean";
+        case LibDLS::MetaMin: return "min";
+        case LibDLS::MetaMax: return "max";
         default: return "undef";
     }
 }

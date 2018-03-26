@@ -49,11 +49,11 @@ public:
 
     void clear();
 
-	static std::string path(const std::string &);
+    static std::string path(const std::string &);
     static bool exists(const std::string &);
     void import(const std::string &);
-	unsigned int count() const;
-	const BaseMessage *findPath(const std::string &) const;
+    unsigned int count() const;
+    const BaseMessage *findPath(const std::string &) const;
 
     /** Exception.
      */
@@ -66,9 +66,9 @@ public:
     };
 
 protected:
-	std::map<std::string, BaseMessage *> _messages; /**< Messages. */
+    std::map<std::string, BaseMessage *> _messages; /**< Messages. */
 
-	virtual BaseMessage *newMessage(xmlNode *);
+    virtual BaseMessage *newMessage(xmlNode *);
 };
 
 } // namespace LibDLS

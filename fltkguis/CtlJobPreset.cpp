@@ -44,7 +44,7 @@ using namespace std;
 */
 
 CtlJobPreset::CtlJobPreset():
-	LibDLS::JobPreset()
+    LibDLS::JobPreset()
 {
     process_watchdog = 0;
     logging_watchdog = 0;
@@ -69,7 +69,7 @@ void CtlJobPreset::write(const string &dls_dir)
     stringstream dir_name, err;
     string file_name;
     fstream file;
-	LibDLS::XmlTag tag;
+    LibDLS::XmlTag tag;
     vector<LibDLS::ChannelPreset>::iterator channel_i;
     int fd;
     char *tmp_file_name;

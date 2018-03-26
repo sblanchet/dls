@@ -159,7 +159,7 @@ CtlDialogChannel::~CtlDialogChannel()
 */
 
 void CtlDialogChannel::show(CtlJobPreset *job,
-		const list<const LibDLS::ChannelPreset *> *channels)
+        const list<const LibDLS::ChannelPreset *> *channels)
 {
     stringstream str;
     list<const LibDLS::ChannelPreset *>::const_iterator channel_i;
@@ -249,7 +249,7 @@ void CtlDialogChannel::show(CtlJobPreset *job,
 
     // Wenn bei allen Kanälen das gleiche, gültige Format gewählt wurde
     if (format_equal && format_index >= 0
-			&& format_index < LibDLS::FORMAT_COUNT)
+            && format_index < LibDLS::FORMAT_COUNT)
     {
         if (format_index == LibDLS::FORMAT_MDCT)
         {
@@ -398,7 +398,7 @@ void CtlDialogChannel::_choice_mdct_changed()
 
 bool CtlDialogChannel::_save_channels()
 {
-	LibDLS::ChannelPreset channel;
+    LibDLS::ChannelPreset channel;
     stringstream str;
     list<const LibDLS::ChannelPreset *>::const_iterator channel_i;
     double freq;
@@ -499,7 +499,7 @@ bool CtlDialogChannel::_save_channels()
                 }
 
                 mdct_block_size =
-					1 << (_choice_mdct->value() + LibDLS::MDCT_MIN_EXP2);
+                    1 << (_choice_mdct->value() + LibDLS::MDCT_MIN_EXP2);
 
                 // Blockgröße kein Vielfaches von MDCT-Dimension?
                 if (write_block)

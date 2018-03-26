@@ -224,7 +224,7 @@ void ViewDialogExport::_button_export_clicked()
     char *env;
     stringstream info_file_name;
     ofstream info_file;
-	LibDLS::Time now;
+    LibDLS::Time now;
     Export *exporter;
 
     if (_export_finished) {

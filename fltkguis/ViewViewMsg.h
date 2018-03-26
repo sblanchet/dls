@@ -56,12 +56,12 @@ private:
 
     // Daten
     struct Message {
-		LibDLS::Job::Message message;
+        LibDLS::Job::Message message;
         int level;
     };
     list<Message> _messages; /**< Liste der geladenen Nachrichten */
-	LibDLS::Time _range_start; /**< Startzeit der anzuzeigenden Zeitspanne */
-	LibDLS::Time _range_end; /**< Endzeit der anzuzeigenden Zeitspanne */
+    LibDLS::Time _range_start; /**< Startzeit der anzuzeigenden Zeitspanne */
+    LibDLS::Time _range_end; /**< Endzeit der anzuzeigenden Zeitspanne */
     int _level_count; /**< Aktuelle Anzahl der anzuzeigenden Ebenen */
 
     // Widget-Zustand

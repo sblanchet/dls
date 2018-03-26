@@ -120,14 +120,14 @@ void ExportAscii::end()
 
 ExportMat4::ExportMat4()
 {
-	_file = new File();
+    _file = new File();
 }
 
 /*****************************************************************************/
 
 ExportMat4::~ExportMat4()
 {
-	delete _file;
+    delete _file;
 }
 
 /*****************************************************************************/

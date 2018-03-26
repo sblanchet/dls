@@ -70,7 +70,7 @@ void BaseMessageList::clear()
  */
 std::string BaseMessageList::path(const string &job_path)
 {
-	return job_path + "/plainmessages.xml";
+    return job_path + "/plainmessages.xml";
 }
 
 /****************************************************************************/
@@ -79,19 +79,19 @@ std::string BaseMessageList::path(const string &job_path)
  */
 bool BaseMessageList::exists(const string &job_path)
 {
-	struct stat buf;
-	int ret = stat(path(job_path).c_str(), &buf);
-	if (ret == 0) {
-		return true;
-	}
-	else if (errno == ENOENT) {
-		return false;
-	}
-	else {
-		stringstream err;
-		err << "stat() failed: " << strerror(errno);
-		throw Exception(err.str());
-	}
+    struct stat buf;
+    int ret = stat(path(job_path).c_str(), &buf);
+    if (ret == 0) {
+        return true;
+    }
+    else if (errno == ENOENT) {
+        return false;
+    }
+    else {
+        stringstream err;
+        err << "stat() failed: " << strerror(errno);
+        throw Exception(err.str());
+    }
 }
 
 /****************************************************************************/
@@ -105,18 +105,18 @@ void BaseMessageList::import(const string &job_path)
     xmlDocPtr doc = xmlParseFile(path(job_path).c_str());
 
     if (!doc) {
-		stringstream err;
+        stringstream err;
 
-		err << "Failed to import messages";
-		xmlErrorPtr e = xmlGetLastError();
-		if (e) {
-			err << ": " << e->message;
-		}
-		else {
-			err << ".";
-		}
+        err << "Failed to import messages";
+        xmlErrorPtr e = xmlGetLastError();
+        if (e) {
+            err << ": " << e->message;
+        }
+        else {
+            err << ".";
+        }
 
-		throw Exception(err.str());
+        throw Exception(err.str());
     }
 
     xmlNode *rootNode = xmlDocGetRootElement(doc);
@@ -131,22 +131,22 @@ void BaseMessageList::import(const string &job_path)
                 message = newMessage(curNode);
             } catch (BaseMessage::Exception &e) {
                 clear();
-				xmlFreeDoc(doc);
+                xmlFreeDoc(doc);
                 throw Exception("Failed to import message: " + e.msg);
             }
 
-			pair<map<string, BaseMessage *>::iterator, bool> ret;
-			ret = _messages.insert(
-					pair<string, BaseMessage *>(message->path(), message));
-			if (ret.second == false) {
-				// already existing
-				stringstream err;
-				err << "Duplicate message path: " << message->path();
-				delete message;
+            pair<map<string, BaseMessage *>::iterator, bool> ret;
+            ret = _messages.insert(
+                    pair<string, BaseMessage *>(message->path(), message));
+            if (ret.second == false) {
+                // already existing
+                stringstream err;
+                err << "Duplicate message path: " << message->path();
+                delete message;
                 clear();
-				xmlFreeDoc(doc);
+                xmlFreeDoc(doc);
                 throw Exception(err.str());
-			}
+            }
         }
     }
 
@@ -159,14 +159,14 @@ void BaseMessageList::import(const string &job_path)
  */
 unsigned int BaseMessageList::count() const
 {
-	unsigned int c = 0;
+    unsigned int c = 0;
 
     for (map<string, BaseMessage *>::const_iterator i = _messages.begin();
             i != _messages.end(); i++) {
         c++;
     }
 
-	return c;
+    return c;
 }
 
 /****************************************************************************/
@@ -175,15 +175,15 @@ unsigned int BaseMessageList::count() const
  */
 const BaseMessage *BaseMessageList::findPath(const std::string &p) const
 {
-	map<string, BaseMessage *>::const_iterator it;
-	it = _messages.find(p);
+    map<string, BaseMessage *>::const_iterator it;
+    it = _messages.find(p);
 
-	if (it != _messages.end()) {
-		return it->second;
-	}
-	else {
-		return NULL;
-	}
+    if (it != _messages.end()) {
+        return it->second;
+    }
+    else {
+        return NULL;
+    }
 }
 
 /****************************************************************************/
@@ -192,7 +192,7 @@ const BaseMessage *BaseMessageList::findPath(const std::string &p) const
  */
 BaseMessage *BaseMessageList::newMessage(xmlNode *node)
 {
-	return new BaseMessage(node);
+    return new BaseMessage(node);
 }
 
 /****************************************************************************/

@@ -37,7 +37,7 @@ Message::Message(
         MessageList *list,
         xmlNode *node
         ):
-	BaseMessage(node),
+    BaseMessage(node),
     _parent_list(list),
     _var(NULL),
     _value(0.0),

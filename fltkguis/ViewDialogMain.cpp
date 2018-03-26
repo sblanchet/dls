@@ -283,7 +283,7 @@ void ViewDialogMain::_checkbutton_messages_clicked()
 void ViewDialogMain::_grid_channels_changed()
 {
     unsigned int i = _grid_channels->current_record();
-	LibDLS::Channel *channel;
+    LibDLS::Channel *channel;
 
     switch (_grid_channels->current_event()) {
         case flgContent:

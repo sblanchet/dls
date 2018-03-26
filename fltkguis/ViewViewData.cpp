@@ -120,7 +120,7 @@ ViewViewData::~ViewViewData()
 */
 
 void ViewViewData::range_callback(void (*cb)(LibDLS::Time,
-			LibDLS::Time, void *), void *data)
+            LibDLS::Time, void *), void *data)
 {
     _range_cb = cb;
     _range_cb_data = data;
@@ -142,7 +142,7 @@ void ViewViewData::range_callback(void (*cb)(LibDLS::Time,
 void ViewViewData::add_channel(LibDLS::Channel *channel)
 {
     ViewChannel viewchannel, *p_viewchannel;
-	LibDLS::Time old_start, old_end;
+    LibDLS::Time old_start, old_end;
 
     if (has_channel(channel)) return;
 
@@ -196,7 +196,7 @@ void ViewViewData::add_channel(LibDLS::Channel *channel)
 void ViewViewData::rem_channel(const LibDLS::Channel *channel)
 {
     list<ViewChannel>::iterator channel_i;
-	LibDLS::Time old_start, old_end;
+    LibDLS::Time old_start, old_end;
     bool found;
 
     found = false;
@@ -334,7 +334,7 @@ bool ViewViewData::has_channel(const LibDLS::Channel *channel) const
 void ViewViewData::_calc_range()
 {
     list<ViewChannel>::const_iterator channel_i;
-	LibDLS::Time start, end;
+    LibDLS::Time start, end;
 
     // Kein Channel vorhanden?
     if (!_channels.size()) {
@@ -558,11 +558,11 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
 {
     double xp, old_xp;
     int offset_drawing, height_drawing;
-	LibDLS::Channel::ChunkMap::const_iterator chunk_i;
+    LibDLS::Channel::ChunkMap::const_iterator chunk_i;
     ViewViewDataChunkRange chunk_range;
     vector<ViewViewDataChunkRange> chunk_ranges, relevant_chunk_ranges;
     vector<ViewViewDataChunkRange>::iterator chunk_range_i;
-	LibDLS::Time last_end;
+    LibDLS::Time last_end;
 
     offset_drawing = top + height - 2;
     height_drawing = height - KANAL_HEADER_HOEHE - 4;
@@ -666,7 +666,7 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
     int pot, step_factor_index, last_pixel, xp, text_width, text_height;
     double time_step, step;
     bool scale_fits;
-	LibDLS::Time time_start, time_end;
+    LibDLS::Time time_start, time_end;
     stringstream str;
 
     // Zehnerpotenz der anzuzeigenden Zeitspanne bestimmen
@@ -1114,7 +1114,7 @@ void ViewViewData::_draw_scan(const ViewChannel *channel, ScanInfo *scan,
     int text_time_width, text_value_width;
     int text_time_x, text_value_x;
     int text_height, yp1 = 0, yp2, y_pos, scan_x;
-	LibDLS::Time scan_time;
+    LibDLS::Time scan_time;
 
     // Wenn nicht gescannt werden soll, oder die
     // Scan-Linie nicht im gültigen Bereich liegt, abbrechen.
@@ -1218,7 +1218,7 @@ void ViewViewData::_draw_interactions(double x_scale) const
 {
     stringstream str;
     int text_width, text_height, x_pos;
-	LibDLS::Time start_time, end_time;
+    LibDLS::Time start_time, end_time;
 
     // "Zooming-Linie"
     if (_zooming) {
@@ -1335,9 +1335,9 @@ int ViewViewData::handle(int event)
 {
     int xp, yp, dx, dw, zoom_out_factor;
     double scale_x;
-	LibDLS::Time new_start, new_end, time_diff;
+    LibDLS::Time new_start, new_end, time_diff;
     unsigned int channel_area_width;
-	LibDLS::Time time_range;
+    LibDLS::Time time_range;
 
     // Cursorposition relativ zum Widget errechnen
     xp = Fl::event_x() - x();

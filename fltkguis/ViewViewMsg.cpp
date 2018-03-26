@@ -104,7 +104,7 @@ void ViewViewMsg::clear()
 */
 
 void ViewViewMsg::load_msg(const LibDLS::Job *job,
-		LibDLS::Time start, LibDLS::Time end)
+        LibDLS::Time start, LibDLS::Time end)
 {
     clear();
 
@@ -219,7 +219,7 @@ void ViewViewMsg::draw()
                 // Text zeichnen
                 if (msg_i->message.type >= 0 &&
                         msg_i->message.type
-						< LibDLS::Job::Message::TypeCount) {
+                        < LibDLS::Job::Message::TypeCount) {
                     fl_color(msg_colors[msg_i->message.type]);
                 }
                 else {

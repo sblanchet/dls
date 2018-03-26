@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     delete dialog;
 
     // Reservierte Speicher der MDCT freigeben
-	LibDLS::mdct_cleanup();
+    LibDLS::mdct_cleanup();
 
     return 0;
 }

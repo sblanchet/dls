@@ -102,20 +102,20 @@ void *loggingCallbackData;
 
 void set_logging_callback(LoggingCallback cb, void *data)
 {
-	loggingCallback = cb;
-	loggingCallbackData = data;
+    loggingCallback = cb;
+    loggingCallbackData = data;
 }
 
 /*****************************************************************************/
 
 void log(const string &msg)
 {
-	if (loggingCallback) {
-		loggingCallback(msg.c_str(), loggingCallbackData);
-	}
-	else {
-		cerr << msg << endl;
-	}
+    if (loggingCallback) {
+        loggingCallback(msg.c_str(), loggingCallbackData);
+    }
+    else {
+        cerr << msg << endl;
+    }
 }
 
 /*****************************************************************************/

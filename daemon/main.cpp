@@ -222,7 +222,7 @@ int main(int argc, char **argv)
     }
 
     // Evtl. allozierte Speicher der MDCT freigeben
-	LibDLS::mdct_cleanup();
+    LibDLS::mdct_cleanup();
 
     exit(exit_code);
 }

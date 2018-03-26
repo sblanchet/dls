@@ -604,10 +604,10 @@ string Time::diff_str_to(const Time &other) const
     int64_t diff, part;
 
     if (other._time > _time) {
-	diff = other._time - _time;
+        diff = other._time - _time;
     }
     else {
-	diff = _time - other._time;
+        diff = _time - other._time;
         str << "-";
     }
 

@@ -553,7 +553,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                         QPoint inter(rect.left() + xp,
                                 rect.bottom() - prev_yp);
                         QPoint cur(rect.left() + xp,
-								rect.bottom() - yp);
+                                rect.bottom() - yp);
 
                         painter.drawLine(prev, inter);
                         painter.drawLine(inter, cur);
@@ -581,10 +581,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                         }
                         else if (xp > measure->x && prev_xp
                                 < measure->x && !first_in_chunk) {
-							measure->minimum = prev_value;
-							measure->maximum = prev_value;
-							measure->minY = prev_yp;
-							measure->maxY = prev_yp;
+                            measure->minimum = prev_value;
+                            measure->maximum = prev_value;
+                            measure->minY = prev_yp;
+                            measure->maxY = prev_yp;
                             measure->found = true;
                         }
                     }
