@@ -47,6 +47,8 @@ public:
     BaseMessageList();
     virtual ~BaseMessageList();
 
+    void clear();
+
 	static std::string path(const std::string &);
     static bool exists(const std::string &);
     void import(const std::string &);
@@ -67,9 +69,6 @@ protected:
 	std::map<std::string, BaseMessage *> _messages; /**< Messages. */
 
 	virtual BaseMessage *newMessage(xmlNode *);
-
-private:
-    void _clear();
 };
 
 } // namespace LibDLS

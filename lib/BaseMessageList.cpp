@@ -47,7 +47,21 @@ BaseMessageList::BaseMessageList()
  */
 BaseMessageList::~BaseMessageList()
 {
-    _clear();
+    clear();
+}
+
+/****************************************************************************/
+
+/** Clear the messages.
+ */
+void BaseMessageList::clear()
+{
+    for (map<string, BaseMessage *>::iterator i = _messages.begin();
+            i != _messages.end(); i++) {
+        delete i->second;
+    }
+
+    _messages.clear();
 }
 
 /****************************************************************************/
@@ -86,7 +100,7 @@ bool BaseMessageList::exists(const string &job_path)
  */
 void BaseMessageList::import(const string &job_path)
 {
-    _clear();
+    clear();
 
     xmlDocPtr doc = xmlParseFile(path(job_path).c_str());
 
@@ -116,7 +130,7 @@ void BaseMessageList::import(const string &job_path)
             try {
                 message = newMessage(curNode);
             } catch (BaseMessage::Exception &e) {
-                _clear();
+                clear();
 				xmlFreeDoc(doc);
                 throw Exception("Failed to import message: " + e.msg);
             }
@@ -129,7 +143,7 @@ void BaseMessageList::import(const string &job_path)
 				stringstream err;
 				err << "Duplicate message path: " << message->path();
 				delete message;
-                _clear();
+                clear();
 				xmlFreeDoc(doc);
                 throw Exception(err.str());
 			}
@@ -179,20 +193,6 @@ const BaseMessage *BaseMessageList::findPath(const std::string &p) const
 BaseMessage *BaseMessageList::newMessage(xmlNode *node)
 {
 	return new BaseMessage(node);
-}
-
-/****************************************************************************/
-
-/** Clear the messages.
- */
-void BaseMessageList::_clear()
-{
-    for (map<string, BaseMessage *>::iterator i = _messages.begin();
-            i != _messages.end(); i++) {
-        delete i->second;
-    }
-
-    _messages.clear();
 }
 
 /****************************************************************************/

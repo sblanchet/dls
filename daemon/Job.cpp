@@ -114,6 +114,7 @@ void Job::import(unsigned int job_id)
 	else {
 		msg() << "Message file " << _messages.path(".") << " not found.";
 		log(Info);
+        _messages.clear();
 	}
 }
 
