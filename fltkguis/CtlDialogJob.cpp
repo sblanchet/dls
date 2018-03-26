@@ -375,7 +375,7 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
             new_channel.sample_frequency = ch_i->frequency;
             new_channel.block_size =
                 (ch_i->frequency >= 10 ? ch_i->frequency : 10);
-            new_channel.meta_mask = 7;
+            new_channel.meta_mask = 6; // min and max
             new_channel.meta_reduction = 30;
             new_channel.format_index = LibDLS::FORMAT_ZLIB;
             new_channel.type = ch_i->type;
