@@ -672,6 +672,7 @@ void MainWindow::scriptError(
 
     updateScriptActions();
 }
+
 /****************************************************************************/
 
 void MainWindow::treeViewCustomContextMenu(const QPoint &point)
