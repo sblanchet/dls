@@ -49,6 +49,7 @@ Connection::Connection(ProcMother *parent_proc, int fd):
     _running(true),
     _messageSize(0U)
 {
+    pthread_mutex_init(&_mutex, NULL);
 }
 
 /*****************************************************************************/
@@ -95,6 +96,20 @@ int Connection::thread_finished()
 
 /*****************************************************************************/
 
+void Connection::lock()
+{
+    pthread_mutex_lock(&_mutex);
+}
+
+/*****************************************************************************/
+
+void Connection::unlock()
+{
+    pthread_mutex_unlock(&_mutex);
+}
+
+/*****************************************************************************/
+
 void *Connection::_run_static(void *arg)
 {
     Connection *conn = (Connection *) arg;
@@ -109,7 +124,9 @@ void *Connection::_run()
     fd_set wfds;
     int ret;
 
+    pthread_mutex_lock(&_mutex);
     _send_hello();
+    pthread_mutex_unlock(&_mutex);
 
     while (_running) {
         FD_ZERO(&rfds);
@@ -131,10 +148,14 @@ void *Connection::_run()
 
         if (ret > 0) { // file descriptors ready
             if (FD_ISSET(_fd, &rfds)) {
+                pthread_mutex_lock(&_mutex);
                 _receive_data();
+                pthread_mutex_unlock(&_mutex);
             }
             if (FD_ISSET(_fd, &wfds)) {
+                pthread_mutex_lock(&_mutex);
                 _send_data();
+                pthread_mutex_unlock(&_mutex);
             }
         }
     }
