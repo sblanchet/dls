@@ -186,14 +186,16 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
 
             // Laufen alle Prozesse noch?
             _check_processes();
+
+            if (process_type != MotherProcess || _exit) {
+                break;
+            }
         }
 
 #ifdef DLS_SERVER
         // check for terminated connections
         _check_connections();
 #endif
-
-        if (process_type != MotherProcess || _exit) break;
 
         ret = select(max_fd + 1, &rfds, NULL, NULL, &tv);
         if (ret == -1) {
@@ -245,18 +247,18 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             _check_signals();
         }
 
+#ifdef DLS_SERVER
+        if (_listen_fd != -1) {
+            msg() << "Closing listening port.";
+            log(Info);
+            close(_listen_fd);
+            _listen_fd = -1;
+        }
+#endif
+
         msg() << "----- DLS Mother process finished. -----";
         log(Info);
     }
-
-#ifdef DLS_SERVER
-    if (process_type == MotherProcess && _listen_fd != -1) {
-        msg() << "Closing listening port.";
-        log(Info);
-        close(_listen_fd);
-        _listen_fd = -1;
-    }
-#endif
 
     return _exit_error ? -1 : 0;
 }
