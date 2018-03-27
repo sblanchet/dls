@@ -86,6 +86,8 @@ private:
     static std::string _format_address(const struct sockaddr *);
     void _check_connections();
     void _clear_connections();
+    void _lock_connections();
+    void _unlock_connections();
 #endif
 };
 

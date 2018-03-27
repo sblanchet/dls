@@ -47,10 +47,14 @@ public:
     int thread_finished();
     int return_code() const { return _ret; }
 
+    void lock();
+    void unlock();
+
 private:
     ProcMother * const _parent_proc;
     const int _fd;
     pthread_t _thread;
+    pthread_mutex_t _mutex;
     int _ret; /**< Return value. */
     bool _running;
     std::string _sendBuffer;

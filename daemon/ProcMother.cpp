@@ -774,7 +774,6 @@ bool ProcMother::_remove_job(unsigned int job_id)
 
 void ProcMother::_check_processes()
 {
-    int fork_ret;
     list<JobPreset>::iterator job_i;
     string dir;
 
@@ -796,7 +795,17 @@ void ProcMother::_check_processes()
 
         log(Info);
 
-        if (!(fork_ret = fork())) { // Kindprozess
+#ifdef DLS_SERVER
+        _lock_connections();
+#endif
+
+        int fork_ret = fork();
+
+#ifdef DLS_SERVER
+        _unlock_connections();
+#endif
+
+        if (!fork_ret) { // Kindprozess
             // Globale Forking-Flags setzen
             process_type = LoggingProcess;
             dlsd_job_id = job_i->id();
@@ -1024,6 +1033,35 @@ void ProcMother::_clear_connections()
     }
 
     _connections.clear();
+}
+
+/*****************************************************************************/
+
+void ProcMother::_lock_connections()
+{
+    msg() << "Locking connection threads...";
+    log(Info);
+
+    for (list<Connection *>::iterator i = _connections.begin();
+            i != _connections.end(); i++) {
+        (*i)->lock();
+    }
+
+    msg() << "Threads locked.";
+    log(Info);
+}
+
+/*****************************************************************************/
+
+void ProcMother::_unlock_connections()
+{
+    msg() << "Unlocking connection threads...";
+    log(Info);
+
+    for (list<Connection *>::iterator i = _connections.begin();
+            i != _connections.end(); i++) {
+        (*i)->unlock();
+    }
 }
 
 #endif
