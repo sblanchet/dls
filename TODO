@@ -1,5 +1,5 @@
 
-$Id$
+$Id: TODO,v 2d1f88e575fa 2017/06/07 15:24:24 fp $
 
 vim: tw=78 spelllang=en spell syntax=markdown
 
@@ -9,6 +9,7 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * man pages for commands
     * Check for PdCom in a portable way
     * Allow compiling without PCRE
+    * Fix top_builddir dependency
 
 # DLS Widgets
     * Fix time scaling bug concerning scrollbar
