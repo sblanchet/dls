@@ -73,7 +73,7 @@ dlsd_SOURCES = \
 
 if ENABLE_SERVER
 dlsd_SOURCES += Connection.cpp
-nodist_dlsd_SOURCES = $(top_srcdir)/proto/dls.pb.cc
+nodist_dlsd_SOURCES = ../proto/dls.pb.cc
 dlsd_LDADD += -lprotobuf
 endif
 
