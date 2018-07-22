@@ -193,6 +193,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setShowMessages(bool);
         void setMessageFilter(const QString &);
         void clearSections();
+        void showExport();
 
     protected:
         bool event(QEvent *);
@@ -342,7 +343,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateSection(Section *section);
         void showMessagesChanged();
         void filterTriggered();
-        void showExport();
         void fixMeasuringLine();
         void removeMeasuringLine();
 };
