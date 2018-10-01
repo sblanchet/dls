@@ -27,7 +27,7 @@
 
 #include <qglobal.h>
 
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= 0x055000
 #include <QtUiPlugin/QDesignerCustomWidgetInterface>
 #else
 #include <QDesignerCustomWidgetInterface>
