@@ -53,6 +53,17 @@ void JobPreset::allow_restart()
 /*****************************************************************************/
 
 /**
+   Inhibit restart.
+*/
+
+void JobPreset::deny_restart()
+{
+    _last_exit_code = E_DLS_ERROR;
+}
+
+/*****************************************************************************/
+
+/**
    Vermerkt, dass ein Prozess gestartet wurde
 
    \param pid Process-ID des gestarteten Prozesses

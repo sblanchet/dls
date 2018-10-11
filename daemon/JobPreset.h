@@ -57,6 +57,7 @@ public:
     void process_terminate();
     void process_notify();
     void allow_restart();
+    void deny_restart();
 
     pid_t process_id() const;
     int last_exit_code() const;

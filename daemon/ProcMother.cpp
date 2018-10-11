@@ -819,6 +819,7 @@ void ProcMother::_check_processes()
                 << job_i->process_id();
             log(Info);
         } else { // Fehler
+            job_i->deny_restart(); // avoid continous restarts when OOM
             msg() << "FATAL: fork() failed: " << strerror(errno)
                 << " (" << errno << ")";
             log(Error);
