@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <QtGlobal>
 #include <QtGui>
 #include <QDomDocument>
 #include <QPrinter>
@@ -1073,7 +1074,7 @@ bool Graph::event(
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
         case QEvent::TouchEnd:
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         case QEvent::TouchCancel:
 #endif
             updateTouch(static_cast<QTouchEvent *>(event));
@@ -2185,7 +2186,7 @@ void Graph::updateTouch(QTouchEvent *event)
 #ifdef DEBUG_MT_ON_SCREEN
     int displayCount = count;
     if (event->type() == QEvent::TouchEnd
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             || event->type() == QEvent::TouchCancel
 #endif
        ) {
@@ -2213,7 +2214,7 @@ void Graph::updateTouch(QTouchEvent *event)
         case QEvent::TouchEnd:
             type = "TouchEnd";
             break;
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         case QEvent::TouchCancel:
             type = "TouchCancel";
             break;
@@ -2316,7 +2317,7 @@ void Graph::updateTouch(QTouchEvent *event)
             break;
 
         case QEvent::TouchEnd:
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         case QEvent::TouchCancel:
 #endif
             event->accept();

@@ -22,9 +22,10 @@
  *
  ****************************************************************************/
 
-#include <QtPlugin>
-
 #include "Plugin.h"
+
+#include <QtGlobal>
+#include <QtPlugin>
 
 /****************************************************************************/
 
@@ -125,7 +126,7 @@ QString Plugin::domXml() const
 {
     QString xml;
 
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     xml = "<ui language=\"c++\">\n"
         "  <widget class=\"DLS::" + widgetClassName + "\" "
         "name=\"dls" + widgetClassName + "\" />\n"

@@ -22,13 +22,14 @@
  *
  ****************************************************************************/
 
-#include <cmath>
+#include "SectionDialog.h"
+#include "SectionModel.h"
 
+#include <QtGlobal>
 #include <QMenu>
 #include <QDebug>
 
-#include "SectionDialog.h"
-#include "SectionModel.h"
+#include <cmath>
 
 using DLS::SectionDialog;
 
@@ -67,7 +68,7 @@ SectionDialog::SectionDialog(
     tableViewLayers->setModel(model);
     tableViewLayers->verticalHeader()->hide();
     QHeaderView *header = tableViewLayers->horizontalHeader();
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     header->setSectionResizeMode(0, QHeaderView::Stretch);
     header->setSectionResizeMode(1, QHeaderView::Stretch);
     header->setSectionResizeMode(2, QHeaderView::ResizeToContents);
