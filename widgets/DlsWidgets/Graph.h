@@ -35,7 +35,7 @@
 #include <QDir>
 
 #ifndef DLS_NO_DESIGNER
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= 0x055000
 #include <QtUiPlugin/QDesignerExportWidget>
 #else
 #include <QtDesigner/QDesignerExportWidget>
@@ -193,6 +193,7 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void setShowMessages(bool);
         void setMessageFilter(const QString &);
         void clearSections();
+        void showExport();
 
     protected:
         bool event(QEvent *);
@@ -342,7 +343,6 @@ class QDESIGNER_WIDGET_EXPORT Graph:
         void updateSection(Section *section);
         void showMessagesChanged();
         void filterTriggered();
-        void showExport();
         void fixMeasuringLine();
         void removeMeasuringLine();
 };
