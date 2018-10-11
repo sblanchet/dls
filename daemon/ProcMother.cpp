@@ -200,7 +200,8 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
         ret = select(max_fd + 1, &rfds, NULL, NULL, &tv);
         if (ret == -1) {
             if (errno != EINTR) {
-                msg() << "select() failed: " << strerror(errno);
+                msg() << "select() failed: " << strerror(errno)
+                    << " (" << errno << ")";
                 log(Error);
                 _exit = true;
                 _exit_error = true;
@@ -216,7 +217,8 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
             int cfd = accept(_listen_fd,
                     (struct sockaddr *) &peer_addr, &peer_addr_size);
             if (cfd == -1) {
-                msg() << "accept() failed: " << strerror(errno);
+                msg() << "accept() failed: " << strerror(errno)
+                    << " (" << errno << ")";
                 log(Warning);
             }
 
@@ -606,7 +608,8 @@ bool ProcMother::_spool_job(unsigned int job_id)
                 _exit_error = E_DLS_ERROR;
 
                 msg() << "Calling stat() on \"" << job_file_name.str()
-                      << "\": " << strerror(errno);
+                      << "\" failed: " << strerror(errno)
+                      << " (" << errno << ")";
                 log(Error);
 
                 return false;
@@ -816,7 +819,8 @@ void ProcMother::_check_processes()
                 << job_i->process_id();
             log(Info);
         } else { // Fehler
-            msg() << "FATAL: Error " << errno << " in fork()";
+            msg() << "FATAL: fork() failed: " << strerror(errno)
+                << " (" << errno << ")";
             log(Error);
         }
     }
@@ -917,7 +921,7 @@ int ProcMother::_prepare_socket(const char *service)
                 sizeof(int));
         if (ret < 0) {
             msg() << "Failed to set SO_REUSEADDR flag for socket: "
-                << strerror(errno);
+                << strerror(errno) << " (" << errno << ")";
             log(Warning);
         }
 
@@ -931,7 +935,7 @@ int ProcMother::_prepare_socket(const char *service)
                     NI_NUMERICHOST | NI_NUMERICSERV);
             if (ret) {
                 msg() << "Failed to get host/service names for bound socket: "
-                    << strerror(errno);
+                    << strerror(errno) << " (" << errno << ")";
                 log(Warning);
             }
             else {
@@ -942,7 +946,8 @@ int ProcMother::_prepare_socket(const char *service)
             break;
         }
 
-        msg() << "Failed to bind socket: " << strerror(errno);
+        msg() << "Failed to bind socket: " << strerror(errno)
+            << " (" << errno << ")";
         log(Warning);
         close(_listen_fd);
         _listen_fd = -1;
@@ -959,7 +964,8 @@ int ProcMother::_prepare_socket(const char *service)
     // listen to socket
     ret = listen(_listen_fd, 16 /* backlog */);
     if (ret == -1) {
-        msg() << "Failed to listen to socket: " << strerror(errno);
+        msg() << "Failed to listen to socket: " << strerror(errno)
+            << " ( " << errno << ")";
         log(Error);
         close(_listen_fd);
         _listen_fd = -1;
