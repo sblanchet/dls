@@ -27,6 +27,8 @@
 
 #include "DlsWidgets/Graph.h"
 
+#include <QtGlobal>
+
 using namespace DLS;
 
 /****************************************************************************/
@@ -80,7 +82,7 @@ WidgetCollection::customWidgets() const
 
 // first parameter must be the same as the TARGET variable in the .pro file.
 
-#if QT_VERSION < 0x050000
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 Q_EXPORT_PLUGIN2(DlsWidgets, WidgetCollection)
 #endif
 
