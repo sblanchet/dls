@@ -234,6 +234,10 @@ void Chunk::fetch_data(
 
         break;
     }
+
+    if (data) {
+        delete data;
+    }
 }
 
 /*****************************************************************************/
@@ -675,7 +679,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
             return;
         }
 
-        if (!*data) *data = new Data();
+        if (!*data) {
+            *data = new Data();
+        }
 
         (*data)->import(start_time, time_per_value, meta_type, level,
                 decimation, decimationCounter, comp->decompression_output(),
@@ -694,7 +700,6 @@ void Chunk::_process_data_tag(const XmlTag *tag,
             // data structure adopted: forget its address.
             *data = NULL;
         }
-        return;
     } else if (_format_index == FORMAT_MDCT) {
         try {
             comp->flush_uncompress(block_data, strlen(block_data));
@@ -705,7 +710,9 @@ void Chunk::_process_data_tag(const XmlTag *tag,
             return;
         }
 
-        if (!*data) *data = new Data();
+        if (!*data) {
+            *data = new Data();
+        }
 
         (*data)->import(start_time, time_per_value, meta_type, level,
                 decimation, decimationCounter, comp->decompression_output(),
@@ -724,10 +731,7 @@ void Chunk::_process_data_tag(const XmlTag *tag,
             // data structure adopted: forget its address.
             *data = NULL;
         }
-        return;
     }
-
-    return;
 }
 
 /*****************************************************************************/

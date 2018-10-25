@@ -509,7 +509,7 @@ int Connection::_static_data_callback(LibDLS::Data *data, void *cb_data)
 {
     Connection *c = (Connection *) cb_data;
     c->_data_callback(data);
-    return 0;
+    return 0; // not adopted: data shall be deleted by the library
 }
 
 /*****************************************************************************/
