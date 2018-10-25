@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <google/protobuf/io/coded_stream.h>
 
@@ -42,7 +43,11 @@ using namespace std;
 
 /*****************************************************************************/
 
-Connection::Connection(ProcMother *parent_proc, int fd):
+Connection::Connection(
+        ProcMother *parent_proc,
+        int fd,
+        const struct sockaddr_storage *peer
+        ):
     _parent_proc(parent_proc),
     _fd(fd),
     _ret(0),
@@ -50,13 +55,22 @@ Connection::Connection(ProcMother *parent_proc, int fd):
     _messageSize(0U)
 {
     pthread_mutex_init(&_mutex, NULL);
+
+    memcpy(&peer_addr, peer, sizeof(struct sockaddr_storage));
+
+    string addr_str = _format_address((struct sockaddr *) &peer_addr);
+    msg() << "Accepted connection from " << addr_str;
+    log(Info);
 }
 
 /*****************************************************************************/
 
 Connection::~Connection()
 {
-    cerr << PFX << "Closing connection." << endl;
+    string addr_str = _format_address((struct sockaddr *) &peer_addr);
+    msg() << "Closing connection for " << addr_str;
+    log(Info);
+
     close(_fd);
 }
 
@@ -526,6 +540,39 @@ std::string Connection::pfx() const
 {
     stringstream str;
     str << "Connection(" << _fd << ")";
+    return str.str();
+}
+
+/*****************************************************************************/
+
+std::string Connection::_format_address(const struct sockaddr *sa)
+{
+    std::stringstream str;
+    char addr_str[INET6_ADDRSTRLEN + 1];
+
+    switch(sa->sa_family) {
+        case AF_INET:
+            {
+                struct sockaddr_in *sa4 = (struct sockaddr_in *) sa;
+                inet_ntop(AF_INET, &sa4->sin_addr,
+                        addr_str, sizeof(addr_str));
+                str << addr_str << " port " << ntohs(sa4->sin_port);
+            }
+            break;
+
+        case AF_INET6:
+            {
+                struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) sa;
+                inet_ntop(AF_INET6, &sa6->sin6_addr,
+                        addr_str, sizeof(addr_str));
+                str << addr_str << " port " << ntohs(sa6->sin6_port);
+            }
+            break;
+
+        default:
+            str << "Unknown address family";
+    }
+
     return str.str();
 }
 

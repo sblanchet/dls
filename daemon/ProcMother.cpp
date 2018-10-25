@@ -222,11 +222,7 @@ int ProcMother::start(const string &dls_dir, bool no_bind,
                 log(Warning);
             }
 
-            addr_str = _format_address((struct sockaddr *) &peer_addr);
-            msg() << "Accepted connection from " << addr_str;
-            log(Info);
-
-            Connection *conn = new Connection(this, cfd);
+            Connection *conn = new Connection(this, cfd, &peer_addr);
             _connections.push_back(conn);
 
             int ret = conn->start_thread();
@@ -978,39 +974,6 @@ int ProcMother::_prepare_socket(const char *service)
 
 /*****************************************************************************/
 
-std::string ProcMother::_format_address(const struct sockaddr *sa)
-{
-    std::stringstream str;
-    char addr_str[INET6_ADDRSTRLEN + 1];
-
-    switch(sa->sa_family) {
-        case AF_INET:
-            {
-                struct sockaddr_in *sa4 = (struct sockaddr_in *) sa;
-                inet_ntop(AF_INET, &sa4->sin_addr,
-                        addr_str, sizeof(addr_str));
-                str << addr_str << " port " << ntohs(sa4->sin_port);
-            }
-            break;
-
-        case AF_INET6:
-            {
-                struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) sa;
-                inet_ntop(AF_INET6, &sa6->sin6_addr,
-                        addr_str, sizeof(addr_str));
-                str << addr_str << " port " << ntohs(sa6->sin6_port);
-            }
-            break;
-
-        default:
-            str << "Unknown address family";
-    }
-
-    return str.str();
-}
-
-/*****************************************************************************/
-
 void ProcMother::_check_connections()
 {
     list<Connection *>::iterator i = _connections.begin();
@@ -1020,9 +983,6 @@ void ProcMother::_check_connections()
 
         Connection *conn = *cur;
         if (conn->thread_finished()) {
-            msg() << "Thread terminated.";
-            log(Info);
-
             delete conn;
             _connections.erase(cur);
         }
