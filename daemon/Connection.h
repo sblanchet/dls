@@ -25,6 +25,7 @@
 /*****************************************************************************/
 
 #include <pthread.h>
+#include <sys/socket.h>
 #include <sstream>
 
 #include "config.h"
@@ -40,7 +41,7 @@ class ProcMother;
 class Connection
 {
 public:
-    Connection(ProcMother *, int);
+    Connection(ProcMother *, int, const struct sockaddr_storage *);
     ~Connection();
 
     int start_thread();
@@ -53,6 +54,7 @@ public:
 private:
     ProcMother * const _parent_proc;
     const int _fd;
+    struct sockaddr_storage peer_addr;
     pthread_t _thread;
     pthread_mutex_t _mutex;
     int _ret; /**< Return value. */
@@ -81,6 +83,7 @@ private:
     static int _static_data_callback(LibDLS::Data *, void *);
     void _data_callback(LibDLS::Data *);
     std::string pfx() const;
+    static std::string _format_address(const struct sockaddr *);
 };
 
 /*****************************************************************************/
