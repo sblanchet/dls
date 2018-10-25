@@ -27,7 +27,10 @@
 
 #include <QtGlobal>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
+/* Do not use QT_VERSION_CHECK macro here, otherwise moc will not work!
+ * https://stackoverflow.com/questions/5107428/qt-interface-undefined-interface-error
+ */
+#if QT_VERSION >= 0x050500
 #include <QtUiPlugin/QDesignerCustomWidgetInterface>
 #else
 #include <QDesignerCustomWidgetInterface>
