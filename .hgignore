@@ -1,6 +1,7 @@
 syntax: glob
 
 **.o
+**~
 ChangeLog
 Makefile
 Makefile.in
@@ -72,6 +73,8 @@ tool/.deps
 tool/.libs/dls
 tool/dls
 tool/dls.exe
+json/.deps
+json/.libs/dlsjson
 widgets/.moc
 widgets/.qm
 widgets/DlsWidgets_resource.rc

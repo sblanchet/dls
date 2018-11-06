@@ -32,7 +32,8 @@ SUBDIRS += \
 	daemon \
 	fltkguis \
 	script \
-	tool
+	tool \
+	json
 
 EXTRA_DIST = \
 	bootstrap.sh \

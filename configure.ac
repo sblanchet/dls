@@ -249,6 +249,36 @@ AM_CONDITIONAL(ENABLE_TOOL, test "x$enabletool" = "x1")
 AC_SUBST(ENABLE_TOOL, [$enabletool])
 
 #------------------------------------------------------------------------------
+# Json-interface tool
+#------------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to build the json-interface tool dlsjson])
+
+AC_ARG_ENABLE([json],
+    AS_HELP_STRING([--enable-json], [Enable the json-interface tool dlsjson]),
+    [
+        case "${enableval}" in
+            yes) enablejson=1
+                ;;
+            no) enablejson=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-json])
+                ;;
+        esac
+    ],
+    [enablejson=0]
+)
+
+if test "x$enablejson" = "x1"; then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_JSON, test "x$enablejson" = "x1")
+AC_SUBST(ENABLE_JSON, [$enablejson])
+
+#------------------------------------------------------------------------------
 # uriparser
 #------------------------------------------------------------------------------
 
@@ -334,6 +364,7 @@ AC_CONFIG_FILES([
     script/dlsd.service
     script/init.sh
     tool/Makefile
+    json/Makefile
 ])
 AC_OUTPUT
 

@@ -1,0 +1,14 @@
+{ "jsonrpc": "2.0",
+     "id": 1,
+     "method": "fetch_data",
+     "params": {
+	 "path": "/vol/data/dls_data",
+	 "job": 100,
+	 "start":1532260173136944,
+	 "end":1532261373136944,
+	 "min_values":100,
+	 "channels":["/groundDistance",
+		     "/pressureGas"
+		    ]
+     }    
+}	       

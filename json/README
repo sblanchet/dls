@@ -1,0 +1,6 @@
+json rpc client for presenting dls-Data to javascript frontends
+
+
+Configuring the web-server:
+make shure the binary "dlsjson" is accessible via /cgi-bin/dlsjson
+
