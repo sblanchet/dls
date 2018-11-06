@@ -1,0 +1,154 @@
+<!-- Test AJAX IO -->
+<!DOCTYPE html>
+<html lang="de">
+   <head>
+     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+     <title>MSR AJAX IO CHECK</title>
+     <link href="css/styles.css" rel="stylesheet" type="text/css" />
+     <script src="thirdParty/jquery-1.10.2.js"></script>
+     <style>
+      .btns {
+	width:100px;"
+      }
+      /* Center the loader */
+      /* https://www.w3schools.com/howto/howto_css_loader.asp */
+      #loader {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	z-index: 1;
+	width: 150px;
+	height: 150px;
+	margin: -75px 0 0 -75px;
+	border: 16px solid #f3f3f3;
+	border-radius: 50%;
+	border-top: 16px solid #3498db;
+	width: 120px;
+	height: 120px;
+	-webkit-animation: spin 2s linear infinite;
+	animation: spin 2s linear infinite;
+      }
+      @-webkit-keyframes spin {
+	0% { -webkit-transform: rotate(0deg); }
+	100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+      }
+     </style>
+     <script>
+	//die Kanalinfo lesen
+
+     function exampleList() {
+       var dataRequest = { "jsonrpc": "2.0",
+			   "id": 1,
+			   "method": "list",
+			   "params": {
+			     "path": "/vol/data/dls_data"
+			   }    
+			   
+       };
+ 
+       document.getElementById("sendText").value = JSON.stringify(dataRequest,null, " ");
+     }
+
+     function exampleListChannels() {
+       var dataRequest = { "jsonrpc": "2.0",
+			   "id": 1,
+			   "method": "list",
+			   "params": {
+			     "path": "/vol/data/dls_data",
+			     "job":100
+			   }    
+			   
+       };
+ 
+       document.getElementById("sendText").value = JSON.stringify(dataRequest,null, " ");
+     }
+     
+     function exampleFetch() {
+       var dataRequest = { "jsonrpc": "2.0",
+			   "id": 1,
+			   "method": "fetch_data",
+			   "params": {
+			     "path": "/vol/data/dls_data",
+			     "job": 100,
+			     "start":1532260173136944,
+			     "end":1532261373136944,
+			     "min_values":100,
+			     "channels":["/groundDistance",
+					 "/pressureGas"
+			     ]
+			   }    
+       }	       
+       
+       document.getElementById("sendText").value = JSON.stringify(dataRequest,null, " ");
+
+     }
+
+     function exampleFetchAll() {
+       var dataRequest = { "jsonrpc": "2.0",
+			   "id": 1,
+			   "method": "fetch_data",
+			   "params": {
+			     "path": "/vol/data/dls_data",
+			     "job": 100,
+			     "start":0,
+			     "end":0,
+			     "min_values":0,
+			     "channels":["/groundDistance",
+					 "/pressureGas"
+			     ]
+			   }    
+       }	       
+       
+       document.getElementById("sendText").value = JSON.stringify(dataRequest,null, " ");
+
+     }
+
+    function send() {	
+	//hide loader
+	document.getElementById("loader").style.display = "block";
+        $.ajax({
+	    url: "../cgi-bin/dlsjson",
+	    data: document.getElementById("sendText").value,
+	    //dataType:"html",
+	    dataType:"json",
+	    type:"post",
+	    success: function( response ) {
+	      document.getElementById("responseText").value = JSON.stringify(response, null, " ");
+	      //hide loader
+	      document.getElementById("loader").style.display = "none";
+
+	    }
+	});
+     }
+
+     </script>
+
+   </head>
+   <body>
+     <div style="display:none;" id="loader"></div>
+     <div style="margin:20px;">
+       <div style="margin:10px; float:left";>
+	 <h1> AJAX Out</h1>
+	 <textarea id="sendText" cols="80" rows="40"></textarea>
+	 <br/>
+	 <div style="margin:2px;">
+	   
+	   <button type="button" class="btns" onClick="exampleList()">Jobs</button> 
+	   <button type="button" class="btns" onClick="exampleListChannels()">Channels</button> 
+	   <button type="button" class="btns" onClick="exampleFetch()">Fetch</button> 
+	   <button type="button" class="btns" onClick="exampleFetchAll()">Fetch All</button> 
+	   <button type="button" class="btns" onClick="send()">Send</button> 
+	 </div>
+       </div>
+       <div style="margin:10px; float:left";>
+	 <h1> AJAX In</h1>
+	 <textarea id="responseText" cols="80" rows="40"></textarea>
+       </div>
+     </div>
+     
+   </body>
+</html>

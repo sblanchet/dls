@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!-- Einfaches Beispiel, um zu testen, ob flotr2 sich als Plotting-Bibliothek eignet -->
+<html lang="de">
+  <head> 
+     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="libs/flotr2/flotr2.js"></script>
+    <script src="libs/jquery/jquery-1.10.2.js"></script>
+    <script src="dlsplot.js"></script>
+    <style>
+      /* Center the loader */
+      /* https://www.w3schools.com/howto/howto_css_loader.asp */
+      #loader {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	z-index: 1;
+	width: 150px;
+	height: 150px;
+	margin: -75px 0 0 -75px;
+	border: 16px solid #f3f3f3;
+	border-radius: 50%;
+	border-top: 16px solid #3498db;
+	width: 120px;
+	height: 120px;
+	-webkit-animation: spin 2s linear infinite;
+	animation: spin 2s linear infinite;
+      }
+      @-webkit-keyframes spin {
+	0% { -webkit-transform: rotate(0deg); }
+	100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+      }
+     </style>
+
+  </head>
+
+  <body>
+    <div style="display:none;" id="loader"></div>
+  <div style="margin:2px;">
+    <button type="button" class="btns" onClick="lastInterval(3600)">last hour</button> 
+    <button type="button" class="btns" onClick="lastInterval(3600*24)">last day</button> 
+    <button type="button" class="btns" onClick="lastWeek()">last week</button> 
+    <button type="button" class="btns" onClick="fetchAll()">show all</button> 
+    <button type="button" class="btns" onClick="zoom(1)">+</button> 
+    <button type="button" class="btns" onClick="zoom(-1)">-</button> 
+    <select id="plotMode" onchange="plotModeChanged()">
+    <option value="zoom">Zoom</option>
+    <option value="move">Move</option>
+    </select>
+
+  </div>
+  <div style="border:20px; width:100%; height:200px;" id="plot"></div>
+  <div style="border:20px; width:100%; height:200px;" id="plot2"></div>
+    <!-- Container for plot -->
+  </div>
+
+  <div style="margin:10px; float:left">
+    <h1> DBG</h1>
+    <button type="button" class="btns" onClick="clearDbg()" style="float:left">clear</button> 
+    <textarea id="dbg" cols="80" rows="20"></textarea>
+  </div>
+
+  <script>
+
+function clearDbg() {
+    dbg = document.getElementById("dbg");
+    dbg.value = "";
+}
+
+   var job = 103;
+   var path = "/vol/data/dls_data";
+
+//   var channels = ["/pressureOil","/pressureGas"];
+
+//var channels = ["/nottuln/Elektro/KL3404-3-Phasen-Leistungsmessung/Strom/0","/nottuln/Elektro/KL3404-3-Phasen-Leistungsmessung/Strom/2",
+//	       "/nottuln/Elektro/KL3404-3-Phasen-Leistungsmessung/Strom/1"];
+
+
+//Instanz eines Plots mit mehreren Diagrammen
+ var dls = {start_time:{},
+	    end_time:{},
+	    plots:[{id:"plot",
+		    graph:{},
+		    channels:["/testRigAB/torqueVsAngle/0"]
+		   },
+		   {id:"plot2",
+		    graph:{},
+		    channels:["/testRigAB/torqueVsAngle/1"]
+		   }]
+	   };
+
+
+   //return from ajax call
+   var channelData;
+
+   function drawDiagramms(dls,start,end){
+       
+       var color = ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#b15928"];
+
+       //Flotr plot options
+       var plotOptions = {
+	   shadowSize : 0,
+	   title:"Example 1",
+
+	   selection: {
+	       mode: 'x',
+	       fps: 30
+           },
+
+	   xaxis: {
+	       mode:'time',
+	       //     timeFormat:'%y-%b-%d',
+	       timeMode:'local',
+	       timeUnit:'millisecond',
+	       //	    timeUnit:'second',
+	       //	    'noTicks':12
+	       //min:Number.MAX_VALUE,
+	       //max:-Number.MAX_VALUE
+	       autoscale:false
+	   },
+	   yaxis: {
+	       //FIXME
+	       //min:1,
+	       //max:2
+	   },
+	   dls: {lineWidth: 1,
+		   show:true,
+		   steps:true
+		  }
+       };
+
+    if(start) {
+	plotOptions.xaxis["min"] = start;
+	dls.start_time = start;
+    }
+    if(end) {
+	plotOptions.xaxis["max"] = end;
+	dls.end_time = end;
+    }
+       //assemble Data
+     for(var i=0;i<dls.plots.length;i++) {
+       var data = [];
+       var k = 0;
+
+       for(var j=0;j<channelData.length;j++) {
+	 if(dls.plots[i].channels.indexOf(channelData[j].path) >-1) {
+	   data.push({"label":channelData[j].path,
+		      "color":color[(++k) % color.length],
+		      "data":channelData[j]}); 
+	 }
+       }
+       dls.plots[i].graph = Flotr.draw(document.getElementById(dls.plots[i].id),data,plotOptions);
+     }
+   }
+			   
+   function getData(dls,start_time,end_time,min_values) {
+       dbg = document.getElementById("dbg");
+
+       var channels = [];
+     for(var i=0;i<dls.plots.length;i++) {
+       for(var j=0;j<dls.plots[i].channels.length;j++) {
+	 channels.push(dls.plots[i].channels[j]);
+       }
+     }
+
+       var dataRequest = { "jsonrpc": "2.0",
+			   "id": 1,
+			   "method": "fetch_data",
+			   "params": {
+			       "path": path,
+			       "job": job,
+			       "start":start_time*1e3,
+			       "end":end_time*1e3,
+			       "min_values":min_values,
+			       "channels":channels
+			   }
+			 }    
+
+       dbg.value+= JSON.stringify(dataRequest, null, " ")+"\n";
+       document.getElementById("loader").style.display = "block";
+			 
+        $.ajax({
+	    url: "../cgi-bin/dlsjson",
+	    data: JSON.stringify(dataRequest),
+	    dataType:"json",
+	    type:"post",
+	    success: function( response ) {
+		if(typeof response.channels != 'undefined') {
+		    channelData = response.channels;  //global
+
+		    if(start_time !=0 && end_time != 0) {
+			drawDiagramms(dls,start_time,end_time);
+		    } else {
+			drawDiagramms(dls);
+		    }
+		}
+	      document.getElementById("loader").style.display = "none";
+
+	    }
+	});
+
+     }	       
+
+function fetchAll(){
+    getData(dls,0,0,window.innerWidth);
+}
+
+function zoom(dir) {
+console.log("ZoomIn");
+    var dt = dls.end_time - dls.start_time;
+    var inc = dt*0.25*dir;
+    getData(dls,dls.start_time+inc,dls.end_time-inc,window.innerWidth);
+}
+
+function lastInterval(dt){
+    var end_time = Date.now();
+    var start_time = end_time - dt*1e3;
+    getData(dls,start_time,end_time,window.innerWidth);
+}
+
+
+function plotModeChanged() {
+    mode = document.getElementById("plotMode").selectedIndex;
+    console.log("mode: "+mode);
+    switch(mode) {
+    case 0:
+	clearPan();
+	initZoom();
+	break;
+    case 1: //move
+	clearZoom();
+	initPan();
+	break;
+    }
+}
+
+   function initZoom(){
+       for(var i=0;i<dls.plots.length;i++) {
+
+	 Flotr.EventAdapter.observe(document.getElementById(dls.plots[i].id), 'flotr:select', function(area) {
+	   drawDiagramms(dls,area.x1,area.x2);
+	     
+	   getData(dls,area.x1,area.x2,window.innerWidth);
+	 });
+       }
+   }
+
+   function clearZoom(){
+	for(var i=0;i<dls.plots.length;i++) {
+	  Flotr.EventAdapter.stopObserving(document.getElementById(dls.plots[i].id), 'flotr:select');
+	}
+   }
+
+/*
+   function initDrag(e) {
+     Flotr.EventAdapter.observe(document, 'mousemove', move);
+     Flotr.EventAdapter.observe(document, 'mouseup', stopDrag);
+   }
+
+   function initPan() {
+     for(var i=0;i<dls.plots.length;i++) {
+          Flotr.EventAdapter.observe(document.getElementById(dls.plots[i].id), 'mousedown', initDrag);
+     } 
+   }
+*/
+   function clearPan() {
+   }
+   window.onload = function(){
+       document.getElementById("plotMode").selectedIndex = 0;
+       getData(dls,0,0,window.innerWidth);
+
+       //zooming
+       initZoom();
+
+       // When graph is clicked, draw the graph with default area.
+     /*
+       Flotr.EventAdapter.observe(document.getElementById("plot"), 'flotr:click', function() {
+           drawDiagramms();
+       });
+     */
+
+   }
+  </script>
+  </body>
+
+</html>
