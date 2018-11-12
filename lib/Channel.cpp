@@ -40,9 +40,7 @@ using namespace std;
 #include "XmlParser.h"
 using namespace LibDLS;
 
-#define DEBUG_TIMING 0
-
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
 #include <iomanip>
 #endif
 
@@ -244,7 +242,7 @@ Channel::_fetch_chunks_local()
     set<int64_t> dir_chunks;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts, te;
     ts.set_now();
 #endif
@@ -337,7 +335,7 @@ Channel::_fetch_chunks_local()
         }
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     te.set_now();
     stringstream msg;
     msg << __func__ << "() " << ts.diff_str_to(te);
@@ -357,7 +355,7 @@ Channel::_fetch_chunks_network()
     Chunk new_chunk;
     Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts;
     ts.set_now();
 #endif
@@ -446,7 +444,7 @@ Channel::_fetch_chunks_network()
         _chunks.erase(*rem_i);
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time te;
     te.set_now();
     stringstream msg;
@@ -473,7 +471,7 @@ void Channel::_fetch_data_local(
         unsigned int decimation /**< Decimation. */
         ) const
 {
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts, te;
     ts.set_now();
 #endif
@@ -494,7 +492,7 @@ void Channel::_fetch_data_local(
         }
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     te.set_now();
     stringstream msg;
     msg << "fetch_data " << ts.diff_str_to(te);
@@ -515,7 +513,7 @@ void Channel::_fetch_data_network(
 {
     DlsProto::Request req;
     DlsProto::Response res;
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts;
     ts.set_now();
 #endif
@@ -577,7 +575,7 @@ void Channel::_fetch_data_network(
         }
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time te;
     te.set_now();
     stringstream msg;
