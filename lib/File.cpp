@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id$
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -244,33 +242,41 @@ void File::close()
     stringstream err;
     bool error = false;
 
-    if (_mode != fomClosed) {
+    if (_mode == fomClosed) {
+        return;
+    }
+
 #if _BSD_SOURCE || _XOPEN_SOURCE || _POSIX_C_SOURCE >= 200112L
+    if (_mode != fomOpenRead) { // open for writing/appending
         if (fsync(_fd) == -1) {
             error = true;
             err << "Could not sync pending data (" << strerror(errno) << ").";
         }
+    }
 #endif
 
-        do {
-            if (::close(_fd) == 0) break;
-
-            if (errno != EINTR) {
-                if (error) {
-                    err << " ";
-                }
-                else {
-                    error = true;
-                }
-
-                err << "Could not close file (" << strerror(errno) << ").";
-            }
+    do {
+        if (::close(_fd) == 0) {
+            break;
         }
-        while (errno == EINTR);
 
-        _mode = fomClosed;
+        if (errno != EINTR) {
+            if (error) {
+                err << " ";
+            }
+            else {
+                error = true;
+            }
 
-        if (error) throw EFile(err.str());
+            err << "Could not close file (" << strerror(errno) << ").";
+        }
+    }
+    while (errno == EINTR);
+
+    _mode = fomClosed;
+
+    if (error) {
+        throw EFile(err.str());
     }
 }
 

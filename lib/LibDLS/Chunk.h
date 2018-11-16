@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id$
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -93,6 +91,11 @@ class Chunk
 
         void set_chunk_info(DlsProto::ChunkInfo *) const;
         void update_from_chunk_info(const DlsProto::ChunkInfo &);
+
+#ifdef DEBUG_TIMING
+        static void reset_timing();
+        static void output_timing();
+#endif
 
     protected:
         std::string _dir; /**< Chunk-Verzeichnis */
