@@ -40,7 +40,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 */
 
 CtlJobPreset::CtlJobPreset():
@@ -53,15 +53,15 @@ CtlJobPreset::CtlJobPreset():
 /*****************************************************************************/
 
 /**
-   Auftragsvorgaben in XML-Datei speichern
+   Save job specification in  XML file
 
-   Schreibt alle Auftragsvorgaben (inclusive Kanalvorgaben)
-   in eine XML-Datei im richtigen Verzeichnis. Danach wird
-   der Mutterprozess über eine Spooling-Datei benachrichtigt,
-   dass er die Vorgaben neu einlesen soll.
+   Write all job specifications (including channel specification)
+   into a XML file in the correct directory. Afterwards, the parent
+   process is notified via a spooling line that it should read in the
+   defaults again.
 
-   \param dls_dir DLS-Datenverzeichnis
-   \throw EJobPreset Ungültige Daten oder Schreiben nicht möglich
+   \param dls_dir DLS data directory
+   \throw EJobPreset invalid data or impossible writing
 */
 
 void CtlJobPreset::write(const string &dls_dir)
@@ -74,7 +74,7 @@ void CtlJobPreset::write(const string &dls_dir)
     int fd;
     char *tmp_file_name;
 
-    // Verzeichnisnamen konstruieren
+    // Construct directory names
     dir_name << dls_dir << "/job" << _id;
 
     if (mkdir(dir_name.str().c_str(), 0755) != 0)
@@ -87,7 +87,7 @@ void CtlJobPreset::write(const string &dls_dir)
         }
     }
 
-    // Dateinamen konstruieren
+    // Construct filenames
     file_name = dir_name.str() + "/job.xml";
 
     try {
@@ -115,7 +115,7 @@ void CtlJobPreset::write(const string &dls_dir)
         throw LibDLS::EJobPreset(err.str());
     }
 
-    // Datei öffnen
+    // Open file
     file.open(tmp_file_name, ios::out);
     close(fd);
 
@@ -219,18 +219,16 @@ void CtlJobPreset::write(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Spooling-Datei erzeugen, um den Prozess zu benachrichtigen
+   Create a spooling file to notify the process
 
-   Diese Methode benachrichtigt den Prozess bezüglich
-   einer Änderung einer Auftragsvorgabe. Es kann z. B.
-   eine neue Vorgabe erstellt worden sein, eine
-   vorhandene Vorgabe kann sich geändert haben, oder es
-   wurde eine Vorgabe gelöscht.
+   This method notifies the process of a change in a job specification.
+   For example, it can notify that a new specification has been created,
+   an existing preset have changed or was deleted.
 
-   Die Spooling-Datei enthält nur die ID des Auftrags. Der
-   Prozess entscheidet damit selbstständig, was zu tun ist.
+   The spooling file contains only the job ID. The process
+   decides independently what to do.
 
-   \param dls_dir DLS-Datenverzeichnis
+   \param dls_dir DLS data directory
 */
 
 void CtlJobPreset::spool(const string &dls_dir)
@@ -241,7 +239,7 @@ void CtlJobPreset::spool(const string &dls_dir)
 
     gettimeofday(&tv, 0);
 
-    // Eindeutigen Dateinamen erzeugen
+    // Create an unique filename
     filename << dls_dir << "/spool/";
     filename << tv.tv_sec << "_" << tv.tv_usec;
     filename << "_" << (unsigned long) this;
@@ -261,7 +259,7 @@ void CtlJobPreset::spool(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Setzt die Auftrags-ID
+   Set the job ID
 */
 
 void CtlJobPreset::id(unsigned int id)
@@ -272,7 +270,7 @@ void CtlJobPreset::id(unsigned int id)
 /*****************************************************************************/
 
 /**
-   Setzt die Auftragsbeschreibung
+   Set the job description
 */
 
 void CtlJobPreset::description(const string &desc)
@@ -283,7 +281,7 @@ void CtlJobPreset::description(const string &desc)
 /*****************************************************************************/
 
 /**
-   Setzt den Sollstatus
+   Set the target status
 */
 
 void CtlJobPreset::running(bool run)
@@ -294,7 +292,7 @@ void CtlJobPreset::running(bool run)
 /*****************************************************************************/
 
 /**
-   Wechselt den Sollstatus
+   Change the target status
 */
 
 void CtlJobPreset::toggle_running()
@@ -305,7 +303,7 @@ void CtlJobPreset::toggle_running()
 /*****************************************************************************/
 
 /**
-   Setzt die Datenquelle
+   Set the data source
 */
 
 void CtlJobPreset::source(const string &src)
@@ -316,7 +314,7 @@ void CtlJobPreset::source(const string &src)
 /*****************************************************************************/
 
 /**
-   Setzt den Namen des Trigger-Parameters
+   Set the name of the trigger parameter
 */
 
 void CtlJobPreset::trigger(const string &trigger_name)
@@ -327,9 +325,9 @@ void CtlJobPreset::trigger(const string &trigger_name)
 /*****************************************************************************/
 
 /**
-   Setzt die Größe der Zeit-Quota
+   Set the size of time quota
 
-   \param seconds Anzahl der maximal zu erfassenden Sekunden
+   \param seconds maximum number of seconds to capture
 */
 
 void CtlJobPreset::quota_time(uint64_t seconds)
@@ -340,9 +338,9 @@ void CtlJobPreset::quota_time(uint64_t seconds)
 /*****************************************************************************/
 
 /**
-   Setzt die Größe der Daten-Quota
+   Set the size of the data quota
 
-   \param bytes Anzahl der maximal zu erfassenden Bytes
+   \param bytes maximum number of bytes to capture
 */
 
 void CtlJobPreset::quota_size(uint64_t bytes)
@@ -353,11 +351,10 @@ void CtlJobPreset::quota_size(uint64_t bytes)
 /*****************************************************************************/
 
 /**
-   Fügt eine Kanalvorgabe hinzu
+   Add a channel preset
 
-   \param channel Neue Kanalvorgabe
-   \throw EJobPreset Eine Vorgabe für diesen Kanal
-   existiert bereits!
+   \param channel New channel
+   \throw EJobPreset A default for this channel already exists!
 */
 
 void CtlJobPreset::add_channel(const LibDLS::ChannelPreset *channel)
@@ -376,14 +373,13 @@ void CtlJobPreset::add_channel(const LibDLS::ChannelPreset *channel)
 /*****************************************************************************/
 
 /**
-   Ändert eine Kanalvorgabe
+   Change a channel preset
 
-   Der zu ändernde Kanal wird anhand des Kanalnamens in der
-   neuen Vorgabe bestimmt.
+   The channel to be changed is determined by the channel name
+   in the new specification.
 
-   \param new_channel Zeiger auf neue KanalvorgabeKanalname
-   \throw EJobPreset Es existiert keine Vorgabe für
-   den angegebenen Kanal
+   \param new_channel Pointer to the new channel preset name
+   \throw EJobPreset There is no default for the specifed channel
 */
 
 void CtlJobPreset::change_channel(const LibDLS::ChannelPreset *new_channel)
@@ -410,12 +406,11 @@ void CtlJobPreset::change_channel(const LibDLS::ChannelPreset *new_channel)
 /*****************************************************************************/
 
 /**
-   Entfernt eine Kanalvorgabe
+   Remove a channel preset
 
-   \param channel_name Kanalname des Kanals, dessen Vorgabe
-   entfernt werden soll
-   \throw EJobPreset Es existiert keine Vorgabe für
-   den angegebenen Kanal
+   \param channel_name Channel name of the channel whose default
+   should be removed
+   \throw EJobPreset There is not default for the specified channel
 */
 
 void CtlJobPreset::remove_channel(const string &channel_name)

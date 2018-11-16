@@ -57,9 +57,9 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param dls_dir DLS-Datenverzeichnis
+   \param dls_dir DLS data directory
 */
 
 CtlDialogMain::CtlDialogMain(const string &dls_dir)
@@ -73,19 +73,19 @@ CtlDialogMain::CtlDialogMain(const string &dls_dir)
     _wnd->callback(_callback, this);
 
     _grid_jobs = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
-    _grid_jobs->add_column("job", "Auftrag", 200);
-    _grid_jobs->add_column("source", "Quelle");
+    _grid_jobs->add_column("job", "Job", 200);
+    _grid_jobs->add_column("source", "Source");
     _grid_jobs->add_column("state", "Status");
     _grid_jobs->add_column("trigger", "Trigger");
-    _grid_jobs->add_column("proc", "Prozess");
-    _grid_jobs->add_column("logging", "Erfassung");
+    _grid_jobs->add_column("proc", "Process");
+    _grid_jobs->add_column("logging", "Logging");
     _grid_jobs->callback(_callback, this);
 
     _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25,
-                                  "Schliessen");
+                                  "Close");
     _button_close->callback(_callback, this);
 
-    _button_add = new Fl_Button(10, HEIGHT - 35, 130, 25, "Neuer Auftrag");
+    _button_add = new Fl_Button(10, HEIGHT - 35, 130, 25, "New job");
     _button_add->callback(_callback, this);
 
     _button_state = new Fl_Button(345, HEIGHT - 35, 100, 25);
@@ -100,7 +100,7 @@ CtlDialogMain::CtlDialogMain(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogMain::~CtlDialogMain()
@@ -113,35 +113,35 @@ CtlDialogMain::~CtlDialogMain()
 /*****************************************************************************/
 
 /**
-   Dialog anzeigen
+   Show dialog
 */
 
 void CtlDialogMain::show()
 {
-    // Fenster zeigen
+    // Show window
     _wnd->show();
 
-    // Überprüfen, ob das angegebene Verzeichnis
-    // schon ein DLS-Datenverzeichnis ist
+    // Check if the specified directory is
+    // already a DLS data directory
     _check_dls_dir();
 
     _load_jobs();
     _load_watchdogs();
 
-    // Timeout für die Aktualisierung der Watchdogs hinzufügen
+    // Add timeout for watchdog update
     Fl::add_timeout(WATCHDOG_TIMEOUT, _static_watchdog_timeout, this);
 
-    // Solange in der Event-Loop bleiben, wie das Fenster sichtbar ist
+    // Stay in the event loop while the window is visible
     while (_wnd->shown()) Fl::wait();
 }
 
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Zeiger aud das Widget, das den Callback ausgelöst hat
-   \param data User-Data, hier Zeiger auf den Dialog
+   \param sender Pointer to the widget that triggered the callback
+   \param data User data, here pointer to the dialog
 */
 
 void CtlDialogMain::_callback(Fl_Widget *sender, void *data)
@@ -158,7 +158,7 @@ void CtlDialogMain::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback für das Erfassungsauftrags-Grid
+   Callback for the collection request grid
 */
 
 void CtlDialogMain::_grid_jobs_callback()
@@ -183,7 +183,7 @@ void CtlDialogMain::_grid_jobs_callback()
             else if (_grid_jobs->current_col() == "state")
             {
                 _grid_jobs->current_content(
-                    _jobs[i].running() ? "gestartet" : "angehalten");
+                    _jobs[i].running() ? "started" : "required");
             }
             else if (_grid_jobs->current_col() == "trigger")
             {
@@ -203,7 +203,7 @@ void CtlDialogMain::_grid_jobs_callback()
                                     FL_DARK_GREEN);
                             }
 
-                            _grid_jobs->current_content("läuft");
+                            _grid_jobs->current_content("running");
                         }
                         else
                         {
@@ -212,7 +212,7 @@ void CtlDialogMain::_grid_jobs_callback()
                                 _grid_jobs->current_content_color(FL_RED);
                             }
 
-                            _grid_jobs->current_content("läuft nicht!");
+                            _grid_jobs->current_content("not running!");
                         }
                     }
                     else
@@ -222,7 +222,7 @@ void CtlDialogMain::_grid_jobs_callback()
                             _grid_jobs->current_content_color(FL_DARK_YELLOW);
                         }
 
-                        _grid_jobs->current_content("(unbekannt)");
+                        _grid_jobs->current_content("(unknown)");
                     }
                 }
             }
@@ -240,7 +240,7 @@ void CtlDialogMain::_grid_jobs_callback()
                                     FL_DARK_GREEN);
                             }
 
-                            _grid_jobs->current_content("läuft");
+                            _grid_jobs->current_content("running");
                         }
                         else
                         {
@@ -249,7 +249,7 @@ void CtlDialogMain::_grid_jobs_callback()
                                 _grid_jobs->current_content_color(FL_RED);
                             }
 
-                            _grid_jobs->current_content("läuft nicht!");
+                            _grid_jobs->current_content("not running!");
                         }
                     }
                     else
@@ -259,7 +259,7 @@ void CtlDialogMain::_grid_jobs_callback()
                             _grid_jobs->current_content_color(FL_DARK_YELLOW);
                         }
 
-                        _grid_jobs->current_content("(unbekannt)");
+                        _grid_jobs->current_content("(unknown)");
                     }
                 }
             }
@@ -285,7 +285,7 @@ void CtlDialogMain::_grid_jobs_callback()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Beenden"-Button wurde geklickt
+   Callback: The "Close" button was clicked
 */
 
 void CtlDialogMain::_button_close_clicked()
@@ -296,13 +296,13 @@ void CtlDialogMain::_button_close_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Hinzufügen"-Button wurde geklickt
+   Callback: The "Add" button was clicked
 */
 
 void CtlDialogMain::_button_add_clicked()
 {
     CtlDialogJobEdit *dialog = new CtlDialogJobEdit(_dls_dir);
-    dialog->show(0); // 0 = Neuer Auftrag
+    dialog->show(0); // 0 = New job
 
     if (dialog->updated())
     {
@@ -315,7 +315,7 @@ void CtlDialogMain::_button_add_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Starten/Anhalten"-Button wurde geklickt
+   Callback: The "Start/Stop" button was clicked
 */
 
 void CtlDialogMain::_button_state_clicked()
@@ -325,7 +325,7 @@ void CtlDialogMain::_button_state_clicked()
 
     if (index < 0 || index >= (int) _jobs.size())
     {
-        msg_win->str() << "Ungültiger Auftrags-Index!";
+        msg_win->str() << "Invalid job index!";
         msg_win->error();
         return;
     }
@@ -340,7 +340,7 @@ void CtlDialogMain::_button_state_clicked()
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
+        msg_win->str() << "Write the specification data: " << e.msg;
         msg_win->error();
         return;
     }
@@ -351,7 +351,7 @@ void CtlDialogMain::_button_state_clicked()
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Konnte den dlsd nicht benachrichtigen!";
+        msg_win->str() << "Cannot notify dlsd!";
         msg_win->warning();
     }
 
@@ -363,7 +363,7 @@ void CtlDialogMain::_button_state_clicked()
 /*****************************************************************************/
 
 /**
-   Alle Watchdog-Informationen laden
+   Load all watchdog information
 */
 
 void CtlDialogMain::_load_watchdogs()
@@ -375,14 +375,14 @@ void CtlDialogMain::_load_watchdogs()
     job_i = _jobs.begin();
     while (job_i != _jobs.end())
     {
-        // Dateinamen konstruieren
+        // Construct filenames
         dir_name.str("");
         dir_name.clear();
         dir_name << _dls_dir << "/job" << job_i->id();
 
         if (stat((dir_name.str() + "/watchdog").c_str(), &file_stat) == 0)
         {
-            // Wenn die neue Dateizeit jünger ist, als die zuletzt gelesene...
+            // If the new file time is younger than the last read...
             if (file_stat.st_mtime > job_i->process_watchdog)
             {
                 job_i->process_watchdog = file_stat.st_mtime;
@@ -399,12 +399,12 @@ void CtlDialogMain::_load_watchdogs()
                     _grid_jobs->redraw();
                 }
             }
-            else // Watchdog nicht verändert
+            else // Watchdog not changed
             {
                 job_i->process_bad_count++;
             }
         }
-        else // Konnte Watchdog nicht lesen
+        else // Cannot read watchdog
         {
             job_i->process_bad_count++;
         }
@@ -417,7 +417,7 @@ void CtlDialogMain::_load_watchdogs()
 
         if (stat((dir_name.str() + "/logging").c_str(), &file_stat) == 0)
         {
-            // Wenn die neue Dateizeit jünger ist, als die zuletzt gelesene...
+            // if the new file time is younger that the last read...
             if (file_stat.st_mtime > job_i->logging_watchdog)
             {
                 job_i->logging_watchdog = file_stat.st_mtime;
@@ -434,12 +434,12 @@ void CtlDialogMain::_load_watchdogs()
                     _grid_jobs->redraw();
                 }
             }
-            else // Watchdog nicht verändert
+            else // Watchdog not changed
             {
                 job_i->logging_bad_count++;
             }
         }
-        else // Konnte Watchdog nicht lesen
+        else // Cannot read watchdog
         {
             job_i->logging_bad_count++;
         }
@@ -458,13 +458,12 @@ void CtlDialogMain::_load_watchdogs()
 /*****************************************************************************/
 
 /**
-   Alle Erfassungsaufträge laden
+   Load all jobs entries
 
-   Läuft durch das Verzeichnis, merkt sich alle Einträge, die
-   "jobXXX" heissen, sortiert diese Liste und überprüft dann
-   jeweils, ob es sich um ein gültiges Auftragsverzeichnis
-   handelt. Wenn ja, wird der entsprechende Auftrag importiert
-   und in die Liste eingefügt.
+   Run through the directory, remember all entries that are called
+   "jobXXX", sort this list and then check in each case whether it is
+   a valid job directory. If so, the correspoding job is imported and inserted
+   into the list.
 */
 
 void CtlDialogMain::_load_jobs()
@@ -483,27 +482,27 @@ void CtlDialogMain::_load_jobs()
 
     str.exceptions(ios::failbit | ios::badbit);
 
-    // Liste der Aufträge leeren
+    // Empty the list of jobs
     _grid_jobs->record_count(0);
     _jobs.clear();
 
-    // Das Hauptverzeichnis öffnen
+    // Open the main directory
     if ((dir = opendir(_dls_dir.c_str())) == NULL)
     {
-        msg_win->str() << "Konnte das Datenverzeichnis \"" << _dls_dir
-                       << "\" nicht öffnen!";
+        msg_win->str() << "Cannot open the data \"" << _dls_dir
+                       << "\" directory!";
         msg_win->error();
         return;
     }
 
-    // Alle Dateien und Unterverzeichnisse durchlaufen
+    // Go through all files and subdirectories
     while ((dir_ent = readdir(dir)) != NULL)
     {
-        // Verzeichnisnamen kopieren
+        // Copy directory name
         dirname = dir_ent->d_name;
 
-        // Wenn das Verzeichnis nicht mit "job" beginnt,
-        // das nächste verarbeiten
+        // If the directory does not start with "job",
+        // process the next one
         if (dirname.substr(0, 3) != "job") continue;
 
         str.str("");
@@ -512,25 +511,25 @@ void CtlDialogMain::_load_jobs()
 
         try
         {
-            // ID aus dem Verzeichnisnamen lesen
+            // Read ID from the directory name
             str >> job_id;
         }
         catch (...)
         {
-            // Der Rest des Verzeichnisnamens ist keine Nummer!
+            // The rest of the directory name is not a number!
             continue;
         }
 
         job_ids.push_back(job_id);
     }
 
-    // Auftrags-IDs aufsteigend sortieren
+    // Sort jobs ID in ascending order
     job_ids.sort();
 
-    // Alle "gemerkten", potentiellen Auftrags-IDs durchlaufen
+    // Go through all "remembered" , potential job IDs
     for (job_id_i = job_ids.begin(); job_id_i != job_ids.end(); job_id_i++)
     {
-        // Gibt es in dem Verzeichnis eine Datei job.xml?
+        // Is there a file job.xml in the directory?
         str.str("");
         str.clear();
         str << _dls_dir << "/job" << *job_id_i << "/job.xml";
@@ -543,7 +542,7 @@ void CtlDialogMain::_load_jobs()
         }
         catch (LibDLS::EJobPreset &e)
         {
-            msg_win->str() << "Importieren des Auftrags " << *job_id_i
+            msg_win->str() << "Import the job " << *job_id_i
                            << ": " << e.msg;
             msg_win->error();
             continue;
@@ -556,10 +555,10 @@ void CtlDialogMain::_load_jobs()
         job.logging_watch_determined = false;
         job.logging_watchdog = 0;
 
-        // Auftrag in die Liste einfügen
+        // Add job to the list
         _jobs.push_back(job);
 
-        // Dateinamen konstruieren
+        // Construct filenames
         watch_file_name.str("");
         watch_file_name.clear();
         watch_file_name << _dls_dir << "/job" << *job_id_i << "/watchdog";
@@ -585,11 +584,11 @@ void CtlDialogMain::_load_jobs()
 /*****************************************************************************/
 
 /**
-   Erfassungsauftrag editieren
+   Edit acquisition job
 
-   Öffnet einen neuen Dialog, um den Auftrag zu bearbeiten
+   Open a new dialog to open the job
 
-   \param index Index des zu bearbeitenden Auftrags in der Liste
+   \param index Index of the job to be processed in the list
 */
 
 void CtlDialogMain::_edit_job(unsigned int index)
@@ -609,7 +608,7 @@ void CtlDialogMain::_edit_job(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Aktualisieren des "Starten/Anhalten"-Buttons
+   Update the "Start/Stop" buttons
 */
 
 void CtlDialogMain::_update_button_state()
@@ -622,11 +621,11 @@ void CtlDialogMain::_update_button_state()
 
         if (_jobs[i].running())
         {
-            _button_state->label("Anhalten");
+            _button_state->label("Stop");
         }
         else
         {
-            _button_state->label("Starten");
+            _button_state->label("Start");
         }
 
         _button_state->show();
@@ -640,7 +639,7 @@ void CtlDialogMain::_update_button_state()
 /*****************************************************************************/
 
 /**
-   Überprüft, ob das Verzeichnis ein DLS-Datenverzeichnis ist
+   Check if the directory is a DLS data directory
 */
 
 void CtlDialogMain::_check_dls_dir()
@@ -654,87 +653,87 @@ void CtlDialogMain::_check_dls_dir()
     fstream pid_file;
     bool start_dlsd;
 
-    // Prüfen, ob das Verzeichnis überhaupt existiert
+    // Check if the directory exists
     if (stat(_dls_dir.c_str(), &stat_buf) == -1)
     {
-        str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
-        str << "existiert noch nicht. Soll es als" << endl;
-        str << "DLS-Datenverzeichnis angelegt werden?";
+        str << "The directory \"" << _dls_dir << "\"" << endl;
+        str << "does not exist. Should it be" << endl;
+        str << "created as a DLS data directory?";
 
-        if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
+        if (fl_choice(str.str().c_str(), "No", "Yes", NULL) == 0) return;
 
         build_dls_dir = true;
 
         if (mkdir(_dls_dir.c_str(), 0755) == -1)
         {
-            msg_win->str() << "Konnte das Verzeichnis \"" << _dls_dir << "\"";
-            msg_win->str() << " nicht anlegen: " << strerror(errno);
+            msg_win->str() << "Cannot create the directory \"" << _dls_dir << "\"";
+            msg_win->str() << " : " << strerror(errno);
             msg_win->error();
             return;
         }
     }
     else
     {
-        // Prüfen, ob das angegebene DLS-Datenverzeichnis überhaupt
-        // ein Verzeichnis ist
+        // Check if the specified DLS data directory is the
+        // main directory
         if (!S_ISDIR(stat_buf.st_mode))
         {
-            msg_win->str() << "\"" << _dls_dir << "\" ist kein Verzeichnis!";
+            msg_win->str() << "\"" << _dls_dir << "\" is not a directory!";
             msg_win->error();
             return;
         }
     }
 
-    // Existiert das Spooling-Verzeichnis?
+    // Does the spooling directory exist?
     if (stat((_dls_dir + "/spool").c_str(), &stat_buf) == -1)
     {
         if (!build_dls_dir)
         {
             str.clear();
             str.str("");
-            str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
-            str << "ist noch kein DLS-Datenverzeichnis." << endl;
-            str << "Soll es als solches initialisiert werden?";
+            str << "The directory \"" << _dls_dir << "\"" << endl;
+            str << "is not a DLS data directory." << endl;
+            str << "Sould it be initialized as such?";
 
-            if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
+            if (fl_choice(str.str().c_str(), "No", "Yes", NULL) == 0) return;
 
             build_dls_dir = true;
         }
 
-        // Spooling-Verzeichnis anlegen
+        // Create spooling directory
         if (mkdir((_dls_dir + "/spool").c_str(), 0755) == -1)
         {
-            msg_win->str() << "Konnte das Verzeichnis \""
+            msg_win->str() << "Cannot create the directory \""
                            << (_dls_dir + "/spool") << "\"";
-            msg_win->str() << " nicht anlegen: " << strerror(errno);
+            msg_win->str() << " : " << strerror(errno);
             msg_win->error();
             return;
         }
     }
 
-    // Existiert die Datei mit der ID-Sequenz?
+    // Does the file with the ID sequence exist?
     if (stat((_dls_dir + "/id_sequence").c_str(), &stat_buf) == -1)
     {
         if (!build_dls_dir)
         {
             str.clear();
             str.str("");
-            str << "Das Verzeichnis \"" << _dls_dir << "\"" << endl;
-            str << "ist noch kein DLS-Datenverzeichnis." << endl;
-            str << "Soll es als solches initialisiert werden?";
+            str << "The directory \"" << _dls_dir << "\"" << endl;
+            str << "is not yet a DLS data directory." << endl;
+            str << "Should it be initialzed as such?";
 
-            if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 0) return;
+            if (fl_choice(str.str().c_str(), "No", "Yes", NULL) == 0) return;
 
             build_dls_dir = true;
         }
 
-        // Datei anlegen
+        // Create file
         if ((fd = open((_dls_dir + "/id_sequence").c_str(),
                        O_WRONLY | O_CREAT, 0644)) == -1)
         {
-            msg_win->str() << "Konnte die Datei \""
+            msg_win->str() << "Cannot create the file \""
                            << (_dls_dir + "/id_sequence") << "\"";
-            msg_win->str() << " nicht anlegen: " << strerror(errno);
+            msg_win->str() << " : " << strerror(errno);
             msg_win->error();
             return;
         }
@@ -742,9 +741,9 @@ void CtlDialogMain::_check_dls_dir()
         if (write(fd, "100\n", 4) != 4)
         {
             close(fd);
-            msg_win->str() << "Konnte die Datei \""
+            msg_win->str() << "Cannot describe the file \""
                            << (_dls_dir + "/id_sequence") << "\"";
-            msg_win->str() << " nicht beschreiben! Bitte manuell löschen!";
+            msg_win->str() << " ! Please delete manually!";
             msg_win->error();
             return;
         }
@@ -754,7 +753,7 @@ void CtlDialogMain::_check_dls_dir()
 
     start_dlsd = false;
 
-    // Existiert die PID-Datei des dlsd?
+    // Does the PID file of dlsd exist?
     if (stat((_dls_dir + "/" + DLS_PID_FILE).c_str(), &stat_buf) == -1)
     {
         start_dlsd = true;
@@ -767,9 +766,9 @@ void CtlDialogMain::_check_dls_dir()
 
         if (!pid_file.is_open())
         {
-            msg_win->str() << "Konnte die Datei \""
+            msg_win->str() << "Cannot open the file \""
                            << (_dls_dir + "/" + DLS_PID_FILE)
-                           << "\" nicht öffnen!";
+                           << "\" !";
             msg_win->error();
             return;
         }
@@ -782,8 +781,8 @@ void CtlDialogMain::_check_dls_dir()
         {
             pid_file.close();
 
-            msg_win->str() << "Datei \"" << (_dls_dir + "/" + DLS_PID_FILE)
-                           << "\" ist korrupt!";
+            msg_win->str() << "File \"" << (_dls_dir + "/" + DLS_PID_FILE)
+                           << "\" is corrupted!";
             msg_win->error();
             return;
         }
@@ -792,14 +791,14 @@ void CtlDialogMain::_check_dls_dir()
 
         if (kill(pid, 0) == -1)
         {
-            if (errno == ESRCH) // Prozess existiert nicht
+            if (errno == ESRCH) // Process does not exist
             {
                 start_dlsd = true;
             }
             else
             {
-                msg_win->str() << "Konnte Prozess " << pid
-                               << " nicht signalisieren!";
+                msg_win->str() << "Cannot signal process " << pid
+                               << " !";
                 msg_win->error();
                 return;
             }
@@ -810,37 +809,37 @@ void CtlDialogMain::_check_dls_dir()
     {
         str.clear();
         str.str("");
-        str << "Für das Verzeichnis \"" << _dls_dir << "\"" << endl;
-        str << "läuft noch kein DLS-Daemon. Jetzt starten?";
+        str << "The directory \"" << _dls_dir << "\"" << endl;
+        str << "has no running DLS daemon yet. Start now?";
 
-        if (fl_choice(str.str().c_str(), "Nein", "Ja", NULL) == 1)
+        if (fl_choice(str.str().c_str(), "No", "Yes", NULL) == 1)
         {
             if ((pid = fork()) == -1)
             {
-                msg_win->str() << "fork() fehlgeschlagen!";
+                msg_win->str() << "fork() failed!";
                 msg_win->error();
                 return;
             }
 
-            if (pid == 0) // Kindprozess
+            if (pid == 0) // child process
             {
                 const char *params[4] = {"dlsd", "-d", _dls_dir.c_str(), 0};
 
                 if (execvp("dlsd", (char * const *) params) == -1)
                 {
-                    cerr << "ERROR: Could not exec dlsd: "
+                    cerr << "ERROR: Can not exec dlsd: "
                          << strerror(errno) << endl;
                     exit(-1);
                 }
             }
-            else // Mutterprozess
+            else // Parent process
             {
                 waitpid(pid, &status, 0);
 
                 if ((signed char) WEXITSTATUS(status) == -1)
                 {
-                    msg_win->str() << "Konnte dlsd nicht ausführen!"
-                                   << " Siehe Konsole für Fehlermeldungen.";
+                    msg_win->str() << "Cannot execute dlsd!"
+                                   << " See console for error messages.";
                     msg_win->error();
                     return;
                 }
@@ -852,9 +851,9 @@ void CtlDialogMain::_check_dls_dir()
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion für den Watchdog-Timeout
+   Static callback function for the watchdog timeout
 
-   \param data Zeiger auf den Dialog
+   \param data Pointer to the dialog
 */
 
 void CtlDialogMain::_static_watchdog_timeout(void *data)

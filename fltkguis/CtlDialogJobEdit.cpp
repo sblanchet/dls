@@ -39,7 +39,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 */
 
 CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
@@ -50,7 +50,7 @@ CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
     _dls_dir = dls_dir;
     _updated = false;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Auftrag ändern");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Modify job");
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
@@ -58,30 +58,30 @@ CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
     _button_ok->callback(_callback, this);
 
     _button_cancel = new Fl_Button(WIDTH - 180, HEIGHT - 35, 80, 25,
-                                   "Abbrechen");
+                                   "Cancel");
     _button_cancel->callback(_callback, this);
 
-    _input_desc = new Fl_Input(10, 30, 200, 25, "Beschreibung");
+    _input_desc = new Fl_Input(10, 30, 200, 25, "Description");
     _input_desc->align(FL_ALIGN_TOP_LEFT);
     _input_desc->take_focus();
 
-    _input_source = new Fl_Input(10, 80, 200, 25, "Quelle");
+    _input_source = new Fl_Input(10, 80, 200, 25, "Source");
     _input_source->align(FL_ALIGN_TOP_LEFT);
 
     _input_trigger = new Fl_Input(10, 130, 200, 25, "Trigger");
     _input_trigger->align(FL_ALIGN_TOP_LEFT);
 
-    _input_quota_time = new Fl_Input(10, 180, 90, 25, "Zeit-Quota");
+    _input_quota_time = new Fl_Input(10, 180, 90, 25, "Time-Quota");
     _input_quota_time->align(FL_ALIGN_TOP_LEFT);
 
     _choice_time_ext = new Fl_Choice(110, 180, 100, 25);
-    _choice_time_ext->add("Sekunden");
-    _choice_time_ext->add("Minuten");
-    _choice_time_ext->add("Stunden");
-    _choice_time_ext->add("Tage");
+    _choice_time_ext->add("Seconds");
+    _choice_time_ext->add("Minutes");
+    _choice_time_ext->add("Hours");
+    _choice_time_ext->add("Days");
     _choice_time_ext->value(2);
 
-    _input_quota_size = new Fl_Input(10, 230, 90, 25, "Daten-Quota");
+    _input_quota_size = new Fl_Input(10, 230, 90, 25, "Data-Quota");
     _input_quota_size->align(FL_ALIGN_TOP_LEFT);
 
     _choice_size_ext = new Fl_Choice(110, 230, 100, 25);
@@ -96,7 +96,7 @@ CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogJobEdit::~CtlDialogJobEdit()
@@ -107,9 +107,9 @@ CtlDialogJobEdit::~CtlDialogJobEdit()
 /*****************************************************************************/
 
 /**
-   Dialog anzeigen
+   Show dialog
 
-   \param job zeiger auf den zu editiernden Messauftrag
+   \param job Pointer to the job settings to modify
 */
 
 void CtlDialogJobEdit::show(CtlJobPreset *job)
@@ -117,8 +117,8 @@ void CtlDialogJobEdit::show(CtlJobPreset *job)
     _job = job;
     _updated = false;
 
-    // Wenn ein bestehender Auftrag editiert werden soll,
-    // müssen zuerst dessen Daten geladen werden
+    // if a an existing job is to be edited,
+    // load its data first
     if (_job)
     {
         _input_desc->value(_job->description().c_str());
@@ -128,8 +128,8 @@ void CtlDialogJobEdit::show(CtlJobPreset *job)
         _display_size_quota();
     }
 
-    // Wenn der Auftrag schon existiert, soll kein Editieren
-    // der Datenquelle mehr möglich sein!
+    // If the job already exists, editing the data source
+    // is unallowed!
     _input_source->readonly(_job != 0);
     if (_job != 0) {
         _input_source->tooltip("Can not be edited for an existing job!");
@@ -137,20 +137,20 @@ void CtlDialogJobEdit::show(CtlJobPreset *job)
         _input_source->tooltip("");
     }
 
-    // Fenster anzeigen
+    // Show window
     _wnd->show();
 
-    // Solange in der Event-Loop bleiben, wie das fenster sichtbar ist
+    // Stay in the event loop while the window is visible
     while (_wnd->shown()) Fl::wait();
 }
 
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Zeiger auf das Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Pointer to the widget that has triggered the callback
+   \param data Pointer to the dialog
 */
 
 void CtlDialogJobEdit::_callback(Fl_Widget *sender, void *data)
@@ -165,55 +165,55 @@ void CtlDialogJobEdit::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback: Der "OK"-Button wurde geklickt
+   Callback: The "OK" button was clicked
 */
 
 void CtlDialogJobEdit::_button_ok_clicked()
 {
-    // Wenn ein existierender Auftrag editiert wird
+    // if editing an existing job
     if (_job)
     {
-        // Diesen Speichern
+        // store it
         if (!_save_job())
         {
-            // Fehler beim Speichern. Dialog offen lassen!
+            // Error while saving. Leave dialog open!
             return;
         }
     }
 
-    // Wenn ein neuer Auftrag editiert wird
+    // if editing a new job
     else
     {
-        // Diesen erstellen
+        // create it
         if (!_create_job())
         {
-            // Fehler beim Erstellen. Dialog offen lassen!
+            // Error while creating. Leave dialog open!
             return;
         }
     }
 
-    // Alles OK! Fenster schliessen
+    // Everything OK! Close the window
     _wnd->hide();
 }
 
 /*****************************************************************************/
 
 /**
-   Callback: Der "Abbrechen"-Button wurde geklickt
+   Callback: The "Cancel" button was clicked
 */
 
 void CtlDialogJobEdit::_button_cancel_clicked()
 {
-    // Dialog schließen
+    // Close dialog
     _wnd->hide();
 }
 
 /*****************************************************************************/
 
 /**
-   Geänderte Auftragsdaten speichern
+   Save changed job data
 
-   \return true, wenn Daten gespeichert wurden
+   \return true, if data has been saved
 */
 
 bool CtlDialogJobEdit::_save_job()
@@ -231,10 +231,10 @@ bool CtlDialogJobEdit::_save_job()
         || _job->quota_time() != quota_time
         || _job->quota_size() != quota_size)
     {
-        // Alte Daten sichern
+        // Save old data
         job_copy = *_job;
 
-        // Neue Daten setzen
+        // Set new data
         _job->description(_input_desc->value());
         _job->source(_input_source->value());
         _job->trigger(_input_trigger->value());
@@ -243,30 +243,30 @@ bool CtlDialogJobEdit::_save_job()
 
         try
         {
-            // Versuchen, die Daten zu speichern
+            // Try to save the data
             _job->write(_dls_dir);
         }
         catch (LibDLS::EJobPreset &e)
         {
-            // Fehler! Alte Daten zurückladen
+            // Error! Restore old data
             *_job = job_copy;
             msg_win->str() << e.msg;
             msg_win->error();
             return false;
         }
 
-        // Die Auftragsdaten wurden jetzt verändert
+        // The job data has been changed
         _updated = true;
 
         try
         {
-            // Versuchen, einen Spooling-Eintrag zu erzeugen
+            // Try to create a spool entry
             _job->spool(_dls_dir);
         }
         catch (LibDLS::EJobPreset &e)
         {
-            // Fehler! Aber nur Warnung ausgeben.
-            msg_win->str() << "Konnte den dlsd nicht benachrichtigen: "
+            // Error! But only issue warning.
+            msg_win->str() << "Cannot notify dlsd: "
                            << e.msg;
             msg_win->warning();
         }
@@ -278,9 +278,9 @@ bool CtlDialogJobEdit::_save_job()
 /*****************************************************************************/
 
 /**
-   Einen neuen Erfassungsauftrag erstellen
+   Create a new job
 
-   \return true, wenn neue Auftrag erstellt wurde
+   \return true, if the new job has been created
 */
 
 bool CtlDialogJobEdit::_create_job()
@@ -292,15 +292,15 @@ bool CtlDialogJobEdit::_create_job()
     if (!_calc_time_quota(&quota_time)) return false;
     if (!_calc_size_quota(&quota_size)) return false;
 
-    // Neue Job-ID aus der ID-Sequence-Datei lesen
+    // Read new job ID from the ID sequence file
     if (!_get_new_id(&new_id))
     {
-        msg_win->str() << "Es konnte keine neue Auftrags-ID ermittelt werden!";
+        msg_win->str() << "No new job ID can be determined!";
         msg_win->error();
         return false;
     }
 
-    // Auftragsdaten setzen
+    // Set job settings
     job.id(new_id);
     job.description(_input_desc->value());
     job.source(_input_source->value());
@@ -311,29 +311,29 @@ bool CtlDialogJobEdit::_create_job()
 
     try
     {
-        // Versuchen, die neuen Daten zu speichern
+        // Try to save the new setttings
         job.write(_dls_dir);
     }
     catch (LibDLS::EJobPreset &e)
     {
-        // Fehler beim Speichern!
+        // Error while saving!
         msg_win->str() << e.msg;
         msg_win->error();
         return false;
     }
 
-    // Die Auftragsdaten wurden verändert
+    // The job settings have been saved
     _updated = true;
 
     try
     {
-        // Versuchen, eine Spooling-Eintrag zu erzeugen
+        // Try to create a spooling entry
         job.spool(_dls_dir);
     }
     catch (LibDLS::EJobPreset &e)
     {
-        // Fehler! Aber nur eine Warnung ausgeben.
-        msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
+        // Error! But only give a warning.
+        msg_win->str() << "Cannot notify dlsd: " << e.msg;
         msg_win->warning();
     }
 
@@ -343,10 +343,10 @@ bool CtlDialogJobEdit::_create_job()
 /*****************************************************************************/
 
 /**
-   Erhöht die ID in der Sequenzdatei und liefert den alten Wert
+   Increase the ID in the sequence file and return the old value
 
-   \param id Zeiger auf Speicher für die neue ID
-   \return true, wenn die neue ID geholt werden konnte
+   \param id Pointer to the new ID
+   \return true, if the new ID can be fetched
 */
 
 bool CtlDialogJobEdit::_get_new_id(int *id)
@@ -365,12 +365,12 @@ bool CtlDialogJobEdit::_get_new_id(int *id)
 
     try
     {
-        // Dateiinhalt in einen Integer konvertieren
+        // Convert file content to an integer
         id_in_file >> *id;
     }
     catch (...)
     {
-        // Fehler beim Konvertieren
+        // Convertion error
         id_in_file.close();
         return false;
     }
@@ -386,7 +386,7 @@ bool CtlDialogJobEdit::_get_new_id(int *id)
 
     try
     {
-        // Neuen ID-Wert in die Datei schreiben
+        // Write new ID value to the file
         id_out_file << (*id + 1) << endl;
     }
     catch (...)
@@ -403,7 +403,7 @@ bool CtlDialogJobEdit::_get_new_id(int *id)
 /*****************************************************************************/
 
 /**
-   Zeigt die aktuelle Zeit-Quota an
+   Display the current time quota
 */
 
 void CtlDialogJobEdit::_display_time_quota()
@@ -446,7 +446,7 @@ void CtlDialogJobEdit::_display_time_quota()
 /*****************************************************************************/
 
 /**
-   Zeigt die aktuelle Daten-Quota an
+   Display the current data quota
 */
 
 void CtlDialogJobEdit::_display_size_quota()
@@ -484,10 +484,10 @@ void CtlDialogJobEdit::_display_size_quota()
 /*****************************************************************************/
 
 /**
-   Berechnet die Zeit-Quota
+   Calculate the time quota
 
-   \param time_quota Zeiger auf Variable für berechnete Quota
-   \return true, wenn Quota berechnet werden konnte
+   \param time_quota Pointer to the calculated quota
+   \return true, if quota has been calculated
 */
 
 bool CtlDialogJobEdit::_calc_time_quota(uint64_t *time_quota)
@@ -508,7 +508,7 @@ bool CtlDialogJobEdit::_calc_time_quota(uint64_t *time_quota)
         }
         catch (...)
         {
-            msg_win->str() << "Die Zeit-Quota muss eine Ganzzahl sein!";
+            msg_win->str() << "The time quota must be an integer!";
             msg_win->error();
             return false;
         }
@@ -537,10 +537,10 @@ bool CtlDialogJobEdit::_calc_time_quota(uint64_t *time_quota)
 /*****************************************************************************/
 
 /**
-   Berechnet die angegebene Daten-Quota
+   Calculate the data quota
 
-   \param size_quota Zeiger auf Variable für berechnete Quota
-   \return true, wenn Quota berechnet wurde
+   \param size_quota Pointer to the calculated quota
+   \return true, if quota has been calculated
 */
 
 bool CtlDialogJobEdit::_calc_size_quota(uint64_t *size_quota)
@@ -561,7 +561,7 @@ bool CtlDialogJobEdit::_calc_size_quota(uint64_t *size_quota)
         }
         catch (...)
         {
-            msg_win->str() << "Die Daten-Quota muss eine Ganzzahl sein!";
+            msg_win->str() << "The data quota must be an integer!";
             msg_win->error();
             return false;
         }

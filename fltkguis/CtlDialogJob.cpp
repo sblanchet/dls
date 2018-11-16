@@ -43,9 +43,9 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param dls_dir DLS-Datenverzeichnis
+   \param dls_dir DLS data directory
 */
 
 CtlDialogJob::CtlDialogJob(const string &dls_dir)
@@ -55,15 +55,15 @@ CtlDialogJob::CtlDialogJob(const string &dls_dir)
 
     _dls_dir = dls_dir;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Auftrag bearbeiten");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Edit job");
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
-    _output_desc = new Fl_Output(10, 25, 200, 25, "Beschreibung");
+    _output_desc = new Fl_Output(10, 25, 200, 25, "Description");
     _output_desc->align(FL_ALIGN_TOP_LEFT);
     _output_desc->callback(_callback, this);
 
-    _output_source = new Fl_Output(220, 25, 110, 25, "Quelle");
+    _output_source = new Fl_Output(220, 25, 110, 25, "Source");
     _output_source->align(FL_ALIGN_TOP_LEFT);
     _output_source->callback(_callback, this);
 
@@ -71,35 +71,35 @@ CtlDialogJob::CtlDialogJob(const string &dls_dir)
     _output_trigger->align(FL_ALIGN_TOP_LEFT);
     _output_trigger->callback(_callback, this);
 
-    _button_change = new Fl_Button(WIDTH - 90, 25, 80, 25, "Ändern...");
+    _button_change = new Fl_Button(WIDTH - 90, 25, 80, 25, "Change...");
     _button_change->callback(_callback, this);
 
     _grid_channels = new Fl_Grid(10, 60, WIDTH - 20, HEIGHT - 105);
-    _grid_channels->add_column("name", "Kanal", 300);
-    _grid_channels->add_column("type", "Typ");
-    _grid_channels->add_column("freq", "Abtastrate");
-    _grid_channels->add_column("block", "Blockgröße");
+    _grid_channels->add_column("name", "Channel", 300);
+    _grid_channels->add_column("type", "Type");
+    _grid_channels->add_column("freq", "Frequency");
+    _grid_channels->add_column("block", "Block size");
     _grid_channels->add_column("format", "Format", 200);
     _grid_channels->callback(_callback, this);
     _grid_channels->take_focus();
     _grid_channels->select_mode(flgMultiSelect);
 
     _button_add = new Fl_Button(10, HEIGHT - 35, 150, 25,
-                                "Kanäle hinzufügen...");
+                                "Add channels...");
     _button_add->callback(_callback, this);
 
     _button_edit = new Fl_Button(170, HEIGHT - 35, 150, 25,
-                                 "Kanäle editieren...");
+                                 "Edit channels...");
     _button_edit->callback(_callback, this);
     _button_edit->deactivate();
 
     _button_rem = new Fl_Button(330, HEIGHT - 35, 150, 25,
-                                "Kanäle entfernen");
+                                "Remove channels");
     _button_rem->callback(_callback, this);
     _button_rem->deactivate();
 
     _button_close = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25,
-                                  "Schliessen");
+                                  "Close");
     _button_close->callback(_callback, this);
 
     _wnd->end();
@@ -110,7 +110,7 @@ CtlDialogJob::CtlDialogJob(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogJob::~CtlDialogJob()
@@ -121,9 +121,9 @@ CtlDialogJob::~CtlDialogJob()
 /*****************************************************************************/
 
 /**
-   Zeigt den Dialog an
+   Display the dialog
 
-   \param job Zeiger auf den Auftrag, der bearbeitet werden soll
+   \param job Pointer to the job to be edited
 */
 
 void CtlDialogJob::show(CtlJobPreset *job)
@@ -147,10 +147,10 @@ void CtlDialogJob::show(CtlJobPreset *job)
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Widget that triggered the callback
+   \param data Pointer to the dialog
 */
 
 void CtlDialogJob::_callback(Fl_Widget *sender, void *data)
@@ -169,7 +169,7 @@ void CtlDialogJob::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback-Methode des Kanal-Grids
+   Callback method for channel grids
 */
 
 void CtlDialogJob::_grid_channels_callback()
@@ -213,7 +213,7 @@ void CtlDialogJob::_grid_channels_callback()
                 }
                 else
                 {
-                    _grid_channels->current_content("UNGÜLTIG!");
+                    _grid_channels->current_content("INVALID!");
                 }
             }
             break;
@@ -235,7 +235,7 @@ void CtlDialogJob::_grid_channels_callback()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Schliessen"-Button wurde geklickt
+   Callback: The "Close" button was clicked
 */
 
 void CtlDialogJob::_button_close_clicked()
@@ -246,7 +246,7 @@ void CtlDialogJob::_button_close_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Hinzufügen"-Button wurde geklickt
+   Callback: Der "Add" button was clicked
 */
 
 void CtlDialogJob::_button_add_clicked()
@@ -265,7 +265,7 @@ void CtlDialogJob::_button_add_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Entfernen"-Button wurde geklickt
+   Callback: Der "Remove" button was clicked
 */
 
 void CtlDialogJob::_button_rem_clicked()
@@ -276,7 +276,7 @@ void CtlDialogJob::_button_rem_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Ändern"-Button wurde geklickt
+   Callback: The "Change" button was clicked
 */
 
 void CtlDialogJob::_button_change_clicked()
@@ -298,7 +298,7 @@ void CtlDialogJob::_button_change_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Editieren"-Button wurde geklickt
+   Callback: The "Edit" button was clicked
 */
 
 void CtlDialogJob::_button_edit_clicked()
@@ -309,9 +309,9 @@ void CtlDialogJob::_button_edit_clicked()
 /*****************************************************************************/
 
 /**
-   Editieren eines oder mehrerer Kanäle
+   Edit one or more channels
 
-   Öffnet für die gewählten Kanäle den Änderungsdialog
+   Open the change dialog for the selected channels
 */
 
 void CtlDialogJob::_edit_channels()
@@ -323,7 +323,7 @@ void CtlDialogJob::_edit_channels()
     sel_i = _grid_channels->selected_list()->begin();
     while (sel_i != _grid_channels->selected_list()->end())
     {
-        // Adressen aller zu Ändernden Kanäle in eine Liste einfügen
+        // Insert the addresses of all channels to be changed into a list
         channels_to_edit.push_back(&(*_job->channels())[*sel_i]);
         sel_i++;
     }
@@ -345,9 +345,9 @@ void CtlDialogJob::_edit_channels()
 /*****************************************************************************/
 
 /**
-   Einfügen von Kanälen
+   Insert channels
 
-   Öffnet den Dialog zum Hinzufügen von Kanälen
+   Open the dialog for adding channels
 */
 
 void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
@@ -365,8 +365,8 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
     {
         if (job_copy.channel_exists(ch_i->name))
         {
-            msg_win->str() << "Kanal \"" << ch_i->name
-                           << "\" ist bereits in der Liste!";
+            msg_win->str() << "Channel \"" << ch_i->name
+                           << "\" is already in the list!";
             msg_win->warning();
         }
         else
@@ -392,7 +392,7 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
+        msg_win->str() << "Writing the specification file: " << e.msg;
         msg_win->error();
         return;
     }
@@ -403,7 +403,7 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
+        msg_win->str() << "Cannot notify dlsd: " << e.msg;
         msg_win->warning();
     }
 
@@ -415,9 +415,9 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
 /*****************************************************************************/
 
 /**
-   Löscht die ausgewählten Kanäle
+   Delete the selected channels
 
-   \param sel_list Liste mit den Indizes der selektierten Kanäle
+   \param sel_list List with the indexes of the selected channels
 */
 
 void CtlDialogJob::_remove_channels(const list<unsigned int> *sel_list)
@@ -432,7 +432,7 @@ void CtlDialogJob::_remove_channels(const list<unsigned int> *sel_list)
     {
         if (*sel_i >= _job->channels()->size())
         {
-            msg_win->str() << "Ungültiger Kanal-Index!";
+            msg_win->str() << "Invalid channel index!";
             msg_win->error();
             return;
         }
@@ -448,7 +448,7 @@ void CtlDialogJob::_remove_channels(const list<unsigned int> *sel_list)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Schreiben der Vorgabendatei: " << e.msg;
+        msg_win->str() << "Writing the specification file: " << e.msg;
         msg_win->error();
         return;
     }
@@ -459,7 +459,7 @@ void CtlDialogJob::_remove_channels(const list<unsigned int> *sel_list)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Konnte den dlsd nicht benachrichtigen: " << e.msg;
+        msg_win->str() << "Cannot notify dlsd: " << e.msg;
         msg_win->warning();
     }
 
@@ -471,7 +471,7 @@ void CtlDialogJob::_remove_channels(const list<unsigned int> *sel_list)
 /*****************************************************************************/
 
 /**
-   Passt bei Änderung der Kanalauswahl die Buttons an
+   Adjust the buttons when changing the channel selection
 */
 
 void CtlDialogJob::_grid_selection_changed()

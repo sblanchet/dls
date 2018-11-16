@@ -42,7 +42,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Auswahldialog für Kanäle der Datenquelle
+   Selection dialog for channels of the data source
 */
 
 class CtlDialogChannels
@@ -56,22 +56,22 @@ public:
     const list<LibDLS::RealChannel> *channels() const;
 
 private:
-    Fl_Double_Window *_wnd;    /**< Dialogfenster */
-    Fl_Button *_button_ok;     /**< "OK"-Button */
-    Fl_Button *_button_cancel; /**< "Abbrechen"-Button */
-    Fl_Grid *_grid_channels;   /**< Grid für die MSR-Kanäle */
-    Fl_Box *_box_message;      /**< Box für die Fehleranzeige */
+    Fl_Double_Window *_wnd;    /**< Dialog box */
+    Fl_Button *_button_ok;     /**< "OK" button */
+    Fl_Button *_button_cancel; /**< "Cancel" button */
+    Fl_Grid *_grid_channels;   /**< Grid for the MSR channels */
+    Fl_Box *_box_message;      /**< Box for the error display */
     Fl_Check_Button *_checkbutton_reduceToOneHz;
 
-    string _source; /**< IP-Adresse/Hostname der Datenquelle */
-    uint16_t _port; /**< Port der Datenquelle */
-    int _socket; /**< File-Deskriptor für die TCP-Verbindung */
-    pthread_t _thread; /**< Thread für die Abfrage */
-    bool _thread_running; /**< true, wenn der Thread läuft */
-    bool _imported; /**< true, wenn alle Kanäle importiert wurden */
-    vector<LibDLS::RealChannel> _channels; /**< Vektor mit den geladenen Kanälen */
-    string _error; /**< Fehlerstring, wird vom Thread gesetzt */
-    list<LibDLS::RealChannel> _selected; /**< Liste mit ausgewählten Kanälen */
+    string _source; /**< IP-Adress/Hostname of the data source */
+    uint16_t _port; /**< Port of the data source */
+    int _socket; /**< File descriptor for the TCP connection */
+    pthread_t _thread; /**< Thread for the query */
+    bool _thread_running; /**< true, if the thread is running */
+    bool _imported; /**< true, if all channels have been imported */
+    vector<LibDLS::RealChannel> _channels; /**< Vector with the charged channels */
+    string _error; /**< Error string is set by the thread */
+    list<LibDLS::RealChannel> _selected; /**< List of selected channels */
 
     static void _callback(Fl_Widget *, void *);
     void _grid_channels_callback();
@@ -88,7 +88,7 @@ private:
 /*****************************************************************************/
 
 /**
-   Liefert die Liste der ausgewählten Kanäle
+   Return the list of selected channels
 */
 
 inline const list<LibDLS::RealChannel> *CtlDialogChannels::channels() const

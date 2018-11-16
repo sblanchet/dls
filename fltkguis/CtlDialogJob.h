@@ -42,7 +42,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Dialog zum bearbeiten einer Auftragsvorgabe
+   Dialog for editing a job specification
 */
 
 class CtlDialogJob
@@ -56,24 +56,22 @@ public:
     bool imported() const;
 
 private:
-    Fl_Double_Window *_wnd; /**< Dialogfenster */
-    Fl_Button *_button_close; /**< "Schliessen" - Button */
-    Fl_Output *_output_desc; /**< Ausgabefeld für die Auftragsbeschreibung */
-    Fl_Output *_output_source; /**< Ausgabefeld für die Datenquelle */
-    Fl_Output *_output_trigger; /**< Ausgabefeld für den Namen des
-                                   Trigger-Parameters */
-    Fl_Button *_button_change; /**< Button für den Dialog zur Änderung
-                                  der Beschreibung, usw. */
-    Fl_Grid *_grid_channels; /**< Das Grid zur Darstellung der Kanäle */
-    Fl_Button *_button_add; /**< Button zum Hinzufügen von Kanälen */
-    Fl_Button *_button_rem; /**< Button zum entfernen von gewählten Kanälen */
-    Fl_Button *_button_edit; /**< Button zum Editieren von gewählten Kanälen */
-    string _dls_dir; /**< DLS-Datenverzeichnis */
-    CtlJobPreset *_job; /**< Zeiger auf den zu bearbeitenden Auftrag */
-    bool _changed; /**< Flag, das anzeigt, ob etwas am
-                      Auftrag geändert wurde */
-    bool _updated; /**< Flag, das angibt, ob der Auftrag
-                      geändert gespeichert wurde */
+    Fl_Double_Window *_wnd; /**< Dialog box */
+    Fl_Button *_button_close; /**< "Close" - Button */
+    Fl_Output *_output_desc; /**< Output field for the job description */
+    Fl_Output *_output_source; /**< Output filed for the data source */
+    Fl_Output *_output_trigger; /**< Output field for the trigger parameters */
+    Fl_Button *_button_change; /**< Button to change the description */
+    Fl_Grid *_grid_channels; /**< The grid to display the channels */
+    Fl_Button *_button_add; /**< Button to add channels */
+    Fl_Button *_button_rem; /**< Button to remove the selected channels */
+    Fl_Button *_button_edit; /**< Button to edit the selected channels */
+    string _dls_dir; /**< DLS data directory */
+    CtlJobPreset *_job; /**< Pointer to the job to be processed */
+    bool _changed; /**< Flag, that indicates if something has changed
+                      on the job */
+    bool _updated; /**< Flag, that indicates if the job
+                      has been changed */
 
     static void _callback(Fl_Widget *, void *);
     void _grid_channels_callback();
@@ -96,9 +94,9 @@ private:
 /*****************************************************************************/
 
 /**
-   Gibt zurück, ob der Auftrag geändert und gespeichert wurde
+   Return whether the job has been modified and saved
 
-   \return true, wenn geändert und gespeichert
+   \return true, if changed and saved
 */
 
 inline bool CtlDialogJob::updated() const

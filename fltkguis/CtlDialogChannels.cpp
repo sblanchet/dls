@@ -49,9 +49,9 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param source IP-Adresse oder Hostname der Datenquelle
+   \param source IP-Address or hostname of the data source
 */
 
 CtlDialogChannels::CtlDialogChannels(const string &source, uint16_t port)
@@ -63,7 +63,7 @@ CtlDialogChannels::CtlDialogChannels(const string &source, uint16_t port)
     _port = port;
     _thread_running = false;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Kanäle auswählen");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Select channels");
     _wnd->set_modal();
     _wnd->callback(_callback, this);
 
@@ -71,25 +71,25 @@ CtlDialogChannels::CtlDialogChannels(const string &source, uint16_t port)
     _button_ok->deactivate();
     _button_ok->callback(_callback, this);
     _button_cancel = new Fl_Button(WIDTH - 180, HEIGHT - 35, 80, 25,
-                                   "Abbrechen");
+                                   "Cancel");
     _button_cancel->callback(_callback, this);
 
     _checkbutton_reduceToOneHz = new Fl_Check_Button(10, HEIGHT - 35,
-            WIDTH - 200, 25, "Reduziere auf 1 Hz");
+            WIDTH - 200, 25, "Reduce to 1 Hz");
     _checkbutton_reduceToOneHz->set();
 
     _grid_channels = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
-    _grid_channels->add_column("name", "Kanal", 200);
-    _grid_channels->add_column("unit", "Einheit", 50);
-    _grid_channels->add_column("freq", "Abtastrate (Hz)");
-    _grid_channels->add_column("type", "Typ");
+    _grid_channels->add_column("name", "Channel", 200);
+    _grid_channels->add_column("unit", "Unit", 50);
+    _grid_channels->add_column("freq", "Sampling rate (Hz)");
+    _grid_channels->add_column("type", "Type");
     _grid_channels->select_mode(flgMultiSelect);
     _grid_channels->callback(_callback, this);
     _grid_channels->hide();
 
     _box_message = new Fl_Box(10, 10, WIDTH - 20, HEIGHT - 55);
     _box_message->align(FL_ALIGN_CENTER);
-    _box_message->label("Empfange Kanäle...");
+    _box_message->label("Receive channels...");
 
     _wnd->end();
     _wnd->resizable(_grid_channels);
@@ -98,7 +98,7 @@ CtlDialogChannels::CtlDialogChannels(const string &source, uint16_t port)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogChannels::~CtlDialogChannels()
@@ -109,10 +109,10 @@ CtlDialogChannels::~CtlDialogChannels()
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Widget that triggered the callback
+   \param data Pointer to the dialog
 */
 
 void CtlDialogChannels::_callback(Fl_Widget *sender, void *data)
@@ -128,7 +128,7 @@ void CtlDialogChannels::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback des Kanal-grids
+   Callback of the channels grids
 */
 
 void CtlDialogChannels::_grid_channels_callback()
@@ -181,20 +181,20 @@ void CtlDialogChannels::_grid_channels_callback()
 /*****************************************************************************/
 
 /**
-   Callback: Der "OK"-Button wurde geklickt
+   Callback: The "OK" button was clicked
 */
 
 void CtlDialogChannels::_button_ok_clicked()
 {
     list<unsigned int>::const_iterator sel_i;
 
-    // Eventuell den Thread abbrechen
+    // Maybe cancel the thread
     if (_thread_running)
     {
         pthread_cancel(_thread);
     }
 
-    // Liste mit ausgewählten Kanlälen erstellen
+    // Create a list of selected channels
     _selected.clear();
     sel_i = _grid_channels->selected_list()->begin();
     while (sel_i != _grid_channels->selected_list()->end())
@@ -207,35 +207,35 @@ void CtlDialogChannels::_button_ok_clicked()
         sel_i++;
     }
 
-    // Fenster schließen
+    // Close the window
     _wnd->hide();
 }
 
 /*****************************************************************************/
 
 /**
-   Callback: Der "Abbrechen"-Button wurde geklickt
+   Callback: The "Cancel" button was clicked
 */
 
 void CtlDialogChannels::_button_cancel_clicked()
 {
-    // Eventuell den Thread abbrechen
+    // Maybe cancel the thread
     if (_thread_running)
     {
         pthread_cancel(_thread);
     }
 
-    // Abbrechen = keine Kanäle ausgewählt
+    // Cancel = no channels selected
     _selected.clear();
 
-    // Fenster schließen
+    // Close the window
     _wnd->hide();
 }
 
 /*****************************************************************************/
 
 /**
-   Dialog zeigen
+   Show dialog
 */
 
 void CtlDialogChannels::show()
@@ -248,7 +248,7 @@ void CtlDialogChannels::show()
     }
     else
     {
-        msg_win->str() << "Konnte keinen neuen Thread starten!";
+        msg_win->str() << "Cannot start a new thread!";
         msg_win->error();
     }
 }
@@ -337,16 +337,16 @@ void CtlDialogChannels::_thread_function()
 
     while (!exit_thread)
     {
-        // File-Descriptor-Sets nullen und mit Client-FD vorbesetzen
+        // Zero file descriptors and pre-populate with client file descriptor
         FD_ZERO(&read_fds);
         FD_ZERO(&write_fds);
         FD_SET(socket, &read_fds);
         if (to_send.length() > 0) FD_SET(socket, &write_fds);
 
-        // Warten auf Änderungen oder Timeout
+        // Wait for changes or timeout
         if ((select_ret = select(socket + 1, &read_fds, &write_fds, 0, 0)) > 0)
         {
-            // Eingehende Daten?
+            // Incoming data?
             if (FD_ISSET(socket, &read_fds))
             {
                 ring.write_info(&write_pointer, &write_size);
@@ -357,7 +357,7 @@ void CtlDialogChannels::_thread_function()
                     break;
                 }
 
-                // Daten abholen...
+                // Pick up data...
                 if ((recv_ret = recv(socket, write_pointer,
                                      write_size, 0)) > 0)
                 {
@@ -370,12 +370,12 @@ void CtlDialogChannels::_thread_function()
                             tag = xml.parse(&ring);
                         }
                         catch (LibDLS::EXmlParserEOF &e)
-                            // Tag noch nicht komplett
+                            // Day not yet complete
                         {
                             break;
                         }
                         catch (LibDLS::EXmlParser &e)
-                            // Anderer Parsing-Fehler
+                            // Other parsing error
                         {
                             _error = "Parser error in tag \"" + e.tag + "\"!";
                             exit_thread = true;
@@ -438,14 +438,14 @@ void CtlDialogChannels::_thread_function()
                 }
             }
 
-            // Bereit zum Senden?
+            // Ready to send?
             if (FD_ISSET(socket, &write_fds))
             {
-                // Daten senden
+                // send data
                 if ((send_ret = send(socket, to_send.c_str(),
                                      to_send.length(), 0)) > 0)
                 {
-                    to_send.erase(0, send_ret); // Gesendetes entfernen
+                    to_send.erase(0, send_ret); // Remove sent
                 }
                 else if (send_ret == -1)
                 {
@@ -455,7 +455,7 @@ void CtlDialogChannels::_thread_function()
             }
         }
 
-        // Select-Fehler
+        // Select Error
         else if (select_ret == -1)
         {
             _error = "Error in select()";

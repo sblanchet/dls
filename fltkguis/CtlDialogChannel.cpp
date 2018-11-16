@@ -46,9 +46,9 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param dls_dir DLS-Datenverzeichnis
+   \param dls_dir DLS Data directory
 */
 
 CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
@@ -63,24 +63,24 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
 
     _dls_dir = dls_dir;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Kanäle bearbeiten");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Edit channels");
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
-    _input_freq = new Fl_Float_Input(10, 25, 120, 25, "Abtastrate (Hz)");
+    _input_freq = new Fl_Float_Input(10, 25, 120, 25, "Frequency (Hz)");
     _input_freq->align(FL_ALIGN_TOP_LEFT);
     _input_freq->callback(_callback, this);
 
-    _input_block = new Fl_Input(140, 25, 120, 25, "Blockgröße");
+    _input_block = new Fl_Input(140, 25, 120, 25, "Block size");
     _input_block->align(FL_ALIGN_TOP_LEFT);
     _input_block->callback(_callback, this);
 
-    _input_mask = new Fl_Input(10, 70, 120, 25, "Meta-Maske");
+    _input_mask = new Fl_Input(10, 70, 120, 25, "Meta-Mask");
     _input_mask->align(FL_ALIGN_TOP_LEFT);
     _input_mask->callback(_callback, this);
     _input_mask->readonly(META_MASK_FIXED);
 
-    _input_red = new Fl_Input(140, 70, 120, 25, "Untersetzung");
+    _input_red = new Fl_Input(140, 70, 120, 25, "Reduction");
     _input_red->align(FL_ALIGN_TOP_LEFT);
     _input_red->callback(_callback, this);
     _input_red->readonly(META_REDUCTION_FIXED);
@@ -90,13 +90,13 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
     _choice_format->callback(_callback, this);
     _choice_format_selected = false;
 
-    // Alle Kompressionsformate einfügen
+    // Insert all compression formats
     for (i = 0; i < LibDLS::FORMAT_COUNT; i++)
     {
         format = LibDLS::format_strings[i];
 
-        // Slashes escapen, FLTK macht aus Strings mit
-        // Slashes entsprechende Untermenüs...
+        // Slashes escapes, FLTK turns string with
+        // slashes into submenus...
         for (j = 1; j <= format.length(); j++)
         {
             if (format[j] == '/')
@@ -109,12 +109,12 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
         _choice_format->add(format.c_str());
     }
 
-    _choice_mdct = new Fl_Choice(10, 160, 120, 25, "MDCT-Blockgröße");
+    _choice_mdct = new Fl_Choice(10, 160, 120, 25, "MDCT block size");
     _choice_mdct->align(FL_ALIGN_TOP_LEFT);
     _choice_mdct->callback(_callback, this);
     _choice_mdct_selected = false;
 
-    // Alle gültigen MDCT-Blockgrößen einfügen
+    // Insert all valid MDCT block sizes
     for (i = LibDLS::MDCT_MIN_EXP2; i <= LibDLS::MDCT_MAX_EXP2; i++)
     {
         str.str("");
@@ -123,7 +123,7 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
         _choice_mdct->add(str.str().c_str());
     }
 
-    _input_accuracy = new Fl_Input(140, 160, 120, 25, "Genauigkeit");
+    _input_accuracy = new Fl_Input(140, 160, 120, 25, "Accuracy");
     _input_accuracy->align(FL_ALIGN_TOP_LEFT);
     _input_accuracy->callback(_callback, this);
 
@@ -131,7 +131,7 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
     _button_ok->callback(_callback, this);
 
     _button_cancel = new Fl_Button(WIDTH - 180, HEIGHT - 35, 80, 25,
-                                   "Abbrechen");
+                                   "Cancel");
     _button_cancel->callback(_callback, this);
 
     _wnd->end();
@@ -140,7 +140,7 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogChannel::~CtlDialogChannel()
@@ -151,11 +151,11 @@ CtlDialogChannel::~CtlDialogChannel()
 /*****************************************************************************/
 
 /**
-   Dialog zeigen
+   Show dialog
 
-   \param job Zeiger auf den Auftrag, dessen Kanäle geändert werden sollen
-   \param channels Zeiger auf eine Liste von konstanten
-   Zeigern auf die zu ändernden Kanäle
+   \param job Pointer to the job whose channel are to be changed
+   \param channels Pointer to a list of constant pointers to the
+   channels to be changed
 */
 
 void CtlDialogChannel::show(CtlJobPreset *job,
@@ -247,7 +247,7 @@ void CtlDialogChannel::show(CtlJobPreset *job,
         _input_red->value(str.str().c_str());
     }
 
-    // Wenn bei allen Kanälen das gleiche, gültige Format gewählt wurde
+    // if the same valid format has been selected for all channels
     if (format_equal && format_index >= 0
             && format_index < LibDLS::FORMAT_COUNT)
     {
@@ -255,11 +255,11 @@ void CtlDialogChannel::show(CtlJobPreset *job,
         {
             _choice_mdct->activate();
 
-            if (mdct_equal) // MDCT gewählt und MDCT-Parameter gleich
+            if (mdct_equal) // MDCT selected and MDCT parameters are the same
             {
                 exp2 = log10((double) mdct_block_size) / log10((double) 2);
 
-                // MDCT-Blockgröße gültig?
+                // MDCT block size valid?
                 if (exp2 == (int) exp2 && exp2 >= LibDLS::MDCT_MIN_EXP2
                     && exp2 <= LibDLS::MDCT_MAX_EXP2)
                 {
@@ -291,7 +291,7 @@ void CtlDialogChannel::show(CtlJobPreset *job,
             _choice_format->value(format_index);
             _choice_format_selected = true;
         }
-    } // Format gueltig
+    } // Format valid
 
     _updated = false;
 
@@ -303,10 +303,10 @@ void CtlDialogChannel::show(CtlJobPreset *job,
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Zeiger auf das Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Pointer to the widget that triggered the callback
+   \param data Pointer to the dialog
 */
 
 void CtlDialogChannel::_callback(Fl_Widget *sender, void *data)
@@ -323,7 +323,7 @@ void CtlDialogChannel::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback: "OK"-Button wurde geklickt
+   Callback: "OK" button was clicked
 */
 
 void CtlDialogChannel::_button_ok_clicked()
@@ -336,7 +336,7 @@ void CtlDialogChannel::_button_ok_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Cancel-Button wurde geklickt
+   Callback: Cancel button was clicked
 */
 
 void CtlDialogChannel::_button_cancel_clicked()
@@ -348,7 +348,7 @@ void CtlDialogChannel::_button_cancel_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Es wurde ein Eintrag in der Format-Auswahlbox gewählt
+   Callback: An entry has been selected in the format selection box
 */
 
 void CtlDialogChannel::_choice_format_changed()
@@ -380,7 +380,7 @@ void CtlDialogChannel::_choice_format_changed()
 /*****************************************************************************/
 
 /**
-   Callback: Es wurde ein Eintrag der MDCT-Blockgrößen-Auswahlbox gewählt
+   Callback: An entry of the MDCT block size selection box was chosen
 */
 
 void CtlDialogChannel::_choice_mdct_changed()
@@ -391,9 +391,9 @@ void CtlDialogChannel::_choice_mdct_changed()
 /*****************************************************************************/
 
 /**
-   Speichert alle Kanäle
+   Save all channels
 
-   \return true, wenn alle Kanäle gespeichert werden konnten
+   \return true, if all channels can be saved
 */
 
 bool CtlDialogChannel::_save_channels()
@@ -457,14 +457,14 @@ bool CtlDialogChannel::_save_channels()
         {
             if (_choice_format->value() == LibDLS::FORMAT_MDCT)
             {
-                // MDCT nur für Fließkommatypen
+                // MDCT only for floating-point types
                 channel_i = _channels->begin();
                 while (channel_i != _channels->end())
                 {
                     if ((*channel_i)->type == LibDLS::TUNKNOWN)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" hat keine Typinformation!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" has no type information!";
                         msg_win->error();
                         return false;
                     }
@@ -472,17 +472,17 @@ bool CtlDialogChannel::_save_channels()
                     if ((*channel_i)->type != LibDLS::TFLT
                         && (*channel_i)->type != LibDLS::TDBL)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" hat keinen Gleitkommatyp!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" has no floating-point type!";
                         msg_win->error();
                         return false;
                     }
 
-                    // Alle Kanäle müssen eine Genauigkeit haben
+                    // All channels must have an accurancy
                     if (!write_acc && (*channel_i)->accuracy <= 0.0)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" benötigt noch eine Genauigkeit!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" still needs an accurancy!";
                         msg_win->error();
                         return false;
                     }
@@ -492,8 +492,8 @@ bool CtlDialogChannel::_save_channels()
 
                 if (!_choice_mdct_selected)
                 {
-                    msg_win->str() << "Sie haben keine MDCT-Blockgröße"
-                                   << " angegeben!";
+                    msg_win->str() << "You have not specified a MDCT"
+                                   << " block size!";
                     msg_win->error();
                     return false;
                 }
@@ -501,32 +501,32 @@ bool CtlDialogChannel::_save_channels()
                 mdct_block_size =
                     1 << (_choice_mdct->value() + LibDLS::MDCT_MIN_EXP2);
 
-                // Blockgröße kein Vielfaches von MDCT-Dimension?
+                // Block size no multiple of MDCT dimension?
                 if (write_block)
                 {
                     if (block % mdct_block_size)
                     {
-                        msg_win->str() << "Die Blockgröße muss ein Vielfaches"
-                                       << " der MDCT-Blockgröße sein!";
+                        msg_win->str() << "The block size must be a multiple"
+                                       << " of the MDCT block size!";
                         msg_win->error();
                         return false;
                     }
                 }
                 else
                 {
-                    // Keine Blockgröße angegeben.
-                    // Alle Kanäle mit ihren bisherigen
-                    // Blockgrößen überprüfen
+                    // No block size specified.
+                    // Check all channels with their previous
+                    // block sizes
                     channel_i = _channels->begin();
                     while (channel_i != _channels->end())
                     {
                         if ((*channel_i)->block_size % mdct_block_size)
                         {
-                            msg_win->str() << "Die bisherigen Blockgröße"
-                                           << " des Kanals \"";
+                            msg_win->str() << "The previous block size"
+                                           << " of the channels \"";
                             msg_win->str() << (*channel_i)->name;
-                            msg_win->str() << "\" ist kein Vielfaches"
-                                           << " der MDCT-Blockgröße!";
+                            msg_win->str() << "\" is not a multiple of"
+                                           << " the MDCT block size!";
                             msg_win->error();
                             return false;
                         }
@@ -543,27 +543,27 @@ bool CtlDialogChannel::_save_channels()
                 {
                     if ((*channel_i)->type == LibDLS::TUNKNOWN)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" hat keine Typinformation!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" has no type information!";
                         msg_win->error();
                         return false;
                     }
 
-                    // Quantisierung nur für Fließkommatypen
+                    // Quantization only for floating-point types
                     if ((*channel_i)->type != LibDLS::TFLT
                         && (*channel_i)->type != LibDLS::TDBL)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" hat keinen Gleitkommatyp!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" has no floating-point type!";
                         msg_win->error();
                         return false;
                     }
 
-                    // Alle Kanäle müssen eine Genauigkeit haben
+                    // All channels must have an accurancy
                     if (!write_acc && (*channel_i)->accuracy <= 0.0)
                     {
-                        msg_win->str() << "Kanal \"" << (*channel_i)->name
-                                       << "\" benötigt noch eine Genauigkeit!";
+                        msg_win->str() << "Channel \"" << (*channel_i)->name
+                                       << "\" still needs an accurancy!";
                         msg_win->error();
                         return false;
                     }
@@ -572,11 +572,11 @@ bool CtlDialogChannel::_save_channels()
                 }
             } // Quant
 
-        } // Format ausgewaehlt
+        } // Format selected
     }
     catch (...)
     {
-        msg_win->str() << "Ungültige Eingabe!";
+        msg_win->str() << "Invalid input!";
         msg_win->error();
         return false;
     }
@@ -584,12 +584,12 @@ bool CtlDialogChannel::_save_channels()
     channel_i = _channels->begin();
     while (channel_i != _channels->end())
     {
-        // Daten von Original-Kanal kopieren
+        // Copy data from original channel
         channel = **channel_i;
 
         channel_changed = false;
 
-        // Soll sich für diesen Kanal etwas ändern?
+        // Should something change for this channel?
         if ((write_freq && channel.sample_frequency != freq) ||
             (write_block && channel.block_size != block) ||
             (write_mask && channel.meta_mask != mask) ||
@@ -614,10 +614,10 @@ bool CtlDialogChannel::_save_channels()
 
         if (channel_changed)
         {
-            // Alte Vorgaben sichern, falls etwas schief geht
+            // Backup old guidelines if somethings goes wrong
             channel_backups.push_back(channel);
 
-            // Neue Daten übernehmen
+            // Transfer new data
             if (write_freq) channel.sample_frequency = freq;
             if (write_block) channel.block_size = block;
             if (write_mask) channel.meta_mask = mask;
@@ -673,7 +673,7 @@ bool CtlDialogChannel::_save_channels()
             catch (LibDLS::EChannelPreset &e)
             {
                 msg_win->str() << "FATAL: " << e.msg << "!";
-                msg_win->str() << " Bitte starten Sie die Anwendung neu!";
+                msg_win->str() << " Please restart the application!";
                 msg_win->error();
             }
 
@@ -686,7 +686,7 @@ bool CtlDialogChannel::_save_channels()
         }
         catch (LibDLS::EJobPreset &e)
         {
-            msg_win->str() << "Konnte dlsd nicht benachrichtigen: " << e.msg;
+            msg_win->str() << "Cannot notify dlsd: " << e.msg;
             msg_win->warning();
         }
 

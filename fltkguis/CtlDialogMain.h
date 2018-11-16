@@ -42,7 +42,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Hauptdialog des DLS-Managers
+   DLS Manager main dialog
 */
 
 class CtlDialogMain
@@ -54,15 +54,14 @@ public:
     void show();
 
 private:
-    Fl_Double_Window *_wnd; /**< Dialog-Fenster */
-    Fl_Grid *_grid_jobs; /**< Grid für alle Erfassungsaufträge */
-    Fl_Button *_button_close; /**< Button zum Schliessen des Dialoges */
-    Fl_Button *_button_add; /**< Button für das Hinzufügen eines Auftrages */
-    Fl_Button *_button_state; /**< Button zum Starten oder Anhalten
-                                 der Erfassung */
+    Fl_Double_Window *_wnd; /**< Dialog window */
+    Fl_Grid *_grid_jobs; /**< Grid for all entry jobs */
+    Fl_Button *_button_close; /**< Button to close dialog */
+    Fl_Button *_button_add; /**< Button to add a job */
+    Fl_Button *_button_state; /**< Button to start or stop acquisition */
 
-    string _dls_dir;            /**< DLS-Datenverzeichnis */
-    vector<CtlJobPreset> _jobs; /**< Vektor mit allen Erfassungsaufträgen */
+    string _dls_dir;            /**< DLS data directory */
+    vector<CtlJobPreset> _jobs; /**< Vector with all acquistion jobs */
 
     void _edit_job(unsigned int);
 
@@ -80,7 +79,7 @@ private:
 
     static void _static_watchdog_timeout(void *);
 
-    CtlDialogMain(); // Soll nicht aufgerufen werden
+    CtlDialogMain(); // Should not be called
 };
 
 /*****************************************************************************/

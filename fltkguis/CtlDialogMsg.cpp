@@ -33,7 +33,7 @@
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 */
 
 CtlDialogMsg::CtlDialogMsg()
@@ -41,16 +41,16 @@ CtlDialogMsg::CtlDialogMsg()
     int x = Fl::w() / 2 - WIDTH / 2;
     int y = Fl::h() / 2 - HEIGHT / 2;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Meldungen");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Reports");
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
     _grid_msg = new Fl_Grid(10, 10, WIDTH - 20, HEIGHT - 55);
-    _grid_msg->add_column("text", "Meldung");
+    _grid_msg->add_column("text", "report");
     _grid_msg->select_mode(flgNoSelect);
     _grid_msg->callback(_callback, this);
 
-    _button_ok = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Schließen");
+    _button_ok = new Fl_Button(WIDTH - 90, HEIGHT - 35, 80, 25, "Close");
     _button_ok->callback(_callback, this);
 
     _wnd->end();
@@ -61,7 +61,7 @@ CtlDialogMsg::CtlDialogMsg()
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 CtlDialogMsg::~CtlDialogMsg()
@@ -72,9 +72,9 @@ CtlDialogMsg::~CtlDialogMsg()
 /*****************************************************************************/
 
 /**
-   Fügt einen Fehler hinzu
+   Add an error
 
-   Der Text wird aus dem Stream gelesen.
+   The text is read from the stream.
 */
 
 void CtlDialogMsg::error()
@@ -96,9 +96,9 @@ void CtlDialogMsg::error()
 /*****************************************************************************/
 
 /**
-   Fügt eine Warnung hinzu
+   Add a warning
 
-   Der Text wird aus dem Stream gelesen.
+   The text is read from the stream.
 */
 
 void CtlDialogMsg::warning()
@@ -120,10 +120,10 @@ void CtlDialogMsg::warning()
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Widget, das den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Widget that trigger the callback
+   \param data Pointer to the dialog
 */
 
 void CtlDialogMsg::_callback(Fl_Widget *sender, void *data)
@@ -138,15 +138,15 @@ void CtlDialogMsg::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback: Der "OK"-Button wurde geklickt
+   Callback: The "OK" button was clicked
 */
 
 void CtlDialogMsg::_button_ok_clicked()
 {
-    // Fenster Schließen
+    // Close the window
     _wnd->hide();
 
-    // Meldungen entfernen
+    // Remove messages
     _grid_msg->record_count(0);
     _messages.clear();
 }
@@ -154,19 +154,19 @@ void CtlDialogMsg::_button_ok_clicked()
 /*****************************************************************************/
 
 /**
-   Callback-Funktion des Grids
+   Callback function of the grid
 */
 
 void CtlDialogMsg::_grid_msg_callback()
 {
     COMMsg msg;
 
-    // Anforderung für Zelleninhalt?
+    // Request for cell content?
     if (_grid_msg->current_event() == flgContent)
     {
         msg = _messages[_grid_msg->current_record()];
 
-        // Spalte "text" angefragt?
+        // Request column "text"?
         if (_grid_msg->current_col() == "text")
         {
             if (msg.type == 1) // Error
