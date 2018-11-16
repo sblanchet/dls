@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id: Channel.cpp,v bc24c001bf75 2016/09/11 18:29:27 fp $
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -40,7 +38,7 @@ using namespace std;
 #include "XmlParser.h"
 using namespace LibDLS;
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
 #include <iomanip>
 #endif
 
@@ -223,7 +221,7 @@ void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
 
 /*****************************************************************************/
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
 #define TRACE_TIMING(TIME) \
     do { \
         t_now.set_now(); \
@@ -253,11 +251,12 @@ Channel::_fetch_chunks_local()
     set<int64_t> dir_chunks;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts, te, t_now, t_prev, t_opendir, t_readdir, t_find, t_import,
          t_insert, t_range, t_close, t_removed;
     ts.set_now();
     t_prev = ts;
+    Chunk::reset_timing();
 #endif
 
     _range_start.set_null();
@@ -360,7 +359,7 @@ Channel::_fetch_chunks_local()
 
     TRACE_TIMING(t_removed);
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     te.set_now();
     stringstream msg;
     msg << __func__ << "() " << ts.diff_str_to(te) << endl
@@ -374,6 +373,7 @@ Channel::_fetch_chunks_local()
         << "      close: " << t_close.to_dbl() << endl
         << "     remove: " << t_removed.to_dbl();
     log(msg.str());
+    Chunk::output_timing();
 #endif
 
     return ret;
@@ -389,7 +389,8 @@ Channel::_fetch_chunks_network()
     Chunk new_chunk;
     Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
-#if DEBUG_TIMING
+
+#ifdef DEBUG_TIMING
     Time ts;
     ts.set_now();
 #endif
@@ -478,7 +479,7 @@ Channel::_fetch_chunks_network()
         _chunks.erase(*rem_i);
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time te;
     te.set_now();
     stringstream msg;
@@ -505,7 +506,7 @@ void Channel::_fetch_data_local(
         unsigned int decimation /**< Decimation. */
         ) const
 {
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts, te;
     ts.set_now();
 #endif
@@ -526,7 +527,7 @@ void Channel::_fetch_data_local(
         }
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     te.set_now();
     stringstream msg;
     msg << "fetch_data " << ts.diff_str_to(te);
@@ -547,7 +548,7 @@ void Channel::_fetch_data_network(
 {
     DlsProto::Request req;
     DlsProto::Response res;
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time ts;
     ts.set_now();
 #endif
@@ -609,7 +610,7 @@ void Channel::_fetch_data_network(
         }
     }
 
-#if DEBUG_TIMING
+#ifdef DEBUG_TIMING
     Time te;
     te.set_now();
     stringstream msg;

@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id$
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -44,9 +42,58 @@ using namespace std;
 #include "LibDLS/Chunk.h"
 using namespace LibDLS;
 
+#ifdef DEBUG_TIMING
+#include <iomanip>
+#endif
+
 /*****************************************************************************/
 
 //#define DEBUG_DATA
+
+#ifdef DEBUG_TIMING
+#define TRACE_TIMING(TIME) \
+    do { \
+        t_now.set_now(); \
+        (TIME) += t_now - t_prev; \
+        t_prev = t_now; \
+    } while(0)
+
+Time t_global_open, t_global_records, t_global_first,
+     t_global_last, t_local_open, t_local_records, t_local_last,
+     t_local_close, t_global_close;
+
+void Chunk::reset_timing()
+{
+    t_global_open.set_null();
+    t_global_records.set_null();
+    t_global_first.set_null();
+    t_global_last.set_null();
+    t_local_open.set_null();
+    t_local_records.set_null();
+    t_local_last.set_null();
+    t_local_close.set_null();
+    t_global_close.set_null();
+}
+
+void Chunk::output_timing()
+{
+    stringstream msg;
+    msg << fixed << setprecision(0) << setw(8)
+        << "     global_open: " << t_global_open.to_dbl() << endl
+        << "      global_rec: " << t_global_records.to_dbl() << endl
+        << "    global_first: " << t_global_first.to_dbl() << endl
+        << "     global_last: " << t_global_last.to_dbl() << endl
+        << "      local_open: " << t_local_open.to_dbl() << endl
+        << "       local_rec: " << t_local_records.to_dbl() << endl
+        << "      local_last: " << t_local_last.to_dbl() << endl
+        << "     local_close: " << t_local_close.to_dbl() << endl
+        << "    global_close: " << t_global_close.to_dbl() << endl;
+    log(msg.str());
+}
+
+#else
+#define TRACE_TIMING(time)
+#endif
 
 /*****************************************************************************/
 
@@ -750,6 +797,11 @@ void Chunk::fetch_range()
     IndexT<IndexRecord> index;
     IndexRecord index_record;
 
+#ifdef DEBUG_TIMING
+    Time t_now, t_prev;
+    t_prev.set_now();
+#endif
+
     _start = (uint64_t) 0;
     _end = (uint64_t) 0;
     _incomplete = true;
@@ -762,16 +814,22 @@ void Chunk::fetch_range()
     }
     catch (EIndexT &e)
     {
+        TRACE_TIMING(t_global_open);
         err << "Opening global index: " << e.msg << endl;
         throw ChunkException(err.str());
     }
 
+    TRACE_TIMING(t_global_open);
+
     if (global_index.record_count() == 0)
     {
+        TRACE_TIMING(t_global_records);
         err << "Global index file \"" << global_index_file_name
             << "\" has no records!";
         throw ChunkException(err.str());
     }
+
+    TRACE_TIMING(t_global_records);
 
     // Ersten und letzten Record lesen, um die Zeitspanne zu bestimmen
     try
@@ -780,10 +838,13 @@ void Chunk::fetch_range()
     }
     catch (EIndexT &e)
     {
+        TRACE_TIMING(t_global_first);
         err << "Could not read first record of global index file \""
             << global_index_file_name << "\": " << e.msg;
         throw ChunkException(err.str());
     }
+
+    TRACE_TIMING(t_global_first);
 
     unsigned int rec_idx = global_index.record_count() - 1;
     try
@@ -792,11 +853,14 @@ void Chunk::fetch_range()
     }
     catch (EIndexT &e)
     {
+        TRACE_TIMING(t_global_last);
         err << "Could not read last record (" << rec_idx
             << ") of global index file \"" << global_index_file_name
             << "\": " << e.msg;
         throw ChunkException(err.str());
     }
+
+    TRACE_TIMING(t_global_last);
 
     // In die letzte Datendatei wird noch erfasst
     // -> Die aktuelle, letzte Zeit aus dem Datendatei-Index holen
@@ -812,17 +876,23 @@ void Chunk::fetch_range()
         }
         catch (EIndexT &e)
         {
+            TRACE_TIMING(t_local_open);
             err << "Could not open index file \""
                 << index_file_name.str() << "\": " << e.msg;
             throw ChunkException(err.str());
         }
 
+        TRACE_TIMING(t_local_open);
+
         if (index.record_count() == 0)
         {
+            TRACE_TIMING(t_local_records);
             err << "Index file \"" << index_file_name.str()
                 << "\" has no records!";
             throw ChunkException(err.str());
         }
+
+        TRACE_TIMING(t_local_records);
 
         unsigned int rec_idx = index.record_count() - 1;
         try
@@ -832,6 +902,7 @@ void Chunk::fetch_range()
         }
         catch (EIndexT &e)
         {
+            TRACE_TIMING(t_local_last);
             stringstream err;
             err << "Could not read last (" << rec_idx
                 << ") record from index file \""
@@ -840,9 +911,12 @@ void Chunk::fetch_range()
             throw ChunkException(err.str());
         }
 
+        TRACE_TIMING(t_local_last);
+
         last_global_index_record.end_time = index_record.end_time;
 
         index.close();
+        TRACE_TIMING(t_local_close);
     }
     else {
         // last global index record has time != 0
@@ -850,6 +924,8 @@ void Chunk::fetch_range()
     }
 
     global_index.close();
+
+    TRACE_TIMING(t_global_close);
 
     _start = first_global_index_record.start_time;
     _end = last_global_index_record.end_time;
