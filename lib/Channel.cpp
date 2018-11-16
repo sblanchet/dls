@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
+ *  $Id: Channel.cpp,v bc24c001bf75 2016/09/11 18:29:27 fp $
  *
  *  This file is part of the Data Logging Service (DLS).
  *
@@ -39,8 +39,6 @@ using namespace std;
 
 #include "XmlParser.h"
 using namespace LibDLS;
-
-#define DEBUG_TIMING 0
 
 #if DEBUG_TIMING
 #include <iomanip>
@@ -225,6 +223,17 @@ void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
 
 /*****************************************************************************/
 
+#if DEBUG_TIMING
+#define TRACE_TIMING(TIME) \
+    do { \
+        t_now.set_now(); \
+        (TIME) += t_now - t_prev; \
+        t_prev = t_now; \
+    } while(0)
+#else
+#define TRACE_TIMING(time)
+#endif
+
 /**
    Lädt die Liste der Chunks und importiert deren Eigenschaften
 
@@ -245,8 +254,10 @@ Channel::_fetch_chunks_local()
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
 #if DEBUG_TIMING
-    Time ts, te;
+    Time ts, te, t_now, t_prev, t_opendir, t_readdir, t_find, t_import,
+         t_insert, t_range, t_close, t_removed;
     ts.set_now();
+    t_prev = ts;
 #endif
 
     _range_start.set_null();
@@ -258,7 +269,10 @@ Channel::_fetch_chunks_local()
         throw ChannelException(err.str());
     }
 
+    TRACE_TIMING(t_opendir);
+
     while ((dir_ent = readdir(dir))) {
+        TRACE_TIMING(t_readdir);
         dir_ent_name = dir_ent->d_name;
         if (dir_ent_name.find("chunk") != 0) {
             continue;
@@ -273,22 +287,26 @@ Channel::_fetch_chunks_local()
         dir_chunks.insert(dir_time);
 
         ChunkMap::iterator chunk_i = _chunks.find(dir_time);
+        TRACE_TIMING(t_find);
         if (chunk_i == _chunks.end()) {
             // chunk not existing yet
             try {
                 new_chunk.import(path() + "/" + dir_ent_name, _type);
             }
             catch (ChunkException &e) {
+                TRACE_TIMING(t_import);
                 stringstream err;
                 err << "WARNING: Failed import chunk: " << e.msg;
                 log(err.str());
                 continue;
             }
+            TRACE_TIMING(t_import);
 
             pair<int64_t, Chunk> val(dir_time, new_chunk);
             pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
             chunk = &ins_ret.first->second;
             ret.first.insert(chunk);
+            TRACE_TIMING(t_insert);
         }
         else {
             // chunk existing
@@ -301,11 +319,13 @@ Channel::_fetch_chunks_local()
                 chunk->fetch_range();
             }
             catch (ChunkException &e) {
+                TRACE_TIMING(t_range);
                 stringstream err;
                 err << "WARNING: Failed to fetch chunk range: " << e.msg;
                 log(err.str());
                 continue;
             }
+            TRACE_TIMING(t_range);
             ret.first.insert(chunk);
         }
 
@@ -326,6 +346,7 @@ Channel::_fetch_chunks_local()
 
     closedir(dir);
 
+    TRACE_TIMING(t_close);
 
     // check for removed chunks and erase them from map
     ChunkMap::iterator ch_i = _chunks.begin();
@@ -337,10 +358,21 @@ Channel::_fetch_chunks_local()
         }
     }
 
+    TRACE_TIMING(t_removed);
+
 #if DEBUG_TIMING
     te.set_now();
     stringstream msg;
-    msg << __func__ << "() " << ts.diff_str_to(te);
+    msg << __func__ << "() " << ts.diff_str_to(te) << endl
+        << fixed << setprecision(0) << setw(8)
+        << "       open: " << t_opendir.to_dbl() << endl
+        << "    readdir: " << t_readdir.to_dbl() << endl
+        << "       find: " << t_find.to_dbl() << endl
+        << "     import: " << t_import.to_dbl() << endl
+        << "     insert: " << t_insert.to_dbl() << endl
+        << "      range: " << t_range.to_dbl() << endl
+        << "      close: " << t_close.to_dbl() << endl
+        << "     remove: " << t_removed.to_dbl();
     log(msg.str());
 #endif
 
