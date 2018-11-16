@@ -565,26 +565,23 @@ unsigned int File::read(std::string &target, unsigned int length)
 
 uint64_t File::calc_size()
 {
-    stringstream err;
-    off_t size;
+    struct stat buf;
 
-    if ((size = lseek(_fd, 0, SEEK_END)) == (off_t) - 1)
-    {
+    if (fstat(_fd, &buf)) {
+        stringstream err;
         err << "Could not determine file size! Seek: " << strerror(errno);
 
-        try
-        {
+        try {
             File::close();
         }
-        catch (EFile &e)
-        {
+        catch (EFile &e) {
             err << " - Close: " << e.msg;
         }
 
         throw EFile(err.str());
     }
 
-    return size;
+    return buf.st_size;
 }
 
 /*****************************************************************************/
