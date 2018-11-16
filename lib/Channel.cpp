@@ -243,6 +243,12 @@ Channel::_fetch_chunks_local()
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 
 #ifdef DEBUG_TIMING
+    {
+        stringstream msg;
+        msg << __func__ << "(" << name() << ")";
+        log(msg.str());
+    }
+
     Time ts, te;
     ts.set_now();
 #endif
@@ -337,9 +343,11 @@ Channel::_fetch_chunks_local()
 
 #ifdef DEBUG_TIMING
     te.set_now();
-    stringstream msg;
-    msg << __func__ << "() " << ts.diff_str_to(te);
-    log(msg.str());
+    {
+        stringstream msg;
+        msg << __func__ << "() " << ts.diff_str_to(te);
+        log(msg.str());
+    }
 #endif
 
     return ret;
@@ -356,6 +364,11 @@ Channel::_fetch_chunks_network()
     Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 #ifdef DEBUG_TIMING
+    {
+        stringstream msg;
+        msg << __func__ << "(" << name() << ")";
+        log(msg.str());
+    }
     Time ts;
     ts.set_now();
 #endif
@@ -472,6 +485,13 @@ void Channel::_fetch_data_local(
         ) const
 {
 #ifdef DEBUG_TIMING
+    {
+        stringstream msg;
+        msg << __func__ << "(" << name()
+            << ", " << start.diff_str_to(end)
+            << ", " << min_values << ")";
+        log(msg.str());
+    }
     Time ts, te;
     ts.set_now();
 #endif
@@ -495,7 +515,7 @@ void Channel::_fetch_data_local(
 #ifdef DEBUG_TIMING
     te.set_now();
     stringstream msg;
-    msg << "fetch_data " << ts.diff_str_to(te);
+    msg << __func__ << "() took " << ts.diff_str_to(te);
     log(msg.str());
 #endif
 }
@@ -514,6 +534,13 @@ void Channel::_fetch_data_network(
     DlsProto::Request req;
     DlsProto::Response res;
 #ifdef DEBUG_TIMING
+    {
+        stringstream msg;
+        msg << __func__ << "(" << name()
+            << ", " << start.diff_str_to(end)
+            << ", " << min_values << ")";
+        log(msg.str());
+    }
     Time ts;
     ts.set_now();
 #endif
