@@ -58,12 +58,17 @@ using namespace LibDLS;
         t_prev = t_now; \
     } while(0)
 
+Time t_import_open, t_import_parse, t_import_close;
 Time t_global_open, t_global_records, t_global_first,
      t_global_last, t_local_open, t_local_records, t_local_last,
      t_local_close, t_global_close;
 
 void Chunk::reset_timing()
 {
+    t_import_open.set_null();
+    t_import_parse.set_null();
+    t_import_close.set_null();
+
     t_global_open.set_null();
     t_global_records.set_null();
     t_global_first.set_null();
@@ -79,6 +84,9 @@ void Chunk::output_timing()
 {
     stringstream msg;
     msg << fixed << setprecision(0) << setw(8)
+        << "     import_open: " << t_import_open.to_dbl() << endl
+        << "    import_parse: " << t_import_parse.to_dbl() << endl
+        << "    import_close: " << t_import_close.to_dbl() << endl
         << "     global_open: " << t_global_open.to_dbl() << endl
         << "      global_rec: " << t_global_records.to_dbl() << endl
         << "    global_first: " << t_global_first.to_dbl() << endl
@@ -149,6 +157,11 @@ void Chunk::import(const string &path, ChannelType type)
     XmlParser xml;
     int i;
 
+#ifdef DEBUG_TIMING
+    Time t_now, t_prev;
+    t_prev.set_now();
+#endif
+
     _dir = path;
     _type = type;
     _incomplete = true;
@@ -156,6 +169,8 @@ void Chunk::import(const string &path, ChannelType type)
     chunk_file_name = _dir + "/chunk.xml";
 
     file.open(chunk_file_name.c_str(), ios::in);
+
+    TRACE_TIMING(t_import_open);
 
     if (!file.is_open()) {
         err << "Failed to open chunk file \"" << chunk_file_name << "\"!";
@@ -202,7 +217,11 @@ void Chunk::import(const string &path, ChannelType type)
         throw ChunkException(err.str());
     }
 
+    TRACE_TIMING(t_import_parse);
+
     file.close();
+
+    TRACE_TIMING(t_import_close);
 }
 
 /*****************************************************************************/
