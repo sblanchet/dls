@@ -41,7 +41,7 @@
 /*****************************************************************************/
 
 /**
-   Export-Dialog des DLS-Viewers
+   Export dialog of the DLS viewer
 */
 
 class ViewDialogExport
@@ -53,20 +53,20 @@ public:
     void show(const list<LibDLS::Channel> *, LibDLS::Time, LibDLS::Time);
 
 private:
-    string _dls_dir;           /**< DLS-Datenverzeichnis */
-    Fl_Double_Window *_wnd;    /**< Dialogfenster */
-    Fl_Box *_box_info; /**< Info-Zeile */
-    Fl_Output *_output_times; /**< Zeitstempel */
+    string _dls_dir;           /**< DLS data directory */
+    Fl_Double_Window *_wnd;    /**< Dialog box */
+    Fl_Box *_box_info; /**< Info line */
+    Fl_Output *_output_times; /**< Timestamp */
 #if 0
-    Fl_Output *_output_time; /**< Verbleibende Zeit */
-    Fl_Output *_output_size; /**< Geschätzte Größe */
+    Fl_Output *_output_time; /**< Remaining time */
+    Fl_Output *_output_size; /**< Estimated size */
 #endif
     Fl_Check_Button *_check_ascii; /**< export to ASCII */
     Fl_Check_Button *_check_mat4; /**< export to MATLAB level 4 file */
     Fl_Spinner *_spinner_decimation; /**< Decimation spinner. */
-    Fl_Progress *_progress; /**< Fortschrittsanzeige */
+    Fl_Progress *_progress; /**< Progress */
     Fl_Button *_button_export; /**< Export-Button */
-    Fl_Button *_button_close;  /**< "Schliessen"-Button */
+    Fl_Button *_button_close;  /**< "Close"-Button */
 
     const list<LibDLS::Channel> *_channels;
     unsigned int _channel_count;
@@ -76,7 +76,7 @@ private:
     string _export_dir;
     bool _export_finished;
     pthread_t _thread; /**< Export-Thread */
-    bool _thread_running; /**< true, wenn der Thread läuft */
+    bool _thread_running; /**< true, when the thread is running */
 
     static void _callback(Fl_Widget *, void *);
     void _button_close_clicked();

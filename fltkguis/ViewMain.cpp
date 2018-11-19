@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     cout << "dls_view " << PACKAGE_VERSION
         << " revision " << REVISION << endl;
 
-    // Kommandozeile verarbeiten
+    // Process command line
     get_options(argc, argv);
 
     Fl::visual(FL_DOUBLE | FL_INDEX);
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     dialog->show();
     delete dialog;
 
-    // Reservierte Speicher der MDCT freigeben
+    // Release reserved MDCT memory
     LibDLS::mdct_cleanup();
 
     return 0;
@@ -98,20 +98,20 @@ void get_options(int argc, char **argv)
     }
     while (c != -1);
 
-    // Weitere Parameter vorhanden?
+    // Are other parameters available?
     if (optind < argc) {
         print_usage();
     }
 
     if (!dir_set) {
-        // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
+        // Read DLS directory from environment variable $DLS_DIR
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
-        // $DLS_DIR leer: Aktuelles Verzeichnis nutzen
+        // $DLS_DIR empty: use current directory
         else dls_dir = ".";
     }
 
-    // Benutztes Verzeichnis ausgeben
+    // Output used directory
     cout << "Using DLS directory \"" << dls_dir << "\"" << endl;
 }
 
@@ -119,9 +119,9 @@ void get_options(int argc, char **argv)
 
 void print_usage()
 {
-    cout << "Aufruf: dls_view [OPTIONEN]" << endl;
-    cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
-    cout << "        -h                 Diese Hilfe anzeigen" << endl;
+    cout << "Call: dls_view [OPTIONS]" << endl;
+    cout << "        -d [Directory]   DLS data directory" << endl;
+    cout << "        -h               Show this help" << endl;
     exit(0);
 }
 

@@ -54,13 +54,13 @@ const Fl_Color msg_colors[LibDLS::Job::Message::TypeCount] =
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param x X-Position des linken Randes
-   \param y Y-Position des oberen Randes
-   \param w Breite des Widgets
-   \param h Höhe des Widgets
-   \param label Label des Widgets
+   \param x X-Position of the left edge
+   \param y Y-Position of the upper edge
+   \param w Width of the widget
+   \param h Height of the widget
+   \param label Label of the widget
 */
 
 ViewViewMsg::ViewViewMsg(int x, int y, int w, int h, const char *label)
@@ -73,7 +73,7 @@ ViewViewMsg::ViewViewMsg(int x, int y, int w, int h, const char *label)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 ViewViewMsg::~ViewViewMsg()
@@ -85,7 +85,7 @@ ViewViewMsg::~ViewViewMsg()
 /*****************************************************************************/
 
 /**
-   Löscht alle Nachrichten
+   Delete all messages
 */
 
 void ViewViewMsg::clear()
@@ -97,10 +97,10 @@ void ViewViewMsg::clear()
 /*****************************************************************************/
 
 /**
-   Lädt Nachrichten im angegebenen Zeitbereich
+   Load messages in the specified time range
 
-   \param start Anfangszeit des Bereiches
-   \param end Endzeit des Bereiches
+   \param start Start time of the area
+   \param end End time of the range
 */
 
 void ViewViewMsg::load_msg(const LibDLS::Job *job,
@@ -127,7 +127,7 @@ void ViewViewMsg::load_msg(const LibDLS::Job *job,
 /*****************************************************************************/
 
 /**
-   FLTK-Zeichenfunktion
+   FLTK character function
 */
 
 void ViewViewMsg::draw()
@@ -137,22 +137,22 @@ void ViewViewMsg::draw()
     double scale_x;
     int xp, scroll_pos;
 
-    // Schriftart und -größe setzen
+    // Set font and size
     fl_font(FL_HELVETICA, 10);
 
-    // Hintergrund zeichnen
+    // Drawing background
     draw_box(FL_DOWN_BOX, FL_WHITE);
 
     if (_range_end <= _range_start) return;
 
-    // Skalierung berechnen
+    // Calculate scaling
     scale_x = (w() - 2 * FRAME_WIDTH) / (_range_end - _range_start).to_dbl();
 
-    // Ebenen berechnen, auf denen die einzelnen
-    // Nachrichten gezeichnet werden sollen
+    // Calculate levels on which to draw
+    // each message
     _calc_msg_levels();
 
-    // Scroll-Bar zeichnen
+    // Draw a scroll bar
     _track_bar->content_height(_level_count * LEVEL_HEIGHT);
     _track_bar->view_height(h() - 2 * FRAME_WIDTH);
     _track_bar->draw(x() + w() - FRAME_WIDTH - TRACK_BAR_WIDTH,
@@ -162,7 +162,7 @@ void ViewViewMsg::draw()
 
     scroll_pos = _track_bar->position();
 
-    // Clipping einrichten
+    // Set up clipping
     if (_track_bar->visible()) {
         fl_push_clip(x() + FRAME_WIDTH, y() + FRAME_WIDTH,
                      w() - 2 * FRAME_WIDTH - TRACK_BAR_WIDTH - 1,
@@ -173,7 +173,7 @@ void ViewViewMsg::draw()
                      w() - 2 * FRAME_WIDTH, h() - 2 * FRAME_WIDTH);
     }
 
-    // Level von unten nach oben zeichnen
+    // Draw level from bottom to top
     for (i = _level_count - 1; i >= 0; i--) {
         msg_i = _messages.begin();
         while (msg_i != _messages.end()) {
@@ -181,7 +181,7 @@ void ViewViewMsg::draw()
                 xp = (int)
                     ((msg_i->message.time - _range_start).to_dbl() * scale_x);
 
-                // Text ausmessen
+                // Measure text
                 text_width = 0;
                 fl_measure(msg_i->message.text.c_str(),
                         text_width, text_height, 0);
@@ -191,7 +191,7 @@ void ViewViewMsg::draw()
                      << msg_i->message.text << endl;
 #endif
 
-                // Hintergrund hinter dem Text weiss zeichnen
+                // Drawing background behing the text white
 #ifdef DEBUG
                 fl_color(FL_RED);
 #else
@@ -202,7 +202,7 @@ void ViewViewMsg::draw()
                          text_width + 5,
                          LEVEL_HEIGHT);
 
-                // Zeitlinie einzeichnen
+                // Timeline draw
                 fl_color(FL_BLACK);
                 fl_line(x() + FRAME_WIDTH + xp,
                         y() + FRAME_WIDTH - scroll_pos,
@@ -216,7 +216,7 @@ void ViewViewMsg::draw()
                         y() + FRAME_WIDTH + i * LEVEL_HEIGHT
                         + LEVEL_HEIGHT / 2 - scroll_pos);
 
-                // Text zeichnen
+                // Drawing text
                 if (msg_i->message.type >= 0 &&
                         msg_i->message.type
                         < LibDLS::Job::Message::TypeCount) {
@@ -236,14 +236,14 @@ void ViewViewMsg::draw()
         }
     }
 
-    // Clipping wieder entfernen
+    // Remove clipping again
     fl_pop_clip();
 }
 
 /*****************************************************************************/
 
 /**
-   Berechnet für jede Nachricht die Anzeigeebene
+   Calculate the display level for each message
 */
 
 void ViewViewMsg::_calc_msg_levels()
@@ -259,23 +259,23 @@ void ViewViewMsg::_calc_msg_levels()
 
     if (_range_end <= _range_start) return;
 
-    // Skalierung berechnen
+    // Calculate scaling
     scale_x = (w() - 2 * FRAME_WIDTH) / (_range_end - _range_start).to_dbl();
 
     msg_i = _messages.begin();
     while (msg_i != _messages.end()) {
         xp = (int) ((msg_i->message.time - _range_start).to_dbl() * scale_x);
 
-        // Zeile finden, in der die Nachricht gezeichnet werden kann
+        // Find a line where the message can be drawn
         level = 0;
         found = false;
         level_i = levels.begin();
         while (level_i != levels.end()) {
-            if (*level_i < xp) { // Nachricht würde in diese Zeile passen
+            if (*level_i < xp) { // Message would fit in this line
                 found = true;
                 msg_i->level = level;
 
-                // Endposition in Zeile vermerken
+                // Note end position in line
                 *level_i = (int)
                     (xp + fl_width(msg_i->message.text.c_str())) + 5;
                 break;
@@ -288,7 +288,7 @@ void ViewViewMsg::_calc_msg_levels()
         if (!found) {
             msg_i->level = level;
 
-            // Alle Zeilen voll. Neue erstellen.
+            // All lines full. Create new ones.
             levels.push_back((int)
                     (xp + fl_width(msg_i->message.text.c_str())) + 5);
             _level_count++;
@@ -301,10 +301,10 @@ void ViewViewMsg::_calc_msg_levels()
 /*****************************************************************************/
 
 /**
-   FLTK-Ereignisfunktion
+   FLTK event function
 
-   \param event Ereignistyp
-   \return 1, wenn Ereignis verarbeitet wurde
+   \param event event type
+   \return 1, wenn Event was processed
 */
 
 int ViewViewMsg::handle(int event)

@@ -60,24 +60,24 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
-    _choice_job = new Fl_Choice(10, 25, 240, 25, "Auftrag");
+    _choice_job = new Fl_Choice(10, 25, 240, 25, "Job");
     _choice_job->align(FL_ALIGN_TOP_LEFT);
     _choice_job->callback(_callback, this);
 
-    _checkbutton_messages = new Fl_Check_Button(260, 25, 100, 25, "Nachrichten");
+    _checkbutton_messages = new Fl_Check_Button(260, 25, 100, 25, "News");
     _checkbutton_messages->set();
     _checkbutton_messages->callback(_callback, this);
 
-    _button_full = new Fl_Button(370, 25, 100, 25, "Gesamt");
+    _button_full = new Fl_Button(370, 25, 100, 25, "Full");
     _button_full->callback(_callback, this);
 
-    _button_reload = new Fl_Button(480, 25, 100, 25, "Aktualisieren");
+    _button_reload = new Fl_Button(480, 25, 100, 25, "Reload");
     _button_reload->callback(_callback, this);
 
-    _button_export = new Fl_Button(590, 25, 100, 25, "Exportieren...");
+    _button_export = new Fl_Button(590, 25, 100, 25, "Export...");
     _button_export->callback(_callback, this);
 
-    _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Schließen");
+    _button_close = new Fl_Button(WIDTH - 90, 25, 80, 25, "Close");
     _button_close->callback(_callback, this);
 
     _tile_ver = new Fl_Tile(10, 60, WIDTH - 20, HEIGHT - 70);
@@ -88,10 +88,10 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
     _view_msg = new ViewViewMsg(10, HEIGHT - 60, WIDTH - 220, 50);
 
     _tile_hor->end();
-    //_tile_hor->resizable(_view_data); // Setzt Datenansicht fest
+    //_tile_hor->resizable(_view_data); // Set data view
 
     _grid_channels = new Fl_Grid(WIDTH - 210, 60, 200, HEIGHT - 70);
-    _grid_channels->add_column("channel", "Kanal");
+    _grid_channels->add_column("channel", "Channel");
     _grid_channels->select_mode(flgNoSelect);
     _grid_channels->check_boxes(true);
     _grid_channels->callback(_callback, this);
@@ -108,7 +108,7 @@ ViewDialogMain::ViewDialogMain(const string &dls_dir)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 ViewDialogMain::~ViewDialogMain()
@@ -119,7 +119,7 @@ ViewDialogMain::~ViewDialogMain()
 /*****************************************************************************/
 
 /**
-   Anzeigen des Dialoges
+   Display the dialog
 */
 
 void ViewDialogMain::show()
@@ -143,9 +143,9 @@ void ViewDialogMain::show()
 
     if (_dls_dir.jobs().empty()) {
         stringstream str;
-        str << "Im DLS-Datenverzeichnis" << endl
+        str << "No jovs were found in the DLS data directory " << endl
             << "\"" << _dls_dir_path << "\"" << endl
-            << "wurden keine Aufträge gefunden!";
+            << " !";
         fl_alert(str.str().c_str());
     }
 
@@ -156,10 +156,10 @@ void ViewDialogMain::show()
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Widget that has triggered the callback
+   \param data Pointer to the dialog
 */
 
 void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
@@ -180,7 +180,7 @@ void ViewDialogMain::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback: Der "Schliessen"-Button wurde geklickt
+   Callback: The "Close"-Button has been clicked
 */
 
 void ViewDialogMain::_button_close_clicked()
@@ -191,7 +191,7 @@ void ViewDialogMain::_button_close_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Aktualisieren"-Button wurde geklickt
+   Callback: The "Reload"-Button has been clicked
 */
 
 void ViewDialogMain::_button_reload_clicked()
@@ -202,7 +202,7 @@ void ViewDialogMain::_button_reload_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Gesamt"-Button wurde geklickt
+   Callback: The "Full"-Button has been clicked
 */
 
 void ViewDialogMain::_button_full_clicked()
@@ -213,7 +213,7 @@ void ViewDialogMain::_button_full_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Export"-Button wurde geklickt
+   Callback: The "Export"-Button has been clicked
 */
 
 void ViewDialogMain::_button_export_clicked()
@@ -240,7 +240,7 @@ void ViewDialogMain::_button_export_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Es wurde ein Auftrag in der Auftragsauswahl gewählt
+   Callback: a job has been selected
 */
 
 void ViewDialogMain::_choice_job_changed()
@@ -261,7 +261,7 @@ void ViewDialogMain::_choice_job_changed()
 /*****************************************************************************/
 
 /**
-   Callback: Die Checkbox "Nachrichten" wurde angeklickt.
+   Callback: The Checkbox "Messages" has been clicked
 */
 
 void ViewDialogMain::_checkbutton_messages_clicked()
@@ -277,7 +277,7 @@ void ViewDialogMain::_checkbutton_messages_clicked()
 /*****************************************************************************/
 
 /**
-   Callback der Kanal-Grids
+   Callback of the channel grids
 */
 
 void ViewDialogMain::_grid_channels_changed()
@@ -316,11 +316,11 @@ void ViewDialogMain::_grid_channels_changed()
 /*****************************************************************************/
 
 /**
-   Statischer Callback der Datenanzeige: Die Zeitspanne hat sich geändert!
+   Static callback of the data display: the time span has changed!
 
-   \param start Neuer Anfang der Zeitspanne
-   \param end Neues Ende der Zeitspanne
-   \param data Zeiger auf den Dialog
+   \param start New beginning of the time span
+   \param end New end of the time span
+   \param data Pointer to the dialog
 */
 
 void ViewDialogMain::_data_range_callback(LibDLS::Time start,
