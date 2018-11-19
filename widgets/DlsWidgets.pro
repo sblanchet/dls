@@ -174,7 +174,7 @@ FORMS = \
 
 RESOURCES = DlsWidgets.qrc
 
-TRANSLATIONS = DlsWidgets_de.ts
+TRANSLATIONS = DlsWidgets_de.ts DlsWidgets_fr.ts
 
 ADDITIONAL_DISTFILES =
 

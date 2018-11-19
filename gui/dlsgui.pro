@@ -95,7 +95,7 @@ RESOURCES += dlsgui.qrc
 
 RC_FILE = dlsgui.rc
 
-TRANSLATIONS = dlsgui_de.ts
+TRANSLATIONS = dlsgui_de.ts dlsgui_fr.ts
 
 mimetype.path = $$PREFIX/share/mime/packages
 mimetype.files = dlsgui-mime.xml
