@@ -48,11 +48,11 @@ using namespace std;
 
 //#define DEBUG
 
-#define ABSTAND 5                   // Distance from all four sides
-#define SKALENHOEHE 10              // Height of the labeling of the time scale
-#define INFOHOEHE 10                // Height of the status bar
-#define MIN_KANAL_HOEHE 50          // Minimum height of a channel line
-#define KANAL_HEADER_HOEHE 14       // Height of the channel text line
+#define DISTANCE 5                  // Distance from all four sides
+#define SCALES_HEIGHT 10            // Height of the labeling of the time scale
+#define INFO_HEIGHT 10              // Height of the status bar
+#define MIN_CHANNEL_HEIGHT 50       // Minimum height of a channel line
+#define CHANNEL_HEADER_HEIGHT 14    // Height of the channel text line
 #define MIN_SCROLL_BUTTON_HEIGHT 10 // Minimum height of the scroll button
 #define TRACK_BAR_WIDTH 20          // Width of the track bar
 
@@ -173,7 +173,7 @@ void ViewViewData::add_channel(LibDLS::Channel *channel)
         Fl::check();
         _do_not_draw = false;
 
-        p_viewchannel->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
+        p_viewchannel->fetch_data(_range_start, _range_end, w() - 2 * DISTANCE);
 
         fl_cursor(FL_CURSOR_DEFAULT);
         redraw();
@@ -289,7 +289,7 @@ void ViewViewData::update()
          channel_i != _channels.end();
          channel_i++) {
         channel_i->channel()->fetch_chunks();
-        channel_i->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
+        channel_i->fetch_data(_range_start, _range_end, w() - 2 * DISTANCE);
     }
 
     redraw();
@@ -373,7 +373,7 @@ void ViewViewData::_load_data()
     for (channel_i = _channels.begin();
          channel_i != _channels.end();
          channel_i++) {
-        channel_i->fetch_data(_range_start, _range_end, w() - 2 * ABSTAND);
+        channel_i->fetch_data(_range_start, _range_end, w() - 2 * DISTANCE);
     }
 
     redraw();
@@ -406,20 +406,20 @@ void ViewViewData::draw()
     draw_box(FL_DOWN_BOX, FL_WHITE);
 
     // Calculate temporary sizes
-    _channel_area_height = h() - SKALENHOEHE - INFOHOEHE - 2 * ABSTAND - 2;
+    _channel_area_height = h() - SCALES_HEIGHT - INFO_HEIGHT - 2 * DISTANCE - 2;
     if (_channels.size())
         _channel_height = _channel_area_height / _channels.size();
     else _channel_height = 0;
-    if (_channel_height < MIN_KANAL_HOEHE) _channel_height = MIN_KANAL_HOEHE;
-    _channel_area_width = w() - 2 * ABSTAND;
+    if (_channel_height < MIN_CHANNEL_HEIGHT) _channel_height = MIN_CHANNEL_HEIGHT;
+    _channel_area_width = w() - 2 * DISTANCE;
 
     // Draw track bar
     _track_bar->content_height(_channels.size() * _channel_height);
     _track_bar->view_height(_channel_area_height);
-    _track_bar->draw(x() + w() - ABSTAND - TRACK_BAR_WIDTH,
-                     y() + ABSTAND,
+    _track_bar->draw(x() + w() - DISTANCE - TRACK_BAR_WIDTH,
+                     y() + DISTANCE,
                      TRACK_BAR_WIDTH,
-                     h() - 2 * ABSTAND);
+                     h() - 2 * DISTANCE);
     _scroll_pos = _track_bar->position();
 
     // Wenn the track bar is visible, the display width becomes narrower
@@ -427,14 +427,14 @@ void ViewViewData::draw()
 
     // Draw boundary lines for the data area
     fl_color(0, 0, 0);
-    fl_line(x() + ABSTAND,
-            y() + ABSTAND + SKALENHOEHE,
-            x() + ABSTAND + _channel_area_width,
-            y() + ABSTAND + SKALENHOEHE);
-    fl_line(x() + ABSTAND,
-            y() + h() - ABSTAND - INFOHOEHE,
-            x() + ABSTAND +  _channel_area_width,
-            y() + h() - ABSTAND - INFOHOEHE);
+    fl_line(x() + DISTANCE,
+            y() + DISTANCE + SCALES_HEIGHT,
+            x() + DISTANCE + _channel_area_width,
+            y() + DISTANCE + SCALES_HEIGHT);
+    fl_line(x() + DISTANCE,
+            y() + h() - DISTANCE - INFO_HEIGHT,
+            x() + DISTANCE +  _channel_area_width,
+            y() + h() - DISTANCE - INFO_HEIGHT);
 
     // If there are no channels, stop here
     if (_channels.size() == 0) return;
@@ -447,7 +447,7 @@ void ViewViewData::draw()
         << " to " << _range_end.to_real_time();
     str << " (" << _range_start.diff_str_to(_range_end) << ")";
     if (_range_end <= _range_start) str << "  - INVALID TIME RANGE!";
-    fl_draw(str.str().c_str(), x() + ABSTAND, y() + h() - ABSTAND);
+    fl_draw(str.str().c_str(), x() + DISTANCE, y() + h() - DISTANCE);
 
     // Cancel if invalid sclare areas
     if (_range_end <= _range_start) return;
@@ -456,8 +456,8 @@ void ViewViewData::draw()
     x_scale = _channel_area_width / (_range_end - _range_start).to_dbl();
 
     // Setu up clipping to draw the coerage gaps
-    fl_push_clip(x() + ABSTAND,                   // X-Position
-                 y() + ABSTAND + SKALENHOEHE + 2, // Y-Position
+    fl_push_clip(x() + DISTANCE,                   // X-Position
+                 y() + DISTANCE + SCALES_HEIGHT + 2, // Y-Position
                  _channel_area_width,             // Width
                  _channel_area_height);           // Height
 
@@ -469,8 +469,8 @@ void ViewViewData::draw()
             || (channel_pos + 1) * _channel_height < _scroll_pos) continue;
 
         _draw_gaps(&(*channel_i),                            // Channel
-                   x() + ABSTAND,                            // X-Position
-                   y() + ABSTAND + SKALENHOEHE - _scroll_pos
+                   x() + DISTANCE,                            // X-Position
+                   y() + DISTANCE + SCALES_HEIGHT - _scroll_pos
                    + channel_pos * _channel_height + 2,  // Y-Position
                    _channel_area_width,                      // Widgth
                    _channel_height,                         // Height
@@ -482,11 +482,11 @@ void ViewViewData::draw()
 
     // Draw time scale
     _draw_time_scale(x(), y(), _channel_area_width,
-                     h() - INFOHOEHE - 2 * ABSTAND, x_scale);
+                     h() - INFO_HEIGHT - 2 * DISTANCE, x_scale);
 
     // Set up clipping for the entire channel area
-    fl_push_clip(x() + ABSTAND,                   // X-Position
-                 y() + ABSTAND + SKALENHOEHE + 2, // Y-Position
+    fl_push_clip(x() + DISTANCE,                   // X-Position
+                 y() + DISTANCE + SCALES_HEIGHT + 2, // Y-Position
                  _channel_area_width,             // Width
                  _channel_area_height - 1);       // Height
 
@@ -509,16 +509,16 @@ void ViewViewData::draw()
         }
 
         // Setup channel clipping
-        fl_push_clip(x() + ABSTAND, // X-Position
-                     (y() + ABSTAND + SKALENHOEHE
+        fl_push_clip(x() + DISTANCE, // X-Position
+                     (y() + DISTANCE + SCALES_HEIGHT
                       + 2 + clip_start), // Y-Position
                      _channel_area_width, // Width
                      clip_height - 1); // Height
 
         // Draw a channel
         _draw_channel(&(*channel_i), // Channel
-                      x() + ABSTAND, // X-Position
-                      (y() + ABSTAND + SKALENHOEHE - _scroll_pos
+                      x() + DISTANCE, // X-Position
+                      (y() + DISTANCE + SCALES_HEIGHT - _scroll_pos
                        + channel_pos * _channel_height + 2), // Y-Position
                       _channel_area_width, // Width
                       _channel_height, // Height
@@ -561,7 +561,7 @@ void ViewViewData::_draw_gaps(const ViewChannel *channel,
     LibDLS::Time last_end;
 
     offset_drawing = top + height - 2;
-    height_drawing = height - KANAL_HEADER_HOEHE - 4;
+    height_drawing = height - CHANNEL_HEADER_HEIGHT - 4;
 
     // Remember chunk time ranges
     for (chunk_i = channel->channel()->chunks().begin();
@@ -711,7 +711,7 @@ void ViewViewData::_draw_time_scale(unsigned int left, unsigned int top,
 
         // Draw scale line
         fl_color(150, 150, 150);
-        fl_line(left + xp, top + SKALENHOEHE - 5,
+        fl_line(left + xp, top + SCALES_HEIGHT - 5,
                 left + xp, top + height);
 
         // Generate scale label text
@@ -753,9 +753,9 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
 
     // Draw box for caption
     fl_color(FL_WHITE);
-    fl_rectf(left + 1, top + 1, width - 2, KANAL_HEADER_HOEHE - 2);
+    fl_rectf(left + 1, top + 1, width - 2, CHANNEL_HEADER_HEIGHT - 2);
     fl_color(FL_BLACK);
-    fl_rect(left, top, width, KANAL_HEADER_HOEHE);
+    fl_rect(left, top, width, CHANNEL_HEADER_HEIGHT);
 
     // Draw caption text
     str << channel->channel()->name();
@@ -779,8 +779,8 @@ void ViewViewData::_draw_channel(const ViewChannel *channel,
     // with any scan line
     scan.found = false;
 
-    drawing_top = top + KANAL_HEADER_HOEHE + 2;
-    drawing_height = height - KANAL_HEADER_HOEHE - 4;
+    drawing_top = top + CHANNEL_HEADER_HEIGHT + 2;
+    drawing_height = height - CHANNEL_HEADER_HEIGHT - 4;
 
     channel_min = channel->min();
     channel_max = channel->max();
@@ -1125,7 +1125,7 @@ void ViewViewData::_draw_scan(const ViewChannel *channel, ScanInfo *scan,
     fl_line(left + scan_x, top, left + scan_x, top + height);
 
     // Calculate the time of the scan line
-    scan_time = _range_start + LibDLS::Time((scan_x - ABSTAND) / x_scale);
+    scan_time = _range_start + LibDLS::Time((scan_x - DISTANCE) / x_scale);
 
     // Set text widths to 0
     // Also important because fl_measure calculates the text
@@ -1216,10 +1216,10 @@ void ViewViewData::_draw_interactions(double x_scale) const
     if (_zooming) {
         fl_color(FL_RED);
 
-        fl_line(x() + _start_x, y() + ABSTAND + SKALENHOEHE + 1,
-                x() + _start_x, y() + h() - ABSTAND - INFOHOEHE - 1);
-        fl_line(x() + _end_x, y() + ABSTAND + SKALENHOEHE + 1,
-                x() + _end_x, y() + h() - ABSTAND - INFOHOEHE - 1);
+        fl_line(x() + _start_x, y() + DISTANCE + SCALES_HEIGHT + 1,
+                x() + _start_x, y() + h() - DISTANCE - INFO_HEIGHT - 1);
+        fl_line(x() + _end_x, y() + DISTANCE + SCALES_HEIGHT + 1,
+                x() + _end_x, y() + h() - DISTANCE - INFO_HEIGHT - 1);
 
         start_time = _range_start.to_dbl() + _start_x / x_scale;
 
@@ -1231,19 +1231,19 @@ void ViewViewData::_draw_interactions(double x_scale) const
         fl_measure(str.str().c_str(), text_width, text_height);
         x_pos = _start_x;
 
-        if (x_pos + text_width >= w() - ABSTAND)
-            x_pos = w() - ABSTAND - text_width;
+        if (x_pos + text_width >= w() - DISTANCE)
+            x_pos = w() - DISTANCE - text_width;
         if (x_pos < 0) x_pos = 0;
 
         fl_color(255, 255, 255);
         fl_rectf(x() + x_pos + 1,
-                 y() + ABSTAND + SKALENHOEHE + 1,
+                 y() + DISTANCE + SCALES_HEIGHT + 1,
                  text_width,
                  text_height);
         fl_color(255, 0, 0);
         fl_draw(str.str().c_str(),
                 x() + x_pos + 2,
-                y() + ABSTAND + SKALENHOEHE + 10);
+                y() + DISTANCE + SCALES_HEIGHT + 10);
 
         end_time = _range_start + LibDLS::Time(_end_x / x_scale);
 
@@ -1255,19 +1255,19 @@ void ViewViewData::_draw_interactions(double x_scale) const
         fl_measure(str.str().c_str(), text_width, text_height);
         x_pos = _end_x;
 
-        if (x_pos + text_width >= w() - ABSTAND)
-            x_pos = w() - ABSTAND - text_width;
+        if (x_pos + text_width >= w() - DISTANCE)
+            x_pos = w() - DISTANCE - text_width;
         if (x_pos < 0) x_pos = 0;
 
         fl_color(255, 255, 255);
         fl_rectf(x() + x_pos + 1,
-                 y() + ABSTAND + SKALENHOEHE + 10,
+                 y() + DISTANCE + SCALES_HEIGHT + 10,
                  text_width,
                  text_height);
         fl_color(255, 0, 0);
         fl_draw(str.str().c_str(),
                 x() + x_pos + 2,
-                y() + ABSTAND + SKALENHOEHE + 20);
+                y() + DISTANCE + SCALES_HEIGHT + 20);
 
         str.str("");
         str.clear();
@@ -1277,19 +1277,19 @@ void ViewViewData::_draw_interactions(double x_scale) const
         fl_measure(str.str().c_str(), text_width, text_height);
         x_pos = _end_x;
 
-        if (x_pos + text_width >= w() - ABSTAND)
-            x_pos = w() - ABSTAND - text_width;
+        if (x_pos + text_width >= w() - DISTANCE)
+            x_pos = w() - DISTANCE - text_width;
         if (x_pos < 0) x_pos = 0;
 
         fl_color(255, 255, 255);
         fl_rectf(x() + x_pos + 1,
-                 y() + ABSTAND + SKALENHOEHE + 23,
+                 y() + DISTANCE + SCALES_HEIGHT + 23,
                  text_width,
                  text_height);
         fl_color(255, 0, 0);
         fl_draw(str.str().c_str(),
                 x() + x_pos + 2,
-                y() + ABSTAND + SKALENHOEHE + 33);
+                y() + DISTANCE + SCALES_HEIGHT + 33);
     }
 
     // "Shift arrow"
@@ -1337,14 +1337,14 @@ int ViewViewData::handle(int event)
 
     // Is this event for the track bar?
     if (_track_bar->handle(event,
-                           xp - w() + TRACK_BAR_WIDTH + ABSTAND,
-                           yp - ABSTAND)) {
+                           xp - w() + TRACK_BAR_WIDTH + DISTANCE,
+                           yp - DISTANCE)) {
         redraw();
         return 1;
     }
 
     // Calculate scaling factor
-    channel_area_width = w() - 2 * ABSTAND;
+    channel_area_width = w() - 2 * DISTANCE;
     if (_track_bar->visible()) channel_area_width -= TRACK_BAR_WIDTH + 1;
     scale_x = (_range_end - _range_start).to_dbl() / channel_area_width;
 
@@ -1358,8 +1358,8 @@ int ViewViewData::handle(int event)
             if (Fl::event_clicks() == 1) { // Double-click
                 Fl::event_clicks(0);
 
-                if (xp > ABSTAND
-                    && xp < (int) (channel_area_width + ABSTAND)) {
+                if (xp > DISTANCE
+                    && xp < (int) (channel_area_width + DISTANCE)) {
                     if (Fl::event_state(FL_SHIFT)) zoom_out_factor = 10;
                     else zoom_out_factor = 2;
 
@@ -1397,8 +1397,8 @@ int ViewViewData::handle(int event)
             _end_x = xp;
             _end_y = yp;
 
-            _start_x -= ABSTAND;
-            _end_x -= ABSTAND;
+            _start_x -= DISTANCE;
+            _end_x -= DISTANCE;
 
             if (_start_x < _end_x) {
                 dx = _start_x;
@@ -1451,7 +1451,7 @@ int ViewViewData::handle(int event)
             _mouse_in = true;
 
             if (Fl::event_state(FL_CTRL)) {
-                _scan_x = xp - ABSTAND;
+                _scan_x = xp - DISTANCE;
                 _scanning = true;
                 redraw();
             }
@@ -1460,7 +1460,7 @@ int ViewViewData::handle(int event)
 
         case FL_MOVE:
             if (_scanning) {
-                _scan_x = xp - ABSTAND;
+                _scan_x = xp - DISTANCE;
                 redraw();
             }
 
@@ -1478,7 +1478,7 @@ int ViewViewData::handle(int event)
 
         case FL_KEYDOWN:
             if (_mouse_in && Fl::event_key() == FL_Control_L) {
-                _scan_x = xp - ABSTAND;
+                _scan_x = xp - DISTANCE;
                 _scanning = true;
                 redraw();
                 return 1;
