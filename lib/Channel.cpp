@@ -263,6 +263,7 @@ Channel::_fetch_chunks_local()
     ts.set_now();
     t_prev = ts;
     Chunk::reset_timing();
+    unsigned int imported = 0, existing = 0, removed = 0;
 #endif
 
     _range_start.set_null();
@@ -312,10 +313,12 @@ Channel::_fetch_chunks_local()
             chunk = &ins_ret.first->second;
             ret.first.insert(chunk);
             TRACE_TIMING(t_insert);
+            imported++;
         }
         else {
             // chunk existing
             chunk = &chunk_i->second;
+            existing++;
         }
 
         if (chunk->incomplete()) {
@@ -360,6 +363,7 @@ Channel::_fetch_chunks_local()
         if (dir_chunks.find(cur->first) == dir_chunks.end()) {
             ret.second.insert(cur->first);
             _chunks.erase(cur);
+            removed++;
         }
     }
 
@@ -370,6 +374,11 @@ Channel::_fetch_chunks_local()
     {
         stringstream msg;
         msg << __func__ << "() " << ts.diff_str_to(te) << endl
+            << " imported " << imported
+            << " / existing " << existing
+            << " / removed " << removed << endl
+            << " ret.first " << ret.first.size()
+            << " / ret.second " << ret.second.size() << endl
             << fixed << setprecision(0) << setw(8)
             << "       open: " << t_opendir.to_dbl() << endl
             << "    readdir: " << t_readdir.to_dbl() << endl
