@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/">
     <file>.qm/locale/dlsgui_de.qm</file>
+    <file>.qm/locale/dlsgui_fr.qm</file>
     <file>images/Edit-delete.svg</file>
     <file>images/Folder-remote.svg</file>
     <file>images/Folder.svg</file>
