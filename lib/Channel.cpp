@@ -313,12 +313,16 @@ Channel::_fetch_chunks_local()
             chunk = &ins_ret.first->second;
             ret.first.insert(chunk);
             TRACE_TIMING(t_insert);
+#ifdef DEBUG_TIMING
             imported++;
+#endif
         }
         else {
             // chunk existing
             chunk = &chunk_i->second;
+#ifdef DEBUG_TIMING
             existing++;
+#endif
         }
 
         if (chunk->incomplete()) {
@@ -363,7 +367,9 @@ Channel::_fetch_chunks_local()
         if (dir_chunks.find(cur->first) == dir_chunks.end()) {
             ret.second.insert(cur->first);
             _chunks.erase(cur);
+#ifdef DEBUG_TIMING
             removed++;
+#endif
         }
     }
 
