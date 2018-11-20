@@ -36,7 +36,7 @@
 /*****************************************************************************/
 
 /**
-   Dialog zum Editieren der Grunddaten eines Messauftrages
+   Dialog to edit the basic setting of an acquisition job
 */
 
 class CtlDialogJobEdit
@@ -49,22 +49,20 @@ public:
     bool updated();
 
 private:
-    Fl_Double_Window *_wnd; /**< Dialogfenster */
-    Fl_Return_Button *_button_ok; /**< Bestätigungs-Button */
-    Fl_Button *_button_cancel; /**< Button zum Abbrechen */
-    Fl_Input *_input_desc; /**< Eingabefeld für die Beschreibung */
-    Fl_Input *_input_source; /**< Eingabefeld für die Datenquelle */
-    Fl_Input *_input_trigger; /**< Eingabefeld für den Trigger-Parameter */
-    Fl_Input *_input_quota_time; /**< Eingabefeld für Zeit-Quota */
-    Fl_Choice *_choice_time_ext; /**< Auswahlfenster für die Erweiterung
-                                    der Zeit-Quota */
-    Fl_Input *_input_quota_size; /**< Eingabefeld für Daten-Quota */
-    Fl_Choice *_choice_size_ext; /**< Auswahlfenster für die Erweiterung
-                                    der Daten-Quota */
+    Fl_Double_Window *_wnd; /**< Dialog box */
+    Fl_Return_Button *_button_ok; /**< Button OK */
+    Fl_Button *_button_cancel; /**< Button Cancel */
+    Fl_Input *_input_desc; /**< Input field for the description */
+    Fl_Input *_input_source; /**< Input field for the datasource */
+    Fl_Input *_input_trigger; /**< Input field for the trigger parameter */
+    Fl_Input *_input_quota_time; /**< Input field for the time quota */
+    Fl_Choice *_choice_time_ext; /**< Selection menu for the time unit */
+    Fl_Input *_input_quota_size; /**< Input field for the data quota */
+    Fl_Choice *_choice_size_ext; /**< Selection menu for the data unit */
 
-    string _dls_dir;    /**< DLS-Datenverzeichnis */
-    CtlJobPreset *_job; /**< Zeiger auf den Messauftrag */
-    bool _updated;      /**< Wurde etwas geändert? */
+    string _dls_dir;    /**< DLS data directory */
+    CtlJobPreset *_job; /**< Pointer to the job settings */
+    bool _updated;      /**< Has something been changed? */
 
     static void _callback(Fl_Widget *, void *);
     void _button_ok_clicked();
@@ -81,9 +79,9 @@ private:
 /*****************************************************************************/
 
 /**
-   Gibt zurück, ob sich etwas geändert hat
+   Return if something has been changed
 
-   \return true, wenn Daten geändert wurden
+   \return true, if data has been changed
 */
 
 inline bool CtlDialogJobEdit::updated()

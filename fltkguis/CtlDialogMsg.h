@@ -38,7 +38,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Nachricht mit Text und Typ für CtlDialogMsg
+   Message with text and type for CtlDialogMsg
 */
 
 struct COMMsg
@@ -50,7 +50,7 @@ struct COMMsg
 /*****************************************************************************/
 
 /**
-   Allgemeiner Dialog zum Anzeigen von Fehlern und Warnungen
+   General dialog for displaying errors and warnings
 */
 
 class CtlDialogMsg
@@ -64,14 +64,13 @@ public:
     void warning();
 
 private:
-    Fl_Double_Window *_wnd; /**< Dialogfenster */
-    Fl_Grid *_grid_msg;     /**< Grid zum Anzeigen der Meldungen */
+    Fl_Double_Window *_wnd; /**< Dialog box */
+    Fl_Grid *_grid_msg;     /**< Grid to display messges */
     Fl_Button *_button_ok;  /**< "OK"-Button */
 
-    vector<COMMsg> _messages; /**< Vektor mit den aktuell
-                                 angezeigten Meldungen */
-    stringstream _str;        /**< Stream zum einfachen Hinzufügen
-                                 von Meldungen */
+    vector<COMMsg> _messages; /**< Vektor with the currently
+                                 displayed messages */
+    stringstream _str;        /**< Stream to easy add messges */
 
     static void _callback(Fl_Widget *, void *);
     void _button_ok_clicked();

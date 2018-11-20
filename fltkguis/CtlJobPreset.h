@@ -34,7 +34,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Erweiterung von JobPreset für den DLS-Manager
+   Extension of JobPreset for the DLS manager
 */
 
 class CtlJobPreset: public LibDLS::JobPreset
@@ -66,16 +66,15 @@ public:
     void change_channel(const LibDLS::ChannelPreset *);
     void remove_channel(const string &);
 
-    time_t process_watchdog; /**< Zeitstempel der Watchdog-Datei */
-    unsigned int process_bad_count; /**< Anzahl letzter Watchdog-Prüfungen,
-                                       ohne dass sich etwas geändert hat */
-    bool process_watch_determined; /**< Watchdog-Information steht fest */
-    time_t logging_watchdog; /**< Zeitstempel der Logging-Watchdog-Datei */
-    unsigned int logging_bad_count; /**< Anzahl letzter
-                                       Logging-Watchdog-Prüfungen,
-                                       ohne dass sich etwas geändert hat */
-    bool logging_watch_determined;  /**< Logging-Watchdog-Information
-                                       steht fest */
+    time_t process_watchdog; /**< Timestamp of the watchdog file */
+    unsigned int process_bad_count; /**< Number of last watchdog checks
+                                       without any changes */
+    bool process_watch_determined; /**< Watchdog information is set */
+    time_t logging_watchdog; /**< Timestamp of the logging watchdog file */
+    unsigned int logging_bad_count; /**< Number of last logging checks
+                                       without any changes */
+    bool logging_watch_determined;  /**< Logging Watchdog Information
+                                       is set */
 };
 
 /*****************************************************************************/

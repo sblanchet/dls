@@ -33,7 +33,7 @@
 
 /*****************************************************************************/
 
-// Versions-String mit Build-Nummer aus dls_build.cpp
+// Version string with build number from dls_build.cpp
 extern const char *view_version_str;
 
 /*****************************************************************************/

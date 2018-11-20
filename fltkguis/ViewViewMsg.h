@@ -39,7 +39,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Widget zum Anzeigen der MSR-Nachrichten
+   Widget to display MSR messages
 */
 
 class ViewViewMsg : public Fl_Widget
@@ -52,20 +52,20 @@ public:
     void clear();
 
 private:
-    Fl_Track_Bar *_track_bar; /**< Vertikale Scroll-Leiste */
+    Fl_Track_Bar *_track_bar; /**< Verticale scroll bar */
 
-    // Daten
+    // Data
     struct Message {
         LibDLS::Job::Message message;
         int level;
     };
-    list<Message> _messages; /**< Liste der geladenen Nachrichten */
-    LibDLS::Time _range_start; /**< Startzeit der anzuzeigenden Zeitspanne */
-    LibDLS::Time _range_end; /**< Endzeit der anzuzeigenden Zeitspanne */
-    int _level_count; /**< Aktuelle Anzahl der anzuzeigenden Ebenen */
+    list<Message> _messages; /**< List of loaded messages */
+    LibDLS::Time _range_start; /**< Start of the time span to be displayed */
+    LibDLS::Time _range_end; /**< End of the time span to be displayed */
+    int _level_count; /**< Current number of levels to be displayed */
 
-    // Widget-Zustand
-    bool _focused; /**< Das Widget hat gerade den Fokus */
+    // Widget condition
+    bool _focused; /**< The widget has currently the focus */
 
     virtual void draw();
     virtual int handle(int);

@@ -38,11 +38,11 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param name Identifiziernder Name der neuen Spalte
-   \param title Anzuzeigender Titel
-   \param width Relative Breite
+   \param name Identifier of the new column name
+   \param title Title to display
+   \param width Relative width
 */
 
 Fl_Grid_Column::Fl_Grid_Column(const string &name,
@@ -56,7 +56,7 @@ Fl_Grid_Column::Fl_Grid_Column(const string &name,
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Desctructor
 */
 
 Fl_Grid_Column::~Fl_Grid_Column()
@@ -66,13 +66,13 @@ Fl_Grid_Column::~Fl_Grid_Column()
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 
-   \param xp Horizontale Positon der oberen, linken Ecke in Pixel
-   \param yp Vertikale Position der oberen, linken Ecke in Pixel
-   \param wp Breite des Widgets in Pixel
-   \param hp Höhe des Widgets in Pixel
-   \param label Name des Widgets in FLTK (Wird nicht verwendet)
+   \param xp Horizontal position of the upper left corner in pixel
+   \param yp Vertical position of the upper left corrner in pixel
+   \param wp Width of the widgets in pixels
+   \param hp Height of the widget in pixels
+   \param label Name of the widget in FLTK (not used)
 */
 
 Fl_Grid::Fl_Grid(int xp, int yp, int wp, int hp, const char *label)
@@ -92,22 +92,22 @@ Fl_Grid::Fl_Grid(int xp, int yp, int wp, int hp, const char *label)
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 Fl_Grid::~Fl_Grid()
 {
-    // Kein deselect_all(), callbacks könnten in die Hose gehen!
+    // No deselect_all(), callbacks could fail!
 }
 
 /*****************************************************************************/
 
 /**
-   Fügt eine Spalte hinzu
+   Add a column
 
-   \param name Identifiziernder Name der neuen Spalte
-   \param title Anzuzeigender Titel
-   \param width Relative Breite
+   \param name Identifier name of the new column
+   \param title Title to display
+   \param width Relative width
 */
 
 void Fl_Grid::add_column(const string &name,
@@ -121,17 +121,16 @@ void Fl_Grid::add_column(const string &name,
 /*****************************************************************************/
 
 /**
-   Setzt die Callback-Funktion
+   Set the callback function
 
-   Die Callback-Funktion wird bei bestimmten Ereignissen
-   aufgerufen. Dazu gehören:
+   The callback function is called on certain events.
+   This includes:
+   - Drawing a cell
+   - Selecting / deselecting a record
+   - Double-clicking on a record
 
-   - Das Zeichnen einer Zelle
-   - Das Selektieren/Deselektieren eines Records
-   - Das Doppelklicken auf einen Record
-
-   \param cb Zeiger auf die aufzurufende Callback-Funktion
-   \param data Beim Aufruf zu übergebende Daten
+   \param cb Pointer to the callback function to call
+   \param data Data to tranfer when calling callback function
 */
 
 void Fl_Grid::callback(void (*cb)(Fl_Widget *, void *), void *data)
@@ -143,13 +142,13 @@ void Fl_Grid::callback(void (*cb)(Fl_Widget *, void *), void *data)
 /*****************************************************************************/
 
 /**
-   Setzt die globale Zeilenhöhe
+   Set the global line height
 
-   Alle Zeilen haben die selbe Zeilenhöhe in Pixel.
-   Die Zeilenhöhe darf nicht 0 sein, da dann etliche
-   Berechnungen, die durch die Zeilenhöhe teilen, scheitern würden!
+   All lines have the same line height in pixels.
+   The line height must not be zero, because many calculation
+   that divide by the line height would fail!
 
-   \param height Zeilenhöhe
+   \param height Line height
 */
 
 void Fl_Grid::row_height(unsigned int height)
@@ -164,11 +163,11 @@ void Fl_Grid::row_height(unsigned int height)
 /*****************************************************************************/
 
 /**
-   Setzt den Inhalt der aktuellen Zelle
+   Set the content of the current cell
 
-   Nur aufzurufen während eines Callbacks vom Typ flgContent
+   Call only during a callback of type flgContent
 
-   \param content Anzuzeigender Inhalt
+   \param content Content to display
 */
 
 void Fl_Grid::current_content(const string &content)
@@ -179,15 +178,14 @@ void Fl_Grid::current_content(const string &content)
 /*****************************************************************************/
 
 /**
-   Setzt die Farbe des Inhaltes der aktuellen Zelle
+   Set the color of the current cell content
 
-   Nur aufzurufen während eines Callbacks vom Typ flgContent
+   Call only during a callback of type flgContent
 
-   Kann mit den FLTK-Farbkonstanten (FL_RED, FL_BLACK, usw.),
-   oder mit dem Konstruktor Fl_Color(R, G, B) aufgerufen
-   werden.
+   Can be used with the FLTK color constants (FL_RED, FL_BLACK, etc.),
+   or with the Fl_Color(R, G, B) constructor.
 
-   \param col Textfarbe
+   \param col Text color
 */
 
 void Fl_Grid::current_content_color(Fl_Color col)
@@ -206,18 +204,17 @@ void Fl_Grid::current_checked(bool checked)
 /*****************************************************************************/
 
 /**
-   Setzt die Anzahl der anzuzeigenden Records
+   Set the number of record to display
 
-   Wenn die neue Anzahl der Records sich von
-   der Aktuellen unterscheidet, wird veranlasst,
-   dass
+   If the new number of records is different from the current one,
+   it causes
 
-   - alle aktuell ausgewählten Records deselektiert werden
-   (die entsprechenden Callbacks werden ausgeführt)
-   - die Scroll-Position ganz nach oben gesetzt wird
-   - das Grid neu gezeichnet wird
+   - all currently selected records are deselected
+   (the corresponding callbacks are executed)
+   - the scroll position is set all the way up
+   - the grid is redraw
 
-   \param count Anzahl
+   \param count Count
 */
 
 void Fl_Grid::record_count(unsigned int count)
@@ -236,7 +233,7 @@ void Fl_Grid::record_count(unsigned int count)
 /*****************************************************************************/
 
 /**
-   Setzt die Anzahl der anzuzeigenden Records auf 0
+   Set the number of record to be displayed to 0
 
    \see record_count()
 */
@@ -249,9 +246,9 @@ void Fl_Grid::clear()
 /*****************************************************************************/
 
 /**
-   Gibt die Anzahl der aktuell ausgewählten Records zurück
+   Return the number of currently selected records
 
-   \return Anzahl der ausgewählten Records
+   \return Number of selected records
 */
 
 unsigned int Fl_Grid::select_count() const
@@ -262,12 +259,12 @@ unsigned int Fl_Grid::select_count() const
 /*****************************************************************************/
 
 /**
-   Gibt den Index des ersten, ausgewählten Records zurück
+   Return the index of the first selected record
 
-   Sollte nur im Single-Select Modus benutzt werden.
+   Should only be used in single-select mode
 
-   \return Index des ausgewählten Records
-   \throws char* Es ist kein Record ausgewählt
+   \return Index of the selected record
+   \throws char* No record is selected
 */
 
 unsigned int Fl_Grid::selected_index() const
@@ -282,8 +279,8 @@ unsigned int Fl_Grid::selected_index() const
 /*****************************************************************************/
 
 /**
-   Gibt den Index des Records zurück, der momentan
-   an oberster Position angezeigt wird.
+   Return the index of the record currently displayed
+   in top tosition
 
    \return Record-Index
 */
@@ -296,10 +293,10 @@ unsigned int Fl_Grid::top_index() const
 /*****************************************************************************/
 
 /**
-   Scrollt zu dem angegebenen Record-Index
+   Scroll to the specified record index
 
-   Es wird versucht, den angegebenen Record
-   in der obersten Zeile erscheinen zu lassen.
+   It tries to get the specified record to appear in
+   the top line.
 
    \param index Record-Index
 */
@@ -321,16 +318,15 @@ void Fl_Grid::scroll(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Setzt den Auswahl-Modus
+   Set the selection mode
 
-   Folgende Werte sind möglich:
+   The following values are possible:
 
-   - flgNoSelect:     Selektieren von Records ist nicht möglich
-   - flgSingleSelect: Es kann immer nur ein Record selektiert
-   werden
-   - flgMultiSelect:  Es können mehrere Records selektiert werden
+   - flgNoSelect:     Selecting records is no possible
+   - flgSingleSelect: Only one record can ben selected at a time
+   - flgMultiSelect:  Several records can be selected
 
-   \param mode Auswahlmodus
+   \param mode Selection mode
 */
 
 void Fl_Grid::select_mode(Fl_Grid_Select_Mode mode)
@@ -342,9 +338,9 @@ void Fl_Grid::select_mode(Fl_Grid_Select_Mode mode)
 /*****************************************************************************/
 
 /**
-   Deselektiert alle momentan selektierten Records
+   Deselect all currently selected records
 
-   Die entsprechenden Callbacks werden aufgerufen!
+   The corresponding callbacks are called!
 */
 
 void Fl_Grid::deselect_all()
@@ -372,10 +368,10 @@ void Fl_Grid::deselect_all()
 /*****************************************************************************/
 
 /**
-   Selektiert einen bestimmten Record
+   Select a specific record
 
-   Vorher werden alle Anderen deselektiert. Um mehrere
-   Records zu selektieren, bitte select_add benutzen!
+   Before all others are deselected.
+   To select several records, please use select_add!
 
    \param index Record-Index
 */
@@ -389,18 +385,18 @@ void Fl_Grid::select(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Selektiert einen weiteren Record
+   Select anohter record
 
-   Fügt den angegebenen record der Liste der momentan
-   ausgewählten records hinzu. Dies geht nur, wenn
+   Add the specified record to the list of currently
+   selected records. This only works if
 
-   - Selektieren überhaut möglich ist
-   - der angegebene Record-Index sinnvoll ist
-   - der angegebene Record noch nicht selektiert ist
+   - Selecting skin is possible
+   - The specified record index makes sense
+   - The specified record is not yet selected
 
-   Wenn der Auswahlmodus flgSingleSelect aktiv ist
-   und schon ein Record selektiert ist, wird dieser
-   erst deselektiert.
+   If the selection mode flgSingleSelect is active
+   and a record has already been selected, it will
+   be deselected.
 
    \param index Record-Index
 */
@@ -431,10 +427,10 @@ void Fl_Grid::select_add(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Prüft, ob ein angegebener Record ausgewählt ist
+   Check if a specified record is selected
 
    \param index Record-Index
-   \return true, wenn der angegebene Record ausgewählt ist
+   \return true, if the specified record is selected
 */
 
 bool Fl_Grid::selected(unsigned int index) const
@@ -459,7 +455,7 @@ bool Fl_Grid::selected(unsigned int index) const
 /*****************************************************************************/
 
 /**
-   Deselektiert den angegebenen Record
+   Deselect the specified record
 
    \param index Record-Index
 */
@@ -493,14 +489,13 @@ void Fl_Grid::deselect(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Selektiert einen Bereich von Records
+   Select a range or records
 
-   Der Bereich wird vom letzten, selektierten
-   Record bis zum aktuellen gewählt. Gab es vorher noch
-   keine Selektierung, oder wurde vorher deselektiert,
-   geht dies nicht.
+   The range is selected from the last selected record to
+   the current one. If there was no selection, or was
+   previousy deselected, this is not possible.
 
-   \param index Record-Index des angeklickten Records
+   \param index Record-Index of the clicked record
 */
 
 void Fl_Grid::_range_select(unsigned int index)
@@ -531,9 +526,9 @@ void Fl_Grid::_range_select(unsigned int index)
 /*****************************************************************************/
 
 /**
-   Bestimmt, ob links neben jeder Zeile eine Checkbox sein soll
+   Determine whether there should be a checkbox to the left of each line
 
-   \param check true, wenn Checkboxen angezeigt werden sollen
+   \param check true, if checkboxes should be displayed
 */
 
 void Fl_Grid::check_boxes(bool check)
@@ -548,13 +543,11 @@ void Fl_Grid::check_boxes(bool check)
 /*****************************************************************************/
 
 /**
-   Zeichnet das Grid
+   Draw the grid
 
-   Diese Funktion wird von FLTK aufgerufen, sobald das Widget
-   neu gezeichnet werden soll. Sie darf nicht "von Hand" aufgerufen
-   werden, da die Zeichenfunktionen nur in einem bestimmten Kontext
-   funktionieren. Um ein Neuzeichnen zu erzwingen, also bitte redraw()
-   benutzen!
+   This function is called by FLTK as soon as the widget is redrawn.
+   It can not be called "by hand" because the drawing functions only
+   work in a certain context. To force a redraw, so please use redraw ()!
 */
 
 void Fl_Grid::draw()
@@ -571,13 +564,13 @@ void Fl_Grid::draw()
     drawing_width = w() - 2 * FRAME_WIDTH;
     drawing_height = h() - 2 * FRAME_WIDTH;
 
-    // Hintergrund zeichnen
+    // Drawing backgroup
     draw_box(FL_DOWN_BOX, FL_WHITE);
 
-    // Fokuslinien zeichnen
+    // Draw focus lines
     if (_focused) draw_focus();
 
-    // Spaltenbreiten Addieren
+    // Add column widths
     col_i = _cols.begin();
     width_sum = 0;
     while (col_i != _cols.end())
@@ -588,7 +581,7 @@ void Fl_Grid::draw()
 
     if (width_sum == 0) return;
 
-    // Clipping erzwingen
+    // Force clipping
     fl_push_clip(x() + FRAME_WIDTH, y() + FRAME_WIDTH,
                  drawing_width, drawing_height);
 
@@ -602,7 +595,7 @@ void Fl_Grid::draw()
             / (float) width_sum;
         _scroll_index = 0;
     }
-    else // Es ist eine Scrollbar nötig
+    else // Is it a scrollbar needed?
     {
         width_factor = ((_check_boxes
                          ? drawing_width - _row_height
@@ -614,7 +607,7 @@ void Fl_Grid::draw()
             _scroll_index = _record_count - row_count;
         }
 
-        // Scrollbar zeichnen
+        // Draw scrollbar
         fl_color(150, 150, 150);
         fl_rectf(x() + FRAME_WIDTH + drawing_width - 19,
                  y() + FRAME_WIDTH + 1, 18, 18);
@@ -643,14 +636,14 @@ void Fl_Grid::draw()
 
         scroll_pos = (int) (_scroll_index
                             / (double) (_record_count
-                                        - row_count) // Hier auf jeden Fall >0
+                                        - row_count) // Definitely >0
                             * ((drawing_height - 38) - scroll_height));
 
         fl_rectf(x() + FRAME_WIDTH + drawing_width - 19,
                  y() + FRAME_WIDTH + 19 + scroll_pos, 18, scroll_height);
     }
 
-    // Header zeichnen
+    // Draw headers
     col_i = _cols.begin();
     width_sum = 0;
     while (col_i != _cols.end())
@@ -658,14 +651,14 @@ void Fl_Grid::draw()
         left = (int) (width_sum * width_factor)
             + (_check_boxes ? _row_height : 0) + 1;
 
-        // Header-Hintergrund
+        // Header background
         fl_color(200, 200, 200);
         fl_rectf(x() + FRAME_WIDTH + left,
                  y() + FRAME_WIDTH + 1,
                  (int) (col_i->width() * width_factor) - 2,
                  _row_height - 2);
 
-        // Header-Text
+        // Header text
         fl_color(0, 0, 0);
         fl_font(FL_HELVETICA | FL_BOLD, 12);
         fl_push_clip(x() + FRAME_WIDTH + left + 1,
@@ -694,7 +687,7 @@ void Fl_Grid::draw()
 
         if (_check_boxes)
         {
-            // Zellen-Hintergrund
+            // cell background
             if (rec_selected)
             {
                 fl_color(82, 133, 156);
@@ -714,7 +707,7 @@ void Fl_Grid::draw()
             fl_rectf(x() + FRAME_WIDTH + 4, y() + FRAME_WIDTH + top + 3,
                      _row_height - 8, _row_height - 8);
 
-            // Checked-Status erfragen
+            // check 'Checked' status
             _checked = false;
             if (_cb)
             {
@@ -741,7 +734,7 @@ void Fl_Grid::draw()
         width_sum = 0;
         while (col_i != _cols.end())
         {
-            // Zellen-Hintergrund
+            // Cells background
             if (rec_selected)
             {
                 fl_color(82, 133, 156);
@@ -759,7 +752,7 @@ void Fl_Grid::draw()
                      (int) (col_i->width() * width_factor) - 2,
                      _row_height - 2);
 
-            // Zellen-Text
+            // Cells text
             if (rec_selected)
             {
                 _content_color = fl_rgb_color(255, 255, 255);
@@ -769,7 +762,7 @@ void Fl_Grid::draw()
                 _content_color = fl_rgb_color(0, 0, 0);
             }
 
-            // Zelleninhalt erfragen
+            // Request cell contents
             _content = "";
             if (_cb)
             {
@@ -797,20 +790,20 @@ void Fl_Grid::draw()
         }
     }
 
-    // Clipping entfernen
+    // Remove clipping
     fl_pop_clip();
 }
 
 /*****************************************************************************/
 
 /**
-   Lässt das Grid FLTK-Ereignisse verarbeiten
+   Let the grid process FLTK events
 
-   Diese Funktion wird nur von FLTK aufgerufen und sollte
-   nicht manuell aufgerufen werden!
 
-   \param e Ereigniscode
-   \return 1, wenn das Ereignis verarbeitet wurde, sonst 0
+    This function is only called by FLTK and should not be called manually!
+
+   \param e Event code
+   \return 1, if the event was processed, otherwise 0
 */
 
 int Fl_Grid::handle(int e)
@@ -840,7 +833,7 @@ int Fl_Grid::handle(int e)
 
             if (_record_count > row_count && xp > drawing_width - 20)
             {
-                if (yp > drawing_height - 20) // Untere Taste
+                if (yp > drawing_height - 20) // Lower button
                 {
                     if (_scroll_index < _record_count - row_count)
                     {
@@ -848,7 +841,7 @@ int Fl_Grid::handle(int e)
                         redraw();
                     }
                 }
-                else if (yp < 20) // Obere Taste
+                else if (yp < 20) // Upper button
                 {
                     if (_scroll_index > 0)
                     {
@@ -858,14 +851,14 @@ int Fl_Grid::handle(int e)
                 }
             }
 
-            else // Auf den Zeilenbereich geklickt
+            else // row area clicked
             {
                 row_index = yp / _row_height - 1;
                 record_index = row_index + _scroll_index;
 
                 if (row_index >= 0
                     && row_index < (int) row_count
-                    && record_index < _record_count) // Auf  Record geklickt
+                    && record_index < _record_count) // Record clicked
                 {
                     if (_select_mode != flgNoSelect)
                     {
@@ -886,8 +879,8 @@ int Fl_Grid::handle(int e)
                         }
                     }
 
-                    // Kein Selektieren möglich, aber Checkboxes, dann führt
-                    // ein "Markieren" zum Checken
+                    // Impossible selection, but checkboxes, then
+                    // a "mark" leads to the check
                     else if (_check_boxes && _cb)
                     {
                         _event = flgCheck;
@@ -915,9 +908,9 @@ int Fl_Grid::handle(int e)
 
         case FL_DRAG:
 
-            if (_record_count > row_count) // Scrollbar vorhanden
+            if (_record_count > row_count) // available scrollbar
             {
-                // Aktuelle Höhe und Position des Scroll-Balkens berechnen
+                // Calculate the current height and position of the scroll bar
                 scroll_height = (int) (row_count
                                        / (double) _record_count
                                        * (drawing_height - 38));
@@ -948,7 +941,7 @@ int Fl_Grid::handle(int e)
                     redraw();
                 }
 
-                // Auf den Scrollbar-Bereich geklickt?
+                // Clicked on the scrollbar area?
                 else if (_push_x > drawing_width - 20)
                 {
                     if (_push_y >= 19 + scroll_pos
@@ -970,7 +963,7 @@ int Fl_Grid::handle(int e)
 
             take_focus();
 
-            if (Fl::event_dy() > 0) // Untere Taste
+            if (Fl::event_dy() > 0) // Lower button
             {
                 if (_scroll_index < _record_count - row_count)
                 {
@@ -978,7 +971,7 @@ int Fl_Grid::handle(int e)
                     redraw();
                 }
             }
-            else if (Fl::event_dy() < 0) // Obere Taste
+            else if (Fl::event_dy() < 0) // Upper button
             {
                 if (_scroll_index > 0)
                 {
@@ -1011,7 +1004,7 @@ int Fl_Grid::handle(int e)
             else if (Fl::event_key() == FL_Page_Down)
             {
                 if (_scroll_index
-                    < _record_count - row_count) // Ist noch nicht am Ende
+                    < _record_count - row_count) // not finished yet
                 {
                     if (row_count > _record_count - _scroll_index - row_count)
                     {

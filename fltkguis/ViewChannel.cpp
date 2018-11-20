@@ -41,7 +41,7 @@ using namespace LibDLS;
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 */
 
 ViewChannel::ViewChannel()
@@ -56,7 +56,7 @@ ViewChannel::ViewChannel()
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 ViewChannel::~ViewChannel()
@@ -120,7 +120,7 @@ void ViewChannel::fetch_data(Time start,
 /*****************************************************************************/
 
 /**
-   Berechnet die Extrema der geladenen Daten
+   Calculate the extrema of the loaded data
 */
 
 void ViewChannel::_calc_min_max()

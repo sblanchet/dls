@@ -55,29 +55,29 @@ int main(int argc, char **argv)
 
     cout << "dls_ctl " << PACKAGE_VERSION << " revision " << REVISION << endl;
 
-    // Kommandozeile verarbeiten
+    // Process command line
     get_options(argc, argv);
 
     Fl::visual(FL_DOUBLE | FL_INDEX);
     Fl::lock();
 
-    // Erst Fenster erstellen
+    // First create a window
     msg_win = new CtlDialogMsg();
     dialog_main = new CtlDialogMain(dls_dir);
 
-    // Zu angegebenem Benutzer wechseln
+    // Switch to the specified user
     if (dls_user != "") {
         if (!(pwd = getpwnam(dls_user.c_str()))) {
-            cerr << "FEHLER: Benutzer \"" << dls_user
-                 << "\" existiert nicht!" << endl;
+            cerr << "ERROR: User \"" << dls_user
+                 << "\" does not exist!" << endl;
             exit(1);
         }
 
-        cout << "Wechsele zu UID " << pwd->pw_uid << "." << endl;
+        cout << "Changing to UID " << pwd->pw_uid << "." << endl;
 
         if (setuid(pwd->pw_uid) == -1) {
-            cerr << "FEHLER: Wechseln zu UID " << pwd->pw_uid;
-            cerr << "fehlgeschlagen: " << strerror(errno);
+            cerr << "ERROR: Changing to UID " << pwd->pw_uid;
+            cerr << "failed: " << strerror(errno);
             exit(1);
         }
     }
@@ -123,36 +123,36 @@ void get_options(int argc, char **argv)
     }
     while (c != -1);
 
-    // Weitere Parameter vorhanden?
+    // Are there other parameter available?
     if (optind < argc) {
         print_usage();
     }
 
     if (!dir_set) {
-        // DLS-Verzeichnis aus Umgebungsvariable $DLS_DIR einlesen
+        // read DLS directory from environment variable $DLS_DIR
         if ((env = getenv(ENV_DLS_DIR)) != 0) dls_dir = env;
 
-        // $DLS_DIR leer: Aktuelles Verzeichnis nutzen
+        // $DLS_DIR empty: use current directory
         else dls_dir = ".";
     }
 
     if (!user_set) {
-        // DLS-Benutzer aus Umgebungsvariable $DLS_USER einlesen
+        // Read DLS user from environment variable $DLS_USER
         if ((env = getenv(ENV_DLS_USER)) != 0) dls_user = env;
     }
 
-    // Benutztes Verzeichnis ausgeben
-    cout << "DLS-Datenverzeichnis \"" << dls_dir << "\"" << endl;
+    // Output used directory
+    cout << "DLS data directory \"" << dls_dir << "\"" << endl;
 }
 
 /*****************************************************************************/
 
 void print_usage()
 {
-    cout << "Aufruf: dls_ctl [OPTIONEN]" << endl;
-    cout << "        -d [Verzeichnis]   DLS-Datenverzeichnis angeben" << endl;
-    cout << "        -u [Benutzer]      DLS-Benutzer angeben" << endl;
-    cout << "        -h                 Diese Hilfe anzeigen" << endl;
+    cout << "Call: dls_ctl [OPTIONS]" << endl;
+    cout << "        -d [directory]     DLS data directory" << endl;
+    cout << "        -u [user]          DLS user" << endl;
+    cout << "        -h                 Show this help" << endl;
     exit(0);
 }
 

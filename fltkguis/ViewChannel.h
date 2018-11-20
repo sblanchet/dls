@@ -134,9 +134,9 @@ inline const list<LibDLS::Data> &ViewChannel::max_data() const
 /*****************************************************************************/
 
 /**
-   Gibt den kleinsten, geladenen Wert zurück
+   Return the minimum loaded value
 
-   \return Kleinster Wert
+   \return Minimum value
 */
 
 inline double ViewChannel::min() const
@@ -147,9 +147,9 @@ inline double ViewChannel::min() const
 /*****************************************************************************/
 
 /**
-   Gibt den größten, geladenen Wert zurück
+   Return the minimum loaded value
 
-   \return Größter Wert
+   \return Maximum value
 */
 
 inline double ViewChannel::max() const
@@ -160,9 +160,9 @@ inline double ViewChannel::max() const
 /*****************************************************************************/
 
 /**
-   Gibt die niedrigste Meta-Ebene zurück, aus der geladen wurde
+   Return the minimum meta level from which to load
 
-   \return Meta-Ebene
+   \return Meta-Level
 */
 
 inline unsigned int ViewChannel::min_level() const
@@ -173,9 +173,9 @@ inline unsigned int ViewChannel::min_level() const
 /*****************************************************************************/
 
 /**
-   Gibt die höchste Meta-Ebene zurück, aus der geladen wurde
+   Return the maximum meta-level from which to load
 
-   \return Meta-Ebene
+   \return Meta-Level
 */
 
 inline unsigned int ViewChannel::max_level() const

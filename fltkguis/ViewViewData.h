@@ -40,7 +40,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Bereich eines Chunks zur Anzeige der nicht erfassten Bereiche
+   Area of a chunk for displaying the unrecorded areas
 */
 
 struct ViewViewDataChunkRange
@@ -65,15 +65,13 @@ struct ScanInfo
 /*****************************************************************************/
 
 /**
-   Anzeige für Messdaten
+   Display for measured data
 
-   Diese Anzeige kann die Daten mehrerer Kanäle
-   übereinander darstellen. Diese werden auf die
-   volle Widget-Höhe verteilt. Würden, die einzelnen
-   Kanäle zu schmal werden, wird eine Mindesthöhe
-   für jeden Kanal verwendet und eine Track-Bar
-   angezeigt. Das Widget unterstützt Interaktionen
-   mit Maus und Keyboard
+   This display can display the data of several channels on top of
+   each other. These are distributed to the full widget height.
+   If the individual channels become too narrow, a minimum height
+   will be used for each channel and a track bar  will be displayed.
+   The widget supports mouse and keyboard interactions.
 */
 
 class ViewViewData : public Fl_Widget
@@ -94,45 +92,44 @@ public:
     LibDLS::Time end() const;
 
 private:
-    Fl_Track_Bar *_track_bar;    /**< Vertikale Track-Bar */
-    list<ViewChannel> _channels; /**< Liste der zu Zeigenden Kanäle */
-    LibDLS::Time _range_start;   /**< Startzeit der anzuzeigenden Zeitspanne */
-    LibDLS::Time _range_end;     /**< Endzeit der anzuzeigenden Zeitspanne */
-    bool _full_range;            /**< Gibt an, ob beim Hinzufügen eines
-                                    Kanales die Zeitspanne auf die volle
-                                    Zeitspanne ausgeweitet werden soll. */
+    Fl_Track_Bar *_track_bar;    /**< Vertical track bar */
+    list<ViewChannel> _channels; /**< channels list to show */
+    LibDLS::Time _range_start;   /**< Start time of the time span to display */
+    LibDLS::Time _range_end;     /**< End time of the time span to display */
+    bool _full_range;            /**< Indicate whether adding a channel
+                                    should extend the time span to the
+                                    full amount of time. */
 
     // Callbacks
     void (*_range_cb)(LibDLS::Time, LibDLS::Time, void *); /**<
-                                                             Funktionszeiger
-                                                             auf Callback bei
-                                                             Zeitbereichs-
-                                                             änderungen */
-    void *_range_cb_data;                        /**< Daten zur Übergabe bei
+                                                             Function pointer
+                                                             for time domain
+                                                             changes */
+    void *_range_cb_data;                        /**< Data for transfer at
                                                     Range-CB */
 
-    // Widget-Zustand
-    bool _focused;       /**< Das Widget hält momentan den Fokus */
-    bool _zooming;       /**< Der Benutzer zieht einen Zoom-Bereich auf */
-    bool _moving;        /**< Der Benutzer zieht einen Verschiebungs-Pfeil */
-    bool _scanning;      /**< Der Benutzer lässt die Scan-Linie anzeigen */
-    int _scan_x;         /**< X-Position der Scan-Linie */
-    int _start_x;        /**< X-Position des Cursors zu Beginn einer Aktion */
-    int _start_y;        /**< Y-Position des Cursors zu Beginn einer Aktion */
-    int _end_x;          /**< X-Position des Cursors zum Ende einer Aktion */
-    int _end_y;          /**< Y-Position des Cursors zum Ende einer Aktion */
-    bool _mouse_in;      /**< Der Mauscursor befindet sich auf dem Widget */
-    bool _do_not_draw;   /**< Flag: Der Inhalt soll nicht neu
-                            gezeichnet werden */
+    // Widget condition
+    bool _focused;       /**< The widget currenlty holds the focus */
+    bool _zooming;       /**< The user picks up a zoom area */
+    bool _moving;        /**< The user pulls a shift arrow */
+    bool _scanning;      /**< The user displays the scan line */
+    int _scan_x;         /**< X-Position of the scan line */
+    int _start_x;        /**< cursor X-Position at the action beginning */
+    int _start_y;        /**< cursor Y-Position at the action beginning */
+    int _end_x;          /**< cursor X-Position at the action ending */
+    int _end_y;          /**< cursor Y-Position at the action ending */
+    bool _mouse_in;      /**< The mouse cursor is on the widget */
+    bool _do_not_draw;   /**< Flag: the content should not be redraw */
 
-    // Temporäre Größen zum Zeichnen
-    int _channel_area_width;  /**< Breite des Zeichenbereiches
-                                 für die Kanäle */
-    int _channel_area_height; /**< Höhe des zeichenbereiches für die Kanäle */
-    int _channel_height;      /**< Höhe einer Kanalzeile, incl. Textbox */
-    int _scroll_pos;          /**< Anzeige-Offset (abhängig von Track-Bar) */
+    // Temporary size for drawing
+    int _channel_area_width;  /**< Width of the character area
+                                 for the channels */
+    int _channel_area_height; /**< Height of the character area
+                                 for the channels */
+    int _channel_height;      /**< Height of a channel line, incl. Textbox */
+    int _scroll_pos;          /**< Display offset (depending on track bar) */
 
-    // Private Methoden
+    // Private methods
     void _load_data();
     void _calc_range();
     void _draw_gaps(const ViewChannel *, int, int, int, int, double) const;
@@ -149,7 +146,7 @@ private:
     void _draw_scan(const ViewChannel *, ScanInfo *, int, int, int, int,
                     double, double, double) const;
 
-    // Prädikatsfunktion zum Sortieren
+    // Predicate function for sorting
     static bool range_before(const ViewViewDataChunkRange &,
                              const ViewViewDataChunkRange &);
 

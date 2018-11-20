@@ -37,13 +37,13 @@ extern CtlDialogMsg *msg_win;
 
 /*****************************************************************************/
 
-// Versions-String mit Build-Nummer aus ctl_build.cpp
+// Version String with build number from ctl_build.cpp
 extern const char *ctl_version_str;
 
 /*****************************************************************************/
 
 /**
-   Nachricht des DLSD mit Zeitpunkt, Typ und Text
+   Message from DLSD with time, type and text
 */
 
 struct CtlMessage

@@ -29,7 +29,7 @@ use Getopt::Std;
 
 #----------------------------------------------------------------
 
-$| = 1; # Ungepufferte Ausgabe
+$| = 1; # Unbuffered output
 
 #----------------------------------------------------------------
 
@@ -43,14 +43,14 @@ my @table;
 #
 #  main
 #
-#  Hauptfunktion. Führt alle Status-Prüfungen durch und
-#  schreibt die Ergebnisse nach STDOUT.
+#  Main function. Perform all status checks and
+#  write the results to STDOUT.
 #
 #----------------------------------------------------------------
 
 sub main
 {
-    # Kommandozeile verarbeiten
+    # Process command line
     &get_options;
     &status;
 }
@@ -59,7 +59,7 @@ sub main
 #
 #  get_options
 #
-#  Verarbeitet die Kommandozeilenparameter
+#  Process the command line parameters
 #
 #----------------------------------------------------------------
 
@@ -69,7 +69,7 @@ sub get_options
 
     &print_usage if !$opt_ret or $opt{'h'} or $#ARGV > 0;
 
-    # Pfad für DLS-Datenverzeichnis ermitteln
+    # Determine path for DLS data directory
     if ($opt{'d'}) {
 	$dls_dir = $opt{'d'};
     }
@@ -85,19 +85,19 @@ sub get_options
 #
 #  print_usage
 #
-#  Gibt die Hilfe über die Kommandozeilenparameter aus
-#  und beendet danach den Prozess.
+#  Return the help via the command line parameters
+#  and then finish the process.
 #
 #----------------------------------------------------------------
 
 sub print_usage
 {
-    $0 =~ /^.*\/([^\/]*)$/; # Programmnamen ermitteln
+    $0 =~ /^.*\/([^\/]*)$/; # Determine program name
 
-    print "Aufruf: $1 [OPTIONEN]\n";
-    print "Optionen:\n";
-    print "        -d [Verzeichnis]   DLS-Datenverzeichnis\n";
-    print "        -h                 Diese Hilfe anzeigen\n";
+    print "Call: $1 [OPTIONS]\n";
+    print "Options:\n";
+    print "        -d [directory]     DLS data directory\n";
+    print "        -h                 Show this help\n";
     exit 0;
 }
 
@@ -105,19 +105,19 @@ sub print_usage
 #
 #  status
 #
-#  Gibt einen Statusbericht aus.
+#  Return a status report.
 #
 #----------------------------------------------------------------
 
 sub status
 {
-    print "\n--- DLS Statusbericht ---------------------\n\n";
-    print "Fuer DLS-Datenverzeichnis \"$dls_dir\"\n\n";
+    print "\n--- DLS status report ---------------------\n\n";
+    print "For DLS data directory \"$dls_dir\"\n\n";
 
-    # Das angegebene DLS-Datenverzeichnis überprüfen
+    # Check the specified DLS data directory
     &check_dls_dir;
 
-    # Tabelle ausgeben
+    # Output table
     print "\n";
     foreach (@table)
     {
@@ -132,9 +132,9 @@ sub status
 #
 #  check_dls_dir
 #
-#  Überprüft, ob der dlsd-Mutterprozess läuft und
-#  startet dann die Prüfungen für die einzelnen
-#  Job-Verzeichnisse.
+#  Check if the dlsd parent process is running and
+#  then start the exams for the individual
+#  job directories.
 #
 #----------------------------------------------------------------
 
@@ -145,17 +145,17 @@ sub check_dls_dir
     my $pid_file = "$dls_dir/dlsd.pid";
 
     unless (-d $dls_dir) {
-	print "FEHLER: Verzeichnis \"$dls_dir\" existiert nicht!\n\n";
+        print "ERROR: Directory \"$dls_dir\" does not exist!\n\n";
 	return;
     }
 
     $mother_running = &check_pid($pid_file);
 
     if ($mother_running == 0) {
-	print "DLS-Mutterprozess LAEUFT NICHT!\n";
+        print "DLS parent process NOT RUNNING!\n";
     }
     else {
-	print "DLS-Mutterprozess laeuft mit PID $mother_running.\n";
+        print "DLS parent process runs with PID $mother_running.\n";
     }
 
     &check_jobs;
@@ -165,8 +165,8 @@ sub check_dls_dir
 #
 #  check_pid
 #
-#  Prüft, ob ein Prozess zu einer PID-Datei noch läuft.
-#  Gibt die PID zurück, wenn ja, sonst 0.
+#  Check if a process with PID is still running.
+#  If yes, return the PID, otherwise return 0.
 #
 #----------------------------------------------------------------
 
@@ -178,10 +178,10 @@ sub check_pid
 
     my $pid = `cat $pid_file`;
     chomp $pid;
-	
-    # Der Inhalt der ersten Zeile muss eine Nummer sein
+
+    # The content of the first line must be a number
     unless ($pid =~ /^\d+$/) {
-	print "FEHLER: \"$pid_file\" ist korrupt!\n\n";
+	print "ERROR: \"$pid_file\" is corrupted!\n\n";
 	return 0;
     }
 
@@ -195,9 +195,9 @@ sub check_pid
 #
 #  check_jobs
 #
-#  Durchläuft die Einträge des DLS-Datenverzeichnisses
-#  und startet die Prüfung eines Jobs, wenn ein
-#  entsprechendes Unterverzeichnis gefunden wurde.
+#  Scroll through the entries of the DLS data directory
+#  and start the exam job, if one
+#  corresponding subdirectory was found.
 #
 #----------------------------------------------------------------
 
@@ -206,18 +206,18 @@ sub check_jobs
     my ($dir_handle, $dir_entry);
 
     unless (opendir $dir_handle, $dls_dir) {
-	print "\nFEHLER: Konnte \"$dls_dir\" nicht öffnen!\n";
+	print "\nERROR: Cannot open \"$dls_dir\" !\n";
 	return;
     }
 
-    push @table, "| Job-ID | Beschreibung          | Status    | Prozess       |";
+    push @table, "| Job-ID | Description           | Status    | Process       |";
     push @table, "|--------|-----------------------|-----------|---------------|";
 
     while ($dir_entry = readdir $dir_handle) {
-	# Verzeichniseintrag muss von der Form jobXXX sein
+	# Directory entry must be of the form jobXXX
 	next unless $dir_entry =~ /^job(\d+)$/;
 
-	# Verzeichniseintrag muss ein Verzeichnis sein
+	# Directory entry must be a directory
 	next unless -d "$dls_dir/$dir_entry";
 
 	&check_job($1);
@@ -232,9 +232,9 @@ sub check_jobs
 #
 #  check_job
 #
-#  Überprüft den Status eines einzelnen Jobs
+#  Check the status of a single job
 #
-#  Parameter: job_id - Auftrags-ID
+#  Parameter: job_id - Job-ID
 #
 #----------------------------------------------------------------
 
@@ -251,34 +251,34 @@ sub check_job
     $state = "";
     $running = 0;
 
-    # job.xml muss existieren
+    # job.xml must exist
     unless (-r $job_file) {
-	print "\nFEHLER: \"$dls_dir/job$job_id\" -";
-	print " Datei job.xml existiert nicht!\n";
+	print "\nERROR: \"$dls_dir/job$job_id\" -";
+	print " File job.xml does not exist!\n";
     }
     else {
-	# Versuch, job.xml zu öffnen
+	# Attempt to open job.xml
 	unless (open JOB, $job_file) {
-	    print "\nFEHLER: \"$job_file\" - Datei lässt sich nicht öffnen!\n";
+	    print "\nERROR: \"$job_file\" - File cannot be opened!\n";
 	}
 	else {
-	    # Den gesamten Dateiinhalt einlesen
+	    # Read the entire file content
 	    while (<JOB>) {$job_xml .= $_;}
 	    close JOB;
 
-	    # Nach <description text="XXX"/> suchen...
+	    # Search for <description text="XXX"/> ...
 	    unless ($job_xml =~ /\<description\s+text\s*=\s*\"(.*)\"\s*\/\>/) {
-		print "\nFEHLER: \"$job_file\" -";
-		print " <description>-Tag nicht gefunden!\n";
+		print "\nERROR: \"$job_file\" -";
+		print " <description> tag not found!\n";
 	    }
 	    else {
 		$desc = $1;
 	    }
 
-	    # Nach <state name="XXX"/> suchen...
+	    # Search for <state name="XXX"/> ...
 	    unless ($job_xml =~ /\<state\s+name\s*=\s*\"(.*)\"\s*\/\>/) {
-		print "\nFEHLER: \"$job_file\" -";
-		print " <state>-Tag nicht gefunden!\n";
+		print "\nERROR: \"$job_file\" -";
+		print " <state> tag not found!\n";
 	    }
 	    else {
 		$state = $1;
@@ -288,21 +288,21 @@ sub check_job
 
     $running = &check_pid($pid_file);
 
-    # Informationen für die Ausgabe auswerten
-    $proc = "UNBEKANNT";
-    $proc = "laeuft" if $running > 0;
-    $proc = "LAEUFT NICHT!" if $running == 0;
+    # Evaluate information for the output
+    $proc = "UNKNOWN";
+    $proc = "running" if $running > 0;
+    $proc = "NOT RUNNING!" if $running == 0;
     $proc = "" if $state eq "paused";
-    $desc = "UNBEKANNT" if $desc eq "";
-    $state = "UNBEKANNT" if $state eq "";
+    $desc = "UNKNOWN" if $desc eq "";
+    $state = "UNKNOWN" if $state eq "";
 
-    # Felder formatieren
+    # Format fields
     $job_id_6 = sprintf "%6d", $job_id;
     $desc_21 = sprintf "%21s", $desc;
     $state_9 = sprintf "%9s", $state;
     $proc_13 = sprintf "%13s", $proc;
 
-    # Felder in Tabellenzeile ausgeben
+    # Output fields in table row
     push @table, "| $job_id_6 | $desc_21 | $state_9 | $proc_13 |";
 }
 

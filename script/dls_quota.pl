@@ -31,13 +31,13 @@ use POSIX;
 
 #----------------------------------------------------------------
 
-$| = 1; # Ungepufferte Ausgabe
+$| = 1; # Unbuffered output
 
 #----------------------------------------------------------------
 
 my %opt;
 my $detached = 0;
-my $check_interval = 5; # Sekunden
+my $check_interval = 5; # Seconds
 my $dls_dir;
 my $progname;
 
@@ -47,21 +47,21 @@ my $progname;
 #
 #  main
 #
-#  Hauptfunktion. Wertet die Kommandozeilenparameter aus, startet
-#  das Logging, initialisiert den Daemon, installiert die
-#  Signalhandler und läuft schliesslich in die Hauptschleife
+#  Main function. Evaluate the command line parameters,
+#  start the logging, initialize the daemon, install the
+#  signal handler and finally run into the main loop
 #
 #----------------------------------------------------------------
 
 sub main
 {
-    $0 =~ /^.*\/([^\/]+)$/; # Programmnamen ermitteln
+    $0 =~ /^.*\/([^\/]+)$/; # Determine program name
     $progname = $1;
 
-    # Kommandozeilenparameter verarbeiten
+    # Process command line parameters
     &get_options;
 
-    # Syslog initialisieren
+    # Syslog initialization
     openlog $progname, "pid";
 
     &print_and_log("----- DLS QUOTA cleanup started -----");
@@ -75,14 +75,14 @@ sub main
 
     &print_and_log("Not detaching from tty!") if defined $opt{'k'};
 
-    # Daemon werden, wenn nicht verboten, oder single check
+    # Will be a daemon, except if it is forbidden, or single check
     &init_daemon unless (defined $opt{'k'} || $check_interval == 0);
 
-    # Signalhandler setzen
+    # Set signal handler
     $SIG{TERM} = $SIG{INT} = \&do_term;
 
     while (1) {
-        # Alle Jobs überprüfen
+        # Check all jobs
     	&check_jobs;
 
         if ($check_interval == 0) {
@@ -90,9 +90,8 @@ sub main
             closelog;
             exit 0;
         }
-
-	    # Und warten
-	    sleep $check_interval;
+        # And wait
+        sleep $check_interval;
     }
 }
 
@@ -100,7 +99,7 @@ sub main
 #
 #  get_options
 #
-#  Verarbeitet die Kommandozeilenparameter.
+#  Process the command line parameters
 #
 #----------------------------------------------------------------
 
@@ -110,7 +109,7 @@ sub get_options
 
     &print_usage if defined $opt{'h'} or $#ARGV > -1;
 
-    # Pfad für DLS-Datenverzeichnis ermitteln
+    # Determine path for DLS data directory
     if (defined $opt{'d'}) {
         $dls_dir = $opt{'d'};
     } elsif (defined $ENV{'DLS_DIR'}) {
@@ -121,7 +120,7 @@ sub get_options
 
     if (defined $opt{'i'}) {
         unless ($opt{'i'} =~ /^\d+$/) {
-            print "FEHLER: Zeitintervall muss eine Ganzzahl sein!\n";
+            print "ERROR: the time interval must be an integer!\n";
             &print_usage;
         }
 
@@ -133,18 +132,18 @@ sub get_options
 #
 #  print_usage
 #
-#  Gibt die Hilfe über die Kommandozeilenparameter aus
-#  und beendet danach den Prozess.
+#  Return the help via the command line parameters
+#  and then finish the process.
 #
 #----------------------------------------------------------------
 
 sub print_usage
 {
-    print "Aufruf: $progname [OPTIONEN]\n";
-    print "        -d [Verzeichnis]   DLS-Datenverzeichnis\n";
-    print "        -i [Sekunden]      Überprüfungs-Intervall (0 = single check)\n";
-    print "        -k                 Kein Daemon werden\n";
-    print "        -h                 Diese Hilfe anzeigen\n";
+    print "Call: $progname [OPTIONS]\n";
+    print "        -d [directory]     DLS data directory\n";
+    print "        -i [seconds]       Verification interval (0 = single check)\n";
+    print "        -k                 Not a daemon\n";
+    print "        -h                 Show this help\n";
     exit 0;
 }
 
@@ -152,8 +151,8 @@ sub print_usage
 #
 #  do_term
 #
-#  Signalhandler für SIGINT und SIGTERM. Gibt eine Logging-
-#  Nachricht aus und beendet dann den Prozess.
+#  Signal handler for SIGINT and SIGTERM. Give a logging
+#  message and then finish the process.
 #
 #----------------------------------------------------------------
 
@@ -168,10 +167,10 @@ sub do_term
 #
 #  print_and_log
 #
-#  Erzeugt eine Logging-Nachricht, die auch auf dem STDOUT
-#  erscheint, wenn kein Daemon initialisiert wurde
+#  Generate a logging message that also appears on the STDOUT
+#  if no daemon has been initialized
 #
-#  Parameter: msg - Nachricht
+#  Parameter: msg - Message
 #
 #----------------------------------------------------------------
 
@@ -186,10 +185,10 @@ sub print_and_log
 #
 #  log_and_die
 #
-#  Erstellt eine Logging-Nachricht und lässt den Prozess
-#  danach sterben.
+#  Create a logging message and leave the process,
+#  die after that.
 #
-#  Parameter: msg - Letzte Worte ;-)
+#  Parameter: msg - Last words ;-)
 #
 #----------------------------------------------------------------
 
@@ -204,30 +203,29 @@ sub log_and_die
 #
 #  init_daemon
 #
-#  Führt alle nötigen Aktionen aus, um einen Daemon-Prozess
-#  zu erzeugen.
+#  Perform all the necessary actions to create a daemon process
 #
 #----------------------------------------------------------------
 
 sub init_daemon
 {
-    # Fork ausführen
+    # run fork
     my $child = fork;
 
     &log_and_die("Can't fork: $!") unless defined($child);
 
-    # Elternprozess beenden
+    # End parent process
     exit 0 if $child;
 
     &print_and_log("daemon started with pid $$");
 
-    # Session leader werden
+    # Become a session leader
     POSIX::setsid;
 
-    # Nach / wechseln
+    # Change to /
     chdir '/';
 
-    # STDXXX schliessen
+    # Close STDXXX
     open STDIN, "</dev/null";
     open STDOUT, ">/dev/null";
     open STDERR, ">&STDOUT";
@@ -239,8 +237,8 @@ sub init_daemon
 #
 #  check_jobs
 #
-#  Prüft bei allen Jobs, ob sie eine Quota haben und führt
-#  bei Bedarf die nötigen Lösch-Operationen aus.
+#  Check all jobs, if they have a quota and
+#  lead if necessary the deletion operations.
 #
 #----------------------------------------------------------------
 
@@ -251,26 +249,26 @@ sub check_jobs
 
     opendir $dirhandle, $dls_dir or &log_and_die("can't open dls directory \"$dls_dir\"!");
 
-    # Alle Einträge im DLS-Datenverzeichnis durchlaufen
+    # Scroll through all entries in the DLS data directory
     while ($entry = readdir $dirhandle)
     {
-	# Abbrechen, wenn nicht "jobXXX"
+	# Cancel if not "jobXXX"
 	next unless $entry =~ /^job\d*$/;
 
 	$path = "$dls_dir/$entry";
 
-	# Abbrechen, wenn kein Verzeichnis
+	# Cancel if not directory
 	next unless -d $path;
 
 	$job_xml_path = "$path/job.xml";
 
-	# Abbrechen, wenn jobXXX/job.xml nicht existiert
+	# Cancel if jobXXX/job.xml does not exist
 	next unless -e $job_xml_path;
 
 	$quota_size = 0;
 	$quota_time = 0;
 
-	# Quota-Informationen aus dem XML holen
+	# Get quota information from the XML file
 	open JOB_XML, $job_xml_path or &log_and_die("cant open $job_xml_path");
 	while (<JOB_XML>)
 	{
@@ -290,11 +288,10 @@ sub check_jobs
 #
 #  check_channels_time
 #
-#  Überprüft bei einem Job mit Zeit-Quota die einzelnen
-#  Kanal-Verzeichnisse.
+#  Check the channel directories for a job with a time quota
 #
-#  Parameter: job_dir    - Job-Verzeichnis
-#             quota_time - Länge der Zeit-Quota in Sekunden
+#  Parameter: job_dir    - Job Directory
+#             quota_time - Lenght of time quota in seconds
 #
 #----------------------------------------------------------------
 
@@ -307,12 +304,12 @@ sub check_channels_time
 
     while ($entry = readdir $dirhandle)
     {
-	# Abbrechen, wenn Name nicht channelXXX
+	# Cancel if name is not channelXXX
 	next unless $entry =~ /^channel\d*$/;
 
 	$path = "$job_dir/$entry";
 
-	# Abbrechen, wenn kein Verzeichnis
+	# Cancel if no directory
 	next unless -d $path;
 
 	&check_chunks_time($path, $quota_time);
@@ -325,11 +322,10 @@ sub check_channels_time
 #
 #  check_chunks_time
 #
-#  Überprüft bei einem Job mit Zeit-Quota die einzelnen Chunk-
-#  Verzeichnisse.
+#  Check the chunck directory for a job with time quota
 #
-#  Parameter: channel_dir - Channel-Verzeichnis
-#             quota_time  - Länge der Zeit-Quota in Sekunden
+#  Parameter: channel_dir - Channel Directory
+#             quota_time  - Length of time quota in seconds
 #
 #----------------------------------------------------------------
 
@@ -338,41 +334,41 @@ sub check_chunks_time
     my ($channel_dir, $quota_time) = @_;
     my ($dirhandle, $entry, $path, @chunk_times, $last_chunk_time);
 
-    # Zuerst alle Chunk-Verzeichnisse einlesen
+    # First read all chunk directories
     opendir $dirhandle, $channel_dir or &log_and_die("Can't open channel directory \"$channel_dir\"!");
     while ($entry = readdir $dirhandle)
     {
-	# Abbrechen, wenn Name nicht chunkXXX
+	# Cancel if name is not chunkXXX
 	next unless $entry =~ /^chunk(\d*)$/;
 
 	$path = "$channel_dir/$entry";
 
-	# Abbrechen, wenn kein Verzeichnis
+	# Cancel if no directory
 	next unless -d $path;
 
 	push @chunk_times, $1;
     }
     closedir $dirhandle;
 
-    # Chunk-Zeiten aufsteigend sortieren
+    # Sort chunk times in ascending order
     @chunk_times = sort {$a <=> $b} @chunk_times;
 
-    # Abbrechen, wenn keine Chunks gefunden
+    # Cancel if no chunks found
     return if $#chunk_times == -1;
 
-    # Letzte Chunk-Zeit merken und entfernen
+    # Remember and remove last chunk time
     $last_chunk_time = pop @chunk_times;
 
-    # Alle Chunk-Zeiten bis zur vorletzten durchlaufen
+    # Go through all the chunk times until the penultimate one
     foreach (@chunk_times)
     {
-	# Durchlauf abbrechen, wenn die aktuelle Chunk-Zeit
-	# bereits nach der Quota-grenze liegt
+	# Abort run if the current chunk time
+	# is already after the quota limit
 	last if $_ >= ($last_chunk_time - $quota_time * 1000000);
 
 	$path = "$channel_dir/chunk$_";
 
-	# Sonst löschen
+	# Otherwise delete
 	&print_and_log("Time quota exceeded - removing $path");
 	&remove_dir($path);
     }
@@ -382,11 +378,11 @@ sub check_chunks_time
 #
 #  check_channels_size
 #
-#  Überprüft bei einem Job mit Daten-Quota die Gesamtgröße
-#  und löscht bei Bedarf die ältesten Chunks.
+#  Check the total size of a job with data quota
+#  and delete the oldest chuncks as needed.
 #
-#  Parameter: job_dir    - Job-Verzeichnis
-#             quota_size - Größe der Daten-Quota in Bytes
+#  Parameter: job_dir    - Job Directory
+#             quota_size - Size of the data quota in bytes
 #
 #----------------------------------------------------------------
 
@@ -401,12 +397,12 @@ sub check_channels_size
     opendir $job_dir_handle, $job_dir or &log_and_die("can't open job directory \"$job_dir\"!");
     while ($job_dir_entry = readdir $job_dir_handle)
     {
-	# Abbrechen, wenn Name nicht channelXXX
+	# Cancel if name is not channelXXX
 	next unless $job_dir_entry =~ /^channel\d*$/;
 
 	$channel_dir = "$job_dir/$job_dir_entry";
 
-	# Abbrechen, wenn kein Verzeichnis
+	# Cancel if no directory
 	next unless -d $channel_dir;
 
 	@chunk_times = ();
@@ -414,28 +410,28 @@ sub check_channels_size
 	opendir $channel_dir_handle, $channel_dir or &log_and_die("can't open channel directory \"$channel_dir\"!");
 	while ($channel_dir_entry = readdir $channel_dir_handle)
 	{
-	    # Abbrechen, wenn Name nicht chunkXXX
+	    # Cancel if name is not chunkXXX
 	    next unless $channel_dir_entry =~ /^chunk(\d*)$/;
 
 	    $chunk_dir = "$channel_dir/$channel_dir_entry";
 
-	    # Abbrechen, wenn kein Verzeichnis
+	    # Cancel if no directory
 	    next unless -d $chunk_dir;
 
 	    push @chunk_times, $1;
 	}
 	closedir $channel_dir_handle;
 
-	# Mit dem nächsten Channel fortfahren, wenn keine Chunks gefunden
+	# Continue to the next channel if no chunks are found
 	next if $#chunk_times == -1;
 
-	# Chunk-Zeiten aufsteigend sortieren
+	# Sort chunk times in ascending order
 	@chunk_times = sort {$a <=> $b} @chunk_times;
 
-	# Den aktuellsten Chunk gesondert merken
+	# Memorize the latest chunk separately
 	push @current_chunks, "$channel_dir/chunk$chunk_times[$#chunk_times]";
 
-	# Alle Chunks in die Liste aufnehmen
+	# Include all chunks in the list
 	foreach (@chunk_times)
 	{
 	    push @chunks, "$channel_dir/chunk$_";
@@ -443,14 +439,14 @@ sub check_channels_size
     }
     closedir $job_dir_handle;
 
-    # Für jeden Chunk ein 'du' aufrufen
+    # Call 'du' (disk usage) for each chunk
     @du_lines = ();
     foreach (@chunks)
     {
-	push @du_lines, `du -s --block-size=1 $_`; # (Backticks: Shell-Kommando ausführen)
+	push @du_lines, `du -s --block-size=1 $_`; # (Backticks: execute shell command)
     }
 
-    # Chunk-Verzeichnisse absteigend nach Zeitstempel sortieren
+    # Sort chunk directories in descending order by timestamp
     @du_lines = sort
     {
 	my ($a_time, $b_time);
@@ -464,7 +460,7 @@ sub check_channels_size
 	return $b_time <=> $a_time;
     } @du_lines;
 
-    # Gesamtgröße aufsummieren
+    # Sum total size
     $total_size = 0;
     foreach (@du_lines)
     {
@@ -472,15 +468,15 @@ sub check_channels_size
 	$total_size += $1;
     }
 
-    # Solange löschen, bis wir die Quota unterschreiten
+    # Clear as long as we go below the quota
     chunk: while ($total_size > $quota_size and $#du_lines > -1)
     {
-	# Den ältesten Chunk betrachten...
+	# Consider the oldest chunk...
 	(pop @du_lines) =~ /(\d+)\s+(.*)$/ or &log_and_die("du parsing error!");
 
 	foreach (@current_chunks)
 	{
-	    # Abbrechen, wenn der Chunk aktiv ist
+	    # Cancel when the chunk is active
 	    next chunk if ($_ eq $2);
 	}
 
@@ -495,9 +491,9 @@ sub check_channels_size
 #
 #  remove_dir
 #
-#  Löscht ein Verzeichnis rekursiv.
+#  Delete a directory recursively
 #
-#  Parameter: dir - Zu löschendes Verzeichnis
+#  Parameter: dir - Directory to delete
 #
 #----------------------------------------------------------------
 
@@ -506,29 +502,29 @@ sub remove_dir
     my ($dir) = @_;
     my ($dirhandle, $entry, $path);
 
-    # Alle Einträge des verzeichnisses durchlaufen
+    # Go through all the entries in the directory
     opendir $dirhandle, $dir or &log_and_die("cant open \"$dir\" to remove!");
     while ($entry = readdir $dirhandle)
     {
-	# . und .. überspringen
+	# . and .. skip
 	next if $entry eq "." or $entry eq "..";
 
 	$path = "$dir/$entry";
 
 	if (-d $path)
 	{
-	    # Unterverzeichnis löschen
+	    # Delete subdirectory
 	    &remove_dir($path);
 	}
 	else
 	{
-	    # Datei löschen
+	    # Delete file
 	    unlink $path;
 	}
     }
     closedir $dirhandle;
 
-    # Das Verzeichnis selber löschen
+    # Delete the directory itself
     rmdir $dir;
 }
 

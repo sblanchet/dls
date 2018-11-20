@@ -61,7 +61,7 @@ ExportInfo;
 */
 
 ViewDialogExport::ViewDialogExport(const string &dls_dir
-                                   /**< DLS-Datenverzeichnis */
+                                   /**< DLS data directory */
                                    )
 {
     int x = Fl::w() / 2 - WIDTH / 2;
@@ -69,19 +69,19 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
 
     _dls_dir = dls_dir;
 
-    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Ansicht Exportieren");
+    _wnd = new Fl_Double_Window(x, y, WIDTH, HEIGHT, "Export view");
     _wnd->callback(_callback, this);
     _wnd->set_modal();
 
     _box_info = new Fl_Box(10, 10, WIDTH - 20, 40);
     _box_info->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_TOP);
 
-    _output_times = new Fl_Output(WIDTH - 410, 85, 400, 25, "Zeitstempel");
+    _output_times = new Fl_Output(WIDTH - 410, 85, 400, 25, "Timestamp");
 
 #if 0
-    _output_time = new Fl_Output(WIDTH - 60, 85, 50, 25, "Verbleibende Zeit");
+    _output_time = new Fl_Output(WIDTH - 60, 85, 50, 25, "Remaining time");
     _output_time->deactivate();
-    _output_size = new Fl_Output(WIDTH - 60, 120, 50, 25, "Geschätzte Größe");
+    _output_size = new Fl_Output(WIDTH - 60, 120, 50, 25, "Estimated size");
     _output_size->deactivate();
 #endif
 
@@ -100,11 +100,11 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
     _progress->deactivate();
 
     _button_export = new Fl_Button(WIDTH - 130, HEIGHT - 35, 120, 25,
-                                   "Exportieren");
+                                   "Export");
     _button_export->callback(_callback, this);
 
     _button_close = new Fl_Button(WIDTH - 240, HEIGHT - 35, 100, 25,
-                                  "Abbrechen");
+                                  "Cancel");
     _button_close->callback(_callback, this);
 
     _thread_running = false;
@@ -114,7 +114,7 @@ ViewDialogExport::ViewDialogExport(const string &dls_dir
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 ViewDialogExport::~ViewDialogExport()
@@ -142,7 +142,7 @@ void ViewDialogExport::_clear_exporters()
 /*****************************************************************************/
 
 /**
-   Anzeigen des Dialoges
+   Display the dialog
 */
 
 void ViewDialogExport::show(const list<Channel> *channels,
@@ -157,10 +157,10 @@ void ViewDialogExport::show(const list<Channel> *channels,
     _end = end;
     _channel_count = _channels->size();
 
-    str << "Anzahl Kanäle: " << _channel_count << endl
-        << "Beginn: " << _start.to_real_time() << endl
-        << "Ende: " << _end.to_real_time() << endl
-        << "Zeitspanne: " << _start.diff_str_to(_end);
+    str << "Number of Channels: " << _channel_count << endl
+        << "Begin: " << _start.to_real_time() << endl
+        << "End: " << _end.to_real_time() << endl
+        << "Period of time: " << _start.diff_str_to(_end);
     _box_info->copy_label(str.str().c_str());
 
     {
@@ -178,10 +178,10 @@ void ViewDialogExport::show(const list<Channel> *channels,
 /*****************************************************************************/
 
 /**
-   Statische Callback-Funktion
+   Static callback function
 
-   \param sender Widget, dass den Callback ausgelöst hat
-   \param data Zeiger auf den Dialog
+   \param sender Widget, that has triggered the callback
+   \param data Pointer to the dialog
 */
 
 void ViewDialogExport::_callback(Fl_Widget *sender, void *data)
@@ -196,7 +196,7 @@ void ViewDialogExport::_callback(Fl_Widget *sender, void *data)
 /*****************************************************************************/
 
 /**
-   Callback: Der "Schliessen"-Button wurde geklickt
+   Callback: The "Close" button has been clicked
 */
 
 void ViewDialogExport::_button_close_clicked()
@@ -214,7 +214,7 @@ void ViewDialogExport::_button_close_clicked()
 /*****************************************************************************/
 
 /**
-   Callback: Der "Export"-Button wurde geklickt
+   Callback: The "Export"-Button has been clicked
 */
 
 void ViewDialogExport::_button_export_clicked()
@@ -334,7 +334,7 @@ void *ViewDialogExport::_static_thread_function(void *data)
     dialog->_output_size->deactivate();
 #endif
     dialog->_button_close->deactivate();
-    dialog->_button_export->label("Schliessen");
+    dialog->_button_export->label("Close");
     dialog->_button_export->activate();
     Fl::unlock();
     Fl::awake();

@@ -54,7 +54,7 @@ enum Fl_Grid_Select_Mode
 /*****************************************************************************/
 
 /**
-   Anzuzeigende Spalte in einem Fl_Grid
+   Column to display in a Fl_Grid
 */
 
 class Fl_Grid_Column
@@ -68,9 +68,9 @@ public:
     unsigned int width() const;
 
 private:
-    string _name;        /**< Identifizierender Spaltenname */
-    string _title;       /**< Angezeigter Spaltentitel */
-    unsigned int _width; /**< Anteilige Breite der Spalte */
+    string _name;        /**< Identifier for column name */
+    string _title;       /**< Column title */
+    unsigned int _width; /**< Proportional column width */
 
     Fl_Grid_Column();
 };
@@ -78,12 +78,11 @@ private:
 /*****************************************************************************/
 
 /**
-   Tabellenobjekt für FLTK
+   Table object for für FLTK
 
-   Zeigt eine Tabelle mit Daten in Spalten und Zeilen an.
-   Unterstützt Auswahl von Zeilen, eine automatische
-   vertikale Scrolling-Leiste und farbliche Kennzeichnung
-   von Zellenwerten.
+    Displays a table with data in columns and rows.
+    Supports selection of lines, automatic vertical
+    scrolling bar and color labeling of cell values.
 */
 
 class Fl_Grid : public Fl_Widget
@@ -92,10 +91,10 @@ public:
     Fl_Grid(int, int, int, int, const char * = "");
     ~Fl_Grid();
 
-    // Spaltenverwaltung
+    // column management
     void add_column(const string &, const string & = "", int = 100);
 
-    // Inhalt
+    // content
     void record_count(unsigned int);
     unsigned int record_count() const;
     void clear();
@@ -103,7 +102,7 @@ public:
     // Callback
     void callback(void (*)(Fl_Widget *, void *), void *);
 
-    // Aussehen
+    // Appearance
     void row_height(unsigned int);
 
     // Event handling
@@ -115,7 +114,7 @@ public:
     void current_content_color(Fl_Color);
     void current_checked(bool);
 
-    // Auswahl
+    // Selection
     unsigned int select_count() const;
     unsigned int selected_index() const;
     const list<unsigned int> *selected_list() const;
@@ -134,38 +133,35 @@ public:
     void check_boxes(bool);
 
 protected:
-    bool _focused; /**< true, wenn das Grid gerade den Fensterfokus besitzt */
-    list<Fl_Grid_Column> _cols; /**< Liste der anzuzeigenden Spalten */
-    unsigned int _record_count; /**< Anzahl der aktuellen Zeilen */
-    void (*_cb)(Fl_Widget *, void *); /**< Zeiger auf die Callback-Funktion */
-    void *_cb_data; /**< Bei einem Callback übergebene Daten */
-    string _content; /**< Zu zeichnender Zelleninhalt */
-    Fl_Color _content_color; /**< Farbe, in der der Zelleninhalt
-                                gezeichnet werden soll */
+    bool _focused; /**< true, if the grid has currently the window focus */
+    list<Fl_Grid_Column> _cols; /**< List of columns to display */
+    unsigned int _record_count; /**< Number of current lines */
+    void (*_cb)(Fl_Widget *, void *); /**< Pointer to the callback function */
+    void *_cb_data; /**< Data passed in a callback */
+    string _content; /**< cell content to draw */
+    Fl_Color _content_color; /**< Color to draw cell content */
     bool _checked;
-    Fl_Grid_Event _event; /**< Art des Callback-Events */
-    unsigned int _event_record; /**< Record-Index des aktuellen Events */
-    string _event_col; /**< Spalten-Identifier des aktuellen Events */
-    bool _event_sel; /**< true, wenn die Zeile des aktuellen Events
-                        selekiert ist */
-    Fl_Grid_Select_Mode _select_mode; /**< Auswahlmodus: Keine, nur eine,
-                                         oder mehrere Zeilen */
-    unsigned int _row_height; /**< Höhe aller Zeilen in Pixel */
-    unsigned int _scroll_index; /**< Index der zu oberst angezeigten Zeile */
-    list<unsigned int> _selected; /**< Liste der Indizes der
-                                     angewählten Records */
-    int _push_x, _push_y; /**< Position des letzten Mausklicks auf dem Grid */
-    bool _scroll_tracking; /**< true, wenn der Benutzer gerade
-                              den Scroll-Balken zieht */
-    int _scroll_grip; /**< Vertikale Position des Mauscursors
-                         auf dem Scroll-Balken */
-    bool _range_select_possible; /**< true, wenn gerade eine
-                                    Bereichsauswahl möglich ist */
-    unsigned int _range_select_partner; /**< Anfangs- oder Endindex
-                                           der aktuell möglichen
-                                           Bereichsauswahl */
-    bool _check_boxes; /**< true, wenn vor jeder Zeile
-                          eine Checkbox erscheinen soll */
+    Fl_Grid_Event _event; /**< Type of callback event */
+    unsigned int _event_record; /**< Record index of the current event */
+    string _event_col; /**< Column identifier of the current event */
+    bool _event_sel; /**< true, if the line of the current event is selected */
+    Fl_Grid_Select_Mode _select_mode; /**< Selection mode: None, only one
+                                         or several lines */
+    unsigned int _row_height; /**< Height of all lines in pixels */
+    unsigned int _scroll_index; /**< Index of the line displayed at the top */
+    list<unsigned int> _selected; /**< Seleted records indexes */
+    int _push_x, _push_y; /**< Position of the last mouse click on the grid */
+    bool _scroll_tracking; /**< true, if the user is currently
+                              dragging the scroll bar */
+    int _scroll_grip; /**< Vertical position of the mouse cursor
+                         on the scroll bar */
+    bool _range_select_possible; /**< true, if a range selection
+                                    is currently possible */
+    unsigned int _range_select_partner; /**< Start or end index of the
+                                           currently possible range
+                                           selection */
+    bool _check_boxes; /**< true, if a checkbox should appear
+                          before each line */
 
     void _range_select(unsigned int);
 
@@ -176,9 +172,9 @@ protected:
 /*****************************************************************************/
 
 /**
-   Gibt die anteilige Breite einer Spalte zurück
+   Return the proportionate width of a column
 
-   \return Anteilige Breite
+   \return Proportional width
 */
 
 inline unsigned int Fl_Grid_Column::width() const
@@ -189,9 +185,9 @@ inline unsigned int Fl_Grid_Column::width() const
 /*****************************************************************************/
 
 /**
-   Gibt den Titel einer Spalte zurück
+   Return the title of a column
 
-   \return Spaltentitel
+   \return column title
 */
 
 inline const string &Fl_Grid_Column::title() const
@@ -202,7 +198,7 @@ inline const string &Fl_Grid_Column::title() const
 /*****************************************************************************/
 
 /**
-   Gibt identifiziernden Namen einer Spalte zurück
+   Return identifier name of a column
 
    \return Name
 */
@@ -215,23 +211,20 @@ inline const string &Fl_Grid_Column::name() const
 /*****************************************************************************/
 
 /**
-   Gibt den Ereignistyp zurück
+   Return the event type
 
-   Gibt während eines Callbacks den Typ des Ereignisses zurück,
-   dass den Callback ausgelöst hat. Dies kann folgendes sein:
+   During a callback, returns the type of event that has
+   triggered the callback. This can be the following::
 
-   - flgContent:     Der Callback erwartet einen Aufruf
-   von current_content(), um den Zelleninhalt
-   zu bekommen
-   - flgSelect:      Der Callback teilt mit, dass ein Record
+   - flgContent:     The callback expects a call to current_content(),
+   to get the cell contents
+   - flgSelect:      The callback informs that a record has been selected
    selektiert wurde
-   - flgDeSelect:    Der Callback teilt mit, dass ein Record
-   nicht mehr selektiert ist
-   - flgDoubleClick: Der Callback teilt mit, dass ein
-   Doppelklick auf einen Record gemacht
-   wurde
+   - flgDeSelect:    The callback informs that a record is no longer selected
+   - flgDoubleClick: The callback informs that a record has received a
+   double-click
 
-   \return Ereignistyp
+   \return event type
 */
 
 inline Fl_Grid_Event Fl_Grid::current_event() const
@@ -242,7 +235,7 @@ inline Fl_Grid_Event Fl_Grid::current_event() const
 /*****************************************************************************/
 
 /**
-   Gibt den Index des Records eines Callbacks an
+   Specify the index of the record of a callback
 
    \return Record-Index
 */
@@ -255,13 +248,12 @@ inline unsigned int Fl_Grid::current_record() const
 /*****************************************************************************/
 
 /**
-   Gibt die Spalte in einem Callback zurück
+   Return the column in a callback
 
-   Gibt während eines Callbacks mit dem Event-Typ
-   flgContent den identifizierenden Namen der
-   betreffenden Spalte zurück
+   Returns the identifyier name of the column in question
+   during a callback with the event type flgContent
 
-   \return Spalten-Identifier
+   \return Column identifier
 */
 
 inline const string &Fl_Grid::current_col() const
@@ -272,9 +264,8 @@ inline const string &Fl_Grid::current_col() const
 /*****************************************************************************/
 
 /**
-   Gibt während eines Callbacks mit dem Event-Typ
-   flgContent an, ob der entsprechende Record
-   gerade selektiert ist
+   Specifies during a callback with the event type flgContent
+   whether the corresponding record is currently selected
 
    \return Record-Index
 */
@@ -287,8 +278,8 @@ inline bool Fl_Grid::current_selected() const
 /*****************************************************************************/
 
 /**
-   Gibt einen konstanten Zeiger auf die Liste der
-   Indizes der selektierten Records zurück
+   Return a constant pointer to the list of indexes
+   of the selected records.
 
    \return Record-Index
 */

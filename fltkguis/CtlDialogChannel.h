@@ -39,10 +39,10 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Dialog zum Ändern der Eigenschaften von zu erfassenden Kanälen
+   Dialog for changing the properties of channels to be acquired
 
-   Über diese Eingabemaske kann der Benutzer die Abtastrate,
-   Meta-Untersetzung, Kompression usw. eines Kanals bestimmen.
+   This input mask allows the user to set the samplig rate,
+   meta-reduction, compression, etc. of a channel.
 */
 
 class CtlDialogChannel
@@ -55,24 +55,24 @@ public:
     bool updated() const;
 
 private:
-    Fl_Double_Window *_wnd;       /**< Dialogfenster */
+    Fl_Double_Window *_wnd;       /**< Dialog box */
     Fl_Return_Button *_button_ok; /**< "OK"-Button */
-    Fl_Button *_button_cancel;    /**< "Abbrechen"-Button */
-    Fl_Input *_input_freq;        /**< Eingabefeld für die Abtastfrequenz */
-    Fl_Input *_input_block;       /**< Eingabefeld für die Blockgröße */
-    Fl_Input *_input_mask;        /**< Eingabefeld für die Meta-Maske */
-    Fl_Input *_input_red;         /**< Eingabefeld für die Meta-Untersetzung */
-    Fl_Choice *_choice_format;    /**< Auswahlfeld für die Kompression */
-    Fl_Choice *_choice_mdct;      /**< Auswahlfeld für die MDCT-Blockgröße */
-    Fl_Input *_input_accuracy;    /**< Eingabefeld für die MDCT-Genauigkeit */
+    Fl_Button *_button_cancel;    /**< "Cancel"-Button */
+    Fl_Input *_input_freq;        /**< Input field for the sampling frequency */
+    Fl_Input *_input_block;       /**< Input field for the block size */
+    Fl_Input *_input_mask;        /**< Input field for the Meta-Mask */
+    Fl_Input *_input_red;         /**< Input field for the meta reduction */
+    Fl_Choice *_choice_format;    /**< Selection box for compression */
+    Fl_Choice *_choice_mdct;      /**< Selection box for the MDCT block size */
+    Fl_Input *_input_accuracy;    /**< Input field for the MDCT accuracy */
 
-    string _dls_dir; /**< DLS-Datenverzeichnis */
-    CtlJobPreset *_job; /**< Zeiger auf das Auftrags-Objekt */
-    const list<const LibDLS::ChannelPreset *> *_channels; /**< Liste der zu
-                                                        ändernden Kanäle */
-    bool _updated; /**< Es wurden Kanäle geändert */
-    bool _choice_format_selected; /**< Es wurde ein Format ausgewählt */
-    bool _choice_mdct_selected; /**< Es wurde eine MDCT-Blockgröße gewählt */
+    string _dls_dir; /**< DLS data directory */
+    CtlJobPreset *_job; /**< Pointer to the job object */
+    const list<const LibDLS::ChannelPreset *> *_channels; /**< List of channel
+                                                        to be changed */
+    bool _updated; /**< Channels have changed */
+    bool _choice_format_selected; /**< A format has been selected */
+    bool _choice_mdct_selected; /**< A MDCT block size was chosen */
 
     static void _callback(Fl_Widget *, void *);
     void _button_ok_clicked();
@@ -87,9 +87,9 @@ private:
 /*****************************************************************************/
 
 /**
-   Gibt zurück, ob Kanäle geändert wurden
+   Return whether channels have changed
 
-   \return true, wenn Kanäle geändert wurden
+   \return true, if channels have been changed
 */
 
 inline bool CtlDialogChannel::updated() const

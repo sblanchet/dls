@@ -43,7 +43,7 @@ using namespace std;
 /*****************************************************************************/
 
 /**
-   Hauptdialog des DLS-Viewers
+   Main dialog of the DLS viewer
 */
 
 class ViewDialogMain
@@ -55,24 +55,20 @@ public:
     void show();
 
 private:
-    string _dls_dir_path; /**< DLS-Datenverzeichnis */
-    Fl_Double_Window *_wnd; /**< Dialogfenster */
-    Fl_Tile *_tile_ver; /**< Vertikaler Trenner zwischen Anzeigen
-                           und Kanalliste */
-    Fl_Tile *_tile_hor; /**< Horizontaler Trenner zwischen Kanälen
-                           und Messages */
-    Fl_Choice *_choice_job; /**< Auswahlfeld zum Wählen des Auftrags */
-    Fl_Button *_button_full; /**< Button zum Anzeigen der gesamten
-                                Zeitspanne */
-    Fl_Button *_button_reload; /**< Button zum erneuten Laden der Daten */
-    Fl_Button *_button_export; /**< Button zum Exportieren der Daten */
-    Fl_Check_Button *_checkbutton_messages; /**< Checkbutton zum Anzeigen der
-                                    Nachrichten. */
-    Fl_Button *_button_close; /**< "Schliessen"-Button */
-    Fl_Grid *_grid_channels; /**< Grid zum Anzeigen der Kanalliste*/
+    string _dls_dir_path; /**< DLS data directory */
+    Fl_Double_Window *_wnd; /**< Dialog box */
+    Fl_Tile *_tile_ver; /**< Vertical separator between ads and channel list */
+    Fl_Tile *_tile_hor; /**< Horizontal separator between channels and messages */
+    Fl_Choice *_choice_job; /**< selection box for job */
+    Fl_Button *_button_full; /**< Button to display the entire time span */
+    Fl_Button *_button_reload; /**< Button to reload the data */
+    Fl_Button *_button_export; /**< Button ton export the data */
+    Fl_Check_Button *_checkbutton_messages; /**< Checkbutton to display the messages. */
+    Fl_Button *_button_close; /**< "Close"-Button */
+    Fl_Grid *_grid_channels; /**< Grid to display the channel list*/
 
-    ViewViewData *_view_data; /**< Anzeige für die Kanaldaten */
-    ViewViewMsg *_view_msg; /**< Anzeige für die Messages */
+    ViewViewData *_view_data; /**< Display for the channel data */
+    ViewViewMsg *_view_msg; /**< Display for the messages */
 
     LibDLS::Directory _dls_dir; /**< LibDLS directory object */
     LibDLS::Job *_current_job; /**< current job */

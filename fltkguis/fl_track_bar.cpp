@@ -31,7 +31,7 @@
 /*****************************************************************************/
 
 /**
-   Konstruktor
+   Constructor
 */
 
 Fl_Track_Bar::Fl_Track_Bar()
@@ -46,7 +46,7 @@ Fl_Track_Bar::Fl_Track_Bar()
 /*****************************************************************************/
 
 /**
-   Destruktor
+   Destructor
 */
 
 Fl_Track_Bar::~Fl_Track_Bar()
@@ -56,9 +56,9 @@ Fl_Track_Bar::~Fl_Track_Bar()
 /*****************************************************************************/
 
 /**
-   Setzt die (virtuelle) Höhe des zu scrollenden Inhalts
+   Set the (virtual) height of the content to scroll
 
-   \param height Neue Höhe
+   \param height New height
 */
 
 void Fl_Track_Bar::content_height(int height)
@@ -69,9 +69,9 @@ void Fl_Track_Bar::content_height(int height)
 /*****************************************************************************/
 
 /**
-   Setzt die Höhe des Anzeigebereiches
+   Set the height of the display area
 
-   \param height Neue Höhe
+   \param height New height
 */
 
 void Fl_Track_Bar::view_height(int height)
@@ -82,12 +82,12 @@ void Fl_Track_Bar::view_height(int height)
 /*****************************************************************************/
 
 /**
-   Zeichnet die track-Bar in das angegebene Rechteck
+   Draw the track back in the specified rectangle
 
-   \param left Linker Rand
-   \param top Oberer Rand
-   \param width Breite
-   \param height Höhe
+   \param left Left position
+   \param top Top possion
+   \param width Width
+   \param height Height
 */
 
 void Fl_Track_Bar::draw(int left, int top, int width, int height)
@@ -104,7 +104,7 @@ void Fl_Track_Bar::draw(int left, int top, int width, int height)
 
     _visible = true;
 
-    // Höhe des Scroll-Buttons bestimmen
+    // Determine the height of the scroll button
     _button_height = (int) (_view_height * height / (double) _content_height);
     if (_button_height < MIN_BUTTON_HEIGHT) _button_height = MIN_BUTTON_HEIGHT;
 
@@ -115,7 +115,7 @@ void Fl_Track_Bar::draw(int left, int top, int width, int height)
         return;
     }
 
-    // Position des Scroll-Buttons bestimmen
+    // Determine the position of the scroll button
     _button_position = (int) (_position * (height - _button_height)
                               / (double) (_content_height - _view_height));
 
@@ -126,7 +126,7 @@ void Fl_Track_Bar::draw(int left, int top, int width, int height)
                            / (double) (height - _button_height));
     }
 
-    // Scroll-Button zeichnen
+    // Draw a scroll button
     fl_color(150, 150, 150);
     fl_rectf(left, top + _button_position, width, _button_height);
 }
@@ -134,13 +134,13 @@ void Fl_Track_Bar::draw(int left, int top, int width, int height)
 /*****************************************************************************/
 
 /**
-   Überprüft die anliegenden Events und wertet diese bei Bedarf aus
+   Check the upcoming events and evaluate them if necessary
 
-   \param event FLTK-Ereignis
-   \param xp X-Position des Cursors auf der Track-Bar
-   \param yp Y-Position des Cursors auf der Track-Bar
-   \return true, wenn das Ereignis für die Track-Bar war
-   und ausgewertet wurde
+   \param event FLTK event
+   \param xp X-Position of the cursor on the track bar
+   \param yp Y-Position of the cursor on the track bar
+   \return true, if the event was for the track back
+   and has been evaluated
 */
 
 bool Fl_Track_Bar::handle(int event, int xp, int yp)
@@ -153,7 +153,7 @@ bool Fl_Track_Bar::handle(int event, int xp, int yp)
 
             _pushed_on_button = false;
 
-            // Auf die Scrollbar geklickt
+            // scroll bar clicked
             if (_visible
                 && xp >= 0
                 && xp <= _last_width
@@ -214,6 +214,3 @@ bool Fl_Track_Bar::handle(int event, int xp, int yp)
 }
 
 /*****************************************************************************/
-
-
-
