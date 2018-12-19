@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id$
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -31,10 +29,32 @@ using namespace std;
 using namespace LibDLS;
 
 /******************************************************************************
+ * Export::Impl
+ *****************************************************************************/
+
+class Export::Impl {
+    public:
+        Impl();
+
+        Time referenceTime;
+        bool trim;
+        Time trimStart;
+        Time trimEnd;
+};
+
+/*****************************************************************************/
+
+Export::Impl::Impl():
+    trim(false)
+{
+}
+
+/******************************************************************************
  * Export
  *****************************************************************************/
 
-Export::Export()
+Export::Export():
+    _impl(new Impl())
 {
 }
 
@@ -42,6 +62,22 @@ Export::Export()
 
 Export::~Export()
 {
+}
+
+/*****************************************************************************/
+
+void Export::setReferenceTime(const Time &ref)
+{
+    _impl->referenceTime = ref;
+}
+
+/*****************************************************************************/
+
+void Export::setTrim(const Time &start, const Time &end)
+{
+    _impl->trim = true;
+    _impl->trimStart = start;
+    _impl->trimEnd = end;
 }
 
 /******************************************************************************
@@ -102,8 +138,12 @@ void ExportAscii::data(const Data *data)
     unsigned int i;
 
     for (i = 0; i < data->size(); i++) {
-        _file << fixed << data->time(i) << "\t"
-              << fixed << data->value(i) << endl;
+        Time time(data->time(i));
+        if (!_impl->trim ||
+                (time >= _impl->trimStart && time <= _impl->trimEnd)) {
+            _file << fixed << time - _impl->referenceTime << "\t"
+                << fixed << data->value(i) << endl;
+        }
     }
 }
 
@@ -168,13 +208,16 @@ void ExportMat4::data(const Data *data)
     unsigned int i;
     double val;
 
-    _header.ncols += data->size();
-
     for (i = 0; i < data->size(); i++) {
-        val = data->time(i).to_dbl();
-        _file->write((const char *) &val, sizeof(double));
-        val = data->value(i);
-        _file->write((const char *) &val, sizeof(double));
+        Time time(data->time(i));
+        if (!_impl->trim ||
+                (time >= _impl->trimStart && time <= _impl->trimEnd)) {
+            val = (data->time(i) - _impl->referenceTime).to_dbl();
+            _file->write((const char *) &val, sizeof(double));
+            val = data->value(i);
+            _file->write((const char *) &val, sizeof(double));
+            _header.ncols++;
+        }
     }
 }
 

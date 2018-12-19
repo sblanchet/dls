@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- * $Id$
- *
- * Copyright (C) 2012-2013  Florian Pose <fp@igh-essen.com>
+ * Copyright (C) 2012-2018  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.
  *
@@ -152,11 +150,23 @@ void ExportDialog::accept()
 
     if (checkBoxAscii->isChecked()) {
         LibDLS::ExportAscii *exp = new LibDLS::ExportAscii();
+        if (checkBoxRelTimes->isChecked()) {
+            exp->setReferenceTime(graph->getStart());
+        }
+        if (checkBoxTrim->isChecked()) {
+            exp->setTrim(graph->getStart(), graph->getEnd());
+        }
         worker.addExporter(exp);
     }
 
     if (checkBoxMatlab->isChecked()) {
         LibDLS::ExportMat4 *exp = new LibDLS::ExportMat4();
+        if (checkBoxRelTimes->isChecked()) {
+            exp->setReferenceTime(graph->getStart());
+        }
+        if (checkBoxTrim->isChecked()) {
+            exp->setTrim(graph->getStart(), graph->getEnd());
+        }
         worker.addExporter(exp);
     }
 
@@ -165,6 +175,9 @@ void ExportDialog::accept()
     pushButtonDir->setEnabled(false);
     checkBoxAscii->setEnabled(false);
     checkBoxMatlab->setEnabled(false);
+    spinBoxDecimation->setEnabled(false);
+    checkBoxTrim->setEnabled(false);
+    checkBoxRelTimes->setEnabled(false);
 
     workerBusy = true;
     QMetaObject::invokeMethod(&worker, "doWork", Qt::QueuedConnection);
