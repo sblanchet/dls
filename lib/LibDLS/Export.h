@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- *  $Id$
- *
  *  This file is part of the Data Logging Service (DLS).
  *
  *  DLS is free software: you can redistribute it and/or modify it under the
@@ -64,10 +62,17 @@ namespace LibDLS
         Export();
         virtual ~Export();
 
+        void setReferenceTime(const Time &);
+        void setTrim(const Time &, const Time &);
+
         virtual void begin(const Channel &, const std::string &,
                 const std::string & = std::string()) = 0;
         virtual void data(const Data *) = 0;
         virtual void end() = 0;
+
+    protected:
+        class Impl;
+        Impl * const _impl;
     };
 
     /*************************************************************************/

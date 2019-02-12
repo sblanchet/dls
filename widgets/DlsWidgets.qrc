@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/DlsWidgets" >
     <file>.qm/locale/DlsWidgets_de.qm</file>
+    <file>.qm/locale/DlsWidgets_fr.qm</file>
     <file>images/Network-error.svg</file>
     <file>images/Network-idle.svg</file>
     <file>images/dialog-error.svg</file>

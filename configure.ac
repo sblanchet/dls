@@ -53,15 +53,15 @@ PKG_CHECK_MODULES([PCRE], [libpcre >= 8])
 # current[:revision[:age]]
 #
 # - If the library source code has changed at all since the last update, then
-# increment revision (‘c:r:a’ becomes ‘c:r+1:a’).
+#   increment revision (‘c:r:a’ becomes ‘c:r+1:a’).
 # - If any interfaces have been added, removed, or changed since the last
-# update, increment current, and set revision to 0.
+#   update, increment current, and set revision to 0.
 # - If any interfaces have been added since the last public release, then
-# increment age.
+#   increment age.
 # - If any interfaces have been removed or changed since the last public
-# release, then set age to 0.
+#   release, then set age to 0.
 #
-AC_SUBST(LIBDLS_VERSION, [4:0:0])
+AC_SUBST(LIBDLS_VERSION, [5:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon

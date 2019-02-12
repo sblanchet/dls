@@ -166,21 +166,35 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_4">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_6">
        <property name="text">
         <string>Decimation:</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="0" column="1">
       <widget class="QSpinBox" name="spinBoxDecimation">
        <property name="minimum">
         <number>1</number>
        </property>
        <property name="maximum">
         <number>2147483647</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QCheckBox" name="checkBoxTrim">
+       <property name="text">
+        <string>Trim data to viewed time range</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="checkBoxRelTimes">
+       <property name="text">
+        <string>Make times relative to beginning</string>
        </property>
       </widget>
      </item>

@@ -601,7 +601,7 @@ bool ProcMother::_spool_job(unsigned int job_id)
             else // Fehler beim Aufruf von stat()
             {
                 _exit = true;
-                _exit_error = E_DLS_ERROR;
+                _exit_error = true;
 
                 msg() << "Calling stat() on \"" << job_file_name.str()
                       << "\" failed: " << strerror(errno)
