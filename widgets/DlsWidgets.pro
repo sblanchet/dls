@@ -78,7 +78,7 @@ else {
 LIBEXT=""
 unix {
     HARDWARE_PLATFORM = $$system(uname -i)
-    contains(HARDWARE_PLATFORM, x86_64) {
+    contains(HARDWARE_PLATFORM, 64) {
         LIBEXT="64"
     }
 }
@@ -103,7 +103,12 @@ equals(DLS_DESIGNER, 1) {
 }
 
 unix {
-    libraries.path = $${PREFIX}/lib$${LIBEXT}
+    isEmpty (LIBDIR) {
+        libraries.path = $${PREFIX}/lib$${LIBEXT}
+    }
+    else {
+        libraries.path = $${LIBDIR}
+    }
     libraries.files = libDlsWidgets.so
 }
 win32 {
