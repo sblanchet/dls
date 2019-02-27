@@ -715,18 +715,35 @@ void LibDLS::Job::_load_msg_local(
                 msg.text = string();
             }
 
+            // lookup message text
+            const BaseMessage *m = _messages->findPath(msg.text);
+            if (m) {
+                string text = m->text(lang);
+                if (text != "") {
+                    msg.text = text;
+                }
+            }
+
             if (re) {
-                int ovec[32];
+                int ovec[30]; // size must be multiple of 3!
                 int ret = pcre_exec(re, NULL, msg.text.c_str(),
-                        msg.text.size(), 0, 0, ovec, 32);
+                        msg.text.size(), 0, 0, ovec,
+                        sizeof(ovec) / sizeof(int));
 #if 0
                 stringstream s;
                 s << msg.text << " " << regex << " " << ret;
                 log(s.str());
 #endif
-                if (ret < 1) {
+                if (ret == PCRE_ERROR_NOMATCH) {
                     // no match; skip this message
                     continue;
+                }
+                else if (ret < 1) {
+                    stringstream err;
+                    err << "Error " << ret << " in pcre_exec(), "
+                        << "regex \"" << regex
+                        << "\" subject \"" << msg.text << "\".";
+                    log(err.str());
                 }
             }
 
@@ -751,15 +768,6 @@ void LibDLS::Job::_load_msg_local(
                     << xml.tag()->title();
                 log(err.str());
                 msg.type = Message::Unknown;
-            }
-
-            // lookup message text
-            const BaseMessage *m = _messages->findPath(msg.text);
-            if (m) {
-                string text = m->text(lang);
-                if (text != "") {
-                    msg.text = text;
-                }
             }
 
             ret.push_back(msg);
