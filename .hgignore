@@ -1,6 +1,7 @@
 syntax: glob
 
 **.o
+**.swp
 ChangeLog
 Makefile
 Makefile.in
