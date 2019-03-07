@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- * $Id$
- *
  * Copyright (C) 2009 - 2013  Florian Pose <fp@igh-essen.com>
  *
  * This file is part of the DLS widget library.

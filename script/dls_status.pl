@@ -4,8 +4,6 @@
 #
 # DLS - Status- und Kontroll-Script für den DLS-Daemon
 #
-# $Id$
-#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the

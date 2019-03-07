@@ -1,7 +1,5 @@
 #------------------------------------------------------------------------------
 #
-# $Id$
-#
 # Systemd service file for DLS
 #
 # This file is part of the Data Logging Service (DLS).

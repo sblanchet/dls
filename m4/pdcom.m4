@@ -1,5 +1,4 @@
 dnl pdcom.m4 -- Find the path to PdCom library
-dnl $Id$
 dnl
 dnl This file provides AC_CHECK_PDCOM, which defines the --with-pdcom-dir
 dnl command-line option and probes for libpdcom in that directory if it

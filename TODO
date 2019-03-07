@@ -7,6 +7,8 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Check for PdCom in a portable way
     * Allow compiling without PCRE
     * Fix top_builddir dependency
+    * Add Copyright (C) and license headers to all files
+    * Remove $RCSId$ logic from LaTeX documents
 
 # DLS Widgets
     * Fix time scaling bug concerning scrollbar

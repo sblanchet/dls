@@ -4,8 +4,6 @@
 #
 # DLS init script
 #
-# $Id: init.sh,v 5ddbbb894dc7 2011/08/17 13:21:30 fp $
-#
 # This file is part of the Data Logging Service (DLS).
 #
 # DLS is free software: you can redistribute it and/or modify it under the
