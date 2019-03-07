@@ -31,14 +31,13 @@ using namespace LibDLS;
 
 extern unsigned int sig_int_term;
 
-static string dls_dir_path;
+extern string dls_dir_path;
 static unsigned int job_id = 0;
 
 /*****************************************************************************/
 
 int list_jobs(Directory *);
 int list_chunks(Job *);
-void list_get_environment();
 void list_get_options(int, char **);
 void list_print_usage();
 
@@ -49,7 +48,6 @@ int list_main(int argc, char *argv[])
     Directory dls_dir;
     Job *job;
 
-    list_get_environment();
     list_get_options(argc, argv);
 
     try {
@@ -180,17 +178,6 @@ int list_chunks(Job *job)
     }
 
     return 0;
-}
-
-/*****************************************************************************/
-
-void list_get_environment()
-{
-    char *env;
-
-    if ((env = getenv("DLS_DIR"))) {
-        dls_dir_path = env;
-    }
 }
 
 /*****************************************************************************/

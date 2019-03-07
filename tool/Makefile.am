@@ -49,6 +49,7 @@ dls_DEPENDENCIES = $(top_builddir)/lib/libdls.la
 
 dls_SOURCES = \
 	Export.cpp \
+	Index.cpp \
 	List.cpp \
 	main.cpp
 

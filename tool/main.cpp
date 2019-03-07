@@ -29,18 +29,24 @@ using namespace std;
 
 string command;
 
+string dls_dir_path;
+string dls_export_dir;
+string dls_export_format;
+
 /*****************************************************************************/
 
 void print_usage();
 
 extern int list_main(int, char *[]);
 extern int export_main(int, char *[]);
+extern int index_main(int, char *[]);
 
 /*****************************************************************************/
 
 int main(int argc, char *argv[])
 {
     string command;
+    char *env;
 
     cout << "dls " << PACKAGE_VERSION << " revision " << REVISION << endl;
 
@@ -51,11 +57,26 @@ int main(int argc, char *argv[])
 
     command = argv[1];
 
+    if ((env = getenv("DLS_DIR"))) {
+        dls_dir_path = env;
+    }
+
+    if ((env = getenv("DLS_EXPORT"))) {
+        dls_export_dir = env;
+    }
+
+    if ((env = getenv("DLS_EXPORT_FMT"))) {
+        dls_export_format = env;
+    }
+
     if (command == "list") {
         return list_main(argc - 1, argv + 1);
     }
     else if (command == "export") {
         return export_main(argc - 1, argv + 1);
+    }
+    else if (command == "index") {
+        return index_main(argc - 1, argv + 1);
     }
 
     // invalid command
@@ -71,6 +92,7 @@ void print_usage()
     cout << "Commands:" << endl;
     cout << "    list - List available chunks." << endl;
     cout << "  export - Export collected data." << endl;
+    cout << "   index - (Re-)generate indices." << endl;
     cout << "    help - Print this help." << endl;
     cout << "Enter \"dls COMMAND -h\" for command-specific help." << endl;
 }

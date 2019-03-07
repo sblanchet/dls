@@ -43,9 +43,10 @@ using namespace LibDLS;
 
 extern unsigned int sig_int_term;
 
-static string dls_dir_path;
-static string dls_export_dir;
-static string dls_export_format;
+extern string dls_dir_path;
+extern string dls_export_dir;
+extern string dls_export_format;
+
 static unsigned int job_id = 0;
 static list<unsigned int> channel_indices; // FIXME replace with set
 static set<string> paths;
@@ -82,7 +83,6 @@ struct ExportChannel {
 
 int export_data_callback(Data *, void *);
 void draw_progress(double percentage);
-void export_get_environment();
 void export_get_options(int, char **);
 void export_print_usage();
 int terminal_width();
@@ -108,7 +108,6 @@ int export_main(int argc, char *argv[])
 
     now.set_now();
 
-    export_get_environment();
     export_get_options(argc, argv);
 
     if (!quiet) {
@@ -624,22 +623,6 @@ Time parse_time(const char *time_str)
     err << "Invalid separator '" << remainder[0]
         << "' in \"" << time_str << "\"!";
     throw err.str();
-}
-
-/*****************************************************************************/
-
-void export_get_environment()
-{
-    char *env;
-
-    if ((env = getenv("DLS_DIR")))
-        dls_dir_path = env;
-
-    if ((env = getenv("DLS_EXPORT")))
-        dls_export_dir = env;
-
-    if ((env = getenv("DLS_EXPORT_FMT")))
-        dls_export_format = env;
 }
 
 /*****************************************************************************/
