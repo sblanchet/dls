@@ -2908,28 +2908,30 @@ void GraphWorker::doWork()
 
     graph->rwLockSections.unlock();
 
-    // get system language
-    QString lang = QLocale::system().name().left(2).toLower();
-    if (lang == "c") {
-        lang = "en";
-    }
-
-    for (std::set<LibDLS::Job *>::const_iterator job = jobSet.begin();
-            job != jobSet.end(); job++) {
-        std::list<LibDLS::Job::Message> msgs =
-            (*job)->load_msg_filtered(graph->getStart(), graph->getEnd(),
-                    graph->getMessageFilter().toUtf8().constData(),
-                    lang.toLocal8Bit().constData());
-        for (std::list<LibDLS::Job::Message>::const_iterator msg =
-                msgs.begin(); msg != msgs.end(); msg++) {
-            messages.append(*msg);
+    if (graph->showMessages) {
+        // get system language
+        QString lang = QLocale::system().name().left(2).toLower();
+        if (lang == "c") {
+            lang = "en";
         }
-    }
 
-    qStableSort(messages);
-    graph->msgMutex.lock();
-    graph->messages = messages;
-    graph->msgMutex.unlock();
+        for (std::set<LibDLS::Job *>::const_iterator job = jobSet.begin();
+                job != jobSet.end(); job++) {
+            std::list<LibDLS::Job::Message> msgs =
+                (*job)->load_msg_filtered(graph->getStart(), graph->getEnd(),
+                        graph->getMessageFilter().toUtf8().constData(),
+                        lang.toLocal8Bit().constData());
+            for (std::list<LibDLS::Job::Message>::const_iterator msg =
+                    msgs.begin(); msg != msgs.end(); msg++) {
+                messages.append(*msg);
+            }
+        }
+
+        qStableSort(messages);
+        graph->msgMutex.lock();
+        graph->messages = messages;
+        graph->msgMutex.unlock();
+    }
 
     emit finished();
 }
