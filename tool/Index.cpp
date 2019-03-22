@@ -22,6 +22,7 @@
 #include <string.h> // strerror()
 #include <stdlib.h> // getenv()
 #include <stdio.h> // rename()
+#include <sys/stat.h> // fchmod()
 
 #include <iostream>
 #include <iomanip>
@@ -124,6 +125,12 @@ int index_reindex_channel(Channel *channel)
         cerr << "Failed to create temporary file in " << channel->path()
             << ": " << strerror(errno) << endl;
         return 1;
+    }
+
+    int ret = fchmod(tmp_fd, 0644);
+    if (ret == -1) {
+        cerr << "Failed to set temporary file mode of " << tmp_path
+            << ": " << strerror(errno) << endl;
     }
 
     try {
