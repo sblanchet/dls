@@ -61,7 +61,7 @@ PKG_CHECK_MODULES([PCRE], [libpcre >= 8])
 # - If any interfaces have been removed or changed since the last public
 #   release, then set age to 0.
 #
-AC_SUBST(LIBDLS_VERSION, [5:0:0])
+AC_SUBST(LIBDLS_VERSION, [6:0:0])
 
 #------------------------------------------------------------------------------
 # Daemon

@@ -461,13 +461,16 @@ void LibDLS::Job::_load_msg_local(
 
     msg_dir << _path << "/messages";
 
-#if 0
+#if DEBUG_TIMING
     {
         stringstream msg;
         msg << __func__ << " " << msg_dir.str() << start.to_real_time()
                 << " " << end.to_real_time();
         log(msg.str());
     }
+
+    Time ts, te;
+    ts.set_now();
 #endif
 
     // try to open message directory
@@ -772,11 +775,12 @@ void LibDLS::Job::_load_msg_local(
         }
     }
 
-
-#if 0
+#ifdef DEBUG_TIMING
+    te.set_now();
     {
         stringstream msg;
-        msg << "Loaded " << ret.size() << " messages.";
+        msg << __func__ << "() " << ts.diff_str_to(te) << endl
+            << "Loaded " << ret.size() << " messages.";
         log(msg.str());
     }
 #endif

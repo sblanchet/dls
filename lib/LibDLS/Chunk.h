@@ -76,6 +76,7 @@ class Chunk
         virtual ~Chunk();
 
         void import(const std::string &, ChannelType);
+        void preload(const std::string &, ChannelType, Time, Time);
         void fetch_range();
 
         Time start() const { return _start; }
@@ -84,7 +85,7 @@ class Chunk
 
         void fetch_data(Time, Time, unsigned int,
                 DataCallback, void *,
-                unsigned int) const;
+                unsigned int);
 
         bool operator<(const Chunk &) const;
         bool operator==(const Chunk &) const;
@@ -107,6 +108,11 @@ class Chunk
         Time _end; /**< Endzeit des Chunks */
         ChannelType _type; /**< channel type */
         bool _incomplete; /**< Data ist still logged. */
+        enum LoadState {
+            Empty,
+            Pre,
+            Full
+        } _load_state;
 
         unsigned int _calc_optimal_level(Time, Time, unsigned int) const;
         Time _time_per_value(unsigned int) const;
