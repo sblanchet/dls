@@ -33,21 +33,6 @@ using namespace LibDLS;
 
 /*****************************************************************************/
 
-#pragma pack(push, 1)
-
-/** Channel index record, containing all chunk times.
- */
-
-struct ChannelIndexRecord
-{
-    uint64_t start_time;
-    uint64_t end_time;
-};
-
-#pragma pack(pop)
-
-/*****************************************************************************/
-
 extern unsigned int sig_int_term;
 
 extern string dls_dir_path;
@@ -161,7 +146,14 @@ int index_reindex_channel(Channel *channel)
         const Chunk *c = &chunk_i->second;
         ChannelIndexRecord rec;
         rec.start_time = c->start().to_uint64();
-        rec.end_time = c->end().to_uint64();
+        if (c->incomplete()) {
+            rec.end_time = 0ULL;
+            cout << "       Incomplete chunk " << c->start().to_uint64()
+                << "." << endl;
+        }
+        else {
+            rec.end_time = c->end().to_uint64();
+        }
         index.append_record(&rec);
         record_count++;
     }

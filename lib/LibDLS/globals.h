@@ -165,6 +165,16 @@ struct MessageIndexRecord
     uint32_t position;
 };
 
+/*****************************************************************************/
+
+/** Channel index record, containing all chunk times.
+ */
+struct ChannelIndexRecord
+{
+    uint64_t start_time;
+    uint64_t end_time;
+};
+
 #pragma pack(pop)
 
 /*****************************************************************************/
