@@ -160,7 +160,7 @@ MainWindow::MainWindow(
     QString fileToLoad;
 
     if (newView) {
-        // pass
+        dlsGraph->setNamedRange(DLS::Graph::Today);
     }
     else if (!fileName.isEmpty()) {
         fileToLoad = fileName;
