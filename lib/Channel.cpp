@@ -456,8 +456,24 @@ Channel::_fetch_chunks_network()
     }
 
     const DlsProto::DirInfo &dir_info = res.dir_info();
-    const DlsProto::JobInfo &job_info = dir_info.job(0); // FIXME check
-    const DlsProto::ChannelInfo &ch_info = job_info.channel(0); // FIXME check
+
+    if (dir_info.job_size() != 1) {
+        stringstream err;
+        err << "Job size is " << dir_info.job_size();
+        log(err.str());
+        return ret;
+    }
+
+    const DlsProto::JobInfo &job_info = dir_info.job(0);
+
+    if (job_info.channel_size() != 1) {
+        stringstream err;
+        err << "Channel size is " << job_info.channel_size();
+        log(err.str());
+        return ret;
+    }
+
+    const DlsProto::ChannelInfo &ch_info = job_info.channel(0);
 
     google::protobuf::RepeatedPtrField<DlsProto::ChunkInfo>::const_iterator
         ch_info_i;
@@ -629,7 +645,7 @@ void Channel::_fetch_data_network(
             stringstream err;
             err << "Error response: " << res.error().message();
             log(err.str());
-            break;
+            continue;
         }
 
         if (res.has_end_of_response() && res.end_of_response()) {
@@ -640,7 +656,7 @@ void Channel::_fetch_data_network(
             stringstream err;
             err << "Error: Expected data!";
             log(err.str());
-            break;
+            continue;
         }
 
         const DlsProto::Data &data_res = res.data();
