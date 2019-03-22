@@ -216,7 +216,7 @@ void ValueScale::draw(QPainter &painter, const QRect &rect,
             textRect.moveBottom(rect.bottom() - p);
 
             if (rect.contains(textRect)) {
-                pen.setColor(Qt::black);
+                pen.setColor(parent->palette().windowText().color());
                 painter.setPen(pen);
                 painter.drawText(textRect, Qt::AlignRight | Qt::AlignBottom,
                         formatValue(stepValue));

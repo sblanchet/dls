@@ -757,7 +757,7 @@ void Scale::drawMajor(
 
     if (textRect.left() + s.width() <= rect.right()) {
         painter.setFont(f);
-        pen.setColor(Qt::black);
+        pen.setColor(parent->palette().windowText().color());
         painter.setPen(pen);
         painter.drawText(textRect, text);
     }
