@@ -159,17 +159,19 @@ MainWindow::MainWindow(
 
     QString fileToLoad;
 
-    if (newView) {
-        dlsGraph->setNamedRange(DLS::Graph::Today);
-    }
-    else if (!fileName.isEmpty()) {
-        fileToLoad = fileName;
-    }
-    else if (restore && recentFiles.size() > 0) {
-        fileToLoad = recentFiles.front();
+    if (not newView) {
+        if (!fileName.isEmpty()) {
+            fileToLoad = fileName;
+        }
+        else if (restore && recentFiles.size() > 0) {
+            fileToLoad = recentFiles.front();
+        }
     }
 
-    if (!fileToLoad.isEmpty()) {
+    if (fileToLoad.isEmpty()) {
+        dlsGraph->setNamedRange(DLS::Graph::Today);
+    }
+    else {
         if (dlsGraph->load(fileToLoad, &model)) {
             currentFileName = fileToLoad;
             updateWindowTitle();
