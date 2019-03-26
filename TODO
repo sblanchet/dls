@@ -19,6 +19,8 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Interactive changing of header sizes
 
 # User frontend (dlsgui)
+    * Do not display duplicate messages (same type, time and text)
+
     * Make loading data sources run in background (so that window is shown
       immediately)
     * Fix adding data sources on loading view
@@ -32,11 +34,15 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Use PdCom to load available channels
 
 # Daemon (dlsd)
+    * Trigger channel re-indexing from finishing process
+
     * Protocol authentication
     * Configuration via protocol
     * Fix online sample time change
 
 # Command-line tool (dls)
+    * Use library indexing methods
+
     * option -Q for really quiet
     * export:
         * times with the date parser
@@ -54,6 +60,9 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * show compression rate
 
 # Library (LibDLS):
+    * Implement channel indexing in library
+    * Make use of existing index during indexing
+
     * Auto-import jobs on reconnect
     * Add version macros
     * Fetch chunks and data in same network request
