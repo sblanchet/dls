@@ -100,13 +100,14 @@ void index_get_options(int argc, char *argv[])
 
 int index_reindex_channel(Channel *channel)
 {
-    cout << "   " << channel->dir_index() << " " << channel->name() << endl;
+    cout << "    Channel " << channel->dir_index() << " - "
+        << channel->name() << endl;
 
     try {
         channel->fetch_chunks();
     }
     catch (ChannelException &e) {
-        cerr << "Failed to fetch chunks: " << e.msg << endl;
+        cerr << "      Failed to fetch chunks: " << e.msg << endl;
         return 1;
     }
 
@@ -122,22 +123,23 @@ int index_reindex_channel(Channel *channel)
 
     int tmp_fd = mkstemp((char *) tmp_path.c_str());
     if (tmp_fd == -1) {
-        cerr << "Failed to create temporary file in " << channel->path()
-            << ": " << strerror(errno) << endl;
+        cerr << "      Failed to create " << tmp_path << ":" << endl
+            << "      " << strerror(errno) << endl;
         return 1;
     }
 
     int ret = fchmod(tmp_fd, 0644);
     if (ret == -1) {
-        cerr << "Failed to set temporary file mode of " << tmp_path
-            << ": " << strerror(errno) << endl;
+        cerr << "      Failed to set mode of " << tmp_path << ":" << endl
+            << "      " << strerror(errno) << endl;
     }
 
     try {
         index.open_read_append(tmp_path);
     }
     catch (EIndexT &e) {
-        cerr << "Failed to open index: " << e.msg << endl;
+        cerr << "      Failed to open index:" << endl
+            << "      " << e.msg << endl;
         close(tmp_fd);
         unlink(tmp_path.c_str());
         return 1;
@@ -146,6 +148,7 @@ int index_reindex_channel(Channel *channel)
     close(tmp_fd);
 
     unsigned int record_count(0);
+    unsigned int incomplete(0);
 
     for (Channel::ChunkMap::const_iterator chunk_i =
             channel->chunks().begin();
@@ -155,8 +158,7 @@ int index_reindex_channel(Channel *channel)
         rec.start_time = c->start().to_uint64();
         if (c->incomplete()) {
             rec.end_time = 0ULL;
-            cout << "       Incomplete chunk " << c->start().to_uint64()
-                << "." << endl;
+            incomplete++;
         }
         else {
             rec.end_time = c->end().to_uint64();
@@ -174,7 +176,7 @@ int index_reindex_channel(Channel *channel)
     }
 
     cout << "       Created channel index with " << record_count
-        << " records." << endl;
+        << " records (" << incomplete << " incomplete)." << endl;
 
     return 0;
 }
@@ -183,14 +185,14 @@ int index_reindex_channel(Channel *channel)
 
 int index_reindex_job(Job *job)
 {
-    cout << " " << setw(4) << job->preset().id()
-        << "  " << job->preset().description() << endl;
+    cout << "  Job " << job->preset().id()
+        << " - " << job->preset().description() << endl;
 
     try {
         job->fetch_channels();
     }
     catch (Exception &e) {
-        cerr << "Failed to fetch channels: " << e.msg << endl;
+        cerr << "    Failed to fetch channels: " << e.msg << endl;
         return 1;
     }
 
