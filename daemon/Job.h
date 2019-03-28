@@ -123,6 +123,8 @@ private:
     bool _add_logger(const LibDLS::ChannelPreset *);
     void _stop_logger(Logger *);
     Logger *_logger_exists_for_channel(const string &);
+
+    void _update_channel_indices();
 };
 
 /*****************************************************************************/

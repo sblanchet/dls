@@ -32,8 +32,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Use PdCom to load available channels
 
 # Daemon (dlsd)
-    * Trigger channel re-indexing from finishing process
-
     * Protocol authentication
     * Configuration via protocol
     * Fix online sample time change

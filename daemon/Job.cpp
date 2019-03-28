@@ -30,7 +30,8 @@ using namespace std;
 #include "globals.h"
 #include "ProcLogger.h"
 #include "Job.h"
-using namespace LibDLS;
+
+#include "lib/LibDLS/Dir.h"
 
 /*****************************************************************************/
 
@@ -80,7 +81,7 @@ void Job::import(unsigned int job_id)
     try {
         _preset.import(_parent_proc->dls_dir(), job_id);
     }
-    catch (EJobPreset &e) {
+    catch (LibDLS::EJobPreset &e) {
         throw EJob("Importing job preset: " + e.msg);
     }
 
@@ -191,7 +192,7 @@ void Job::subscribe_messages()
 
 void Job::_sync_loggers(SyncLoggerMode mode)
 {
-    vector<ChannelPreset>::const_iterator channel_i;
+    vector<LibDLS::ChannelPreset>::const_iterator channel_i;
     list<Logger *>::iterator logger_i, del_i;
     unsigned int add_count = 0, chg_count = 0, rem_count = 0;
 
@@ -297,7 +298,7 @@ void Job::_sync_loggers(SyncLoggerMode mode)
    \param preset Kanalvorgaben für den neuen Logger
 */
 
-bool Job::_add_logger(const ChannelPreset *preset)
+bool Job::_add_logger(const LibDLS::ChannelPreset *preset)
 {
     PdCom::Variable *pv = _parent_proc->findVariable(preset->name);
 
@@ -531,6 +532,8 @@ void Job::finish()
 
     msg() << "Job finished without errors.";
     log(Info);
+
+    _update_channel_indices();
 }
 
 /*****************************************************************************/
@@ -541,10 +544,11 @@ void Job::finish()
    \param info_tag Info-Tag
 */
 
-void Job::message(Time time, const string &type, const string &message)
+void Job::message(LibDLS::Time time, const string &type,
+        const string &message)
 {
     stringstream filename, dirname;
-    MessageIndexRecord index_record;
+    LibDLS::MessageIndexRecord index_record;
     struct stat stat_buf;
 
     msg() << _preset.source() << ":" << _preset.port()
@@ -601,12 +605,12 @@ void Job::message(Time time, const string &type, const string &message)
             _message_index.open_read_append(
                     (filename.str() + ".idx").c_str());
         }
-        catch (EFile &e) {
+        catch (LibDLS::EFile &e) {
             msg() << "Failed to open message file:" << e.msg;
             log(Error);
             return;
         }
-        catch (EIndexT &e) {
+        catch (LibDLS::EIndexT &e) {
             msg() << "Failed to open message index: " << e.msg;
             log(Error);
             return;
@@ -626,15 +630,69 @@ void Job::message(Time time, const string &type, const string &message)
         _message_file.append(tag.str().c_str(), tag.str().size());
         _message_index.append_record(&index_record);
     }
-    catch (EFile &e) {
+    catch (LibDLS::EFile &e) {
         msg() << "Could not write message file: " << e.msg;
         log(Error);
         return;
     }
-    catch (EIndexT &e) {
+    catch (LibDLS::EIndexT &e) {
         msg() << "Could not write message index: " << e.msg;
         log(Error);
         return;
+    }
+}
+
+/*****************************************************************************/
+
+/** Update channel indices.
+ */
+void Job::_update_channel_indices()
+{
+    LibDLS::Directory dls_dir;
+
+    try {
+        dls_dir.set_uri(_parent_proc->dls_dir());
+    }
+    catch (LibDLS::DirectoryException &e) {
+        msg() << "Passing URI failed: " << e.msg;
+        log(Warning);
+        return;
+    }
+
+    try {
+        dls_dir.import();
+    }
+    catch (LibDLS::DirectoryException &e) {
+        msg() << "Import failed: " << e.msg;
+        log(Warning);
+        return;
+    }
+
+    LibDLS::Job *job;
+    if (!(job = dls_dir.find_job(id()))) {
+        msg() << "No such job - " << id() << ".";
+        log(Warning);
+        return;
+    }
+
+    try {
+        job->fetch_channels();
+    }
+    catch (LibDLS::Exception &e) {
+        msg() << "Failed to fetch channels: " << e.msg;
+        log(Warning);
+        return;
+    }
+
+    for (list<LibDLS::Channel>::iterator channel_i = job->channels().begin();
+            channel_i != job->channels().end(); channel_i++) {
+        try {
+            channel_i->update_index();
+        }
+        catch (LibDLS::ChannelException &e) {
+            msg() << "Updating channel index failed: " << e.msg;
+            log(Warning);
+        }
     }
 }
 
