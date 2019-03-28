@@ -73,7 +73,7 @@ CtlDialogChannel::CtlDialogChannel(const string &dls_dir)
     _input_block->align(FL_ALIGN_TOP_LEFT);
     _input_block->callback(_callback, this);
 
-    _input_mask = new Fl_Input(10, 70, 120, 25, "Meta-Mask");
+    _input_mask = new Fl_Input(10, 70, 120, 25, "Meta mask");
     _input_mask->align(FL_ALIGN_TOP_LEFT);
     _input_mask->callback(_callback, this);
     _input_mask->readonly(META_MASK_FIXED);
@@ -476,11 +476,11 @@ bool CtlDialogChannel::_save_channels()
                         return false;
                     }
 
-                    // All channels must have an accurancy
+                    // All channels must have an accuracy
                     if (!write_acc && (*channel_i)->accuracy <= 0.0)
                     {
                         msg_win->str() << "Channel \"" << (*channel_i)->name
-                                       << "\" still needs an accurancy!";
+                                       << "\" still needs an accuracy!";
                         msg_win->error();
                         return false;
                     }
@@ -521,7 +521,7 @@ bool CtlDialogChannel::_save_channels()
                         if ((*channel_i)->block_size % mdct_block_size)
                         {
                             msg_win->str() << "The previous block size"
-                                           << " of the channels \"";
+                                           << " of the channel \"";
                             msg_win->str() << (*channel_i)->name;
                             msg_win->str() << "\" is not a multiple of"
                                            << " the MDCT block size!";
@@ -557,11 +557,11 @@ bool CtlDialogChannel::_save_channels()
                         return false;
                     }
 
-                    // All channels must have an accurancy
+                    // All channels must have an accuracy
                     if (!write_acc && (*channel_i)->accuracy <= 0.0)
                     {
                         msg_win->str() << "Channel \"" << (*channel_i)->name
-                                       << "\" still needs an accurancy!";
+                                       << "\" still needs an accuracy!";
                         msg_win->error();
                         return false;
                     }

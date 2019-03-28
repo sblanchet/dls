@@ -69,7 +69,7 @@ CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
     _input_trigger = new Fl_Input(10, 130, 200, 25, "Trigger");
     _input_trigger->align(FL_ALIGN_TOP_LEFT);
 
-    _input_quota_time = new Fl_Input(10, 180, 90, 25, "Time-Quota");
+    _input_quota_time = new Fl_Input(10, 180, 90, 25, "Time quota");
     _input_quota_time->align(FL_ALIGN_TOP_LEFT);
 
     _choice_time_ext = new Fl_Choice(110, 180, 100, 25);
@@ -79,7 +79,7 @@ CtlDialogJobEdit::CtlDialogJobEdit(const string &dls_dir)
     _choice_time_ext->add("Days");
     _choice_time_ext->value(2);
 
-    _input_quota_size = new Fl_Input(10, 230, 90, 25, "Data-Quota");
+    _input_quota_size = new Fl_Input(10, 230, 90, 25, "Size quota");
     _input_quota_size->align(FL_ALIGN_TOP_LEFT);
 
     _choice_size_ext = new Fl_Choice(110, 230, 100, 25);
@@ -264,7 +264,7 @@ bool CtlDialogJobEdit::_save_job()
         catch (LibDLS::EJobPreset &e)
         {
             // Error! But only issue warning.
-            msg_win->str() << "Cannot notify dlsd: "
+            msg_win->str() << "Failed to notify dlsd: "
                            << e.msg;
             msg_win->warning();
         }
@@ -331,7 +331,7 @@ bool CtlDialogJobEdit::_create_job()
     catch (LibDLS::EJobPreset &e)
     {
         // Error! But only give a warning.
-        msg_win->str() << "Cannot notify dlsd: " << e.msg;
+        msg_win->str() << "Failed to notify dlsd: " << e.msg;
         msg_win->warning();
     }
 
@@ -559,7 +559,7 @@ bool CtlDialogJobEdit::_calc_size_quota(uint64_t *size_quota)
         }
         catch (...)
         {
-            msg_win->str() << "The data quota must be an integer!";
+            msg_win->str() << "The size quota must be an integer!";
             msg_win->error();
             return false;
         }

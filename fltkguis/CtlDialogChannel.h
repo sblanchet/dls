@@ -39,7 +39,7 @@ using namespace std;
 /**
    Dialog for changing the properties of channels to be acquired
 
-   This input mask allows the user to set the samplig rate,
+   This input mask allows the user to set the sampling rate,
    meta-reduction, compression, etc. of a channel.
 */
 
@@ -58,7 +58,7 @@ private:
     Fl_Button *_button_cancel;    /**< "Cancel"-Button */
     Fl_Input *_input_freq;        /**< Input field for the sampling frequency */
     Fl_Input *_input_block;       /**< Input field for the block size */
-    Fl_Input *_input_mask;        /**< Input field for the Meta-Mask */
+    Fl_Input *_input_mask;        /**< Input field for the meta mask */
     Fl_Input *_input_red;         /**< Input field for the meta reduction */
     Fl_Choice *_choice_format;    /**< Selection box for compression */
     Fl_Choice *_choice_mdct;      /**< Selection box for the MDCT block size */

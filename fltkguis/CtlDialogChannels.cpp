@@ -246,7 +246,7 @@ void CtlDialogChannels::show()
     }
     else
     {
-        msg_win->str() << "Cannot start a new thread!";
+        msg_win->str() << "Failed to start a new thread!";
         msg_win->error();
     }
 }

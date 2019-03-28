@@ -181,7 +181,7 @@ void CtlDialogMain::_grid_jobs_callback()
             else if (_grid_jobs->current_col() == "state")
             {
                 _grid_jobs->current_content(
-                    _jobs[i].running() ? "started" : "required");
+                    _jobs[i].running() ? "started" : "paused");
             }
             else if (_grid_jobs->current_col() == "trigger")
             {
@@ -338,7 +338,7 @@ void CtlDialogMain::_button_state_clicked()
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Write the specification data: " << e.msg;
+        msg_win->str() << "Writing the preset file: " << e.msg;
         msg_win->error();
         return;
     }
@@ -349,7 +349,7 @@ void CtlDialogMain::_button_state_clicked()
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Cannot notify dlsd!";
+        msg_win->str() << "Failed to notify dlsd!";
         msg_win->warning();
     }
 
@@ -487,8 +487,8 @@ void CtlDialogMain::_load_jobs()
     // Open the main directory
     if ((dir = opendir(_dls_dir.c_str())) == NULL)
     {
-        msg_win->str() << "Cannot open the data \"" << _dls_dir
-                       << "\" directory!";
+        msg_win->str() << "Failed to open data directory \"" << _dls_dir
+                       << "\"!";
         msg_win->error();
         return;
     }
@@ -664,8 +664,8 @@ void CtlDialogMain::_check_dls_dir()
 
         if (mkdir(_dls_dir.c_str(), 0755) == -1)
         {
-            msg_win->str() << "Cannot create the directory \"" << _dls_dir << "\"";
-            msg_win->str() << " : " << strerror(errno);
+            msg_win->str() << "Failed to create directory \"" << _dls_dir
+                << "\": " << strerror(errno);
             msg_win->error();
             return;
         }
@@ -701,9 +701,9 @@ void CtlDialogMain::_check_dls_dir()
         // Create spooling directory
         if (mkdir((_dls_dir + "/spool").c_str(), 0755) == -1)
         {
-            msg_win->str() << "Cannot create the directory \""
-                           << (_dls_dir + "/spool") << "\"";
-            msg_win->str() << " : " << strerror(errno);
+            msg_win->str() << "Failed to create directory \""
+                           << (_dls_dir + "/spool") << "\": "
+                           << strerror(errno);
             msg_win->error();
             return;
         }
@@ -717,7 +717,7 @@ void CtlDialogMain::_check_dls_dir()
             str.clear();
             str.str("");
             str << "The directory \"" << _dls_dir << "\"" << endl;
-            str << "is not yet a DLS data directory." << endl;
+            str << "is not a DLS data directory." << endl;
             str << "Shall it be initialized?";
 
             if (fl_choice(str.str().c_str(), "No", "Yes", NULL) == 0) return;
@@ -729,9 +729,9 @@ void CtlDialogMain::_check_dls_dir()
         if ((fd = open((_dls_dir + "/id_sequence").c_str(),
                        O_WRONLY | O_CREAT, 0644)) == -1)
         {
-            msg_win->str() << "Cannot create the file \""
-                           << (_dls_dir + "/id_sequence") << "\"";
-            msg_win->str() << " : " << strerror(errno);
+            msg_win->str() << "Failed to create file \""
+                           << (_dls_dir + "/id_sequence") << "\": "
+                           << strerror(errno);
             msg_win->error();
             return;
         }
@@ -739,7 +739,7 @@ void CtlDialogMain::_check_dls_dir()
         if (write(fd, "100\n", 4) != 4)
         {
             close(fd);
-            msg_win->str() << "Cannot write the file \""
+            msg_win->str() << "Failed to write file \""
                            << (_dls_dir + "/id_sequence") << "\"";
             msg_win->str() << "! Please delete manually!";
             msg_win->error();
@@ -764,9 +764,9 @@ void CtlDialogMain::_check_dls_dir()
 
         if (!pid_file.is_open())
         {
-            msg_win->str() << "Cannot open the file \""
+            msg_win->str() << "Failed to open \""
                            << (_dls_dir + "/" + DLS_PID_FILE)
-                           << "\" !";
+                           << "\"!";
             msg_win->error();
             return;
         }
@@ -795,7 +795,7 @@ void CtlDialogMain::_check_dls_dir()
             }
             else
             {
-                msg_win->str() << "Cannot signal process " << pid << "!";
+                msg_win->str() << "Failed to signal process " << pid << "!";
                 msg_win->error();
                 return;
             }

@@ -390,7 +390,7 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Writing the specification file: " << e.msg;
+        msg_win->str() << "Writing the preset file: " << e.msg;
         msg_win->error();
         return;
     }
@@ -401,7 +401,7 @@ void CtlDialogJob::_insert_channels(const list<LibDLS::RealChannel> *channels)
     }
     catch (LibDLS::EJobPreset &e)
     {
-        msg_win->str() << "Cannot notify dlsd: " << e.msg;
+        msg_win->str() << "Failed to notify dlsd: " << e.msg;
         msg_win->warning();
     }
 
