@@ -143,7 +143,7 @@ void ViewDialogExport::_clear_exporters()
    Display the dialog
 */
 
-void ViewDialogExport::show(const list<Channel> *channels,
+void ViewDialogExport::show(list<Channel> *channels,
                             LibDLS::Time start, LibDLS::Time end)
 {
     stringstream str;
@@ -346,7 +346,7 @@ void *ViewDialogExport::_static_thread_function(void *data)
 
 void ViewDialogExport::_thread_function()
 {
-    list<Channel>::const_iterator channel_i;
+    list<Channel>::iterator channel_i;
     list<Export *>::iterator exp_i;
     ExportInfo info;
     unsigned int current_channel, total_channels;

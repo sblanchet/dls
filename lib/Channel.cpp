@@ -38,6 +38,7 @@ using namespace std;
 
 #include "proto/dls.pb.h"
 
+#include "IndexT.h"
 #include "XmlParser.h"
 #include "IndexT.h"
 using namespace LibDLS;
@@ -180,7 +181,7 @@ void Channel::fetch_data(
         DataCallback cb, /**< callback */
         void *cb_data, /**< arbitrary callback parameter */
         unsigned int decimation /**< Decimation. */
-        ) const
+        )
 {
     if (_job->dir()->access() == Directory::Local) {
         _fetch_data_local(start, end, min_values, cb, cb_data, decimation);
@@ -262,7 +263,6 @@ Channel::_fetch_chunks_local()
 {
     DIR *dir;
     struct dirent *dir_ent;
-    string dir_ent_name;
     Chunk new_chunk, *chunk;
     bool first = true;
     int64_t dir_time;
@@ -276,16 +276,82 @@ Channel::_fetch_chunks_local()
         log(msg.str());
     }
 
-    Time ts, te, t_now, t_prev, t_opendir, t_readdir, t_find, t_import,
-         t_insert, t_range, t_close, t_removed;
+    Time ts, te, t_now, t_prev, t_index_open, t_index_load, t_opendir,
+         t_readdir, t_find, t_import, t_insert, t_range, t_close, t_removed;
     ts.set_now();
     t_prev = ts;
     Chunk::reset_timing();
-    unsigned int imported = 0, existing = 0, removed = 0;
+    unsigned int imported = 0, existing = 0, removed = 0, from_index = 0;
 #endif
 
     _range_start.set_null();
     _range_end.set_null();
+
+    if (_chunks.empty()) {
+        // try to open channel index file
+        stringstream indexPath;
+        indexPath << path() << "/channel.idx";
+        IndexT<ChannelIndexRecord> index;
+
+        try {
+            index.open_read(indexPath.str());
+        }
+        catch (EIndexT &e) {
+            cerr << "Failed to open index: " << e.msg << endl;
+        }
+
+        TRACE_TIMING(t_index_open);
+
+#ifdef DEBUG_TIMING
+        {
+            stringstream msg;
+            msg << "Using channel index with " << index.record_count()
+                << " records.";
+            log(msg.str());
+        }
+#endif
+
+        for (unsigned int i = 0; i < index.record_count(); i++) {
+            ChannelIndexRecord rec(index[i]);
+
+            ChunkMap::iterator chunk_i = _chunks.find(rec.start_time);
+            stringstream chunk_path;
+            chunk_path << path() << "/chunk" << rec.start_time;
+            if (chunk_i == _chunks.end()) {
+                // chunk not existing yet
+                try {
+                    new_chunk.preload(chunk_path.str(), _type,
+                            rec.start_time, rec.end_time);
+                }
+                catch (ChunkException &e) {
+                    stringstream err;
+                    err << "WARNING: Failed to preload chunk: " << e.msg;
+                    log(err.str());
+                    continue;
+                }
+
+                pair<int64_t, Chunk> val(rec.start_time, new_chunk);
+                pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
+                chunk = &ins_ret.first->second;
+                ret.first.insert(chunk);
+#ifdef DEBUG_TIMING
+                from_index++;
+#endif
+            }
+        }
+    }
+
+#ifdef DEBUG_TIMING
+    {
+        stringstream msg;
+        msg << "Finished loading index.";
+        log(msg.str());
+    }
+#endif
+
+    TRACE_TIMING(t_index_load);
+
+    // now read chunks from directory
 
     if (!(dir = opendir(path().c_str()))) {
         stringstream err;
@@ -296,7 +362,10 @@ Channel::_fetch_chunks_local()
     TRACE_TIMING(t_opendir);
 
     while ((dir_ent = readdir(dir))) {
+        string dir_ent_name;
+
         TRACE_TIMING(t_readdir);
+
         dir_ent_name = dir_ent->d_name;
         if (dir_ent_name.find("chunk") != 0) {
             continue;
@@ -314,6 +383,13 @@ Channel::_fetch_chunks_local()
         TRACE_TIMING(t_find);
         if (chunk_i == _chunks.end()) {
             // chunk not existing yet
+#ifdef DEBUG_TIMING
+            {
+                stringstream msg;
+                msg << "Importing " << dir_ent_name;
+                log(msg.str());
+            }
+#endif
             try {
                 new_chunk.import(path() + "/" + dir_ent_name, _type);
             }
@@ -345,6 +421,13 @@ Channel::_fetch_chunks_local()
 
         if (chunk->incomplete()) {
             // chunk is still logging, fetch current end time
+#ifdef DEBUG_TIMING
+            {
+                stringstream msg;
+                msg << "Fetching range of " << chunk->start().to_int64();
+                log(msg.str());
+            }
+#endif
             try {
                 chunk->fetch_range();
             }
@@ -386,6 +469,11 @@ Channel::_fetch_chunks_local()
             ret.second.insert(cur->first);
             _chunks.erase(cur);
 #ifdef DEBUG_TIMING
+            {
+                stringstream msg;
+                msg << "Removing " << cur->second.start().to_int64();
+                log(msg.str());
+            }
             removed++;
 #endif
         }
@@ -400,10 +488,13 @@ Channel::_fetch_chunks_local()
         msg << __func__ << "() " << ts.diff_str_to(te) << endl
             << " imported " << imported
             << " / existing " << existing
+            << " / from index " << from_index
             << " / removed " << removed << endl
             << " ret.first " << ret.first.size()
             << " / ret.second " << ret.second.size() << endl
             << fixed << setprecision(0) << setw(8)
+            << " index open: " << t_index_open.to_dbl() << endl
+            << " index load: " << t_index_load.to_dbl() << endl
             << "       open: " << t_opendir.to_dbl() << endl
             << "    readdir: " << t_readdir.to_dbl() << endl
             << "       find: " << t_find.to_dbl() << endl
@@ -565,7 +656,7 @@ void Channel::_fetch_data_local(
         DataCallback cb, /**< callback */
         void *cb_data, /**< arbitrary callback parameter */
         unsigned int decimation /**< Decimation. */
-        ) const
+        )
 {
 #ifdef DEBUG_TIMING
     {
@@ -579,7 +670,7 @@ void Channel::_fetch_data_local(
     ts.set_now();
 #endif
 
-    ChunkMap::const_iterator chunk_i;
+    ChunkMap::iterator chunk_i;
 
     if (start < end) {
         try {

@@ -77,7 +77,7 @@ public:
     void import(const std::string &, unsigned int);
     std::pair<std::set<Chunk *>, std::set<int64_t> > fetch_chunks();
     void fetch_data(Time, Time, unsigned int,
-                    DataCallback, void *, unsigned int = 1) const;
+                    DataCallback, void *, unsigned int = 1);
 
     std::string path() const { return _path; }
     unsigned int dir_index() const { return _dir_index; }
@@ -118,7 +118,7 @@ private:
     std::pair<std::set<Chunk *>, std::set<int64_t> > _fetch_chunks_local();
     std::pair<std::set<Chunk *>, std::set<int64_t> > _fetch_chunks_network();
     void _fetch_data_local(Time, Time, unsigned int,
-                    DataCallback, void *, unsigned int) const;
+                    DataCallback, void *, unsigned int);
     void _fetch_data_network(Time, Time, unsigned int,
                     DataCallback, void *, unsigned int) const;
     void _update_index_local();

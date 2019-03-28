@@ -96,7 +96,10 @@ private:
 */
 
 template <class REC>
-IndexT<REC>::IndexT()
+IndexT<REC>::IndexT():
+    _size(0),
+    _record_count(0),
+    _position(0)
 {
 }
 
@@ -266,6 +269,10 @@ void IndexT<REC>::open_read_append(const string &file_name)
 template <class REC>
 void IndexT<REC>::close()
 {
+    _size = 0;
+    _record_count = 0;
+    _position = 0;
+
     try
     {
         _file.close();

@@ -491,9 +491,20 @@ void Connection::_process_channel_request(
         if (data_req.has_decimation()) {
             decimation = data_req.decimation();
         }
-        channel->fetch_data(LibDLS::Time(data_req.start()),
-                LibDLS::Time(data_req.end()), min_values,
-                _static_data_callback, this, decimation);
+        try {
+            channel->fetch_data(LibDLS::Time(data_req.start()),
+                    LibDLS::Time(data_req.end()), min_values,
+                    _static_data_callback, this, decimation);
+        }
+        catch (LibDLS::ChannelException &e) {
+            stringstream str;
+            str << "fetch_data(): " << e.msg;
+
+            DlsProto::Response res;
+            DlsProto::Error *err = res.mutable_error();
+            err->set_message(str.str());
+            _send_msg(res);
+        }
 
         DlsProto::Response res;
         res.set_end_of_response(true);

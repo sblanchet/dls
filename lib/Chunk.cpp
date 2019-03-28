@@ -115,7 +115,8 @@ Chunk::Chunk():
     _format_index(0),
     _mdct_block_size(0),
     _type(TUNKNOWN),
-    _incomplete(true)
+    _incomplete(true),
+    _load_state(Empty)
 {
 }
 
@@ -129,7 +130,8 @@ Chunk::Chunk(const DlsProto::ChunkInfo &info, ChannelType type):
     _start(info.start()),
     _end(info.end()),
     _type(type),
-    _incomplete(info.incomplete())
+    _incomplete(info.incomplete()),
+    _load_state(Pre)
 {
 }
 
@@ -164,7 +166,6 @@ void Chunk::import(const string &path, ChannelType type)
 
     _dir = path;
     _type = type;
-    _incomplete = true;
 
     chunk_file_name = _dir + "/chunk.xml";
 
@@ -222,6 +223,27 @@ void Chunk::import(const string &path, ChannelType type)
     file.close();
 
     TRACE_TIMING(t_import_close);
+
+    _load_state = Full;
+}
+
+/*****************************************************************************/
+
+/** Initialises a chung with basc values from channel index.
+ */
+void Chunk::preload(const string &path, ChannelType type,
+        Time start, Time end)
+{
+    _dir = path;
+    _sample_frequency = 0.0;
+    _meta_reduction = 0;
+    _format_index = 0;
+    _mdct_block_size = 0;
+    _start = start;
+    _end = end;
+    _type = type;
+    _incomplete = end.is_null();
+    _load_state = Pre;
 }
 
 /*****************************************************************************/
@@ -237,7 +259,7 @@ void Chunk::fetch_data(
         DataCallback cb,
         void *cb_data, /**< arbitrary callback param */
         unsigned int decimation
-        ) const
+        )
 {
     if (!decimation) {
         stringstream err;
@@ -245,15 +267,33 @@ void Chunk::fetch_data(
         throw ChunkException(err.str());
     }
 
+    // The chunk range was not determined successfully
+    if (_start.is_null() or _end.is_null()) {
+#ifdef DEBUG_TIMING
+        cerr << _start.to_int64() << " " << _end.to_int64()
+            << " load " << _load_state << endl;
+#endif
+
+        return;
+    }
+
     // The requested time range does not intersect the chunk's range.
     if (start > _end || end < _start) {
         return;
     }
 
+    if (_load_state != Full) {
+#ifdef DEBUG_TIMING
+        cerr << "Importing " << _start.to_int64() << endl;
+#endif
+        import(_dir, _type);
+    }
+
     unsigned int level = _calc_optimal_level(start, end, min_values);
     unsigned int decimationCounter = 0;
     Data *data = NULL;
-    Time limit = (min_values > 0) ? 2 * (end - start).to_int64() / min_values : 0;
+    Time limit = (min_values > 0) ?
+        2 * (end - start).to_int64() / min_values : 0;
     Time end_to_use = (end < _end) ? end : _end;
     Time time_per_value, last;
 
@@ -821,10 +861,6 @@ void Chunk::fetch_range()
     t_prev.set_now();
 #endif
 
-    _start = (uint64_t) 0;
-    _end = (uint64_t) 0;
-    _incomplete = true;
-
     global_index_file_name = _dir + "/level0/data_gen.idx";
 
     try
@@ -863,6 +899,8 @@ void Chunk::fetch_range()
         throw ChunkException(err.str());
     }
 
+    _start = first_global_index_record.start_time;
+
     TRACE_TIMING(t_global_first);
 
     unsigned int rec_idx = global_index.record_count() - 1;
@@ -883,7 +921,9 @@ void Chunk::fetch_range()
 
     // In die letzte Datendatei wird noch erfasst
     // -> Die aktuelle, letzte Zeit aus dem Datendatei-Index holen
-    if (last_global_index_record.end_time == 0)
+    _incomplete = (last_global_index_record.end_time == 0);
+
+    if (_incomplete)
     {
         index_file_name << _dir << "/level0/data"
                         << last_global_index_record.start_time << "_gen.idx";
@@ -937,16 +977,11 @@ void Chunk::fetch_range()
         index.close();
         TRACE_TIMING(t_local_close);
     }
-    else {
-        // last global index record has time != 0
-        _incomplete = false;
-    }
 
     global_index.close();
 
     TRACE_TIMING(t_global_close);
 
-    _start = first_global_index_record.start_time;
     _end = last_global_index_record.end_time;
 }
 

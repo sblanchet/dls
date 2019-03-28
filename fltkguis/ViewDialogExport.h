@@ -48,7 +48,7 @@ public:
     ViewDialogExport(const string &);
     ~ViewDialogExport();
 
-    void show(const list<LibDLS::Channel> *, LibDLS::Time, LibDLS::Time);
+    void show(list<LibDLS::Channel> *, LibDLS::Time, LibDLS::Time);
 
 private:
     string _dls_dir;           /**< DLS data directory */
@@ -66,7 +66,7 @@ private:
     Fl_Button *_button_export; /**< Export-Button */
     Fl_Button *_button_close;  /**< "Close"-Button */
 
-    const list<LibDLS::Channel> *_channels;
+    list<LibDLS::Channel> *_channels;
     unsigned int _channel_count;
     LibDLS::Time _start, _end;
     list<LibDLS::Export *> _exporters;
