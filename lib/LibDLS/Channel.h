@@ -100,6 +100,8 @@ public:
     void set_channel_info(DlsProto::ChannelInfo *) const;
     void set_chunk_info(DlsProto::ChannelInfo *) const;
 
+    void update_index();
+
 private:
     Job * const _job; /**< Parent job. */
     std::string _path; /**< channel directory path */
@@ -119,6 +121,7 @@ private:
                     DataCallback, void *, unsigned int);
     void _fetch_data_network(Time, Time, unsigned int,
                     DataCallback, void *, unsigned int) const;
+    void _update_index_local();
 
     Channel();
 };

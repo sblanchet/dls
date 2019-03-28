@@ -17,19 +17,14 @@
  *
  *****************************************************************************/
 
-#include <unistd.h>
-#include <errno.h>
-#include <string.h> // strerror()
-#include <stdlib.h> // getenv()
-#include <stdio.h> // rename()
-#include <sys/stat.h> // fchmod()
+#include <unistd.h> // getopt()
+#include <stdlib.h> // strtoul()
 
 #include <iostream>
 #include <iomanip>
 using namespace std;
 
 #include "lib/LibDLS/Dir.h"
-#include "lib/IndexT.h"
 using namespace LibDLS;
 
 /*****************************************************************************/
@@ -98,91 +93,6 @@ void index_get_options(int argc, char *argv[])
 
 /*****************************************************************************/
 
-int index_reindex_channel(Channel *channel)
-{
-    cout << "    Channel " << channel->dir_index() << " - "
-        << channel->name() << endl;
-
-    try {
-        channel->fetch_chunks();
-    }
-    catch (ChannelException &e) {
-        cerr << "      Failed to fetch chunks: " << e.msg << endl;
-        return 1;
-    }
-
-    IndexT<ChannelIndexRecord> index;
-
-    stringstream path;
-    path << channel->path() << "/channel.idx";
-    string index_path(path.str());
-
-    stringstream tmp;
-    tmp << channel->path() << "/.channel.idx.XXXXXX";
-    string tmp_path(tmp.str());
-
-    int tmp_fd = mkstemp((char *) tmp_path.c_str());
-    if (tmp_fd == -1) {
-        cerr << "      Failed to create " << tmp_path << ":" << endl
-            << "      " << strerror(errno) << endl;
-        return 1;
-    }
-
-    int ret = fchmod(tmp_fd, 0644);
-    if (ret == -1) {
-        cerr << "      Failed to set mode of " << tmp_path << ":" << endl
-            << "      " << strerror(errno) << endl;
-    }
-
-    try {
-        index.open_read_append(tmp_path);
-    }
-    catch (EIndexT &e) {
-        cerr << "      Failed to open index:" << endl
-            << "      " << e.msg << endl;
-        close(tmp_fd);
-        unlink(tmp_path.c_str());
-        return 1;
-    }
-
-    close(tmp_fd);
-
-    unsigned int record_count(0);
-    unsigned int incomplete(0);
-
-    for (Channel::ChunkMap::const_iterator chunk_i =
-            channel->chunks().begin();
-            chunk_i != channel->chunks().end(); chunk_i++) {
-        const Chunk *c = &chunk_i->second;
-        ChannelIndexRecord rec;
-        rec.start_time = c->start().to_uint64();
-        if (c->incomplete()) {
-            rec.end_time = 0ULL;
-            incomplete++;
-        }
-        else {
-            rec.end_time = c->end().to_uint64();
-        }
-        index.append_record(&rec);
-        record_count++;
-    }
-
-    index.close();
-
-    if (rename(tmp_path.c_str(), index_path.c_str()) == -1) {
-        unlink(tmp_path.c_str());
-        cerr << "Failed to rename " << tmp_path << " to "
-            << index_path << ": " << strerror(errno) << endl;
-    }
-
-    cout << "       Created channel index with " << record_count
-        << " records (" << incomplete << " incomplete)." << endl;
-
-    return 0;
-}
-
-/*****************************************************************************/
-
 int index_reindex_job(Job *job)
 {
     cout << "  Job " << job->preset().id()
@@ -198,7 +108,7 @@ int index_reindex_job(Job *job)
 
     for (list<Channel>::iterator channel_i = job->channels().begin();
             channel_i != job->channels().end(); channel_i++) {
-        index_reindex_channel(&*channel_i);
+        channel_i->update_index();
     }
 
     return 0;
