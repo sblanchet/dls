@@ -372,13 +372,16 @@ Channel::_fetch_chunks_local()
                 log(msg.str());
             }
 #endif
+            stringstream chunk_path;
+            chunk_path << path() << "/" << dir_ent_name;
             try {
-                new_chunk.import(path() + "/" + dir_ent_name, _type);
+                new_chunk.import(chunk_path.str(), _type);
             }
             catch (ChunkException &e) {
                 TRACE_TIMING(t_import);
                 stringstream err;
-                err << "WARNING: Failed import chunk: " << e.msg;
+                err << "WARNING: Failed to import " << chunk_path.str()
+                    << ": " << e.msg;
                 log(err.str());
                 continue;
             }
