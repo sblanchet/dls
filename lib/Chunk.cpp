@@ -299,6 +299,10 @@ void Chunk::fetch_data(
         return;
     }
 
+#ifdef DEBUG_TIMING
+    data_chunks++;
+#endif
+
     if (_load_state != Full) {
 #ifdef DEBUG_TIMING
         cerr << "Importing " << _start.to_int64() << endl;
@@ -319,6 +323,11 @@ void Chunk::fetch_data(
 
 #ifdef DEBUG_DATA
         cerr << "l=" << level << flush;
+#endif
+#ifdef DEBUG_TIMING
+    if (level < MAX_LEVEL) {
+        data_levels[level]++;
+    }
 #endif
 
         if (!level) {

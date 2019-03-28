@@ -670,6 +670,7 @@ void Channel::_fetch_data_local(
         log(msg.str());
     }
     Time ts, te;
+    Chunk::reset_timing();
     ts.set_now();
 #endif
 
@@ -694,6 +695,7 @@ void Channel::_fetch_data_local(
     stringstream msg;
     msg << __func__ << "() took " << ts.diff_str_to(te);
     log(msg.str());
+    Chunk::output_timing();
 #endif
 }
 
