@@ -50,10 +50,10 @@ using QtDls::Model;
 /****************************************************************************/
 
 QColor Graph::messageColor[] = {
-    Qt::blue,
-    Qt::darkYellow,
-    Qt::red,
-    Qt::red,
+    QColor( 38, 139, 210), // blue
+    QColor(203,  75,  22), // orange (close to red)
+    QColor(220,  50,  47), // red
+    QColor(211,  54, 130), // magenta
     Qt::black
 };
 
@@ -2072,6 +2072,8 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
 
         msgMutex.lock();
 
+        LibDLS::Job::Message prevMsg;
+
         for (QList<LibDLS::Job::Message>::const_iterator msg =
                 messages.begin(); msg != messages.end(); msg++) {
             LibDLS::Time dt = msg->time - getStart();
@@ -2083,6 +2085,16 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
             if (xc >= messageWidth) {
                 break;
             }
+#if 0
+            qDebug() << msg->time.to_str().c_str() << msg->type
+                << msg->text.c_str() << prevMsg.time.to_str().c_str()
+                << prevMsg.type << prevMsg.text.c_str();
+#endif
+            if (*msg == prevMsg) {
+                continue;
+            }
+            prevMsg = *msg;
+
             if (msg->type > types[xc]) {
                 types[xc] = msg->type;
             }
@@ -2121,7 +2133,7 @@ void Graph::drawMessages(QPainter &painter, const QRect &rect)
                             Qt::AlignLeft | Qt::AlignVCenter, label);
                     QRect back = bound.adjusted(-1, -1, 1, 1);
                     back = back.intersected(textRect);
-                    painter.fillRect(back, Qt::white);
+                    painter.fillRect(back, palette().base());
                     if (msg->type != LibDLS::Job::Message::Unknown) {
                         painter.setPen(messageColor[msg->type]);
                     }
