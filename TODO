@@ -19,8 +19,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Interactive changing of header sizes
 
 # User frontend (dlsgui)
-    * Do not display duplicate messages (same type, time and text)
-
     * Make loading data sources run in background (so that window is shown
       immediately)
     * Fix adding data sources on loading view
@@ -61,7 +59,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
 
 # Library (LibDLS):
     * Implement channel indexing in library
-    * Make use of existing index during indexing
 
     * Auto-import jobs on reconnect
     * Add version macros
