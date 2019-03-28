@@ -637,6 +637,15 @@ void LibDLS::Job::_load_msg_local(
                     break;
                 }
                 next_record_already_read = true;
+
+                if (next_index_record.position <= index_record.position) {
+                    stringstream err;
+                    err << "ERROR: Messages index \"" << index.path()
+                        << "\" is corrupted.";
+                    log(err.str());
+                    break;
+                }
+
                 to_read =
                     next_index_record.position - index_record.position;
             }
