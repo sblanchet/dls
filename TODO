@@ -39,8 +39,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * Fix online sample time change
 
 # Command-line tool (dls)
-    * Use library indexing methods
-
     * option -Q for really quiet
     * export:
         * times with the date parser
@@ -58,8 +56,6 @@ vim: tw=78 spelllang=en spell syntax=markdown
     * show compression rate
 
 # Library (LibDLS):
-    * Implement channel indexing in library
-
     * Auto-import jobs on reconnect
     * Add version macros
     * Fetch chunks and data in same network request

@@ -19,6 +19,9 @@
 
 #include <fcntl.h>
 #include <dirent.h>
+#include <errno.h>
+#include <sys/stat.h> // fchmod()
+#include <unistd.h> // close()
 
 #include <iostream>
 #include <sstream>
@@ -36,6 +39,7 @@ using namespace std;
 #include "proto/dls.pb.h"
 
 #include "XmlParser.h"
+#include "IndexT.h"
 using namespace LibDLS;
 
 #ifdef DEBUG_TIMING
@@ -216,6 +220,20 @@ void Channel::set_chunk_info(DlsProto::ChannelInfo *channel_info) const
     for (ChunkMap::const_iterator chunk_i = _chunks.begin();
             chunk_i != _chunks.end(); chunk_i++) {
         chunk_i->second.set_chunk_info(channel_info->add_chunk());
+    }
+}
+
+/*****************************************************************************/
+
+void Channel::update_index()
+{
+    if (_job->dir()->access() == Directory::Local) {
+        return _update_index_local();
+    }
+    else {
+        stringstream err;
+        err << "Updating remote indices not implemented yet!";
+        throw ChannelException(err.str());
     }
 }
 
@@ -680,6 +698,95 @@ void Channel::_fetch_data_network(
     log(msg.str());
     cerr << msg.str() << endl;
 #endif
+}
+
+/*****************************************************************************/
+
+void Channel::_update_index_local()
+{
+    {
+        stringstream msg;
+        msg << "Updating index of channel (" << _dir_index << ") " << _name;
+        log(msg.str());
+    }
+
+    fetch_chunks();
+
+    IndexT<ChannelIndexRecord> index;
+
+    stringstream path;
+    path << _path << "/channel.idx";
+    string index_path(path.str());
+
+    stringstream tmp;
+    tmp << _path << "/.channel.idx.XXXXXX";
+    string tmp_path(tmp.str());
+
+    int tmp_fd = mkstemp((char *) tmp_path.c_str());
+    if (tmp_fd == -1) {
+        stringstream err;
+        err << "Failed to create " << tmp_path << ": " << strerror(errno);
+        throw ChannelException(err.str());
+    }
+
+    int ret = fchmod(tmp_fd, 0644);
+    if (ret == -1) {
+        stringstream err;
+        err << "Failed to set temporary file mode of " << tmp_path
+            << ": " << strerror(errno);
+        close(tmp_fd);
+        unlink(tmp_path.c_str());
+        throw ChannelException(err.str());
+    }
+
+    try {
+        index.open_read_append(tmp_path);
+    }
+    catch (EIndexT &e) {
+        stringstream err;
+        err << "Failed to open index: " << e.msg;
+        close(tmp_fd);
+        unlink(tmp_path.c_str());
+        throw ChannelException(err.str());
+    }
+
+    close(tmp_fd);
+
+    unsigned int record_count(0);
+    unsigned int incomplete(0);
+
+    for (Channel::ChunkMap::const_iterator chunk_i =
+            _chunks.begin(); chunk_i != _chunks.end(); chunk_i++) {
+        const Chunk *c = &chunk_i->second;
+        ChannelIndexRecord rec;
+        rec.start_time = c->start().to_uint64();
+        if (c->incomplete()) {
+            rec.end_time = 0ULL;
+            incomplete++;
+        }
+        else {
+            rec.end_time = c->end().to_uint64();
+        }
+        index.append_record(&rec);
+        record_count++;
+    }
+
+    index.close();
+
+    if (rename(tmp_path.c_str(), index_path.c_str()) == -1) {
+        stringstream err;
+        err << "Failed to rename " << tmp_path << " to "
+            << index_path << ": " << strerror(errno);
+        unlink(tmp_path.c_str());
+        throw ChannelException(err.str());
+    }
+
+    {
+        stringstream msg;
+        msg << "Created channel index with " << record_count
+            << " records (" << incomplete << " incomplete).";
+        log(msg.str());
+    }
 }
 
 /*****************************************************************************/
