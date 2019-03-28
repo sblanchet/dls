@@ -82,6 +82,9 @@ class Job
 
         struct Message
         {
+            Message():
+                type(Unknown) {}
+
             Time time;
             enum Type {
                 Unknown = -1,
@@ -97,6 +100,11 @@ class Job
 
             bool operator<(const Message &other) const {
                 return time < other.time;
+            }
+            bool operator==(const Message &other) const {
+                return time == other.time and
+                    type == other.type and
+                    text == other.text;
             }
 
             const std::string &type_str() const;
