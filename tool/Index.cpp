@@ -95,14 +95,14 @@ void index_get_options(int argc, char *argv[])
 
 int index_reindex_job(Job *job)
 {
-    cout << " " << setw(4) << job->preset().id()
-        << "  " << job->preset().description() << endl;
+    cout << endl << "Job (" << job->preset().id()
+        << ") " << job->preset().description() << endl << endl;
 
     try {
         job->fetch_channels();
     }
     catch (Exception &e) {
-        cerr << "Failed to fetch channels: " << e.msg << endl;
+        cerr << "    Failed to fetch channels: " << e.msg << endl;
         return 1;
     }
 
