@@ -504,10 +504,6 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
     dataMutex.lock();
 
     if (genericData.size()) {
-        double prev_value = 0.0;
-        int prev_xp = 0, prev_yp = 0;
-        bool first_in_chunk = true;
-
         QPen pen;
         pen.setColor(color);
 
@@ -517,6 +513,10 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
 
         for (QList<LibDLS::Data *>::const_iterator d = genericData.begin();
                 d != genericData.end(); d++) {
+
+            double prev_value = 0.0;
+            int prev_xp = 0, prev_yp = 0;
+            bool first = true;
 
             for (unsigned int i = 0; i < (*d)->size(); i++) {
                 double value = (*d)->value(i) * scale + offset;
@@ -541,7 +541,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 }
 
                 if (xp >= 0) {
-                    if (first_in_chunk) {
+                    if (first) {
                         QPointF p(rect.left() + xv, rect.bottom() - yv);
                         painter.drawPoint(p);
                     }
@@ -578,7 +578,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                             }
                         }
                         else if (xp > measure->x && prev_xp
-                                < measure->x && !first_in_chunk) {
+                                < measure->x && !first) {
                             measure->minimum = prev_value;
                             measure->maximum = prev_value;
                             measure->minY = prev_yp;
@@ -599,7 +599,7 @@ void Layer::draw(QPainter &painter, const QRect &rect, double xScale,
                 prev_xp = xp;
                 prev_yp = yp;
                 prev_value = value;
-                first_in_chunk = false;
+                first = false;
             }
         }
 
