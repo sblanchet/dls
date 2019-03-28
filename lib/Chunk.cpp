@@ -62,6 +62,9 @@ Time t_import_open, t_import_parse, t_import_close;
 Time t_global_open, t_global_records, t_global_first,
      t_global_last, t_local_open, t_local_records, t_local_last,
      t_local_close, t_global_close;
+unsigned int data_chunks;
+#define MAX_LEVEL 16
+unsigned int data_levels[MAX_LEVEL];
 
 void Chunk::reset_timing()
 {
@@ -78,6 +81,11 @@ void Chunk::reset_timing()
     t_local_last.set_null();
     t_local_close.set_null();
     t_global_close.set_null();
+
+    data_chunks = 0;
+    for (unsigned int i = 0; i < MAX_LEVEL; i++) {
+        data_levels[i] = 0;
+    }
 }
 
 void Chunk::output_timing()
@@ -95,7 +103,16 @@ void Chunk::output_timing()
         << "       local_rec: " << t_local_records.to_dbl() << endl
         << "      local_last: " << t_local_last.to_dbl() << endl
         << "     local_close: " << t_local_close.to_dbl() << endl
-        << "    global_close: " << t_global_close.to_dbl() << endl;
+        << "    global_close: " << t_global_close.to_dbl() << endl
+        << endl
+        << "    fetched data from " << data_chunks << " chunks." << endl;
+
+    for (unsigned int i = 0; i < MAX_LEVEL; i++) {
+        if (data_levels[i]) {
+            msg << "    level " << i << ": " << data_levels[i] << endl;
+        }
+    }
+
     log(msg.str());
 }
 
@@ -270,10 +287,10 @@ void Chunk::fetch_data(
     // The chunk range was not determined successfully
     if (_start.is_null() or _end.is_null()) {
 #ifdef DEBUG_TIMING
-        cerr << _start.to_int64() << " " << _end.to_int64()
+        cerr << __func__ << "() start = " << _start.to_int64()
+            << " end = " << _end.to_int64()
             << " load " << _load_state << endl;
 #endif
-
         return;
     }
 
