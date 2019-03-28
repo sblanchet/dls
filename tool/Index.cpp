@@ -95,8 +95,8 @@ void index_get_options(int argc, char *argv[])
 
 int index_reindex_job(Job *job)
 {
-    cout << "  Job " << job->preset().id()
-        << " - " << job->preset().description() << endl;
+    cout << endl << "Job (" << job->preset().id()
+        << ") " << job->preset().description() << endl << endl;
 
     try {
         job->fetch_channels();

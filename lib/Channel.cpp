@@ -861,7 +861,7 @@ void Channel::_update_index_local()
 
     {
         stringstream msg;
-        msg << "Created channel index with " << record_count
+        msg << "    Created channel index with " << record_count
             << " records (" << incomplete << " incomplete).";
         log(msg.str());
     }
