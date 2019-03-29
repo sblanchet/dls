@@ -468,6 +468,13 @@ void Connection::_process_channel_request(
         for (set<LibDLS::Chunk *>::const_iterator upd_i =
                 updated_removed.first.begin();
                 upd_i != updated_removed.first.end(); upd_i++) {
+#ifdef DEBUG_TIMING
+            {
+                msg() << "updated " << (*upd_i)->start().to_int64()
+                    << " " << (*upd_i)->start().to_real_time();
+                log(Info);
+            }
+#endif
             (*upd_i)->set_chunk_info(channel_info->add_chunk());
         }
 
@@ -475,6 +482,12 @@ void Connection::_process_channel_request(
         for (set<int64_t>::const_iterator rem_i =
                 updated_removed.second.begin();
                 rem_i != updated_removed.second.end(); rem_i++) {
+#ifdef DEBUG_TIMING
+            {
+                msg() << "removed " << *rem_i;
+                log(Info);
+            }
+#endif
             channel_info->add_removed_chunks(*rem_i);
         }
 
