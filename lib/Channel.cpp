@@ -263,7 +263,6 @@ Channel::_fetch_chunks_local()
 {
     DIR *dir;
     struct dirent *dir_ent;
-    Chunk new_chunk, *chunk;
     bool first = true;
     int64_t dir_time;
     set<int64_t> dir_chunks;
@@ -319,6 +318,7 @@ Channel::_fetch_chunks_local()
             chunk_path << path() << "/chunk" << rec.start_time;
             if (chunk_i == _chunks.end()) {
                 // chunk not existing yet
+                Chunk new_chunk;
                 try {
                     new_chunk.preload(chunk_path.str(), _type,
                             rec.start_time, rec.end_time);
@@ -330,9 +330,17 @@ Channel::_fetch_chunks_local()
                     continue;
                 }
 
+#ifdef DEBUG_TIMING
+                {
+                    stringstream msg;
+                    msg << "Preloaded " << new_chunk.start().to_int64()
+                        << " " << new_chunk.start().to_real_time();
+                    log(msg.str());
+                }
+#endif
                 pair<int64_t, Chunk> val(rec.start_time, new_chunk);
                 pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
-                chunk = &ins_ret.first->second;
+                Chunk *chunk = &ins_ret.first->second;
                 ret.first.insert(chunk);
 #ifdef DEBUG_TIMING
                 from_index++;
@@ -381,17 +389,19 @@ Channel::_fetch_chunks_local()
 
         ChunkMap::iterator chunk_i = _chunks.find(dir_time);
         TRACE_TIMING(t_find);
+        Chunk *chunk;
         if (chunk_i == _chunks.end()) {
             // chunk not existing yet
 #ifdef DEBUG_TIMING
             {
                 stringstream msg;
-                msg << "Importing " << dir_ent_name;
+                msg << "Importing chunk " << dir_time;
                 log(msg.str());
             }
 #endif
             stringstream chunk_path;
             chunk_path << path() << "/" << dir_ent_name;
+            Chunk new_chunk;
             try {
                 new_chunk.import(chunk_path.str(), _type);
             }
@@ -427,7 +437,9 @@ Channel::_fetch_chunks_local()
 #ifdef DEBUG_TIMING
             {
                 stringstream msg;
-                msg << "Fetching range of " << chunk->start().to_int64();
+                msg << "Fetching range of incomplete chunk "
+                    << chunk->start().to_int64()
+                    << " " << chunk->start().to_real_time();
                 log(msg.str());
             }
 #endif
@@ -521,8 +533,6 @@ Channel::_fetch_chunks_network()
 {
     DlsProto::Request req;
     DlsProto::Response res;
-    Chunk new_chunk;
-    Chunk *chunk;
     std::pair<std::set<Chunk *>, std::set<int64_t> > ret;
 #ifdef DEBUG_TIMING
     {
@@ -593,8 +603,9 @@ Channel::_fetch_chunks_network()
             ch_info_i != ch_info.chunk().end(); ch_info_i++) {
         uint64_t start = ch_info_i->start();
         ChunkMap::iterator chunk_i = _chunks.find(start);
+        Chunk *chunk;
         if (chunk_i == _chunks.end()) {
-            new_chunk = Chunk(*ch_info_i, _type);
+            Chunk new_chunk = Chunk(*ch_info_i, _type);
             pair<int64_t, Chunk> val(start, new_chunk);
             pair<ChunkMap::iterator, bool> ins_ret = _chunks.insert(val);
             chunk = &ins_ret.first->second;
