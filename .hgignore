@@ -67,7 +67,7 @@ proto/dls.pb.h
 proto/libdls_la-*.lo
 script/Makefile
 script/Makefile.in
-script/dlsd.service
+script/dls.service
 script/init.sh
 stamp-h1
 tool/.deps

@@ -331,7 +331,7 @@ AC_CONFIG_FILES([
     lib/Makefile
     proto/Makefile
     script/Makefile
-    script/dlsd.service
+    script/dls.service
     script/init.sh
     tool/Makefile
 ])
