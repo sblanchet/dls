@@ -233,11 +233,11 @@ seen in \autoref{fig:arch}.
 \label{sec:dlsd_mother}
 \index{dlsd!parent process}
 
-A dlsd process started with the command \texttt{dls start} will monitor the
-measurement jobs\index{measurement job}. It is then called \textit{dlsd parent
-process}. In the memory it holds available a list of dedicated copies of the
-job specifications existing in the DLS data directory, which additionally
-contain information on the associated acquisition processes.
+A dlsd process started by the user or system will monitor the measurement
+jobs\index{measurement job}. It is then called \textit{dlsd parent process}.
+In the memory it holds available a list of dedicated copies of the job
+specifications existing in the DLS data directory, which additionally contain
+information on the associated acquisition processes.
 
 Every started parent process must work in a different DLS data
 directory\index{DLS data directory}. This is ensured by implemented protective
