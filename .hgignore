@@ -33,6 +33,7 @@ doku/dls_doku_en.log
 doku/dls_doku_en.out
 doku/dls_doku_en.pdf
 doku/dls_doku_en.toc
+doku/hg.tex
 fltkguis/.deps
 fltkguis/.libs
 fltkguis/dls_ctl

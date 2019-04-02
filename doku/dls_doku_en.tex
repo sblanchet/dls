@@ -24,7 +24,6 @@
 \usepackage[automark,headsepline]{scrpage2}
 \usepackage{makeidx}
 \usepackage{listings}
-\usepackage[nofancy]{rcsinfo}
 \usepackage{hyperref}
 
 \lstset{basicstyle=\ttfamily\small}
@@ -47,7 +46,7 @@
 \DeclareFontShape{OT1}{cmtt}{bx}{n} {
 <5><6><7><8><9><10><10.95><12><14.4><17.28><20.74><24.88>cmttb10 }{}
 
-\rcsInfo $RCSId$
+\input{hg}
 
 \makeindex
 
@@ -82,7 +81,7 @@ tiny variation in a fraction of a second is needed.
 
 \vspace{\fill}
 
-{\large Essen, \rcsInfoLongDate\\[1ex] Revision \rcsInfoRevision}
+{\large Essen, \today\\[1ex] Revision \revision}
 
 \end{center}
 \end{titlepage}
