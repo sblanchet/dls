@@ -79,8 +79,6 @@ int main(int argc, char *argv[])
     qputenv("QT_QPA_PLATFORM_PLUGIN_PATH", QByteArray("platforms"));
 #endif
 
-    QApplication::setStyle("plastique");
-
     QCoreApplication::setOrganizationName("EtherLab");
     QCoreApplication::setOrganizationDomain("etherlab.org");
     QCoreApplication::setApplicationName("dlsgui");
