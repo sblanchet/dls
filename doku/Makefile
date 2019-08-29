@@ -18,8 +18,10 @@ pdf:  dls_doku.pdf dls_doku_en.pdf
 
 %.dvi : %.tex
 	latex $(LATEX_OPTIONS) \\nonstopmode\\input{$<}
+	latex $(LATEX_OPTIONS) \\nonstopmode\\input{$<}
 
 %.pdf : %.tex
+	latex $(LATEX_OPTIONS) \\nonstopmode\\input{$<}
 	pdflatex $(LATEX_OPTIONS) $<
 
 
