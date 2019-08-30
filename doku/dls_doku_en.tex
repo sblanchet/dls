@@ -878,7 +878,7 @@ The time stamp in the file name is the time stamp of the first data value in the
 
 In the \textit{level0} directory the meta type is always \textit{gen} (``generic'').
 
-Data files have a simple XML structure. Each data block appears as a \textit{\textless b\textgreater}-Tag. This contains the time stamp of the first value in the block as attribute \textit{t} (``time''), the number of compressed data values as attribute \textit{s} (``size'') and the coded data as attribute \textit{d}(``data'').
+Data files have a simple XML structure. Each data block appears as a \textit{\textless d\textgreater}-Tag. This contains the time stamp of the first value in the block as attribute \textit{t} (``time''), the number of compressed data values as attribute \textit{s} (``size'') and the coded data as attribute \textit{d}(``data'').
 
 Data files have a defined maximum size. As soon as the dlsd acquisition process exceeded that size by adding the next block, it would first create a new data file.
 
