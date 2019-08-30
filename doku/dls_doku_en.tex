@@ -225,7 +225,7 @@ running when data are to be acquired.
 A representation of the entire system architecture\index{architecture} can be
 seen in \autoref{fig:arch}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[width=250pt]{bilder/arch} \end{center} \caption{Architecture} \label{fig:arch} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[width=250pt]{bilder/arch_en} \end{center} \caption{Architecture} \label{fig:arch} \end{figure}
 
 %------------------------------------------------------------------------------
 
@@ -588,7 +588,7 @@ For command line parameters refer to \autoref{sec:apx_cmd_quota}.
 
 \begin{figure}[htb]
  \begin{center}
-  \includegraphics[width=250pt]{bilder/quota}
+  \includegraphics[width=250pt]{bilder/quota_en}
  \end{center}
  \caption{Compliance with the time quota}
  \label{fig:quota}
@@ -702,7 +702,7 @@ All persistent data of the DLS system are organised in \textit{DLS data
 directories}\index{DLS data directory}. The basic structure is shown in
 \autoref{fig:dls_data}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[width=300pt]{bilder/dls_data} \end{center} \caption{Structure of the DLS data directory} \label{fig:dls_data} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[width=300pt]{bilder/dls_data_en} \end{center} \caption{Structure of the DLS data directory} \label{fig:dls_data} \end{figure}
 
 %------------------------------------------------------------------------------
 
@@ -891,7 +891,7 @@ The facts which parameters have ultimately been used for the data acquisition an
 The entries in the index file will always correspond to a block in the data
 file. The structure of an entry is shown in \autoref{fig:dls_data_index}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index} \end{center} \caption{Entry of an index file} \label{fig:dls_data_index} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index_en} \end{center} \caption{Entry of an index file} \label{fig:dls_data_index} \end{figure}
 
 Each entry is 20 bytes long. The first 8 bytes correspond to the time stamp of
 the first data value in the respective block in microseconds, which has been
@@ -911,7 +911,7 @@ An entry in a global index file will always correspond to a data file of the
 same meta type. The structure of an entry is shown in
 \autoref{fig:dls_data_index_glob}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index_glob} \end{center} \caption{Entry of a global index file} \label{fig:dls_data_index_glob} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index_glob_en} \end{center} \caption{Entry of a global index file} \label{fig:dls_data_index_glob} \end{figure}
 
 An entry in a global index file is always 16 bytes long. The first 8 bytes correspond to the time stamp of the first data value in the data file in microseconds as a \textit{long long int}, the last 8 bytes correspond to the last data value.
 
@@ -939,7 +939,7 @@ An entry in a message index file will always correspond to a message in the
 message file. The structure of an entry is shown in
 \autoref{fig:dls_data_index_msg}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index_msg} \end{center} \caption{Entry of a message index file} \label{fig:dls_data_index_msg} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[height=15pt]{bilder/dls_data_index_msg_en} \end{center} \caption{Entry of a message index file} \label{fig:dls_data_index_msg} \end{figure}
 
 %------------------------------------------------------------------------------
 
@@ -1476,7 +1476,7 @@ overlapping, the original signal can be recovered by a re-overlapping of two
 successive, re-transformed sequences of coefficients. This method is presented
 in \autoref{fig:comp_mdct}.
 
-\begin{figure}[htb] \begin{center} \includegraphics[width=300pt]{bilder/mdct} \end{center} \caption{Modified, discrete cosinus transformation} \label{fig:comp_mdct} \end{figure}
+\begin{figure}[htb] \begin{center} \includegraphics[width=300pt]{bilder/mdct_en} \end{center} \caption{Modified, discrete cosinus transformation} \label{fig:comp_mdct} \end{figure}
 
 This modified DCT is supplemented by the overlaying of the values to be transformed by means of a window function that gives a lower weighting to the values at the margins. It is thus prevented that the different errors on the marginal areas of the single transformations lead to ``artefacts'' and the original signal can be seamlessly recovered.
 
