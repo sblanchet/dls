@@ -2041,13 +2041,18 @@ nicht mehr) kann zuvor gelöscht werden.
 \index{dlsd!Kommandozeilenparameter}
 
 \begin{lstlisting}
-  dlsd 1.0.0 revision 26
-  Usage: dlsd [OPTIONS]
-         -d <dir>       Set DLS data directory.
-         -u <user>      Switch to <user>.
-         -n <number>    Set maximal number of open files.
-         -k             Do not detach from console.
-         -h             Show this help.
+dlsd 1.4.0-rc2 revision de0a3e76b9ae
+Usage: dlsd [OPTIONS]
+  -d <dir>      Set DLS data directory.
+  -u <user>     Switch to <user>.
+  -n <number>   Set maximal number of open files.
+  -k            Do not detach from console.
+  -w <seconds>  Wait time before restarting logging
+                  process after an error. Default is 30.
+  -b            Do not bind to network socket.
+  -p <port>     Listen port or service name. Default is 53584.
+  -r            Read-only mode (no data logging).
+  -h            Show this help.
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
@@ -2067,10 +2072,10 @@ nicht mehr) kann zuvor gelöscht werden.
 \index{dls\_status!Kommandozeilenparameter}
 
 \begin{lstlisting}
-  Aufruf: dls_status [OPTIONEN]
-  Optionen:
-          -d [Verzeichnis]   DLS-Datenverzeichnis
-          -h                 Diese Hilfe anzeigen
+Call: dls_status [OPTIONS]
+Options:
+        -d [directory]     DLS data directory
+        -h                 Show this help
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
@@ -2095,10 +2100,10 @@ Der DLS Manager wird in Kap.~\ref{sec:manager} beschrieben.
 \index{DLS View!Kommandozeilenparameter}
 
 \begin{lstlisting}
-  dls_view 1.0.0 revision 26
-  Aufruf: dls_view [OPTIONEN]
-          -d [Verzeichnis]   DLS-Datenverzeichnis angeben
-          -h                 Diese Hilfe anzeigen
+dls_view 1.4.0-rc2 revision de0a3e76b9ae
+Call: dls_view [OPTIONS]
+        -d [directory]   DLS data directory
+        -h               Show this help
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
@@ -2139,33 +2144,41 @@ Der DLS Manager wird in Kap.~\ref{sec:manager} beschrieben.
 \subsection{dls export}
 
 \begin{lstlisting}
-  Usage: dls export [OPTIONS]
-  Options:
-     -d DIR         DLS data directory. Default: `\$`DLS_DIR
-     -o DIR         Output directory.
-                    Default: `\$`DLS_EXPORT_DIR or "."
-     -f NAMEFMT     Naming format for export directory. See
-                    strftime(3).
-                    Default: `\$`DLS_EXPORT_FMT or
-                    "dls-export-%Y-%m-%d-%H-%M-%S"
-     -a             Enable ASCII exporter
-     -m             Enable MATLAB4 exporter
-     -j ID          Job to export (MANDATORY)
-     -c CHANNELS    Indices of channels to export (see below).
-                    Default: All channels
-     -s TIMESTAMP   Start time (see below).
-                    Default: Start of recording
-     -e TIMESTAMP   End time (see below). Default:
-                    End of recording
-     -q             Be quiet (no progress bar)
-     -h             Print this help
-  CHANNELS is a comma-separated list of channel indices.
-     Use the minus sign to specify ranges.
-     Examples: "2,4,9", "1-20", "2,4,13-15,42".
-  TIMESTAMP is a broken-down time with microsecond resolution:
-     YYYY[-MM[-DD[-HH[-MM[-SS[-UUUUUU]]]]]] or
-     YYYY[-MM[-SS[ HH[:MM[:SS[.UUUUUU]]]]]].
-     Examples: "2006-08", "2005-08-15 13:14:58.896366"
+dls 1.4.0-rc2 revision de0a3e76b9ae
+Usage: dls export [OPTIONS]
+Options:
+   -d DIR         DLS data directory. Default: $DLS_DIR
+   -o DIR         Output directory. Default: $DLS_EXPORT_DIR or "."
+   -f NAMEFMT     Naming format for export directory.
+                  See strftime(3).
+                  Default: $DLS_EXPORT_FMT or "dls-export-%Y-%m-%d-%H-%M-%S"
+   -a             Enable ASCII exporter
+   -m             Enable MATLAB4 exporter
+   -j ID          Job to export (MANDATORY)
+   -c CHANNELS    Indices of channels to export (see below).
+                  Default: All channels
+   -p CHANNEL     Path of one channel to export (see
+                  below). This option may appear
+                  multiple times. Default: All channels.
+   -s TIMESTAMP   Start time (see below). Default: Start of recording
+   -e TIMESTAMP   End time (see below). Default: End of recording
+   -n DECIMATION  Export every n'th value.
+   -g             Export messages.
+   -l LANGUAGE    2-character language code for messages.
+   -q             Be quiet (no progress bar)
+   -h             Print this help
+CHANNELS is a comma-separated list of channel indices.
+   Use the minus sign to specify ranges.
+   Examples: "2,4,9", "1-20", "2,4,13-15,42".
+CHANNEL is a signal name, optionally prefixed with
+   'FILE:', where FILE is the name of the exported
+   channel data file. If FILE is empty, or there is no
+   colon found, files are named according to the channel
+   indices.
+TIMESTAMP is a broken-down time with microsecond resolution:
+   YYYY[-MM[-DD[-HH[-MM[-SS[-UUUUUU]]]]]] or
+   YYYY[-MM[-SS[ HH[:MM[:SS[.UUUUUU]]]]]].
+   Examples: "2006-08", "2005-08-15 13:14:58.896366"
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
@@ -2175,11 +2188,11 @@ Der DLS Manager wird in Kap.~\ref{sec:manager} beschrieben.
 \index{dls\_quota!Kommandozeilenparameter}
 
 \begin{lstlisting}
-  Aufruf: dls_quota [OPTIONEN]
-          -d [Verzeichnis]   DLS-Datenverzeichnis
-          -i [Sekunden]      Überprüfungs-Intervall
-          -k                 Kein Daemon werden
-          -h                 Diese Hilfe anzeigen
+Call: dls_quota [OPTIONS]
+        -d [directory]     DLS data directory
+        -i [seconds]       Verification interval (0 = single check)
+        -k                 Not a daemon
+        -h                 Show this help
 \end{lstlisting}
 
 %------------------------------------------------------------------------------
