@@ -1619,7 +1619,25 @@ The DLS data directory will automatically be created when the DLS Manager is sta
 \autoref{tab:typen} shows all previously supported channel data
 types\index{channel!data types} and the respective possible compression methods.
 
-\begin{table}[htb] \centering \caption{Supported channel data types} \label{tab:typen} \vspace{1.5ex} \begin{tabular}[thb]{|l|l|l|} \hline \textbf{Typ} & \textbf{Description} & \textbf{Compression}\\ \hline \textit{TCHAR} & 1 byte integer (with sign) & ZLib/Base64\\ \hline \textit{TUCHAR} & 1 byte integer (without sign) & ZLib/Base64\\ \hline \textit{TINT} & 4 bytes integer (with sign) & ZLib/Base64\\ \hline \textit{TUINT} & 4 bytes integer (without sign) & ZLib/Base64\\ \hline \textit{TLINT} & 4 bytes integer (with sign) & ZLib/Base64\\ \hline \textit{TULINT} & 4 bytes integer (without sign) & ZLib/Base64\\ \hline \textit{TFLT} & 4 bytes floating point & ZLib/Base64,\\ & & MDCT/ZLib/Base64,\\ & & Quant/ZLib/Base64\\ \hline \textit{TDBL} & 8 bytes floating point & ZLib/Base64,\\ & & MDCT/ZLib/Base64,\\ & & Quant/ZLib/Base64\\ \hline \end{tabular} \end{table}
+\begin{table}[htb]
+  \centering \caption{Supported channel data types}
+  \label{tab:typen} \vspace{1.5ex}
+  \begin{tabular}[thb]{|l|l|l|} \hline
+    \textbf{Type} & \textbf{Description} & \textbf{Compression}\\ \hline
+    \textit{TCHAR} & 1 byte integer (with sign) & ZLib/Base64\\ \hline
+    \textit{TUCHAR} & 1 byte integer (without sign) & ZLib/Base64\\ \hline
+    \textit{TINT} & 4 bytes integer (with sign) & ZLib/Base64\\ \hline
+    \textit{TUINT} & 4 bytes integer (without sign) & ZLib/Base64\\ \hline
+    \textit{TLINT} & 8 bytes integer (with sign) & ZLib/Base64\\ \hline
+    \textit{TULINT} & 8 bytes integer (without sign) & ZLib/Base64\\ \hline
+    \textit{TFLT} & 4 bytes floating point & ZLib/Base64,\\
+                  &                        & MDCT/ZLib/Base64,\\
+                  &                        & Quant/ZLib/Base64\\ \hline
+    \textit{TDBL} & 8 bytes floating point & ZLib/Base64,\\
+                  &                        & MDCT/ZLib/Base64,\\
+                  &                        & Quant/ZLib/Base64\\ \hline
+  \end{tabular}
+\end{table}
 
 %------------------------------------------------------------------------------
 
